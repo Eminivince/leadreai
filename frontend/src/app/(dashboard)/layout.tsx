@@ -1,19 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Sidebar } from '../../components/layout/Sidebar.js';
 import { Topbar } from '../../components/layout/Topbar.js';
 import { useAuth } from '../../hooks/useAuth.js';
+import { LoadingSpinner } from '../../components/shared/LoadingSpinner.js';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth(true); // redirects to /login if unauthenticated
-  const router = useRouter();
+  const { isLoading } = useAuth(true); // redirects to /login if unauthenticated
 
-  useEffect(() => {
-    // If user is null and we're not loading, redirect is handled by useAuth
-    if (!user) return;
-  }, [user, router]);
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center"><LoadingSpinner size={32} /></div>;
 
   return (
     <div className="flex min-h-screen bg-gray-50">
