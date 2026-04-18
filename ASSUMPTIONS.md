@@ -8,3 +8,4 @@
 - `next-auth` is NOT used; auth is fully custom backend JWT
 - Turborepo `dev` task runs backend + frontend + workers in parallel
 - Workers package runs idle in Phase 1 — verifies BullMQ connects to Redis but processes no jobs
+- ESLint 8 is used instead of ESLint 9 — the .eslintrc.cjs format is more compatible with the @typescript-eslint plugin versions installed
