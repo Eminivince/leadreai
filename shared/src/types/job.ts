@@ -9,18 +9,18 @@ export type JobStatus =
   | 'cancelled';
 
 export interface JobGeography {
-  country?: string;
-  state?: string;
-  city?: string;
+  country?: string | null;
+  state?: string | null;
+  city?: string | null;
 }
 
 export interface ParsedIntent {
   industry: string;
-  subIndustry?: string;
+  subIndustry?: string | null;
   geography: JobGeography;
   targetCount: number;
   desiredFields: string[];
-  companySize?: string;
+  companySize?: string | null;
   keywords: string[];
   confidenceScore: number;
 }

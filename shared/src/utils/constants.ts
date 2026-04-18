@@ -43,3 +43,9 @@ export const SOURCE_TYPES = [
   'ssl',
   'linkedin',
 ] as const;
+
+export const DESIRED_FIELDS = [
+  'businessEmail', 'officePhone', 'mobilePhone',
+  'address', 'website', 'linkedin', 'whois', 'techStack',
+] as const;
+export type DesiredField = typeof DESIRED_FIELDS[number];

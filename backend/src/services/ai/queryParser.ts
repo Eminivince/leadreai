@@ -33,6 +33,10 @@ Rules:
  * using the configured AI provider.
  */
 export async function parseQuery(rawQuery: string): Promise<ParsedIntent> {
+  if (!rawQuery.trim()) {
+    throw ApiError.badRequest('rawQuery must not be empty');
+  }
+
   const response = await generateText(
     [{ role: 'user', content: rawQuery }],
     {
@@ -42,25 +46,22 @@ export async function parseQuery(rawQuery: string): Promise<ParsedIntent> {
     },
   );
 
-  // Strip markdown code fences if the model ignores the "no fences" instruction
-  const stripped = response.text
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/\s*```\s*$/i, '')
-    .trim();
+  // Extract the first {...} JSON object from the response; handles stray text or code fences
+  const jsonMatch = response.text.match(/\{[\s\S]*\}/);
+  const stripped = jsonMatch ? jsonMatch[0] : response.text.trim();
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(stripped);
   } catch (err) {
-    throw ApiError.badRequest(
-      'Failed to parse query intent: ' + (err instanceof Error ? err.message : String(err)),
-    );
+    throw new ApiError(502, 'AI_PARSE_ERROR', 'AI returned unparseable response');
   }
 
   const result = ParsedIntentSchema.safeParse(parsed);
   if (!result.success) {
-    throw ApiError.badRequest('Failed to parse query intent: ' + result.error.message);
+    throw new ApiError(502, 'AI_SCHEMA_ERROR', 'AI response did not match expected structure');
   }
 
-  return result.data as ParsedIntent;
+  // Keep in sync with DESIRED_FIELDS constant
+  return result.data;
 }
