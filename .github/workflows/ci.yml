@@ -38,6 +38,15 @@ jobs:
       - name: Type-check frontend
         run: pnpm --filter @leadreai/frontend type-check
 
+      - name: Build shared
+        run: pnpm --filter @leadreai/shared build
+
+      - name: Build backend
+        run: pnpm --filter @leadreai/backend build
+
+      - name: Build workers
+        run: pnpm --filter @leadreai/workers build
+
       - name: Lint shared
         run: pnpm --filter @leadreai/shared lint
 

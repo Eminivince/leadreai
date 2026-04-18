@@ -61,8 +61,8 @@ export async function writeLeads(
   }
 
   // Update job to complete
-  const totalLeadsFound = nonDupes.length;
-  const totalAfterDedup = leads.filter(l => !l.isDuplicate).length;
+  const totalLeadsFound = leads.length;
+  const totalAfterDedup = nonDupes.length;
 
   await ProspectingJob.findByIdAndUpdate(jobId, {
     status: 'complete',
