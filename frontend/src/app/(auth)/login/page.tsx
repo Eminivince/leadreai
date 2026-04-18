@@ -5,10 +5,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 import { LoginSchema, type LoginInput } from '@leadreai/shared';
-import { apiFetch } from '../../../lib/api';
-import { setAccessToken } from '../../../lib/auth';
-import { useAppStore } from '../../../store/useAppStore';
+import { apiFetch } from '@/lib/api';
+import { setAccessToken } from '@/lib/auth';
+import { useAppStore } from '@/store/useAppStore';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import type { ApiResponse, User } from '@leadreai/shared';
 
 interface LoginResponseData {
@@ -20,9 +24,11 @@ export default function LoginPage() {
   const router = useRouter();
   const { setUser } = useAppStore();
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginInput>({
-    resolver: zodResolver(LoginSchema),
-  });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginInput>({ resolver: zodResolver(LoginSchema) });
 
   async function onSubmit(data: LoginInput) {
     try {
@@ -39,41 +45,63 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Sign in to LeadreAI</h1>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      {/* Ambient glow */}
+      <div className="pointer-events-none absolute left-1/2 top-1/4 h-96 w-96 -translate-x-1/2 rounded-full bg-indigo-600/10 blur-[100px]" />
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.97, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+        className="relative w-full max-w-md rounded-2xl border border-border/60 bg-card p-8 shadow-2xl"
+      >
+        <div className="mb-8 text-center">
+          <span className="mb-2 block bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-2xl font-bold text-transparent">
+            LeadreAI
+          </span>
+          <h1 className="text-xl font-semibold text-foreground">Welcome back</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Sign in to your account</p>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <div className="space-y-1.5">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
               type="email"
+              placeholder="you@company.com"
               {...register('email')}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+            {errors.email && (
+              <p className="text-xs text-destructive">{errors.email.message}</p>
+            )}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input
+
+          <div className="space-y-1.5">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
               type="password"
+              placeholder="••••••••"
               {...register('password')}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
+            {errors.password && (
+              <p className="text-xs text-destructive">{errors.password.message}</p>
+            )}
           </div>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
-          >
-            {isSubmitting ? 'Signing in...' : 'Sign in'}
-          </button>
+
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? 'Signing in…' : 'Sign in'}
+          </Button>
         </form>
-        <p className="mt-4 text-sm text-center text-gray-500">
+
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-blue-600 hover:underline">Register</Link>
+          <Link href="/register" className="text-indigo-400 hover:text-indigo-300 hover:underline">
+            Create one
+          </Link>
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }
