@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Pencil, Trash2, Plus, Mail, CheckCircle2 } from 'lucide-react';
+import { Pencil, Trash2, Plus, Mail, CheckCircle2, Link2 } from 'lucide-react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -374,6 +375,19 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* ── Section: CRM Integration ─────────────────────────────────────── */}
+      <Link href="/dashboard/settings/crm">
+        <Card className="cursor-pointer hover:shadow-md transition-shadow">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Link2 className="w-5 h-5 text-orange-500" />
+              CRM Integration
+            </CardTitle>
+            <CardDescription>Connect HubSpot to sync leads and contacts.</CardDescription>
+          </CardHeader>
+        </Card>
+      </Link>
 
       {/* ── Section 2: Email Configuration ──────────────────────────────────── */}
       <Card>

@@ -3,6 +3,7 @@
 import { X, Globe, Mail, Phone, Linkedin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 interface Lead {
   _id: string;
@@ -23,6 +24,10 @@ interface Lead {
   tags: string[];
   notes?: string;
   createdAt: string;
+  contactSummary?: {
+    totalContacts: number;
+    topContact?: { fullName: string; title: string; seniority: string };
+  };
 }
 
 interface LeadDetailDrawerProps {
@@ -161,6 +166,22 @@ export function LeadDetailDrawer({ lead, onClose }: LeadDetailDrawerProps) {
               </div>
             </section>
           )}
+
+          {/* Contacts summary */}
+          {lead.contactSummary?.totalContacts ? (
+            <section className="space-y-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contacts</h3>
+              <div className="text-sm text-foreground">{lead.contactSummary.totalContacts} contacts found</div>
+              {lead.contactSummary.topContact && (
+                <div className="text-xs text-muted-foreground">
+                  Top: {lead.contactSummary.topContact.fullName} · {lead.contactSummary.topContact.title}
+                </div>
+              )}
+              <Link href={`/dashboard/leads/${lead._id}/contacts`} className="text-xs text-indigo-600 hover:underline block">
+                View all contacts →
+              </Link>
+            </section>
+          ) : null}
         </div>
       </div>
     </>
