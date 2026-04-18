@@ -1,7 +1,6 @@
 import type { Request, Response } from 'express';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
-import mongoose from 'mongoose';
 import User, { type IUser } from '../models/User.js';
 import Workspace from '../models/Workspace.js';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../lib/jwt.js';
@@ -34,10 +33,9 @@ export async function register(req: Request, res: Response): Promise<void> {
 
   const passwordHash = await bcrypt.hash(password, env.BCRYPT_ROUNDS);
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  let user: IUser | null = null;
   try {
-    const users = await User.create([{
+    user = await User.create({
       email: email.toLowerCase(),
       passwordHash,
       firstName,
@@ -45,36 +43,34 @@ export async function register(req: Request, res: Response): Promise<void> {
       plan: 'free' as const,
       creditsBalance: 0,
       isEmailVerified: false,
-    }], { session });
-    const user = users[0]!;
-
-    const slug = `${firstName.toLowerCase()}-workspace-${randomBytes(4).toString('hex')}`;
-    await Workspace.create([{
-      name: `${firstName}'s Workspace`,
-      slug,
-      ownerId: user._id,
-      members: [{ userId: user._id, role: 'owner', joinedAt: new Date() }],
-    }], { session });
-
-    await session.commitTransaction();
-
-    const accessToken = signAccessToken({ sub: String(user._id), email: user.email });
-    const refreshToken = signRefreshToken(String(user._id));
-
-    res.cookie('refresh_token', refreshToken, REFRESH_COOKIE_OPTIONS);
-
-    logger.info('User registered', { userId: String(user._id), email: user.email });
-
-    res.status(201).json({ success: true, data: { accessToken, user: userPublicFields(user) } });
+    });
   } catch (err: unknown) {
-    await session.abortTransaction();
     if (err instanceof Error && 'code' in err && (err as { code: number }).code === 11000) {
       throw ApiError.conflict('Email already in use');
     }
     throw err;
-  } finally {
-    await session.endSession();
   }
+
+  try {
+    const slug = `${firstName.toLowerCase()}-workspace-${randomBytes(4).toString('hex')}`;
+    await Workspace.create({
+      name: `${firstName}'s Workspace`,
+      slug,
+      ownerId: user._id,
+      members: [{ userId: user._id, role: 'owner', joinedAt: new Date() }],
+    });
+  } catch (err) {
+    // Workspace creation failed — remove the orphaned user to preserve atomicity
+    await User.deleteOne({ _id: user._id });
+    throw err;
+  }
+
+  const accessToken = signAccessToken({ sub: String(user._id), email: user.email });
+  const refreshToken = signRefreshToken(String(user._id));
+
+  res.cookie('refresh_token', refreshToken, REFRESH_COOKIE_OPTIONS);
+  logger.info('User registered', { userId: String(user._id), email: user.email });
+  res.status(201).json({ success: true, data: { accessToken, user: userPublicFields(user) } });
 }
 
 export async function login(req: Request, res: Response): Promise<void> {
