@@ -45,7 +45,7 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-r border-border/50 bg-card">
+    <aside className="flex w-60 shrink-0 flex-col border-r border-border/50 bg-card">
       {/* Logo */}
       <div className="flex h-16 items-center border-b border-border/50 px-6">
         <span className="text-lg font-bold tracking-tight text-foreground">
@@ -54,7 +54,7 @@ export function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 space-y-0.5 px-3 py-4">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const isActive =
             pathname === href ||
@@ -67,7 +67,7 @@ export function Sidebar() {
               className={cn(
                 'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                 isActive
-                  ? 'border-l-2 border-foreground bg-muted pl-[10px] text-foreground'
+                  ? 'bg-secondary text-foreground'
                   : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground'
               )}
             >
@@ -92,7 +92,7 @@ export function Sidebar() {
                 <div className="truncate text-xs font-medium text-foreground">
                   {user?.firstName} {user?.lastName}
                 </div>
-                <div className="truncate text-xs text-muted-foreground">{user?.email}</div>
+                <div className="truncate text-[10px] text-muted-foreground">{user?.email}</div>
               </div>
               <ChevronUp size={14} className="shrink-0 text-muted-foreground" />
             </button>

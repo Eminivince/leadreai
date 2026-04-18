@@ -7,12 +7,23 @@ import { useAppStore } from '@/store/useAppStore';
 import { useCredits } from '@/hooks/useCredits';
 import { Zap } from 'lucide-react';
 
-const PAGE_TITLES: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/dashboard/leads': 'Leads',
-  '/dashboard/campaigns': 'Campaigns',
-  '/dashboard/settings': 'Settings',
-};
+function resolveTitle(pathname: string): string {
+  if (pathname === '/dashboard') return 'Dashboard';
+  if (pathname.startsWith('/dashboard/leads')) {
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments.length === 3) return 'Lead Detail';
+    return 'Leads';
+  }
+  if (pathname.startsWith('/dashboard/campaigns')) {
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments.length === 3) return 'Campaign Detail';
+    if (segments.length >= 4) return 'Draft Editor';
+    return 'Campaigns';
+  }
+  if (pathname.startsWith('/dashboard/settings/crm')) return 'CRM Integration';
+  if (pathname.startsWith('/dashboard/settings')) return 'Settings';
+  return 'Dashboard';
+}
 
 function getInitials(firstName?: string, lastName?: string) {
   return `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase() || '?';
@@ -22,7 +33,7 @@ export function Topbar() {
   const pathname = usePathname();
   const { user } = useAppStore();
   const { data: credits } = useCredits();
-  const title = PAGE_TITLES[pathname] ?? 'Dashboard';
+  const title = resolveTitle(pathname);
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/50 bg-card/80 px-6 backdrop-blur">
