@@ -21,6 +21,7 @@ const STATUS_STYLES: Record<string, { variant: BadgeVariant; label: string }> = 
 
 interface JobCardProps {
   job: ProspectingJob;
+  onRefresh?: () => void;
 }
 
 function formatRelativeTime(dateStr: string): string {
@@ -38,12 +39,13 @@ function formatRelativeTime(dateStr: string): string {
   return date.toLocaleDateString();
 }
 
-export function JobCard({ job }: JobCardProps) {
+export function JobCard({ job, onRefresh }: JobCardProps) {
   const { workspaceId } = useWorkspace();
   const isActive = ['queued', 'parsing', 'collecting', 'enriching', 'deduplicating'].includes(job.status);
   const { status: liveStatus, percentage } = useJob(
     isActive ? workspaceId : null,
-    isActive ? job._id : null
+    isActive ? job._id : null,
+    onRefresh,
   );
 
   const displayStatus = liveStatus ?? job.status;
@@ -70,12 +72,12 @@ export function JobCard({ job }: JobCardProps) {
               <p className="mt-1 text-xs text-red-400">{job.error.message}</p>
             )}
             {job.status === 'complete' && job.result?.totalLeadsFound != null && (
-              <p className="mt-1 text-xs text-emerald-400">{job.result.totalLeadsFound} leads found</p>
+              <p className="mt-1 text-xs text-muted-foreground">{job.result.totalLeadsFound} leads found</p>
             )}
             {isActive && percentage != null && (
               <div className="mt-2 h-1 w-full rounded-full bg-secondary">
                 <div
-                  className="h-1 rounded-full bg-indigo-500 transition-all duration-500"
+                  className="h-1 rounded-full bg-foreground transition-all duration-500"
                   style={{ width: `${percentage}%` }}
                 />
               </div>

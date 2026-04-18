@@ -5,7 +5,18 @@ const envSchema = z.object({
   REDIS_URL: z.string().default('redis://localhost:6379'),
   WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(20).default(3),
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
-  MONGODB_URI: z.string().default('mongodb://localhost:27017/leadreai'),
+  MONGODB_URI: z.string().default('mongodb://localhost:27017'),
+  MONGODB_DB_NAME: z.string().default('leadreai'),
+  SERPAPI_KEY: z.string().optional(),
+  PLAYWRIGHT_HEADLESS: z.coerce.boolean().default(true),
+  PLAYWRIGHT_TIMEOUT_MS: z.coerce.number().default(30000),
+  PLAYWRIGHT_CONCURRENCY: z.coerce.number().default(3),
+  MAX_FILE_DOWNLOAD_SIZE_MB: z.coerce.number().default(25),
+  DEDUP_SIMILARITY_THRESHOLD: z.coerce.number().default(0.25),
+  PROXY_LIST: z.string().optional(),
+  OPENROUTER_API_KEY: z.string().optional(),
+  OPENROUTER_MODEL: z.string().default('nvidia/nemotron-3-super-120b-a12b:free'),
+  OPENROUTER_BASE_URL: z.string().default('https://openrouter.ai/api/v1'),
 });
 
 const parsed = envSchema.safeParse(process.env);

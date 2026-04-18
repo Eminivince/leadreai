@@ -48,7 +48,7 @@ export function Sidebar() {
     <aside className="flex w-64 shrink-0 flex-col border-r border-border/50 bg-card">
       {/* Logo */}
       <div className="flex h-16 items-center border-b border-border/50 px-6">
-        <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-lg font-bold text-transparent">
+        <span className="text-lg font-bold tracking-tight text-foreground">
           LeadreAI
         </span>
       </div>
@@ -67,7 +67,7 @@ export function Sidebar() {
               className={cn(
                 'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                 isActive
-                  ? 'border-l-2 border-indigo-500 bg-indigo-600/15 pl-[10px] text-indigo-400'
+                  ? 'border-l-2 border-foreground bg-muted pl-[10px] text-foreground'
                   : 'text-muted-foreground hover:bg-secondary/60 hover:text-foreground'
               )}
             >

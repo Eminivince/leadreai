@@ -45,9 +45,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      {/* Ambient glow */}
-      <div className="pointer-events-none absolute left-1/2 top-1/4 h-96 w-96 -translate-x-1/2 rounded-full bg-indigo-600/10 blur-[100px]" />
+    <div className="relative flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="pointer-events-none absolute left-1/2 top-1/4 h-96 w-96 -translate-x-1/2 rounded-full bg-white/[0.06] blur-[100px]" />
 
       <motion.div
         initial={{ opacity: 0, scale: 0.97, y: 8 }}
@@ -56,9 +55,7 @@ export default function LoginPage() {
         className="relative w-full max-w-md rounded-2xl border border-border/60 bg-card p-8 shadow-2xl"
       >
         <div className="mb-8 text-center">
-          <span className="mb-2 block bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-2xl font-bold text-transparent">
-            LeadreAI
-          </span>
+          <span className="mb-2 block text-2xl font-bold tracking-tight text-foreground">LeadreAI</span>
           <h1 className="text-xl font-semibold text-foreground">Welcome back</h1>
           <p className="mt-1 text-sm text-muted-foreground">Sign in to your account</p>
         </div>
@@ -97,7 +94,7 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-indigo-400 hover:text-indigo-300 hover:underline">
+          <Link href="/register" className="font-medium text-foreground underline-offset-4 hover:underline">
             Create one
           </Link>
         </p>

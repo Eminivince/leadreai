@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import { WORKSPACE_ROLES } from '@leadreai/shared';
+import { WORKSPACE_ROLES, KNOWLEDGE_BASE_ENTRY_TYPES, KnowledgeBaseEntryType } from '@leadreai/shared';
 
 export interface IWorkspace extends mongoose.Document {
   name: string;
@@ -13,8 +13,17 @@ export interface IWorkspace extends mongoose.Document {
   settings: {
     defaultExportFormat: 'csv' | 'xlsx';
     notifyOnJobComplete: boolean;
+    cheapMode: boolean;
     webhookUrl?: string;
   };
+  knowledgeBase: Array<{
+    _id: mongoose.Types.ObjectId;
+    title: string;
+    content: string;
+    type: KnowledgeBaseEntryType;
+    createdAt: Date;
+    updatedAt: Date;
+  }>;
   usageStats: {
     totalJobsRun: number;
     totalLeadsFound: number;
@@ -41,8 +50,22 @@ const workspaceSchema = new Schema<IWorkspace>(
     settings: {
       defaultExportFormat: { type: String, enum: ['csv', 'xlsx'], default: 'csv' },
       notifyOnJobComplete: { type: Boolean, default: true },
+      cheapMode: { type: Boolean, default: false },
       webhookUrl: { type: String },
     },
+    knowledgeBase: [
+      {
+        title: { type: String, required: true, trim: true, maxlength: 200 },
+        content: { type: String, required: true, maxlength: 2000 },
+        type: {
+          type: String,
+          enum: KNOWLEDGE_BASE_ENTRY_TYPES,
+          default: 'other',
+        },
+        createdAt: { type: Date, default: Date.now },
+        updatedAt: { type: Date, default: Date.now },
+      },
+    ],
     usageStats: {
       totalJobsRun: { type: Number, default: 0 },
       totalLeadsFound: { type: Number, default: 0 },

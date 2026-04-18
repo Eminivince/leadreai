@@ -1,7 +1,13 @@
+import { createRequire } from 'module';
 import axios from 'axios';
 import axiosRetry from 'axios-retry';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
+
+// pdf-parse is CJS — use createRequire so we get the function directly
+const _require = createRequire(import.meta.url);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const pdfParseFn = _require('pdf-parse') as (buf: Buffer) => Promise<{ text: string }>;
 
 export interface ExtractedFileData {
   url: string;
@@ -58,11 +64,7 @@ async function extractFile(url: string): Promise<ExtractedFileData | null> {
 }
 
 async function extractPdf(url: string, buffer: Buffer): Promise<ExtractedFileData> {
-  const pdfParse = await import('pdf-parse');
-  // pdf-parse v2 ESM exports the function directly (no .default wrapper)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const parseFn = (pdfParse as any).default ?? pdfParse;
-  const result = await (parseFn as (buf: Buffer) => Promise<{ text: string }>)(buffer);
+  const result = await pdfParseFn(buffer);
   const text = result.text;
   const emails: string[] = [...new Set<string>(text.match(EMAIL_REGEX) ?? [])];
   const phones: string[] = [...new Set<string>(text.match(PHONE_REGEX) ?? [])];

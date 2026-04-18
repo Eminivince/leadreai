@@ -20,34 +20,54 @@ export interface PageScrapedData {
   pageText: string;        // first 2000 chars of visible text (for fallback extraction)
 }
 
+const MAX_PAGES = 25;
+const PAGE_DELAY_MS = 300;
+const SCRAPER_TIMEOUT_MS = 90_000;
+
 export async function runPageScraper(
   serpResults: SerpResult[],
   publisher: Redis,
   jobId: string
 ): Promise<PageScrapedData[]> {
-  // Skip file URLs — those go to fileExtractor
-  const pageUrls = serpResults.filter(
-    r => !r.isFilePath && !SKIP_DOMAINS.some(d => r.url.includes(d))
-  );
+  // Skip file URLs and social/search domains; cap at MAX_PAGES
+  const pageUrls = serpResults
+    .filter(r => !r.isFilePath && !SKIP_DOMAINS.some(d => r.url.includes(d)))
+    .slice(0, MAX_PAGES);
   const fileUrls = serpResults.filter(r => r.isFilePath).map(r => r.url);
+
+  logger.info('pageScraper: launching browser', { jobId, pagesToScrape: pageUrls.length });
 
   const browser = await chromium.launch({ headless: env.PLAYWRIGHT_HEADLESS });
   const results: PageScrapedData[] = [];
   const semaphore = new Semaphore(env.PLAYWRIGHT_CONCURRENCY);
 
   try {
-    await Promise.all(
+    const scrapeAll = Promise.all(
       pageUrls.map(serpResult =>
         semaphore
           .run(() => scrapePage(browser, serpResult.url, fileUrls))
           .then(data => {
-            if (data) results.push(data);
+            if (data) {
+              results.push(data);
+              logger.info('pageScraper: page scraped', {
+                jobId, url: serpResult.url, emails: data.emails.length, phones: data.phones.length,
+              });
+            }
           })
           .catch(err =>
-            logger.warn('Page scrape failed', { url: serpResult.url, err })
+            logger.warn('pageScraper: page failed', { jobId, url: serpResult.url, err: err instanceof Error ? err.message : String(err) })
           )
       )
     );
+
+    await Promise.race([
+      scrapeAll,
+      new Promise<void>((_, reject) =>
+        setTimeout(() => reject(new Error(`pageScraper timeout after ${SCRAPER_TIMEOUT_MS}ms`)), SCRAPER_TIMEOUT_MS)
+      ),
+    ]);
+  } catch (err) {
+    logger.warn('pageScraper: finishing early', { jobId, reason: err instanceof Error ? err.message : String(err), collected: results.length });
   } finally {
     await browser.close();
   }
@@ -146,7 +166,7 @@ async function scrapePage(
     });
 
     // Small rate-limit delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, PAGE_DELAY_MS));
 
     return {
       url,

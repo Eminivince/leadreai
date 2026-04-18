@@ -1,4 +1,5 @@
 import { PLAN_TIERS, WORKSPACE_ROLES } from '../utils/constants.js';
+import type { KnowledgeBaseEntry } from './campaign.js';
 
 export type PlanTier = (typeof PLAN_TIERS)[number];
 export type WorkspaceRole = (typeof WORKSPACE_ROLES)[number];
@@ -27,6 +28,7 @@ export interface User {
 export interface WorkspaceSettings {
   defaultExportFormat: 'csv' | 'xlsx';
   notifyOnJobComplete: boolean;
+  cheapMode: boolean;
   webhookUrl?: string;
 }
 
@@ -50,6 +52,7 @@ export interface Workspace {
   ownerId: string;
   members: WorkspaceMemberDetail[];
   settings: WorkspaceSettings;
+  knowledgeBase: KnowledgeBaseEntry[];
   usageStats: WorkspaceUsageStats;
   createdAt: string;
   updatedAt: string;

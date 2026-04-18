@@ -6,12 +6,14 @@ import { env } from './config/env.js';
 import { runIntentParser } from './pipeline/intentParser.js';
 
 async function connectDB(): Promise<void> {
-  await mongoose.connect(env.MONGODB_URI);
+  await mongoose.connect(env.MONGODB_URI, { dbName: env.MONGODB_DB_NAME });
   logger.info('Worker MongoDB connected');
 }
 
 export async function createProspectingWorker(connection: Redis, publisher: Redis): Promise<Worker> {
   await connectDB();
+
+  const prefix = `{bull}:leadreai:${env.NODE_ENV}`;
 
   const worker = new Worker(
     'prospecting',
@@ -48,6 +50,7 @@ export async function createProspectingWorker(connection: Redis, publisher: Redi
     },
     {
       connection,
+      prefix,
       concurrency: env.WORKER_CONCURRENCY,
     }
   );

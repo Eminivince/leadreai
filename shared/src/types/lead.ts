@@ -1,4 +1,5 @@
 import { OUTREACH_STATUSES, LEAD_EMAIL_TYPES, PHONE_TYPES, SOURCE_TYPES } from '../utils/constants.js';
+import type { QualificationStatus } from '../utils/constants.js';
 
 export type OutreachStatus = (typeof OUTREACH_STATUSES)[number];
 export type LeadEmailType = (typeof LEAD_EMAIL_TYPES)[number];
@@ -104,6 +105,9 @@ export interface Lead {
   isDuplicate: boolean;
   mergedIntoId?: string;
   outreachStatus: OutreachStatus;
+  qualificationStatus: QualificationStatus;
+  qualificationScore?: number;
+  qualificationReason?: string;
   tags: string[];
   notes?: string;
   createdAt: string;

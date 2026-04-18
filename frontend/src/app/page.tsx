@@ -1,10 +1,12 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Zap, Brain, Download, ArrowRight, Sparkles, Users, Target } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ArrowRight, Brain, ChevronDown, Download, LogIn, Sparkles, UserPlus, Zap } from 'lucide-react';
+import { CinematicFooter, MagneticButton } from '@/components/ui/motion-footer';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 const fadeUp = {
@@ -43,190 +45,212 @@ const stats = [
   { value: '98%', label: 'Data Accuracy' },
 ];
 
+/** Unsplash — stable editorial image */
+const HERO_IMAGE =
+  'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1920&q=80';
+
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
+    <div className="relative w-full overflow-x-hidden bg-background font-sans text-foreground selection:bg-muted selection:text-foreground">
+      <header className="sticky top-0 z-[60] border-b border-border/50 bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-xl font-bold text-transparent">
+          <Link href="/" className="text-xl font-bold tracking-tight text-foreground">
             LeadreAI
-          </span>
-          <nav className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/login">Sign in</Link>
-            </Button>
-            <Button size="sm" asChild>
-              <Link href="/register">Get Started</Link>
-            </Button>
+          </Link>
+          <nav className="flex items-center gap-2 sm:gap-3">
+            <MagneticButton
+              as={Link}
+              href="/login"
+              className="footer-glass-pill group inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-foreground sm:px-5 sm:py-2.5"
+            >
+              <LogIn className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground sm:h-[18px] sm:w-[18px]" />
+              Sign in
+            </MagneticButton>
+            <MagneticButton
+              as={Link}
+              href="/register"
+              className="group inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_rgba(0,0,0,0.45)] transition-colors hover:bg-primary/90 sm:px-5 sm:py-2.5"
+            >
+              <UserPlus className="h-4 w-4 shrink-0 opacity-90 transition-opacity group-hover:opacity-100 sm:h-[18px] sm:w-[18px]" />
+              Get Started
+            </MagneticButton>
           </nav>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden px-6 py-32">
-        {/* Background effects */}
-        <div className="absolute inset-0 dot-grid opacity-40" />
-        <div className="absolute left-1/2 top-0 h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-indigo-600/10 blur-[120px]" />
+      <main className="relative z-10 min-h-[125vh] w-full rounded-b-3xl border-b border-border/60 bg-background shadow-[0_32px_120px_-24px_rgba(0,0,0,0.55)]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_center,hsl(0_0%_100%_/_0.04)_0%,transparent_55%)]" />
 
-        <div className="relative mx-auto max-w-4xl text-center">
-          <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible">
-            <Badge variant="indigo" className="mb-6 gap-1.5 px-3 py-1 text-xs">
-              <Sparkles size={12} />
-              AI-Powered Lead Generation
-            </Badge>
-          </motion.div>
+        <section className="relative min-h-[85vh] overflow-hidden px-6 py-28 md:py-32">
+          <Image
+            src={HERO_IMAGE}
+            alt="Team collaborating around laptops in a modern office"
+            fill
+            priority
+            className="object-cover opacity-[0.12]"
+            sizes="100vw"
+          />
+          <div className="absolute inset-0 dot-grid opacity-50" />
+          <div className="absolute left-1/2 top-0 h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-white/[0.06] blur-[120px]" />
 
-          <motion.h1
-            custom={1}
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            className="mb-6 text-5xl font-extrabold leading-tight tracking-tight sm:text-6xl lg:text-7xl"
-          >
-            Find Your Next{' '}
-            <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Customer
-            </span>{' '}
-            with Natural Language
-          </motion.h1>
+          <div className="relative mx-auto max-w-4xl text-center">
+            <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible">
+              <Badge variant="outline" className="mb-6 gap-1.5 px-3 py-1 text-xs">
+                <Sparkles size={12} />
+                AI-Powered Lead Generation
+              </Badge>
+            </motion.div>
 
-          <motion.p
-            custom={2}
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            className="mb-10 text-lg text-muted-foreground sm:text-xl"
-          >
-            Describe your ideal prospect in plain English. LeadreAI uses AI to find, enrich, and
-            deliver verified B2B leads — in minutes, not days.
-          </motion.p>
+            <motion.h1
+              custom={1}
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="mb-6 text-5xl font-extrabold leading-tight tracking-tight sm:text-6xl lg:text-7xl"
+            >
+              Find Your Next{' '}
+              <span className="text-foreground underline decoration-white/25 decoration-2 underline-offset-8">
+                Customer
+              </span>{' '}
+              with Natural Language
+            </motion.h1>
 
-          <motion.div
-            custom={3}
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center"
-          >
-            <Button size="lg" className="gap-2 px-8" asChild>
-              <Link href="/register">
-                Start for free <ArrowRight size={16} />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link href="/login">See how it works</Link>
-            </Button>
-          </motion.div>
-        </div>
-      </section>
+            <motion.p
+              custom={2}
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="mb-10 text-lg text-muted-foreground sm:text-xl"
+            >
+              Describe your ideal prospect in plain English. LeadreAI uses AI to find, enrich, and
+              deliver verified B2B leads — in minutes, not days.
+            </motion.p>
 
-      {/* Stats bar */}
-      <section className="border-y border-border/50 bg-card/30 px-6 py-12">
-        <div className="mx-auto max-w-4xl">
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
-            {stats.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                custom={i}
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                className="text-center"
+            <motion.div
+              custom={3}
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center"
+            >
+              <MagneticButton
+                as={Link}
+                href="/register"
+                className="group flex items-center gap-3 rounded-full bg-primary px-10 py-5 text-sm font-bold text-primary-foreground shadow-[0_12px_40px_-12px_rgba(0,0,0,0.5)] transition-colors hover:bg-primary/90 md:text-base"
               >
-                <div className="text-4xl font-extrabold text-foreground">{stat.value}</div>
-                <div className="mt-1 text-sm text-muted-foreground">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="px-6 py-24">
-        <div className="mx-auto max-w-6xl">
-          <motion.div
-            variants={fadeUp}
-            custom={0}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="mb-16 text-center"
-          >
-            <h2 className="mb-4 text-3xl font-bold sm:text-4xl">Everything you need to close deals</h2>
-            <p className="text-muted-foreground">
-              From query to qualified lead in minutes — powered by Claude AI.
-            </p>
-          </motion.div>
-
-          <div className="grid gap-6 sm:grid-cols-3">
-            {features.map((feature, i) => (
-              <motion.div
-                key={feature.title}
-                custom={i}
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
+                <UserPlus className="h-6 w-6 opacity-80 transition-opacity group-hover:opacity-100" />
+                Start for free
+                <ArrowRight className="h-5 w-5 opacity-80 transition-opacity group-hover:opacity-100" />
+              </MagneticButton>
+              <MagneticButton
+                as={Link}
+                href="/login"
+                className="footer-glass-pill group flex items-center gap-3 rounded-full px-10 py-5 text-sm font-bold text-foreground md:text-base"
               >
-                <Card className="h-full border-border/60 bg-card/60 transition-colors hover:border-indigo-500/40 hover:bg-card">
-                  <CardContent className="p-6">
-                    <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600/20">
-                      <feature.icon size={20} className="text-indigo-400" />
-                    </div>
-                    <h3 className="mb-2 font-semibold text-foreground">{feature.title}</h3>
-                    <p className="text-sm leading-relaxed text-muted-foreground">
-                      {feature.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                <LogIn className="h-6 w-6 text-muted-foreground transition-colors group-hover:text-foreground" />
+                See how it works
+              </MagneticButton>
+            </motion.div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* CTA Banner */}
-      <section className="px-6 pb-24">
-        <div className="mx-auto max-w-3xl">
-          <motion.div
-            variants={fadeUp}
-            custom={0}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="relative overflow-hidden rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-600/20 via-purple-600/10 to-background p-12 text-center"
-          >
-            <div className="absolute inset-0 dot-grid opacity-20" />
-            <div className="relative">
-              <h2 className="mb-4 text-3xl font-bold">Ready to fill your pipeline?</h2>
-              <p className="mb-8 text-muted-foreground">
-                Join hundreds of sales teams using AI to find their next customers.
-              </p>
-              <Button size="lg" className="gap-2 px-10" asChild>
-                <Link href="/register">
-                  Start for free <ArrowRight size={16} />
-                </Link>
-              </Button>
+        <section className="border-y border-border/50 bg-card/30 px-6 py-12">
+          <div className="mx-auto max-w-4xl">
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
+              {stats.map((stat, i) => (
+                <motion.div
+                  key={stat.label}
+                  custom={i}
+                  variants={fadeUp}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  className="text-center"
+                >
+                  <div className="text-4xl font-extrabold text-foreground">{stat.value}</div>
+                  <div className="mt-1 text-sm text-muted-foreground">{stat.label}</div>
+                </motion.div>
+              ))}
             </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-border/50 px-6 py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
-          <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text font-bold text-transparent">
-            LeadreAI
-          </span>
-          <span>© {new Date().getFullYear()} LeadreAI. All rights reserved.</span>
-          <div className="flex gap-4">
-            <Link href="/login" className="hover:text-foreground transition-colors">Sign in</Link>
-            <Link href="/register" className="hover:text-foreground transition-colors">Register</Link>
           </div>
+        </section>
+
+        <section className="px-6 py-24">
+          <div className="mx-auto max-w-6xl">
+            <motion.div
+              variants={fadeUp}
+              custom={0}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="mb-16 text-center"
+            >
+              <h2 className="mb-4 text-3xl font-bold sm:text-4xl">Everything you need to close deals</h2>
+              <p className="text-muted-foreground">
+                From query to qualified lead in minutes — powered by Claude AI.
+              </p>
+            </motion.div>
+
+            <div className="grid gap-6 sm:grid-cols-3">
+              {features.map((feature, i) => (
+                <motion.div
+                  key={feature.title}
+                  custom={i}
+                  variants={fadeUp}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                >
+                  <Card className="h-full border-border/60 bg-card/60 transition-colors hover:border-foreground/20 hover:bg-card">
+                    <CardContent className="p-6">
+                      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                        <feature.icon size={20} className="text-foreground" />
+                      </div>
+                      <h3 className="mb-2 font-semibold text-foreground">{feature.title}</h3>
+                      <p className="text-sm leading-relaxed text-muted-foreground">
+                        {feature.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="px-6 pb-16 pt-4">
+          <div className="mx-auto max-w-3xl">
+            <motion.div
+              variants={fadeUp}
+              custom={0}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-muted/50 via-background to-background p-12 text-center"
+            >
+              <div className="absolute inset-0 dot-grid opacity-20" />
+              <div className="relative">
+                <h2 className="mb-4 text-3xl font-bold">Ready to fill your pipeline?</h2>
+                <p className="mb-8 text-muted-foreground">
+                  Join hundreds of sales teams using AI to find their next customers.
+                </p>
+                <Button size="lg" className="gap-2 px-10" asChild>
+                  <Link href="/register">
+                    Start for free <ArrowRight size={16} />
+                  </Link>
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        <div className="flex flex-col items-center justify-end pb-10 pt-4 text-muted-foreground">
+          <p className="mb-3 text-xs font-medium uppercase tracking-[0.35em]">Scroll to reveal</p>
+          <ChevronDown className="h-6 w-6 animate-bounce opacity-70" aria-hidden />
         </div>
-      </footer>
+      </main>
+
+      <CinematicFooter />
     </div>
   );
 }

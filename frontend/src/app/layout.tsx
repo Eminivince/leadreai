@@ -22,9 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             theme="dark"
             toastOptions={{
               style: {
-                background: 'hsl(222 47% 14%)',
-                border: '1px solid hsl(216 34% 22%)',
-                color: 'hsl(213 31% 91%)',
+                background: 'hsl(0 0% 9%)',
+                border: '1px solid hsl(0 0% 18%)',
+                color: 'hsl(0 0% 98%)',
               },
             }}
           />

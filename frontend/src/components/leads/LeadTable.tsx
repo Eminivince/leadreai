@@ -29,6 +29,9 @@ export interface Lead {
   completenessScore: number;
   isDuplicate: boolean;
   outreachStatus: string;
+  qualificationStatus?: 'pending' | 'qualified' | 'dust';
+  qualificationScore?: number;
+  qualificationReason?: string;
   tags: string[];
   notes?: string;
   createdAt: string;
@@ -37,9 +40,18 @@ export interface Lead {
 interface LeadTableProps {
   leads: Lead[];
   isLoading?: boolean;
+  showQualificationScore?: boolean;
+  onPromote?: (lead: Lead) => void;
+  promotingIds?: Set<string>;
 }
 
-export function LeadTable({ leads, isLoading }: LeadTableProps) {
+export function LeadTable({
+  leads,
+  isLoading,
+  showQualificationScore,
+  onPromote,
+  promotingIds,
+}: LeadTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
@@ -51,7 +63,7 @@ export function LeadTable({ leads, isLoading }: LeadTableProps) {
         cell: ({ row }) => (
           <button
             onClick={() => setSelectedLead(row.original)}
-            className="text-left font-medium text-foreground hover:text-indigo-400 transition-colors"
+            className="text-left font-medium text-foreground transition-colors hover:text-muted-foreground"
           >
             {row.original.companyName}
             {row.original.companyDomain && (
@@ -87,7 +99,7 @@ export function LeadTable({ leads, isLoading }: LeadTableProps) {
         cell: ({ row }) => (
           <span className="text-sm">
             {row.original.emails.length > 0 ? (
-              <span className="text-emerald-400">
+              <span className="text-foreground">
                 {row.original.emails.length} email{row.original.emails.length > 1 ? 's' : ''}
               </span>
             ) : (
@@ -102,7 +114,7 @@ export function LeadTable({ leads, isLoading }: LeadTableProps) {
         cell: ({ row }) => (
           <span className="text-sm">
             {row.original.phones.length > 0 ? (
-              <span className="text-blue-400">
+              <span className="text-foreground">
                 {row.original.phones.length} phone{row.original.phones.length > 1 ? 's' : ''}
               </span>
             ) : (
@@ -118,10 +130,10 @@ export function LeadTable({ leads, isLoading }: LeadTableProps) {
           const score = getValue<number>();
           const color =
             score >= 70
-              ? 'text-emerald-400'
+              ? 'text-foreground'
               : score >= 40
-              ? 'text-yellow-400'
-              : 'text-muted-foreground';
+              ? 'text-muted-foreground'
+              : 'text-muted-foreground/70';
           return <span className={`text-sm font-semibold ${color}`}>{score}</span>;
         },
       },
@@ -134,8 +146,58 @@ export function LeadTable({ leads, isLoading }: LeadTableProps) {
           </Badge>
         ),
       },
+      ...(showQualificationScore
+        ? ([
+            {
+              id: 'qualificationScore',
+              header: 'AI Score',
+              cell: ({ row }) => {
+                const score = row.original.qualificationScore;
+                const reason = row.original.qualificationReason;
+                if (score == null) return <span className="text-muted-foreground text-sm">—</span>;
+                return (
+                  <span
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-foreground"
+                    title={reason ?? undefined}
+                  >
+                    {Math.round(score)}%
+                    {reason && (
+                      <span
+                        className="inline-flex h-4 w-4 cursor-default items-center justify-center rounded-full bg-muted text-[10px] text-muted-foreground"
+                        title={reason}
+                      >
+                        ?
+                      </span>
+                    )}
+                  </span>
+                );
+              },
+            },
+          ] as ColumnDef<Lead>[])
+        : []),
+      ...(onPromote
+        ? ([
+            {
+              id: 'promote',
+              header: '',
+              cell: ({ row }) => {
+                const lead = row.original;
+                const isPending = promotingIds?.has(lead._id) ?? false;
+                return (
+                  <button
+                    disabled={isPending}
+                    onClick={() => onPromote(lead)}
+                    className="rounded border border-border bg-secondary px-2.5 py-1 text-xs font-medium text-foreground hover:bg-secondary/70 disabled:opacity-50 transition-colors"
+                  >
+                    {isPending ? 'Promoting…' : 'Promote'}
+                  </button>
+                );
+              },
+            },
+          ] as ColumnDef<Lead>[])
+        : []),
     ],
-    []
+    [showQualificationScore, onPromote, promotingIds]
   );
 
   const table = useReactTable({

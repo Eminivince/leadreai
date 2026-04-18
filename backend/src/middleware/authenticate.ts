@@ -17,12 +17,15 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
   try {
     const authHeader = req.headers.authorization;
     const cookieToken = req.cookies?.access_token as string | undefined;
+    const queryToken = typeof req.query.token === 'string' ? req.query.token : undefined;
 
     let token: string | undefined;
     if (authHeader?.startsWith('Bearer ')) {
       token = authHeader.slice(7);
     } else if (cookieToken) {
       token = cookieToken;
+    } else if (queryToken) {
+      token = queryToken;
     }
 
     if (!token) {

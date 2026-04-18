@@ -66,7 +66,7 @@ export function LeadDetailDrawer({ lead, onClose }: LeadDetailDrawerProps) {
                   href={lead.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-indigo-400 hover:underline"
+                  className="flex items-center gap-1.5 text-foreground underline-offset-4 hover:underline"
                 >
                   <Globe size={13} /> {lead.website}
                 </a>
@@ -76,7 +76,7 @@ export function LeadDetailDrawer({ lead, onClose }: LeadDetailDrawerProps) {
                   href={lead.socialProfiles.linkedinUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-indigo-400 hover:underline"
+                  className="flex items-center gap-1.5 text-foreground underline-offset-4 hover:underline"
                 >
                   <Linkedin size={13} /> LinkedIn
                 </a>

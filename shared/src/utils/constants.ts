@@ -49,3 +49,15 @@ export const DESIRED_FIELDS = [
   'address', 'website', 'linkedin', 'whois', 'techStack',
 ] as const;
 export type DesiredField = typeof DESIRED_FIELDS[number];
+
+export const QUALIFICATION_STATUSES = ['pending', 'qualified', 'dust'] as const;
+export type QualificationStatus = typeof QUALIFICATION_STATUSES[number];
+
+export const KNOWLEDGE_BASE_ENTRY_TYPES = [
+  'about_company',
+  'value_proposition',
+  'target_customer',
+  'tone_guidelines',
+  'other',
+] as const;
+export type KnowledgeBaseEntryType = typeof KNOWLEDGE_BASE_ENTRY_TYPES[number];

@@ -8,9 +8,10 @@ import { Loader2, Sparkles } from 'lucide-react';
 interface QueryInputProps {
   onSubmit: (rawQuery: string) => void;
   isSubmitting?: boolean;
+  error?: string | null;
 }
 
-export function QueryInput({ onSubmit, isSubmitting = false }: QueryInputProps) {
+export function QueryInput({ onSubmit, isSubmitting = false, error: externalError }: QueryInputProps) {
   const [query, setQuery] = useState('');
   const error = query.length > 0 && query.length < 10 ? 'Query must be at least 10 characters' : null;
   const canSubmit = query.length >= 10 && query.length <= 500 && !isSubmitting;
@@ -33,7 +34,7 @@ export function QueryInput({ onSubmit, isSubmitting = false }: QueryInputProps) 
           maxLength={500}
           className={cn(
             'w-full resize-none rounded-lg border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground',
-            'focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50',
+            'focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-foreground/30',
             'transition-colors',
             error ? 'border-red-500/50' : 'border-border'
           )}
@@ -43,13 +44,14 @@ export function QueryInput({ onSubmit, isSubmitting = false }: QueryInputProps) 
         </div>
       </div>
       {error && <p className="text-xs text-red-400">{error}</p>}
+      {externalError && <p className="text-xs text-red-400">{externalError}</p>}
       <Button
         type="submit"
         disabled={!canSubmit}
-        className="gap-2 bg-indigo-600 hover:bg-indigo-500 text-white"
+        className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
       >
         {isSubmitting ? (
-          <><Loader2 size={14} className="animate-spin" /> Analysing query...</>
+          <><Loader2 size={14} className="animate-spin" /> {query.length === 0 ? 'Loading…' : 'Analysing query…'}</>
         ) : (
           <><Sparkles size={14} /> Find Leads</>
         )}

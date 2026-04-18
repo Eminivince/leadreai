@@ -33,9 +33,10 @@ const statCards = [
 ];
 
 export default function DashboardPage() {
-  const { workspaceId } = useWorkspace();
+  const { workspaceId, isLoading: workspaceLoading } = useWorkspace();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const { data: jobsData } = useQuery({
     queryKey: ['jobs', workspaceId],
@@ -51,6 +52,7 @@ export default function DashboardPage() {
   async function handleSubmit(rawQuery: string) {
     if (!workspaceId) return;
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
       await apiFetch(`/api/v1/workspaces/${workspaceId}/jobs`, {
         method: 'POST',
@@ -58,7 +60,7 @@ export default function DashboardPage() {
       });
       await queryClient.invalidateQueries({ queryKey: ['jobs', workspaceId] });
     } catch (err) {
-      console.error('Failed to create job', err);
+      setSubmitError(err instanceof Error ? err.message : 'Failed to create job. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -79,7 +81,11 @@ export default function DashboardPage() {
           <CardTitle className="text-sm font-semibold">New Prospecting Query</CardTitle>
         </CardHeader>
         <CardContent>
-          <QueryInput onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+          <QueryInput
+            onSubmit={handleSubmit}
+            isSubmitting={isSubmitting || workspaceLoading}
+            error={submitError}
+          />
         </CardContent>
       </Card>
 
@@ -89,8 +95,8 @@ export default function DashboardPage() {
           <Card key={title}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-indigo-600/15">
-                <Icon size={16} className="text-indigo-400" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted">
+                <Icon size={16} className="text-foreground" />
               </div>
             </CardHeader>
             <CardContent>
@@ -116,7 +122,11 @@ export default function DashboardPage() {
         ) : (
           <div className="space-y-3">
             {jobs.map((job) => (
-              <JobCard key={job._id} job={job} />
+              <JobCard
+                key={job._id}
+                job={job}
+                onRefresh={() => queryClient.invalidateQueries({ queryKey: ['jobs', workspaceId] })}
+              />
             ))}
           </div>
         )}

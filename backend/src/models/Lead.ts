@@ -4,6 +4,8 @@ import {
   PHONE_TYPES,
   OUTREACH_STATUSES,
   SOURCE_TYPES,
+  QUALIFICATION_STATUSES,
+  QualificationStatus,
 } from '@leadreai/shared';
 
 export interface ILead extends mongoose.Document {
@@ -59,6 +61,9 @@ export interface ILead extends mongoose.Document {
   isDuplicate: boolean;
   mergedIntoId?: mongoose.Types.ObjectId;
   outreachStatus: (typeof OUTREACH_STATUSES)[number];
+  qualificationStatus: QualificationStatus;
+  qualificationScore?: number;
+  qualificationReason?: string;
   tags: string[];
   notes?: string;
   createdAt: Date;
@@ -125,6 +130,9 @@ const leadSchema = new Schema<ILead>(
     isDuplicate: { type: Boolean, default: false },
     mergedIntoId: { type: Schema.Types.ObjectId, ref: 'Lead' },
     outreachStatus: { type: String, enum: OUTREACH_STATUSES, default: 'not_contacted' },
+    qualificationStatus: { type: String, enum: QUALIFICATION_STATUSES, default: 'pending' },
+    qualificationScore: { type: Number, min: 0, max: 1 },
+    qualificationReason: { type: String },
     tags: { type: [String], default: [] },
     notes: { type: String, maxlength: 5000 },
   },
@@ -140,5 +148,6 @@ leadSchema.index({ 'address.country': 1 });
 leadSchema.index({ companyName: 'text', description: 'text' });
 leadSchema.index({ workspaceId: 1, companyDomain: 1 }, { unique: true, sparse: true });
 leadSchema.index({ workspaceId: 1, isDuplicate: 1, rankScore: -1 });
+leadSchema.index({ workspaceId: 1, qualificationStatus: 1 });
 
 export default mongoose.model<ILead>('Lead', leadSchema);

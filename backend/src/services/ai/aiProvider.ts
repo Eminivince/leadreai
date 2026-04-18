@@ -7,7 +7,7 @@ export interface AiMessage {
 
 export interface AiResponse {
   text: string;
-  provider: 'anthropic' | 'google';
+  provider: 'anthropic' | 'google' | 'openrouter';
   inputTokens?: number;
   outputTokens?: number;
 }
@@ -101,13 +101,64 @@ async function generateWithGoogle(
   };
 }
 
+async function generateWithOpenRouter(
+  messages: AiMessage[],
+  options: GenerateOptions,
+): Promise<AiResponse> {
+  if (!env.OPENROUTER_API_KEY) {
+    throw new Error('OPENROUTER_API_KEY is not set');
+  }
+
+  const body = {
+    model: env.OPENROUTER_MODEL,
+    max_tokens: options.maxTokens ?? env.ANTHROPIC_MAX_TOKENS,
+    messages: [
+      ...(options.systemPrompt ? [{ role: 'system', content: options.systemPrompt }] : []),
+      ...messages.map((m) => ({ role: m.role, content: m.content })),
+    ],
+  };
+
+  const res = await fetch(`${env.OPENROUTER_BASE_URL}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${env.OPENROUTER_API_KEY}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://leadreai.app',
+      'X-Title': 'LeadreAI',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`OpenRouter error ${res.status}: ${detail}`);
+  }
+
+  const data = await res.json() as {
+    choices: Array<{ message: { content: string } }>;
+    usage?: { prompt_tokens?: number; completion_tokens?: number };
+  };
+
+  const text = data.choices[0]?.message.content ?? '';
+  return {
+    text,
+    provider: 'openrouter',
+    inputTokens: data.usage?.prompt_tokens,
+    outputTokens: data.usage?.completion_tokens,
+  };
+}
+
 /**
- * Unified AI text generation. Routes to Anthropic or Google based on USE_GOOGLE env flag.
+ * Unified AI text generation.
+ * Priority: USE_OPENROUTER → USE_GOOGLE → Anthropic (default)
  */
 export async function generateText(
   messages: AiMessage[],
   options: GenerateOptions = {},
 ): Promise<AiResponse> {
+  if (env.USE_OPENROUTER) {
+    return generateWithOpenRouter(messages, options);
+  }
   if (env.USE_GOOGLE) {
     return generateWithGoogle(messages, options);
   }
