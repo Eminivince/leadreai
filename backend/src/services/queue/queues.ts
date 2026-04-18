@@ -15,6 +15,7 @@ let _prospectingQueue: Queue | null = null;
 let _enrichmentQueue: Queue | null = null;
 let _outreachQueue: Queue | null = null;
 let _exportQueue: Queue | null = null;
+let _contactEnrichmentQueue: Queue | null = null;
 
 export function getProspectingQueue(): Queue {
   if (!_prospectingQueue) {
@@ -58,4 +59,15 @@ export function getExportQueue(): Queue {
     });
   }
   return _exportQueue;
+}
+
+export function getContactEnrichmentQueue(): Queue {
+  if (!_contactEnrichmentQueue) {
+    _contactEnrichmentQueue = new Queue('contact-enrichment', {
+      connection: getRedis(),
+      prefix: QUEUE_PREFIX,
+      defaultJobOptions,
+    });
+  }
+  return _contactEnrichmentQueue;
 }
