@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import { Redis } from 'ioredis';
 import { logger } from '../utils/logger.js';
+import { fireWebhook } from '../services/webhook.js';
+import { env } from '../config/env.js';
 import type { LeadRecord } from './deduplicator.js';
 
 // Inline Lead model (strict: false — picks up all fields without re-specifying)
@@ -76,6 +78,12 @@ export async function writeLeads(
     channel,
     JSON.stringify({ type: 'complete', totalLeadsFound, totalAfterDedup })
   );
+
+  // Fire webhook to workspace
+  const ws = await mongoose.model('Workspace').findById(workspaceId, { 'settings.webhookUrl': 1 }).lean() as { settings?: { webhookUrl?: string } } | null;
+  if (ws?.settings?.webhookUrl) {
+    fireWebhook(ws.settings.webhookUrl, { event: 'job:complete', jobId, workspaceId, status: 'complete', totalLeadsFound }, env.WEBHOOK_TIMEOUT_MS);
+  }
 
   logger.info('Job complete', { jobId, totalLeadsFound });
 }

@@ -3,6 +3,7 @@ import { Redis } from 'ioredis';
 import mongoose from 'mongoose';
 import { logger } from './utils/logger.js';
 import { env } from './config/env.js';
+import { fireWebhook } from './services/webhook.js';
 import { runIntentParser } from './pipeline/intentParser.js';
 
 async function connectDB(): Promise<void> {
@@ -44,6 +45,12 @@ export async function createProspectingWorker(connection: Redis, publisher: Redi
           `job:progress:${jobId}`,
           JSON.stringify({ type: 'error', message })
         );
+
+        // Fire webhook to workspace
+        const ws = await mongoose.model('Workspace').findById(workspaceId, { 'settings.webhookUrl': 1 }).lean() as { settings?: { webhookUrl?: string } } | null;
+        if (ws?.settings?.webhookUrl) {
+          fireWebhook(ws.settings.webhookUrl, { event: 'job:failed', jobId, workspaceId, status: 'failed', error: message }, env.WEBHOOK_TIMEOUT_MS);
+        }
 
         throw err; // re-throw so BullMQ marks job as failed and retries
       }
