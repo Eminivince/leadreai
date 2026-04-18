@@ -266,7 +266,13 @@ export async function pauseSequence(req: Request, res: Response): Promise<void> 
   if (sequence.status === 'archived') throw ApiError.badRequest('Cannot pause an archived sequence');
 
   await Sequence.updateOne({ _id: sequenceId }, { $set: { status: 'paused' } });
-  await SequenceEnrollment.updateMany({ sequenceId, status: 'active' }, { $set: { status: 'paused' } });
+  const pauseResult = await SequenceEnrollment.updateMany({ sequenceId, status: 'active' }, { $set: { status: 'paused' } });
+  if (pauseResult.modifiedCount > 0) {
+    await Sequence.updateOne(
+      { _id: sequenceId, 'stats.active': { $gt: 0 } },
+      { $inc: { 'stats.active': -pauseResult.modifiedCount } },
+    );
+  }
 
   res.json({ success: true });
 }
@@ -280,10 +286,13 @@ export async function resumeSequence(req: Request, res: Response): Promise<void>
   if (sequence.status === 'archived') throw ApiError.badRequest('Cannot resume an archived sequence');
 
   await Sequence.updateOne({ _id: sequenceId }, { $set: { status: 'active' } });
-  await SequenceEnrollment.updateMany(
+  const resumeResult = await SequenceEnrollment.updateMany(
     { sequenceId, status: 'paused' },
     { $set: { status: 'active', nextStepAt: new Date() } },
   );
+  if (resumeResult.modifiedCount > 0) {
+    await Sequence.updateOne({ _id: sequenceId }, { $inc: { 'stats.active': resumeResult.modifiedCount } });
+  }
 
   res.json({ success: true });
 }
