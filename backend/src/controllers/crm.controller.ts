@@ -75,7 +75,7 @@ export async function hubspotCallback(req: Request, res: Response): Promise<void
 // Returns { connected, portalId, syncEnabled, autoSyncOnJobComplete, lastSyncAt, tokenExpiresAt }
 export async function hubspotStatus(req: Request, res: Response): Promise<void> {
   const { workspaceId } = req.params;
-  const workspace = await Workspace.findById(workspaceId).select('+crmConfig.hubspot.accessToken');
+  const workspace = await Workspace.findById(workspaceId);
 
   if (!workspace?.crmConfig?.hubspot?.portalId) {
     res.json({ success: true, data: { connected: false } });
@@ -106,7 +106,7 @@ export async function hubspotDisconnect(req: Request, res: Response): Promise<vo
     req,
     workspaceId,
     action: 'crm.hubspot.disconnect',
-    resourceType: 'lead',
+    resourceType: 'workspace',
     resourceId: new mongoose.Types.ObjectId(workspaceId),
   });
   res.json({ success: true });

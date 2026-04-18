@@ -36,7 +36,6 @@ const envSchema = z.object({
   HUBSPOT_CLIENT_ID: z.string().optional(),
   HUBSPOT_CLIENT_SECRET: z.string().optional(),
   HUBSPOT_REDIRECT_URI: z.string().url().optional(),
-  ENCRYPTION_KEY: z.string().min(32).optional(),
   CREDITS_PER_JOB: z.coerce.number().int().min(0).default(0),
   WEBHOOK_TIMEOUT_MS: z.coerce.number().default(5000),
 });

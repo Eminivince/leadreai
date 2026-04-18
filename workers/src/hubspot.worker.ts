@@ -1,7 +1,7 @@
 import { Worker, type Job } from 'bullmq';
 import { Redis } from 'ioredis';
 import mongoose from 'mongoose';
-import { createDecipheriv, scryptSync } from 'crypto';
+import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
 import { logger } from './utils/logger.js';
 import { env } from './config/env.js';
 
@@ -46,6 +46,80 @@ function decrypt(ciphertext: string): string {
   const decipher = createDecipheriv('aes-256-gcm', key, Buffer.from(ivHex, 'hex'));
   decipher.setAuthTag(Buffer.from(authTagHex, 'hex'));
   return decipher.update(Buffer.from(encryptedHex, 'hex')) + decipher.final('utf8');
+}
+
+// Inlined encrypt — mirrors backend/src/utils/encrypt.ts (same key derivation)
+function encryptInline(plaintext: string): string {
+  const iv = randomBytes(16);
+  const key = getDecryptKey();
+  const cipher = createCipheriv('aes-256-gcm', key, iv);
+  const encrypted = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted.toString('hex')}`;
+}
+
+// ---------------------------------------------------------------------------
+// Token refresh helper (inlined — worker cannot import from backend)
+// ---------------------------------------------------------------------------
+async function maybeRefreshHubSpotToken(tokens: {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: Date;
+  workspaceId: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  WorkspaceModel: mongoose.Model<any>;
+}): Promise<string> {
+  const fiveMinutes = 5 * 60 * 1000;
+  if (tokens.expiresAt.getTime() - Date.now() > fiveMinutes) {
+    return tokens.accessToken; // still fresh
+  }
+
+  const clientId = process.env['HUBSPOT_CLIENT_ID'];
+  const clientSecret = process.env['HUBSPOT_CLIENT_SECRET'];
+  if (!clientId || !clientSecret) {
+    logger.warn('hubspot.worker: cannot refresh token — HUBSPOT_CLIENT_ID/SECRET not set');
+    return tokens.accessToken;
+  }
+
+  const body = new URLSearchParams({
+    grant_type: 'refresh_token',
+    client_id: clientId,
+    client_secret: clientSecret,
+    refresh_token: tokens.refreshToken,
+  });
+
+  const resp = await fetch('https://api.hubapi.com/oauth/v1/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body.toString(),
+  });
+
+  if (!resp.ok) {
+    logger.warn('hubspot.worker: token refresh failed, using existing token', { status: resp.status });
+    return tokens.accessToken;
+  }
+
+  const data = await resp.json() as {
+    access_token: string;
+    refresh_token: string;
+    expires_in: number;
+  };
+  const newExpiresAt = new Date(Date.now() + data.expires_in * 1000);
+
+  // Persist refreshed tokens back to workspace (encrypted inline)
+  await tokens.WorkspaceModel.updateOne(
+    { _id: tokens.workspaceId },
+    {
+      $set: {
+        'crmConfig.hubspot.accessToken': encryptInline(data.access_token),
+        'crmConfig.hubspot.refreshToken': encryptInline(data.refresh_token),
+        'crmConfig.hubspot.expiresAt': newExpiresAt,
+      },
+    }
+  );
+
+  logger.info('hubspot.worker: token refreshed successfully', { workspaceId: tokens.workspaceId });
+  return data.access_token;
 }
 
 // ---------------------------------------------------------------------------
@@ -205,9 +279,19 @@ async function processHubspotSync(job: Job<HubSpotSyncPayload>): Promise<void> {
   if (!hs?.accessToken) throw new Error('HubSpot not connected for this workspace');
 
   // 2. Decrypt tokens
-  const accessToken = decrypt(hs.accessToken as string);
+  const decryptedAccess = decrypt(hs.accessToken as string);
+  const decryptedRefresh = hs.refreshToken ? decrypt(hs.refreshToken as string) : '';
 
-  // 3. Load leads
+  // 3. Refresh token if near expiry
+  const accessToken = await maybeRefreshHubSpotToken({
+    accessToken: decryptedAccess,
+    refreshToken: decryptedRefresh,
+    expiresAt: hs.expiresAt ? new Date(hs.expiresAt as string) : new Date(0),
+    workspaceId,
+    WorkspaceModel: Workspace,
+  });
+
+  // 4. Load leads
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let leads: any[];
   if (leadIds && leadIds.length > 0) {
@@ -230,7 +314,7 @@ async function processHubspotSync(job: Job<HubSpotSyncPayload>): Promise<void> {
 
   for (const lead of leads) {
     try {
-      // 4. Upsert company
+      // 5. Upsert company
       const companyResult = await upsertCompany(accessToken, {
         name: lead.companyName,
         domain: lead.companyDomain,
@@ -257,7 +341,7 @@ async function processHubspotSync(job: Job<HubSpotSyncPayload>): Promise<void> {
         }
       );
 
-      // 5. Load contacts for this lead
+      // 6. Load contacts for this lead
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const contacts: any[] = await Contact.find({
         leadId: lead._id,
@@ -315,7 +399,7 @@ async function processHubspotSync(job: Job<HubSpotSyncPayload>): Promise<void> {
     }
   }
 
-  // 6. Write sync log entry
+  // 7. Write sync log entry
   await Workspace.updateOne(
     { _id: workspaceId },
     {
