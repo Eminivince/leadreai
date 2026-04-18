@@ -5,6 +5,8 @@ import { createProspectingWorker } from './prospecting.worker.js';
 import { createOutreachWorker } from './outreach.worker.js';
 import { createContactWorker } from './contact.worker.js';
 import { createHubspotWorker } from './hubspot.worker.js';
+import { createSequenceWorker } from './sequence.worker.js';
+import { startSequenceScheduler } from './sequenceScheduler.js';
 
 async function bootstrap() {
   // Each BullMQ Worker needs its own Redis connection — sharing one instance causes
@@ -20,6 +22,12 @@ async function bootstrap() {
 
   const hubspotConn = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
   hubspotConn.on('error', (err) => logger.error('HubSpot Redis error', { err }));
+
+  const sequenceConn = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
+  sequenceConn.on('error', (err) => logger.error('Sequence Redis error', { err }));
+
+  const schedulerConn = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
+  schedulerConn.on('error', (err) => logger.error('Scheduler Redis error', { err }));
 
   const publisher = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
   publisher.on('connect', () => logger.info('Workers Redis connected'));
@@ -37,14 +45,21 @@ async function bootstrap() {
   const hubspotWorker = createHubspotWorker(hubspotConn);
   logger.info('HubSpot sync worker ready', { concurrency: env.WORKER_CONCURRENCY });
 
+  const sequenceWorker = createSequenceWorker(sequenceConn);
+  logger.info('Sequence worker ready', { concurrency: env.WORKER_CONCURRENCY });
+
+  const schedulerTimer = startSequenceScheduler(schedulerConn);
+  logger.info('Sequence scheduler started');
+
   let isShuttingDown = false;
   async function shutdown(signal: string) {
     if (isShuttingDown) return;
     isShuttingDown = true;
     logger.info(`Received ${signal}, shutting down workers`);
-    await Promise.all([prospectingWorker.close(), outreachWorker.close(), contactWorker.close(), hubspotWorker.close()]);
+    clearInterval(schedulerTimer);
+    await Promise.all([prospectingWorker.close(), outreachWorker.close(), contactWorker.close(), hubspotWorker.close(), sequenceWorker.close()]);
     await publisher.quit();
-    await Promise.all([prospectingConn.quit(), outreachConn.quit(), contactConn.quit(), hubspotConn.quit()]);
+    await Promise.all([prospectingConn.quit(), outreachConn.quit(), contactConn.quit(), hubspotConn.quit(), sequenceConn.quit(), schedulerConn.quit()]);
     logger.info('Worker shutdown complete');
     process.exit(0);
   }
