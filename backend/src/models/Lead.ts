@@ -66,6 +66,8 @@ export interface ILead extends mongoose.Document {
   qualificationReason?: string;
   tags: string[];
   notes?: string;
+  suppressedAt?: Date;
+  suppressReason?: string;
   contactIds: mongoose.Types.ObjectId[];
   contactSummary?: {
     totalContacts: number;
@@ -151,6 +153,8 @@ const leadSchema = new Schema<ILead>(
     qualificationReason: { type: String },
     tags: { type: [String], default: [] },
     notes: { type: String, maxlength: 5000 },
+    suppressedAt: { type: Date },
+    suppressReason: { type: String },
     contactIds: [{ type: Schema.Types.ObjectId, ref: 'Contact' }],
     contactSummary: {
       totalContacts: { type: Number, default: 0 },
