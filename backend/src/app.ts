@@ -2,9 +2,9 @@ import express, { type Express } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import { rateLimit } from 'express-rate-limit';
 import { env } from './config/env.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { globalRateLimiter } from './middleware/rateLimiter.js';
 import authRouter from './routes/auth.routes.js';
 import workspaceRouter from './routes/workspace.routes.js';
 import jobsRouter from './routes/jobs.routes.js';
@@ -27,13 +27,7 @@ export function createApp(): Express {
   app.use(express.json({ limit: '1mb' }));
   app.use(cookieParser());
 
-  const limiter = rateLimit({
-    windowMs: env.RATE_LIMIT_WINDOW_MS,
-    max: env.RATE_LIMIT_MAX_REQUESTS,
-    standardHeaders: true,
-    legacyHeaders: false,
-  });
-  app.use(limiter);
+  app.use(globalRateLimiter);
 
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });

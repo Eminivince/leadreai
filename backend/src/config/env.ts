@@ -23,12 +23,18 @@ const envSchema = z.object({
   OPENROUTER_MODEL: z.string().default('nvidia/nemotron-3-super-120b-a12b:free'),
   OPENROUTER_BASE_URL: z.string().default('https://openrouter.ai/api/v1'),
   SERPAPI_KEY: z.string().optional(),
+  RESEND_API_KEY: z.string().optional(),
+  FROM_EMAIL: z.string().email().default('outreach@leadreai.app'),
+  FROM_NAME: z.string().default('LeadreAI'),
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
   LOG_TO_MONGODB: z.coerce.boolean().default(false),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(900000),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(100),
   JOB_RATE_LIMIT_PER_HOUR: z.coerce.number().default(10),
   WORKER_CONCURRENCY: z.coerce.number().default(3),
+  ADMIN_SECRET: z.string().min(16).optional(),
+  CREDITS_PER_JOB: z.coerce.number().int().min(0).default(0),
+  WEBHOOK_TIMEOUT_MS: z.coerce.number().default(5000),
 });
 
 const parsed = envSchema.safeParse(process.env);
