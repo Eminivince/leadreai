@@ -177,7 +177,7 @@ export function LeadDetailDrawer({ lead, onClose }: LeadDetailDrawerProps) {
                   Top: {lead.contactSummary.topContact.fullName} · {lead.contactSummary.topContact.title}
                 </div>
               )}
-              <Link href={`/dashboard/leads/${lead._id}/contacts`} className="text-xs text-indigo-600 hover:underline block">
+              <Link href={`/dashboard/leads/${lead._id}`} className="text-xs text-indigo-600 hover:underline block">
                 View all contacts →
               </Link>
             </section>

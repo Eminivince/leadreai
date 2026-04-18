@@ -12,7 +12,7 @@ interface ContactCardProps {
 }
 
 export function ContactCard({ contact, onBuyingRoleChange, onSelect }: ContactCardProps) {
-  const initials = contact.fullName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const initials = contact.fullName.split(' ').map(w => w[0] ?? '').join('').slice(0, 2).toUpperCase() || '?';
   const topEmail = contact.emails[0];
 
   return (

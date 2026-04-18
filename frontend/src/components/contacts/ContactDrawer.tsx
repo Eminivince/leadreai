@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Mail, Phone, Linkedin, ExternalLink, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,8 +18,15 @@ export function ContactDrawer({ contact, onClose, onSave }: ContactDrawerProps) 
   const [notes, setNotes] = useState(contact?.notes ?? '');
   const [buyingRole, setBuyingRole] = useState(contact?.buyingRole ?? 'unknown');
 
+  useEffect(() => {
+    if (contact) {
+      setNotes(contact.notes ?? '');
+      setBuyingRole(contact.buyingRole ?? 'unknown');
+    }
+  }, [contact?._id]);
+
   if (!contact) return null;
-  const initials = contact.fullName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const initials = contact.fullName.split(' ').map(w => w[0] ?? '').join('').slice(0, 2).toUpperCase() || '?';
 
   return (
     <>

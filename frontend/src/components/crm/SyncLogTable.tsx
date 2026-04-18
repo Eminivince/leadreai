@@ -20,8 +20,8 @@ export function SyncLogTable({ workspaceId }: { workspaceId: string }) {
           </tr>
         </thead>
         <tbody>
-          {log.map((entry, i) => (
-            <tr key={i} className="border-b last:border-0">
+          {log.map((entry) => (
+            <tr key={entry.syncedAt} className="border-b last:border-0">
               <td className="py-2 pr-4">{new Date(entry.syncedAt).toLocaleString()}</td>
               <td className="py-2 pr-4 capitalize">{entry.direction}</td>
               <td className="py-2 pr-4 text-right">{entry.companiesSynced}</td>
