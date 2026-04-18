@@ -32,6 +32,10 @@ export interface Lead {
   qualificationStatus?: 'pending' | 'qualified' | 'dust';
   qualificationScore?: number;
   qualificationReason?: string;
+  contactSummary?: {
+    totalContacts: number;
+    topContact?: { fullName: string; title: string; seniority: string };
+  };
   tags: string[];
   notes?: string;
   createdAt: string;
@@ -124,6 +128,15 @@ export function LeadTable({
         ),
       },
       {
+        id: 'contacts',
+        header: 'Contacts',
+        cell: ({ row }) => {
+          const total = row.original.contactSummary?.totalContacts;
+          if (!total) return <span className="text-xs text-muted-foreground">—</span>;
+          return <span className="text-xs font-medium text-foreground">{total}</span>;
+        },
+      },
+      {
         accessorKey: 'rankScore',
         header: 'Rank',
         cell: ({ getValue }) => {
@@ -153,22 +166,18 @@ export function LeadTable({
               header: 'AI Score',
               cell: ({ row }) => {
                 const score = row.original.qualificationScore;
-                const reason = row.original.qualificationReason;
-                if (score == null) return <span className="text-muted-foreground text-sm">—</span>;
+                if (score === undefined || score === null) return <span className="text-xs text-muted-foreground">—</span>;
+                const pct = Math.round(score);
+                const color =
+                  pct >= 70 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                  pct >= 40 ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                             'bg-red-500/20 text-red-400 border-red-500/30';
                 return (
                   <span
-                    className="inline-flex items-center gap-1 text-sm font-semibold text-foreground"
-                    title={reason ?? undefined}
+                    className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tabular-nums ${color}`}
+                    title={row.original.qualificationReason ?? undefined}
                   >
-                    {Math.round(score)}%
-                    {reason && (
-                      <span
-                        className="inline-flex h-4 w-4 cursor-default items-center justify-center rounded-full bg-muted text-[10px] text-muted-foreground"
-                        title={reason}
-                      >
-                        ?
-                      </span>
-                    )}
+                    {pct}
                   </span>
                 );
               },
