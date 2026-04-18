@@ -19,8 +19,10 @@ import { contactsRouter, leadContactsRouter } from './routes/contacts.routes.js'
 import crmRouter, { crmLeadsRouter } from './routes/crm.routes.js';
 import suppressionRouter from './routes/suppression.routes.js';
 import sequencesRouter from './routes/sequences.routes.js';
+import webhooksRouter from './routes/webhooks.routes.js';
 import { authenticate } from './middleware/authenticate.js';
 import { asyncHandler } from './utils/asyncHandler.js';
+import { handleUnsubscribe } from './controllers/webhooks.controller.js';
 import { jobProgressStream } from './sse/jobProgressStream.js';
 
 export function createApp(): Express {
@@ -31,7 +33,12 @@ export function createApp(): Express {
     origin: env.FRONTEND_URL,
     credentials: true,
   }));
-  app.use(express.json({ limit: '1mb' }));
+  app.use(express.json({
+    limit: '1mb',
+    verify: (req: any, _res, buf) => {
+      req.rawBody = buf;
+    },
+  }));
   app.use(cookieParser());
 
   app.use(globalRateLimiter);
@@ -71,6 +78,9 @@ export function createApp(): Express {
   app.use('/api/v1/workspaces/:workspaceId/enrollments', enrollmentsRouter);
 
   app.use('/admin/queues', adminRouter);
+
+  app.use('/webhooks', webhooksRouter);
+  app.get('/unsubscribe', asyncHandler(handleUnsubscribe));
 
   app.use(errorHandler);
 
