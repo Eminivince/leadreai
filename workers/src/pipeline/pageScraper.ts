@@ -5,6 +5,28 @@ import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 import type { SerpResult } from './serpScraper.js';
 
+const PROXIES: Array<{ server: string; username?: string; password?: string }> = (
+  env.PROXY_LIST ? env.PROXY_LIST.split(',').map((p) => p.trim()).filter(Boolean) : []
+).map((raw) => {
+  try {
+    const url = new URL(raw);
+    return {
+      server: `${url.protocol}//${url.hostname}:${url.port}`,
+      username: url.username || undefined,
+      password: url.password || undefined,
+    };
+  } catch {
+    return { server: raw };
+  }
+});
+
+let proxyIndex = 0;
+function nextProxy(): { server: string; username?: string; password?: string } | undefined {
+  if (PROXIES.length === 0) return undefined;
+  // eslint-disable-next-line no-plusplus
+  return PROXIES[proxyIndex++ % PROXIES.length];
+}
+
 const EMAIL_REGEX = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
 const PHONE_REGEX = /(?:\+?[\d\s\-().]{7,20})/g;
 const FILE_EXT_REGEX = /\.(pdf|docx?|xlsx?)(\?[^"']*)?$/i;
@@ -98,6 +120,7 @@ async function scrapePage(
     context = await browser.newContext({
       userAgent: randomUserAgent(),
       ignoreHTTPSErrors: true,
+      proxy: nextProxy(),
     });
     const page = await context.newPage();
 
