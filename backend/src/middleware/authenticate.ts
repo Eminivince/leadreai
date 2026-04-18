@@ -39,7 +39,8 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
     req.user = user;
     next();
   } catch (err) {
-    if (err instanceof Error && (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError')) {
+    const JWT_ERROR_NAMES = new Set(['JsonWebTokenError', 'TokenExpiredError', 'NotBeforeError']);
+    if (err instanceof Error && JWT_ERROR_NAMES.has(err.name)) {
       next(ApiError.unauthorized('Invalid or expired token'));
       return;
     }

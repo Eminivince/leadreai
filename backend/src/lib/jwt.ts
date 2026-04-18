@@ -25,9 +25,17 @@ export function signRefreshToken(userId: string): string {
 }
 
 export function verifyAccessToken(token: string): AccessTokenPayload {
-  return jwt.verify(token, env.JWT_SECRET) as AccessTokenPayload;
+  const raw = jwt.verify(token, env.JWT_SECRET);
+  if (typeof raw !== 'object' || !raw || !('sub' in raw) || !('email' in raw)) {
+    throw new Error('Malformed token payload');
+  }
+  return raw as AccessTokenPayload;
 }
 
 export function verifyRefreshToken(token: string): RefreshTokenPayload {
-  return jwt.verify(token, env.JWT_REFRESH_SECRET) as RefreshTokenPayload;
+  const raw = jwt.verify(token, env.JWT_REFRESH_SECRET);
+  if (typeof raw !== 'object' || !raw || !('sub' in raw)) {
+    throw new Error('Malformed token payload');
+  }
+  return raw as RefreshTokenPayload;
 }

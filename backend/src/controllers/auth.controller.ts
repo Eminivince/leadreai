@@ -1,10 +1,13 @@
 import type { Request, Response } from 'express';
+import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
 import User, { type IUser } from '../models/User.js';
 import Workspace from '../models/Workspace.js';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../lib/jwt.js';
 import { ApiError } from '../utils/ApiError.js';
 import { logger } from '../utils/logger.js';
+import { env } from '../config/env.js';
 import type { RegisterInput, LoginInput } from '@leadreai/shared';
 
 const REFRESH_COOKIE_OPTIONS = {
@@ -12,7 +15,7 @@ const REFRESH_COOKIE_OPTIONS = {
   path: '/api/v1/auth/refresh',
   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in ms
   sameSite: 'strict' as const,
-  secure: process.env['NODE_ENV'] === 'production',
+  secure: env.NODE_ENV === 'production',
 };
 
 function userPublicFields(user: IUser) {
@@ -29,40 +32,49 @@ function userPublicFields(user: IUser) {
 export async function register(req: Request, res: Response): Promise<void> {
   const { email, password, firstName, lastName } = req.body as RegisterInput;
 
-  const existing = await User.findOne({ email: email.toLowerCase() });
-  if (existing) {
-    throw ApiError.conflict('Email already in use');
+  const passwordHash = await bcrypt.hash(password, env.BCRYPT_ROUNDS);
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const users = await User.create([{
+      email: email.toLowerCase(),
+      passwordHash,
+      firstName,
+      lastName,
+      plan: 'free' as const,
+      creditsBalance: 0,
+      isEmailVerified: false,
+    }], { session });
+    const user = users[0]!;
+
+    const slug = `${firstName.toLowerCase()}-workspace-${randomBytes(4).toString('hex')}`;
+    await Workspace.create([{
+      name: `${firstName}'s Workspace`,
+      slug,
+      ownerId: user._id,
+      members: [{ userId: user._id, role: 'owner', joinedAt: new Date() }],
+    }], { session });
+
+    await session.commitTransaction();
+
+    const accessToken = signAccessToken({ sub: String(user._id), email: user.email });
+    const refreshToken = signRefreshToken(String(user._id));
+
+    res.cookie('refresh_token', refreshToken, REFRESH_COOKIE_OPTIONS);
+
+    logger.info('User registered', { userId: String(user._id), email: user.email });
+
+    res.status(201).json({ success: true, data: { accessToken, user: userPublicFields(user) } });
+  } catch (err: unknown) {
+    await session.abortTransaction();
+    if (err instanceof Error && 'code' in err && (err as { code: number }).code === 11000) {
+      throw ApiError.conflict('Email already in use');
+    }
+    throw err;
+  } finally {
+    await session.endSession();
   }
-
-  const passwordHash = await bcrypt.hash(password, 12);
-  const user = await User.create({
-    email: email.toLowerCase(),
-    passwordHash,
-    firstName,
-    lastName,
-  });
-
-  // Create a default workspace for the new user
-  const slugSuffix = Math.random().toString(16).slice(2, 6);
-  const slug = `${firstName.toLowerCase()}-workspace-${slugSuffix}`;
-  await Workspace.create({
-    name: `${firstName}'s Workspace`,
-    slug,
-    ownerId: user._id,
-    members: [{ userId: user._id, role: 'owner', joinedAt: new Date() }],
-  });
-
-  const accessToken = signAccessToken({ sub: String(user._id), email: user.email });
-  const refreshToken = signRefreshToken(String(user._id));
-
-  res.cookie('refresh_token', refreshToken, REFRESH_COOKIE_OPTIONS);
-
-  logger.info('User registered', { userId: String(user._id), email: user.email });
-
-  res.status(201).json({
-    success: true,
-    data: { accessToken, user: userPublicFields(user) },
-  });
 }
 
 export async function login(req: Request, res: Response): Promise<void> {
@@ -129,7 +141,8 @@ export async function refresh(req: Request, res: Response): Promise<void> {
 }
 
 export async function me(req: Request, res: Response): Promise<void> {
-  res.status(200).json({ success: true, data: userPublicFields(req.user!) });
+  if (!req.user) throw ApiError.unauthorized();
+  res.status(200).json({ success: true, data: userPublicFields(req.user) });
 }
 
 export async function updateMe(req: Request, res: Response): Promise<void> {

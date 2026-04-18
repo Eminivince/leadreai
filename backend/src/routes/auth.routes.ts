@@ -2,13 +2,14 @@ import { Router, type Router as RouterType } from 'express';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { validate } from '../middleware/validate.js';
 import { authenticate } from '../middleware/authenticate.js';
+import { authRateLimiter } from '../middleware/rateLimiter.js';
 import { RegisterSchema, LoginSchema } from '@leadreai/shared';
 import * as authController from '../controllers/auth.controller.js';
 
 const router: RouterType = Router();
 
-router.post('/register', validate(RegisterSchema), asyncHandler(authController.register));
-router.post('/login', validate(LoginSchema), asyncHandler(authController.login));
+router.post('/register', authRateLimiter, validate(RegisterSchema), asyncHandler(authController.register));
+router.post('/login', authRateLimiter, validate(LoginSchema), asyncHandler(authController.login));
 router.post('/logout', authenticate, asyncHandler(authController.logout));
 router.post('/refresh', asyncHandler(authController.refresh));
 router.get('/me', authenticate, asyncHandler(authController.me));
