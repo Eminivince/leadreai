@@ -9,7 +9,7 @@ const router: RouterType = Router();
 
 router.post('/register', validate(RegisterSchema), asyncHandler(authController.register));
 router.post('/login', validate(LoginSchema), asyncHandler(authController.login));
-router.post('/logout', asyncHandler(authController.logout));
+router.post('/logout', authenticate, asyncHandler(authController.logout));
 router.post('/refresh', asyncHandler(authController.refresh));
 router.get('/me', authenticate, asyncHandler(authController.me));
 router.patch('/me', authenticate, asyncHandler(authController.updateMe));

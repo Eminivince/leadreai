@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import User from '../models/User.js';
+import User, { type IUser } from '../models/User.js';
 import Workspace from '../models/Workspace.js';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../lib/jwt.js';
 import { ApiError } from '../utils/ApiError.js';
@@ -15,7 +15,7 @@ const REFRESH_COOKIE_OPTIONS = {
   secure: process.env['NODE_ENV'] === 'production',
 };
 
-function userPublicFields(user: InstanceType<typeof User>) {
+function userPublicFields(user: IUser) {
   return {
     _id: user._id,
     email: user.email,
@@ -129,7 +129,7 @@ export async function refresh(req: Request, res: Response): Promise<void> {
 }
 
 export async function me(req: Request, res: Response): Promise<void> {
-  res.status(200).json({ success: true, data: req.user });
+  res.status(200).json({ success: true, data: userPublicFields(req.user!) });
 }
 
 export async function updateMe(req: Request, res: Response): Promise<void> {
@@ -149,11 +149,15 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
   if (lastName !== undefined) updates['lastName'] = lastName;
   if (avatarUrl !== undefined) updates['avatarUrl'] = avatarUrl;
 
-  const updated = await User.findByIdAndUpdate(
+  const updatedUser = await User.findByIdAndUpdate(
     req.user._id,
     { $set: updates },
     { new: true, runValidators: true }
   );
 
-  res.status(200).json({ success: true, data: updated });
+  if (!updatedUser) {
+    throw ApiError.notFound('User not found');
+  }
+
+  res.status(200).json({ success: true, data: userPublicFields(updatedUser) });
 }
