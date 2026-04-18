@@ -4,7 +4,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   REDIS_URL: z.string().default('redis://localhost:6379'),
   WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(20).default(3),
-  CONTACT_ENRICHMENT_CONCURRENCY: z.string().default('2'),
+  CONTACT_ENRICHMENT_CONCURRENCY: z.coerce.number().int().min(1).max(20).default(2),
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
   MONGODB_URI: z.string().default('mongodb://localhost:27017'),
   MONGODB_DB_NAME: z.string().default('leadreai'),

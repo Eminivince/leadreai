@@ -21,7 +21,7 @@ export function createContactWorker(connection: Redis): Worker {
     },
     {
       connection,
-      concurrency: parseInt(env.CONTACT_ENRICHMENT_CONCURRENCY ?? '2', 10),
+      concurrency: env.CONTACT_ENRICHMENT_CONCURRENCY,
     }
   );
 

@@ -23,6 +23,7 @@ export interface SeniorityResult {
 }
 
 export function mapSeniority(title: string): SeniorityResult {
+  if (!title || !title.trim()) return { seniority: 'unknown', department: 'other' };
   const lower = title.toLowerCase();
   let seniority: SeniorityLevel = 'ic';
 
