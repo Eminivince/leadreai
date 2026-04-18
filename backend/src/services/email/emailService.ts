@@ -9,16 +9,37 @@ export interface SendEmailOptions {
   subject: string;
   html: string;
   text?: string;
+  unsubscribeUrl?: string;
 }
 
 export interface SendEmailResult {
   messageId: string;
 }
 
+function injectUnsubscribe(opts: SendEmailOptions): SendEmailOptions & { headers: Record<string, string> } {
+  const headers: Record<string, string> = {};
+  let { html, text } = opts;
+
+  if (opts.unsubscribeUrl) {
+    headers['List-Unsubscribe'] = `<${opts.unsubscribeUrl}>`;
+    headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
+
+    const footerHtml = `<br><br><hr style="border:none;border-top:1px solid #eee;margin:24px 0"><p style="font-size:11px;color:#999;font-family:sans-serif">You received this email because you are in our prospecting database. <a href="${opts.unsubscribeUrl}" style="color:#999">Unsubscribe</a></p>`;
+    const footerText = `\n\n---\nTo unsubscribe: ${opts.unsubscribeUrl}`;
+
+    html = html + footerHtml;
+    if (text) text = text + footerText;
+  }
+
+  return { ...opts, html, text, headers };
+}
+
 export async function sendEmailForWorkspace(
   config: IEmailConfig & { apiKey?: string; smtpPass?: string },
   opts: SendEmailOptions,
 ): Promise<SendEmailResult> {
+  const { headers, ...enrichedOpts } = injectUnsubscribe(opts);
+
   if (config.provider === 'resend') {
     if (!config.apiKey) throw new Error('Resend API key not configured for this workspace');
     const apiKey = decrypt(config.apiKey);
@@ -26,11 +47,12 @@ export async function sendEmailForWorkspace(
     const from = `${config.fromName} <${config.fromEmail}>`;
     const { data, error } = await resend.emails.send({
       from,
-      to: opts.to,
-      subject: opts.subject,
-      html: opts.html,
-      text: opts.text,
+      to: enrichedOpts.to,
+      subject: enrichedOpts.subject,
+      html: enrichedOpts.html,
+      text: enrichedOpts.text,
       ...(config.replyTo ? { replyTo: config.replyTo } : {}),
+      ...(Object.keys(headers).length > 0 ? { headers } : {}),
     });
     if (error || !data) {
       logger.error('[emailService] Resend error', { error });
@@ -42,7 +64,6 @@ export async function sendEmailForWorkspace(
   if (config.provider === 'sendgrid') {
     if (!config.apiKey) throw new Error('SendGrid API key not configured for this workspace');
     const apiKey = decrypt(config.apiKey);
-    // SendGrid via SMTP relay — avoids adding another SDK dependency
     const transporter = nodemailer.createTransport({
       host: 'smtp.sendgrid.net',
       port: 587,
@@ -50,11 +71,12 @@ export async function sendEmailForWorkspace(
     });
     const info = await transporter.sendMail({
       from: `"${config.fromName}" <${config.fromEmail}>`,
-      to: opts.to,
-      subject: opts.subject,
-      html: opts.html,
-      text: opts.text,
+      to: enrichedOpts.to,
+      subject: enrichedOpts.subject,
+      html: enrichedOpts.html,
+      text: enrichedOpts.text,
       ...(config.replyTo ? { replyTo: config.replyTo } : {}),
+      ...(Object.keys(headers).length > 0 ? { headers } : {}),
     });
     return { messageId: String(info.messageId) };
   }
@@ -70,11 +92,12 @@ export async function sendEmailForWorkspace(
     });
     const info = await transporter.sendMail({
       from: `"${config.fromName}" <${config.fromEmail}>`,
-      to: opts.to,
-      subject: opts.subject,
-      html: opts.html,
-      text: opts.text,
+      to: enrichedOpts.to,
+      subject: enrichedOpts.subject,
+      html: enrichedOpts.html,
+      text: enrichedOpts.text,
       ...(config.replyTo ? { replyTo: config.replyTo } : {}),
+      ...(Object.keys(headers).length > 0 ? { headers } : {}),
     });
     return { messageId: String(info.messageId) };
   }

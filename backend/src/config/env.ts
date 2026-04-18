@@ -38,6 +38,11 @@ const envSchema = z.object({
   HUBSPOT_REDIRECT_URI: z.string().url().optional(),
   CREDITS_PER_JOB: z.coerce.number().int().min(0).default(0),
   WEBHOOK_TIMEOUT_MS: z.coerce.number().default(5000),
+  RESEND_WEBHOOK_SECRET: z.string().optional(),
+  SENDGRID_WEBHOOK_SECRET: z.string().optional(),
+  UNSUBSCRIBE_BASE_URL: z.string().url().default('http://localhost:4000/unsubscribe'),
+  UNSUBSCRIBE_TOKEN_SECRET: z.string().min(16).optional(),
+  SEQUENCE_MAX_SENDS_PER_MINUTE: z.coerce.number().int().min(1).default(50),
 });
 
 const parsed = envSchema.safeParse(process.env);
