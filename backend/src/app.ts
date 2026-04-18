@@ -12,6 +12,7 @@ import leadsRouter from './routes/leads.routes.js';
 import exportRouter from './routes/export.routes.js';
 import campaignsRouter from './routes/campaigns.routes.js';
 import outreachRouter from './routes/outreach.routes.js';
+import adminRouter from './routes/admin.routes.js';
 import { authenticate } from './middleware/authenticate.js';
 import { asyncHandler } from './utils/asyncHandler.js';
 import { jobProgressStream } from './sse/jobProgressStream.js';
@@ -45,6 +46,8 @@ export function createApp(): Express {
     authenticate,
     asyncHandler(jobProgressStream)
   );
+
+  app.use('/admin/queues', adminRouter);
 
   app.use(errorHandler);
 
