@@ -8,6 +8,8 @@ import { errorHandler } from './middleware/errorHandler.js';
 import authRouter from './routes/auth.routes.js';
 import workspaceRouter from './routes/workspace.routes.js';
 import jobsRouter from './routes/jobs.routes.js';
+import leadsRouter from './routes/leads.routes.js';
+import exportRouter from './routes/export.routes.js';
 import { authenticate } from './middleware/authenticate.js';
 import { asyncHandler } from './utils/asyncHandler.js';
 import { jobProgressStream } from './sse/jobProgressStream.js';
@@ -38,6 +40,8 @@ export function createApp(): Express {
   app.use('/api/v1/auth', authRouter);
   app.use('/api/v1/workspaces', workspaceRouter);
   app.use('/api/v1/workspaces/:workspaceId/jobs', jobsRouter);
+  app.use('/api/v1/workspaces/:workspaceId/leads', leadsRouter);
+  app.use('/api/v1/workspaces/:workspaceId/export', exportRouter);
   app.get(
     '/api/v1/workspaces/:workspaceId/jobs/:jobId/stream',
     authenticate,
