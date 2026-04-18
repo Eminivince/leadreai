@@ -96,6 +96,11 @@ export async function updateSequence(req: Request, res: Response): Promise<void>
     if (!VALID_SEQUENCE_STATUSES.includes(status as typeof VALID_SEQUENCE_STATUSES[number])) {
       throw ApiError.badRequest(`status must be one of: ${VALID_SEQUENCE_STATUSES.join(', ')}`);
     }
+    // Prevent resurrecting an archived sequence via PATCH
+    const existing = await Sequence.findOne({ _id: sequenceId, workspaceId }).select('status');
+    if (existing?.status === 'archived' && status !== 'archived') {
+      throw ApiError.badRequest('Cannot change status of an archived sequence');
+    }
     setFields['status'] = status;
   }
   if (tags !== undefined) setFields['tags'] = tags;
@@ -123,9 +128,10 @@ export async function archiveSequence(req: Request, res: Response): Promise<void
   if (!sequence) throw ApiError.notFound('Sequence not found');
 
   await SequenceEnrollment.updateMany(
-    { sequenceId, status: 'active' },
+    { sequenceId, status: { $in: ['active', 'paused'] } },
     { $set: { status: 'paused', stopReason: 'sequence_archived' } },
   );
+  await Sequence.updateOne({ _id: sequenceId }, { $set: { 'stats.active': 0 } });
 
   logAudit({ req, workspaceId: workspaceId!, action: 'sequence.archive', resourceType: 'sequence', resourceId: sequence._id, metadata: {} });
   res.json({ success: true, data: sequence });
@@ -157,52 +163,81 @@ export async function enrollLeads(req: Request, res: Response): Promise<void> {
   const matchCount = await Lead.countDocuments({ _id: { $in: leadObjectIds }, workspaceId });
   if (matchCount !== leadObjectIds.length) throw ApiError.badRequest('One or more leads do not belong to this workspace');
 
+  // Pre-fetch all existing enrollments in one query (avoid N+1)
+  const existingEnrollments = await SequenceEnrollment.find(
+    { sequenceId, leadId: { $in: leadObjectIds } },
+  ).select('leadId');
+  const alreadyEnrolledSet = new Set(existingEnrollments.map(e => e.leadId.toString()));
+
+  // Build suppression sets (both email AND domain)
   const leads = await Lead.find({ _id: { $in: leadObjectIds } }).select('emails');
   const suppressedEmailSet = new Set<string>();
+  const suppressedDomainSet = new Set<string>();
   const allEmails = leads.flatMap(l => l.emails.map(e => e.address.toLowerCase()));
-  if (allEmails.length > 0) {
+  const allDomains = [...new Set(allEmails.map(e => e.split('@')[1]).filter((d): d is string => !!d))];
+
+  if (allEmails.length > 0 || allDomains.length > 0) {
+    const orClauses: object[] = [];
+    if (allEmails.length > 0) orClauses.push({ email: { $in: allEmails } });
+    if (allDomains.length > 0) orClauses.push({ domain: { $in: allDomains } });
     const suppressedEntries = await SuppressionEntry.find({
       workspaceId,
-      $or: [
-        { email: { $in: allEmails } },
-        { domain: { $in: allEmails.map(e => e.split('@')[1]).filter(Boolean) } },
-      ],
+      $or: orClauses,
     }).select('email domain');
 
     for (const entry of suppressedEntries) {
       if (entry.email) suppressedEmailSet.add(entry.email);
+      if (entry.domain) suppressedDomainSet.add(entry.domain);
     }
   }
 
   const now = new Date();
   const nextStepAt = new Date(now.getTime() + step1.delayDays * 86_400_000);
   const userId = req.user._id;
+  const contactOid = contactId && mongoose.Types.ObjectId.isValid(contactId)
+    ? new mongoose.Types.ObjectId(contactId)
+    : undefined;
 
-  let enrolled = 0;
-  let skipped = 0;
+  const docsToInsert: object[] = [];
 
   for (const leadId of leadObjectIds) {
-    const alreadyEnrolled = await SequenceEnrollment.exists({ sequenceId, leadId });
-    if (alreadyEnrolled) { skipped++; continue; }
+    if (alreadyEnrolledSet.has(leadId.toString())) { continue; }
 
     const lead = leads.find(l => l._id.toString() === leadId.toString());
     const primaryEmail = lead?.emails[0]?.address.toLowerCase();
-    if (primaryEmail && suppressedEmailSet.has(primaryEmail)) { skipped++; continue; }
+    const primaryDomain = primaryEmail?.split('@')[1];
 
-    await SequenceEnrollment.create({
+    if (primaryEmail && suppressedEmailSet.has(primaryEmail)) { continue; }
+    if (primaryDomain && suppressedDomainSet.has(primaryDomain)) { continue; }
+
+    docsToInsert.push({
       workspaceId,
       sequenceId,
       leadId,
-      contactId: contactId && mongoose.Types.ObjectId.isValid(contactId) ? new mongoose.Types.ObjectId(contactId) : undefined,
+      ...(contactOid ? { contactId: contactOid } : {}),
       enrolledBy: userId,
       status: 'active',
       currentStep: 1,
       nextStepAt,
     });
-    enrolled++;
   }
 
-  await Sequence.updateOne({ _id: sequenceId }, { $inc: { 'stats.totalEnrolled': enrolled, 'stats.active': enrolled } });
+  const skipped = leadObjectIds.length - docsToInsert.length;
+  let enrolled = 0;
+
+  if (docsToInsert.length > 0) {
+    // insertMany with ordered:false so E11000 duplicates (race) are skipped gracefully
+    const result = await SequenceEnrollment.insertMany(docsToInsert, { ordered: false }).catch((err: any) => {
+      // Mongoose insertMany throws on any error with ordered:false — extract inserted docs
+      if (err?.insertedDocs) return err.insertedDocs as (typeof docsToInsert);
+      throw err;
+    });
+    enrolled = Array.isArray(result) ? result.length : 0;
+  }
+
+  if (enrolled > 0) {
+    await Sequence.updateOne({ _id: sequenceId }, { $inc: { 'stats.totalEnrolled': enrolled, 'stats.active': enrolled } });
+  }
 
   res.json({ success: true, data: { enrolled, skipped } });
 }
@@ -213,6 +248,7 @@ export async function pauseSequence(req: Request, res: Response): Promise<void> 
 
   const sequence = await Sequence.findOne({ _id: sequenceId, workspaceId });
   if (!sequence) throw ApiError.notFound('Sequence not found');
+  if (sequence.status === 'archived') throw ApiError.badRequest('Cannot pause an archived sequence');
 
   await Sequence.updateOne({ _id: sequenceId }, { $set: { status: 'paused' } });
   await SequenceEnrollment.updateMany({ sequenceId, status: 'active' }, { $set: { status: 'paused' } });
@@ -226,6 +262,7 @@ export async function resumeSequence(req: Request, res: Response): Promise<void>
 
   const sequence = await Sequence.findOne({ _id: sequenceId, workspaceId });
   if (!sequence) throw ApiError.notFound('Sequence not found');
+  if (sequence.status === 'archived') throw ApiError.badRequest('Cannot resume an archived sequence');
 
   await Sequence.updateOne({ _id: sequenceId }, { $set: { status: 'active' } });
   await SequenceEnrollment.updateMany(
