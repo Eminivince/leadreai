@@ -70,6 +70,6 @@ export interface IContactSummary {
   topContact?: {
     fullName: string;
     title: string;
-    seniority: string;
+    seniority: SeniorityLevel;
   };
 }

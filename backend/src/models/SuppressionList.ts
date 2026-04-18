@@ -21,7 +21,7 @@ const suppressionSchema = new Schema<ISuppressionEntry>(
   { timestamps: false },
 );
 
-suppressionSchema.index({ workspaceId: 1, email: 1 }, { sparse: true });
-suppressionSchema.index({ workspaceId: 1, domain: 1 }, { sparse: true });
+suppressionSchema.index({ workspaceId: 1, email: 1 }, { unique: true, sparse: true });
+suppressionSchema.index({ workspaceId: 1, domain: 1 }, { unique: true, sparse: true });
 
 export const SuppressionEntry = mongoose.model<ISuppressionEntry>('SuppressionEntry', suppressionSchema);

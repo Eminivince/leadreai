@@ -1,6 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
+import { SENIORITY_LEVELS, DEPARTMENTS, BUYING_ROLES, CRM_PROVIDERS, CONTACT_EMAIL_TYPES, CONTACT_SOURCE_TYPES } from '@leadreai/shared';
 
-export interface IContact extends mongoose.Document {
+export interface IContactDoc extends mongoose.Document {
   workspaceId: mongoose.Types.ObjectId;
   leadId?: mongoose.Types.ObjectId;
   jobId?: mongoose.Types.ObjectId;
@@ -49,7 +50,7 @@ export interface IContact extends mongoose.Document {
   updatedAt: Date;
 }
 
-const contactSchema = new Schema<IContact>(
+const contactSchema = new Schema<IContactDoc>(
   {
     workspaceId: { type: Schema.Types.ObjectId, ref: 'Workspace', required: true },
     leadId: { type: Schema.Types.ObjectId, ref: 'Lead' },
@@ -58,15 +59,15 @@ const contactSchema = new Schema<IContact>(
     lastName: String,
     fullName: { type: String, required: true, trim: true },
     title: String,
-    department: { type: String, enum: ['sales', 'marketing', 'engineering', 'finance', 'hr', 'legal', 'operations', 'other'] },
-    seniority: { type: String, enum: ['c_level', 'vp', 'director', 'manager', 'ic', 'unknown'] },
+    department: { type: String, enum: DEPARTMENTS },
+    seniority: { type: String, enum: SENIORITY_LEVELS },
     linkedinUrl: String,
     twitterUrl: String,
     avatarUrl: String,
     emails: [
       {
         address: { type: String, required: true, lowercase: true },
-        type: { type: String, enum: ['direct', 'pattern_inferred', 'generic'], required: true },
+        type: { type: String, enum: CONTACT_EMAIL_TYPES, required: true },
         confidence: { type: Number, required: true },
         verified: { type: Boolean, default: false },
         source: { type: String, required: true },
@@ -79,21 +80,21 @@ const contactSchema = new Schema<IContact>(
         source: { type: String, required: true },
       },
     ],
-    buyingRole: { type: String, enum: ['champion', 'economic_buyer', 'technical_buyer', 'blocker', 'influencer', 'unknown'] },
+    buyingRole: { type: String, enum: BUYING_ROLES },
     sources: [
       {
         url: { type: String, required: true },
-        type: { type: String, enum: ['linkedin', 'company_website', 'press_release', 'directory', 'pattern_inferred'], required: true },
+        type: { type: String, enum: CONTACT_SOURCE_TYPES, required: true },
         scrapedAt: { type: Date, required: true },
         confidence: { type: Number, required: true },
       },
     ],
-    confidenceScore: { type: Number, default: 0 },
-    freshnessScore: { type: Number, default: 100 },
+    confidenceScore: { type: Number, default: 0, min: 0, max: 100 },
+    freshnessScore: { type: Number, default: 100, min: 0, max: 100 },
     verifiedAt: Date,
     crmRefs: [
       {
-        provider: { type: String, enum: ['hubspot', 'salesforce', 'pipedrive', 'close'], required: true },
+        provider: { type: String, enum: CRM_PROVIDERS, required: true },
         externalId: { type: String, required: true },
         syncedAt: { type: Date, required: true },
         syncStatus: { type: String, enum: ['synced', 'error', 'pending'], required: true },
@@ -107,10 +108,9 @@ const contactSchema = new Schema<IContact>(
   { timestamps: true },
 );
 
-contactSchema.index({ workspaceId: 1 });
-contactSchema.index({ leadId: 1 });
+contactSchema.index({ workspaceId: 1, leadId: 1 });
 contactSchema.index({ linkedinUrl: 1 }, { sparse: true });
-contactSchema.index({ workspaceId: 1, 'emails.address': 1 }, { unique: true, sparse: true });
-contactSchema.index({ confidenceScore: -1 });
+contactSchema.index({ workspaceId: 1, 'emails.address': 1 }, { unique: true, sparse: true }); // dedup: one contact per email per workspace
+contactSchema.index({ workspaceId: 1, confidenceScore: -1 });
 
-export const Contact = mongoose.model<IContact>('Contact', contactSchema);
+export const Contact = mongoose.model<IContactDoc>('Contact', contactSchema);

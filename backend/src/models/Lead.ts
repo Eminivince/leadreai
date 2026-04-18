@@ -72,7 +72,7 @@ export interface ILead extends mongoose.Document {
     topContact?: {
       fullName: string;
       title: string;
-      seniority: string;
+      seniority: 'c_level' | 'vp' | 'director' | 'manager' | 'ic' | 'unknown';
     };
   };
   createdAt: Date;

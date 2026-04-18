@@ -116,7 +116,7 @@ export interface Lead {
     topContact?: {
       fullName: string;
       title: string;
-      seniority: string;
+      seniority: 'c_level' | 'vp' | 'director' | 'manager' | 'ic' | 'unknown';
     };
   };
   createdAt: string;

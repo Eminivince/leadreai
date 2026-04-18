@@ -58,10 +58,10 @@ export interface IWorkspace extends mongoose.Document {
     creditsUsed: number;
   };
   crmConfig?: {
-    provider: 'hubspot' | 'salesforce' | 'pipedrive' | 'close';
+    provider: 'hubspot';
     hubspot?: {
-      accessToken: string;
-      refreshToken: string;
+      accessToken?: string;
+      refreshToken?: string;
       expiresAt: Date;
       portalId: string;
       syncEnabled: boolean;
