@@ -13,6 +13,7 @@ router.post('/login', authRateLimiter, validate(LoginSchema), asyncHandler(authC
 router.post('/logout', authenticate, asyncHandler(authController.logout));
 router.post('/refresh', asyncHandler(authController.refresh));
 router.get('/me', authenticate, asyncHandler(authController.me));
+router.get('/me/credits', authenticate, asyncHandler(authController.getCredits));
 router.patch('/me', authenticate, asyncHandler(authController.updateMe));
 
 export default router;

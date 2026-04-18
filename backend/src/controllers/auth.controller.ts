@@ -170,3 +170,10 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
 
   res.status(200).json({ success: true, data: userPublicFields(updatedUser) });
 }
+
+export async function getCredits(req: Request, res: Response): Promise<void> {
+  if (!req.user) throw ApiError.unauthorized();
+  const user = await User.findById(req.user._id).select('creditsBalance plan');
+  if (!user) throw ApiError.notFound('User not found');
+  res.json({ success: true, data: { creditsBalance: user.creditsBalance, plan: user.plan } });
+}

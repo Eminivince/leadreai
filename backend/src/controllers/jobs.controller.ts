@@ -1,14 +1,34 @@
 import { type Request, type Response } from 'express';
 import ProspectingJob from '../models/ProspectingJob.js';
+import User from '../models/User.js';
 import { parseQuery } from '../services/ai/queryParser.js';
 import { dispatchProspectingJob } from '../services/queue/jobDispatcher.js';
 import { getProspectingQueue } from '../services/queue/queues.js';
 import { ApiError } from '../utils/ApiError.js';
 import { JOB_STATUSES } from '@leadreai/shared';
+import { env } from '../config/env.js';
 
 export async function createJob(req: Request, res: Response): Promise<void> {
   const { workspaceId } = req.params;
   const { rawQuery } = req.body as { rawQuery: string };
+
+  if (!rawQuery || typeof rawQuery !== 'string' || !rawQuery.trim()) {
+    throw ApiError.badRequest('rawQuery is required');
+  }
+
+  // Atomic deduct (skip if CREDITS_PER_JOB = 0 — credits disabled)
+  if (env.CREDITS_PER_JOB > 0) {
+    const updated = await User.findOneAndUpdate(
+      { _id: req.user!._id, creditsBalance: { $gte: env.CREDITS_PER_JOB } },
+      { $inc: { creditsBalance: -env.CREDITS_PER_JOB } },
+      { new: true }
+    );
+    if (!updated) {
+      throw ApiError.badRequest(
+        `Insufficient credits. This action requires ${env.CREDITS_PER_JOB} credit(s).`
+      );
+    }
+  }
 
   const parsedIntent = await parseQuery(rawQuery);
 
@@ -18,12 +38,20 @@ export async function createJob(req: Request, res: Response): Promise<void> {
     rawQuery,
     parsedIntent,
     status: 'queued',
+    creditsCharged: env.CREDITS_PER_JOB,
   });
 
   let bullmqJob;
   try {
     bullmqJob = await dispatchProspectingJob(job._id.toString(), workspaceId!);
   } catch (err) {
+    // Refund credit on dispatch failure
+    if (env.CREDITS_PER_JOB > 0) {
+      await User.updateOne(
+        { _id: req.user!._id },
+        { $inc: { creditsBalance: env.CREDITS_PER_JOB } }
+      ).catch(() => {});
+    }
     await ProspectingJob.deleteOne({ _id: job._id });
     throw err;
   }
