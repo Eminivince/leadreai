@@ -2,35 +2,16 @@
 
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { BriefcaseBusiness, Users, Coins } from 'lucide-react';
+import { BriefcaseBusiness, Users, ArrowDownToLine, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { EmptyState } from '@/components/shared/EmptyState';
 import { QueryInput } from '@/components/prospecting/QueryInput';
 import { JobCard } from '@/components/prospecting/JobCard';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { LeadsAreaChart } from '@/components/dashboard/LeadsAreaChart';
 import { useWorkspace } from '@/hooks/useWorkspace';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { apiFetch } from '@/lib/api';
-import type { ProspectingJob, ApiResponse } from '@leadreai/shared';
-
-const statCards = [
-  {
-    title: 'Prospecting Jobs',
-    value: '0',
-    description: 'Total jobs submitted',
-    icon: BriefcaseBusiness,
-  },
-  {
-    title: 'Leads Found',
-    value: '—',
-    description: 'Across all campaigns',
-    icon: Users,
-  },
-  {
-    title: 'Credits Remaining',
-    value: '0',
-    description: 'Free tier',
-    icon: Coins,
-  },
-];
+import type { ApiResponse, ProspectingJob } from '@leadreai/shared';
 
 export default function DashboardPage() {
   const { workspaceId, isLoading: workspaceLoading } = useWorkspace();
@@ -38,11 +19,13 @@ export default function DashboardPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const { data: jobsData } = useQuery({
+  const { data: stats, isLoading: statsLoading } = useDashboardStats(workspaceId ?? null);
+
+  const { data: jobsData, isLoading: jobsLoading } = useQuery({
     queryKey: ['jobs', workspaceId],
     queryFn: () =>
       apiFetch<ApiResponse<ProspectingJob[]> & { total: number }>(
-        `/api/v1/workspaces/${workspaceId}/jobs?limit=5`
+        `/api/v1/workspaces/${workspaceId}/jobs?limit=20`,
       ),
     enabled: !!workspaceId,
   });
@@ -59,6 +42,7 @@ export default function DashboardPage() {
         body: JSON.stringify({ rawQuery }),
       });
       await queryClient.invalidateQueries({ queryKey: ['jobs', workspaceId] });
+      await queryClient.invalidateQueries({ queryKey: ['workspace-stats', workspaceId] });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Failed to create job. Please try again.');
     } finally {
@@ -67,69 +51,98 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-foreground">Overview</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Submit a prospecting query to start generating leads.
+          Your lead generation workspace at a glance.
         </p>
       </div>
 
-      {/* Query input */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-semibold">New Prospecting Query</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <QueryInput
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting || workspaceLoading}
-            error={submitError}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Stat cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        {statCards.map(({ title, value, description, icon: Icon }) => (
-          <Card key={title}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted">
-                <Icon size={16} className="text-foreground" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-foreground">{value}</div>
-              <p className="mt-1 text-xs text-muted-foreground">{description}</p>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Jobs Run"
+          value={stats?.totalJobsRun}
+          description="Prospecting jobs submitted"
+          icon={BriefcaseBusiness}
+          isLoading={statsLoading}
+        />
+        <StatCard
+          title="Leads Found"
+          value={stats?.totalLeadsFound}
+          description="Across all jobs"
+          icon={Users}
+          isLoading={statsLoading}
+        />
+        <StatCard
+          title="Exports"
+          value={stats?.totalExports}
+          description="CSV / Excel downloads"
+          icon={ArrowDownToLine}
+          isLoading={statsLoading}
+        />
+        <StatCard
+          title="Credits Used"
+          value={stats?.creditsUsed}
+          description="This workspace"
+          icon={Zap}
+          isLoading={statsLoading}
+        />
       </div>
 
-      {/* Recent jobs */}
-      <div>
-        <h3 className="mb-4 text-sm font-semibold text-foreground">Recent Jobs</h3>
-        {jobs.length === 0 ? (
+      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+        <div className="space-y-6">
           <Card>
-            <CardContent className="p-0">
-              <EmptyState
-                title="No prospecting jobs yet"
-                description="Submit a query to find your next customers using natural language."
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold">New Prospecting Query</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <QueryInput
+                onSubmit={handleSubmit}
+                isSubmitting={isSubmitting || workspaceLoading}
+                error={submitError}
               />
             </CardContent>
           </Card>
-        ) : (
-          <div className="space-y-3">
-            {jobs.map((job) => (
-              <JobCard
-                key={job._id}
-                job={job}
-                onRefresh={() => queryClient.invalidateQueries({ queryKey: ['jobs', workspaceId] })}
-              />
-            ))}
-          </div>
-        )}
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold">Leads Found — Last 14 Days</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <LeadsAreaChart jobs={jobs} isLoading={jobsLoading} />
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-foreground">Recent Jobs</h3>
+          {jobsLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-20 animate-pulse rounded-lg bg-card border border-border" />
+              ))}
+            </div>
+          ) : jobs.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border p-6 text-center">
+              <p className="text-sm text-muted-foreground">No jobs yet.</p>
+              <p className="text-xs text-muted-foreground mt-1">Submit a query to get started.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {jobs.slice(0, 8).map(job => (
+                <JobCard
+                  key={job._id}
+                  job={job}
+                  onRefresh={() => {
+                    void queryClient.invalidateQueries({ queryKey: ['jobs', workspaceId] });
+                    void queryClient.invalidateQueries({ queryKey: ['workspace-stats', workspaceId] });
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
