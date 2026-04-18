@@ -19,7 +19,10 @@ const envSchema = z.object({
   OPENROUTER_MODEL: z.string().default('nvidia/nemotron-3-super-120b-a12b:free'),
   OPENROUTER_BASE_URL: z.string().default('https://openrouter.ai/api/v1'),
   WEBHOOK_TIMEOUT_MS: z.coerce.number().default(5000),
-  JWT_SECRET: z.string().min(32).optional(),
+  JWT_SECRET: z.string().min(32),
+  UNSUBSCRIBE_BASE_URL: z.string().url().default('http://localhost:4000/unsubscribe'),
+  UNSUBSCRIBE_TOKEN_SECRET: z.string().optional(),
+  SEQUENCE_SCHEDULER_INTERVAL_MS: z.coerce.number().int().min(10000).default(60000),
 });
 
 const parsed = envSchema.safeParse(process.env);
