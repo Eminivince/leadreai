@@ -1,9 +1,24 @@
 import mongoose from 'mongoose';
 import { Redis } from 'ioredis';
+import { Queue } from 'bullmq';
 import { logger } from '../utils/logger.js';
 import { fireWebhook } from '../services/webhook.js';
 import { env } from '../config/env.js';
 import type { LeadRecord } from './deduplicator.js';
+
+// ---------------------------------------------------------------------------
+// Lazy contact-enrichment queue
+// ---------------------------------------------------------------------------
+let _contactQueue: Queue | null = null;
+function getContactQueue(): Queue {
+  if (!_contactQueue) {
+    _contactQueue = new Queue('contact-enrichment', {
+      connection: new Redis(env.REDIS_URL, { maxRetriesPerRequest: null }),
+      prefix: '{leadreai}',
+    });
+  }
+  return _contactQueue;
+}
 
 // Inline Lead model (strict: false — picks up all fields without re-specifying)
 const leadSchema = new mongoose.Schema({}, { strict: false, timestamps: true });
@@ -58,6 +73,38 @@ export async function writeLeads(
       upserted: result.upsertedCount,
       modified: result.modifiedCount,
     });
+
+    // Dispatch contact-enrichment jobs for written leads that have a companyDomain
+    const domainsToEnrich = nonDupes.filter(l => l.companyDomain).map(l => l.companyDomain);
+    if (domainsToEnrich.length > 0) {
+      const writtenLeads = await Lead.find(
+        {
+          workspaceId: new mongoose.Types.ObjectId(workspaceId),
+          companyDomain: { $in: domainsToEnrich },
+        },
+        { _id: 1, companyDomain: 1, companyName: 1, website: 1, emails: 1 }
+      ).lean();
+
+      if (writtenLeads.length > 0) {
+        const queue = getContactQueue();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await queue.addBulk(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (writtenLeads as any[]).map((lead: any) => ({
+            name: 'enrich',
+            data: {
+              workspaceId,
+              leadId: lead._id.toString(),
+              companyDomain: lead.companyDomain,
+              companyName: lead.companyName,
+              websiteUrl: lead.website,
+              existingEmails: (lead.emails ?? []).map((e: any) => e.address),
+            },
+          }))
+        );
+        logger.info('leadWriter: enqueued contact enrichment jobs', { count: writtenLeads.length });
+      }
+    }
   }
 
   // Update job to complete
