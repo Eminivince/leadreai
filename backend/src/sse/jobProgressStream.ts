@@ -32,22 +32,25 @@ export async function jobProgressStream(req: Request, res: Response): Promise<vo
   const subscriber = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
   subscriber.on('error', (err) => logger.error('SSE subscriber error', { err }));
 
-  // 5. Subscribe to pub/sub channel
   const channel = `job:progress:${jobId}`;
-  await subscriber.subscribe(channel);
-  subscriber.on('message', (_chan: string, message: string) => {
-    res.write(`data: ${message}\n\n`);
-  });
 
-  // 6. Heartbeat every 30 seconds to keep connection alive
+  // 5. Register cleanup BEFORE subscribing so the connection is always released,
+  //    even if subscriber.subscribe() throws.
   const heartbeat = setInterval(() => {
     send({ type: 'heartbeat' });
   }, 30_000);
 
-  // 7. Cleanup on client disconnect
   req.on('close', () => {
     clearInterval(heartbeat);
     subscriber.unsubscribe(channel).catch(() => {});
     subscriber.quit().catch(() => {});
   });
+
+  // 6. Subscribe to pub/sub channel
+  await subscriber.subscribe(channel);
+  subscriber.on('message', (_chan: string, message: string) => {
+    res.write(`data: ${message}\n\n`);
+  });
+
+  // 7. Heartbeat every 30 seconds to keep connection alive — interval already started above.
 }
