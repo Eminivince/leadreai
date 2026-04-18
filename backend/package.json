@@ -27,7 +27,9 @@
     "rate-limit-redis": "^4.2.0",
     "csv-stringify": "^6.4.6",
     "exceljs": "^4.4.0",
-    "cookie-parser": "^1.4.6"
+    "cookie-parser": "^1.4.6",
+    "@anthropic-ai/sdk": "^0.26.0",
+    "@google/generative-ai": "^0.15.0"
   },
   "devDependencies": {
     "@leadreai/shared": "workspace:*",
