@@ -4,6 +4,7 @@ import { env } from './config/env.js';
 import { createProspectingWorker } from './prospecting.worker.js';
 import { createOutreachWorker } from './outreach.worker.js';
 import { createContactWorker } from './contact.worker.js';
+import { createHubspotWorker } from './hubspot.worker.js';
 
 async function bootstrap() {
   // Each BullMQ Worker needs its own Redis connection — sharing one instance causes
@@ -16,6 +17,9 @@ async function bootstrap() {
 
   const contactConn = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
   contactConn.on('error', (err) => logger.error('Contact Redis error', { err }));
+
+  const hubspotConn = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
+  hubspotConn.on('error', (err) => logger.error('HubSpot Redis error', { err }));
 
   const publisher = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
   publisher.on('connect', () => logger.info('Workers Redis connected'));
@@ -30,14 +34,17 @@ async function bootstrap() {
   const contactWorker = createContactWorker(contactConn);
   logger.info('Contact worker ready', { concurrency: env.CONTACT_ENRICHMENT_CONCURRENCY });
 
+  const hubspotWorker = createHubspotWorker(hubspotConn);
+  logger.info('HubSpot sync worker ready', { concurrency: env.WORKER_CONCURRENCY });
+
   let isShuttingDown = false;
   async function shutdown(signal: string) {
     if (isShuttingDown) return;
     isShuttingDown = true;
     logger.info(`Received ${signal}, shutting down workers`);
-    await Promise.all([prospectingWorker.close(), outreachWorker.close(), contactWorker.close()]);
+    await Promise.all([prospectingWorker.close(), outreachWorker.close(), contactWorker.close(), hubspotWorker.close()]);
     await publisher.quit();
-    await Promise.all([prospectingConn.quit(), outreachConn.quit(), contactConn.quit()]);
+    await Promise.all([prospectingConn.quit(), outreachConn.quit(), contactConn.quit(), hubspotConn.quit()]);
     logger.info('Worker shutdown complete');
     process.exit(0);
   }

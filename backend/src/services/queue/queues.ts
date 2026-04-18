@@ -16,6 +16,7 @@ let _enrichmentQueue: Queue | null = null;
 let _outreachQueue: Queue | null = null;
 let _exportQueue: Queue | null = null;
 let _contactEnrichmentQueue: Queue | null = null;
+let _hubspotSyncQueue: Queue | null = null;
 
 export function getProspectingQueue(): Queue {
   if (!_prospectingQueue) {
@@ -70,4 +71,15 @@ export function getContactEnrichmentQueue(): Queue {
     });
   }
   return _contactEnrichmentQueue;
+}
+
+export function getHubspotSyncQueue(): Queue {
+  if (!_hubspotSyncQueue) {
+    _hubspotSyncQueue = new Queue('hubspot-sync', {
+      connection: getRedis(),
+      prefix: QUEUE_PREFIX,
+      defaultJobOptions,
+    });
+  }
+  return _hubspotSyncQueue;
 }
