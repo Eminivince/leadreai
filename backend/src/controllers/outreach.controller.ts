@@ -10,6 +10,8 @@ import { getOutreachQueue } from '../services/queue/queues.js';
 import { generateOutreachDraft } from '../services/ai/outreachDraftService.js';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
+import { logAudit } from '../services/audit.js';
+import { sendEmailForWorkspace, textToHtml } from '../services/email/emailService.js';
 
 // ---------------------------------------------------------------------------
 // generateSingleDraft  POST /api/v1/workspaces/:workspaceId/outreach/generate
@@ -71,7 +73,7 @@ export async function generateSingleDraft(req: Request, res: Response): Promise<
   );
 
   const draft = await OutreachDraft.create({
-    workspaceId,
+    workspaceId: workspaceId!,
     campaignId,
     leadId,
     createdBy: req.user._id,
@@ -85,6 +87,15 @@ export async function generateSingleDraft(req: Request, res: Response): Promise<
     modelResponse: JSON.stringify(result),
     reasoning: result.reasoning,
     status: 'draft',
+  });
+
+  logAudit({
+    req,
+    workspaceId: workspaceId!,
+    action: 'outreach_draft.generate_single',
+    resourceType: 'outreach_draft',
+    resourceId: draft._id,
+    metadata: { campaignId, leadId },
   });
 
   res.status(201).json({ success: true, data: draft });
@@ -127,7 +138,7 @@ export async function generateCampaignDrafts(req: Request, res: Response): Promi
     'generate-outreach',
     {
       campaignId: campaign._id.toString(),
-      workspaceId,
+      workspaceId: workspaceId!,
       leadIds: campaign.leadIds.map((id) => id.toString()),
     },
     {
@@ -136,6 +147,15 @@ export async function generateCampaignDrafts(req: Request, res: Response): Promi
       jobId: campaign._id.toString(),
     },
   );
+
+  logAudit({
+    req,
+    workspaceId: workspaceId!,
+    action: 'outreach_draft.generate_bulk',
+    resourceType: 'campaign',
+    resourceId: campaign._id,
+    metadata: { leadCount: campaign.leadIds.length, bullmqJobId: job.id },
+  });
 
   res.status(202).json({ success: true, data: { bullmqJobId: job.id } });
 }
@@ -148,7 +168,7 @@ export async function generateCampaignDrafts(req: Request, res: Response): Promi
 export async function streamCampaignGeneration(req: Request, res: Response): Promise<void> {
   const { workspaceId, campaignId } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(campaignId!)) {
+  if (!campaignId || !mongoose.Types.ObjectId.isValid(campaignId)) {
     res.status(400).json({ success: false, error: 'Invalid campaignId' });
     return;
   }
@@ -170,16 +190,18 @@ export async function streamCampaignGeneration(req: Request, res: Response): Pro
     res.write(`data: ${JSON.stringify(data)}\n\n`);
   };
 
-  // Send initial connected + bootstrap progress so late-connecting clients know current state
-  const doneCount = await OutreachDraft.countDocuments({ campaignId, workspaceId });
-  send({ type: 'connected', campaignId });
-  send({ type: 'bootstrap', done: doneCount, total: campaign.leadIds?.length ?? 0 });
+  const totalLeads = campaign.leadIds?.length ?? 0;
 
-  // Dedicated Redis connection for pub/sub
+  // Dedicated Redis connection for pub/sub — subscribe BEFORE bootstrap so worker
+  // messages are not dropped while we await DB counts / initial sends.
   const subscriber = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
   subscriber.on('error', (err) => logger.error('SSE outreach subscriber error', { err }));
 
   const channel = `outreach:progress:${campaignId}`;
+
+  subscriber.on('message', (_chan: string, message: string) => {
+    res.write(`data: ${message}\n\n`);
+  });
 
   const heartbeat = setInterval(() => {
     send({ type: 'heartbeat' });
@@ -191,10 +213,50 @@ export async function streamCampaignGeneration(req: Request, res: Response): Pro
     subscriber.quit().catch(() => {});
   });
 
-  await subscriber.subscribe(channel);
-  subscriber.on('message', (_chan: string, message: string) => {
-    res.write(`data: ${message}\n\n`);
-  });
+  try {
+    await subscriber.subscribe(channel);
+  } catch (err) {
+    logger.error('SSE outreach subscribe failed', { err, campaignId });
+    clearInterval(heartbeat);
+    await subscriber.quit().catch(() => {});
+    res.end();
+    return;
+  }
+
+  const doneCount = await OutreachDraft.countDocuments({ campaignId, workspaceId });
+  send({ type: 'connected', campaignId });
+  send({ type: 'bootstrap', done: doneCount, total: totalLeads });
+
+  // If the BullMQ job already finished before this connection subscribed, replay the
+  // terminal event so the client does not hang on "Generating…".
+  try {
+    const queue = getOutreachQueue();
+    const job = await queue.getJob(campaignId);
+    if (job) {
+      const state = await job.getState();
+      if (state === 'completed') {
+        const done = await OutreachDraft.countDocuments({ campaignId, workspaceId });
+        send({
+          type: 'generation_complete',
+          campaignId,
+          done,
+          failed: Math.max(0, totalLeads - done),
+          total: totalLeads,
+        });
+      } else if (state === 'failed') {
+        const done = await OutreachDraft.countDocuments({ campaignId, workspaceId });
+        send({
+          type: 'generation_complete',
+          campaignId,
+          done,
+          failed: Math.max(0, totalLeads - done),
+          total: totalLeads,
+        });
+      }
+    }
+  } catch (err) {
+    logger.warn('SSE outreach job state sync skipped', { err, campaignId });
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -323,6 +385,14 @@ export async function approveDraft(req: Request, res: Response): Promise<void> {
 
   if (!draft) throw ApiError.notFound('Draft not found');
 
+  logAudit({
+    req,
+    workspaceId: workspaceId!,
+    action: 'outreach_draft.approve',
+    resourceType: 'outreach_draft',
+    resourceId: draft._id,
+  });
+
   res.json({ success: true, data: draft });
 }
 
@@ -340,5 +410,96 @@ export async function deleteDraft(req: Request, res: Response): Promise<void> {
   const draft = await OutreachDraft.findOneAndDelete({ _id: draftId, workspaceId });
   if (!draft) throw ApiError.notFound('Draft not found');
 
+  logAudit({
+    req,
+    workspaceId: workspaceId!,
+    action: 'outreach_draft.delete',
+    resourceType: 'outreach_draft',
+    resourceId: draft._id,
+    metadata: { campaignId: draft.campaignId?.toString(), leadId: draft.leadId?.toString() },
+  });
+
   res.json({ success: true });
+}
+
+// ---------------------------------------------------------------------------
+// sendDraft  POST /api/v1/workspaces/:workspaceId/outreach/:draftId/send
+// ---------------------------------------------------------------------------
+
+export async function sendDraft(req: Request, res: Response): Promise<void> {
+  const { workspaceId, draftId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(draftId!)) {
+    throw ApiError.badRequest('Invalid draftId');
+  }
+
+  const draft = await OutreachDraft.findOne({ _id: draftId, workspaceId });
+  if (!draft) throw ApiError.notFound('Draft not found');
+
+  if (draft.status === 'sent') {
+    throw ApiError.conflict('Draft has already been sent');
+  }
+  if (draft.status !== 'approved') {
+    throw ApiError.badRequest('Draft must be approved before sending');
+  }
+
+  // Load workspace email config (select secret fields explicitly)
+  const workspace = await Workspace.findById(workspaceId).select('+emailConfig.apiKey +emailConfig.smtpPass');
+  if (!workspace) throw ApiError.notFound('Workspace not found');
+
+  if (!workspace.emailConfig?.provider || !workspace.emailConfig.fromEmail) {
+    throw ApiError.badRequest(
+      'Email is not configured for this workspace. Go to Settings → Email to set up your sending account.'
+    );
+  }
+
+  // Load lead to get recipient address
+  const lead = await Lead.findOne({ _id: draft.leadId, workspaceId });
+  if (!lead) throw ApiError.notFound('Lead not found');
+
+  if (!lead.emails || lead.emails.length === 0) {
+    throw ApiError.badRequest('Lead has no email address on record');
+  }
+
+  // Prefer highest-confidence business email, then any
+  const sortedEmails = [...lead.emails].sort((a, b) => {
+    const businessBonus = (e: typeof a) => (e.type === 'business' ? 1 : 0);
+    return (businessBonus(b) - businessBonus(a)) || (b.confidence - a.confidence);
+  });
+  const toAddress = sortedEmails[0]!.address;
+
+  const subject = draft.subject ?? `Hello from ${workspace.name}`;
+  const { messageId } = await sendEmailForWorkspace(workspace.emailConfig, {
+    to: toAddress,
+    subject,
+    html: textToHtml(draft.body),
+    text: draft.body,
+  });
+
+  const sent = await OutreachDraft.findByIdAndUpdate(
+    draftId,
+    {
+      $set: {
+        status: 'sent',
+        sentAt: new Date(),
+        'deliveryMetadata.provider': workspace.emailConfig.provider,
+        'deliveryMetadata.messageId': messageId,
+      },
+    },
+    { new: true },
+  );
+
+  // Mark the lead as contacted
+  await Lead.updateOne({ _id: draft.leadId }, { $set: { outreachStatus: 'contacted' } });
+
+  logAudit({
+    req,
+    workspaceId: workspaceId!,
+    action: 'outreach_draft.send',
+    resourceType: 'outreach_draft',
+    resourceId: draft._id,
+    metadata: { to: toAddress, messageId, provider: workspace.emailConfig.provider },
+  });
+
+  res.json({ success: true, data: sent });
 }

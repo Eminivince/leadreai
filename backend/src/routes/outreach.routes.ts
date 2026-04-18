@@ -15,6 +15,7 @@ router.get('/outreach', asyncHandler(outreachController.listDrafts));
 router.get('/outreach/:draftId', asyncHandler(outreachController.getDraft));
 router.patch('/outreach/:draftId', asyncHandler(outreachController.updateDraft));
 router.post('/outreach/:draftId/approve', asyncHandler(outreachController.approveDraft));
+router.post('/outreach/:draftId/send', asyncHandler(outreachController.sendDraft));
 router.delete('/outreach/:draftId', asyncHandler(outreachController.deleteDraft));
 
 // Campaign bulk generation + SSE stream

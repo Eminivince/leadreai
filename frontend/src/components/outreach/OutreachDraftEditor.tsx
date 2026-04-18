@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Trash2, CheckCircle, ArrowLeft, ExternalLink } from 'lucide-react';
+import { Trash2, CheckCircle, ArrowLeft, ExternalLink, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -129,6 +129,22 @@ export function OutreachDraftEditor({ draftId, campaignId }: Props) {
     },
   });
 
+  const sendMutation = useMutation({
+    mutationFn: () =>
+      apiFetch<ApiResponse<OutreachDraft>>(
+        `/api/v1/workspaces/${workspaceId}/outreach/${draftId}/send`,
+        { method: 'POST' }
+      ),
+    onSuccess: () => {
+      toast.success('Email sent successfully.');
+      void queryClient.invalidateQueries({ queryKey: ['draft', workspaceId, draftId] });
+      void queryClient.invalidateQueries({ queryKey: ['campaign-drafts', workspaceId, campaignId] });
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to send email.');
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: () =>
       apiFetch(`/api/v1/workspaces/${workspaceId}/outreach/${draftId}`, {
@@ -170,6 +186,7 @@ export function OutreachDraftEditor({ draftId, campaignId }: Props) {
 
   const flWordCount = wordCount(firstLine);
   const isApproved = draft.status === 'approved';
+  const isSent = draft.status === 'sent';
 
   return (
     <div className="space-y-6">
@@ -307,15 +324,28 @@ export function OutreachDraftEditor({ draftId, campaignId }: Props) {
                 Delete
               </Button>
 
-              <Button
-                size="sm"
-                onClick={() => approveMutation.mutate()}
-                disabled={isApproved || approveMutation.isPending}
-                className="gap-1.5"
-              >
-                <CheckCircle size={14} />
-                {isApproved ? 'Approved' : 'Approve'}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => approveMutation.mutate()}
+                  disabled={isApproved || isSent || approveMutation.isPending}
+                  className="gap-1.5"
+                >
+                  <CheckCircle size={14} />
+                  {isApproved || isSent ? 'Approved' : 'Approve'}
+                </Button>
+
+                <Button
+                  size="sm"
+                  onClick={() => sendMutation.mutate()}
+                  disabled={!isApproved || isSent || sendMutation.isPending}
+                  className="gap-1.5"
+                >
+                  <Send size={14} />
+                  {isSent ? 'Sent' : sendMutation.isPending ? 'Sending…' : 'Send'}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

@@ -276,7 +276,30 @@ export async function createOutreachWorker(connection: Redis, publisher: Redis):
   const worker = new Worker(
     'outreach',
     async (job: Job) => {
-      await processOutreachJob(job, publisher);
+      try {
+        await processOutreachJob(job, publisher);
+      } catch (err) {
+        const data = job.data as OutreachJobData;
+        const total = data.leadIds?.length ?? 0;
+        const msg = err instanceof Error ? err.message : String(err);
+        logger.error('[outreachWorker] Job threw before terminal publish', {
+          jobId: job.id,
+          campaignId: data.campaignId,
+          err: msg,
+        });
+        await publisher.publish(
+          `outreach:progress:${data.campaignId}`,
+          JSON.stringify({
+            type: 'generation_complete',
+            campaignId: data.campaignId,
+            done: 0,
+            failed: total,
+            total,
+            fatalError: msg,
+          }),
+        );
+        throw err;
+      }
     },
     {
       connection,

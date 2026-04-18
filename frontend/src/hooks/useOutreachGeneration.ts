@@ -54,23 +54,27 @@ export function useOutreachGeneration({
       const es = new EventSource(url);
       esRef.current = es;
 
-      es.addEventListener('draft_created', (ev: MessageEvent) => {
+      // Backend sends generic `data: {...}\n\n` messages (not named events) — use onmessage
+      es.onmessage = (ev: MessageEvent) => {
         try {
-          const payload = JSON.parse(ev.data as string) as { done: number; total: number };
-          setDone(payload.done);
-          setTotal(payload.total);
+          const data = JSON.parse(ev.data as string) as Record<string, unknown>;
+          if (data.type === 'draft_created') {
+            setDone(Number(data.done) || 0);
+            setTotal(Number(data.total) || 0);
+          } else if (data.type === 'generation_complete') {
+            setIsGenerating(false);
+            setIsComplete(true);
+            es.close();
+            esRef.current = null;
+            onComplete?.();
+          } else if (data.type === 'bootstrap') {
+            setDone(Number(data.done) || 0);
+            setTotal(Number(data.total) || 0);
+          }
         } catch {
           // ignore parse errors
         }
-      });
-
-      es.addEventListener('generation_complete', () => {
-        setIsGenerating(false);
-        setIsComplete(true);
-        es.close();
-        esRef.current = null;
-        onComplete?.();
-      });
+      };
 
       es.onerror = () => {
         setIsGenerating(false);

@@ -4,6 +4,7 @@ import Campaign from '../models/Campaign.js';
 import OutreachDraft from '../models/OutreachDraft.js';
 import Lead from '../models/Lead.js';
 import { ApiError } from '../utils/ApiError.js';
+import { logAudit } from '../services/audit.js';
 
 export async function listCampaigns(req: Request, res: Response): Promise<void> {
   const { workspaceId } = req.params;
@@ -55,7 +56,7 @@ export async function createCampaign(req: Request, res: Response): Promise<void>
   }
 
   const campaign = await Campaign.create({
-    workspaceId,
+    workspaceId: workspaceId!,
     createdBy: req.user._id,
     name: body.name.trim(),
     description: body.description,
@@ -66,6 +67,15 @@ export async function createCampaign(req: Request, res: Response): Promise<void>
       language: body.language?.trim() ?? 'English',
       personalization: [],
     },
+  });
+
+  logAudit({
+    req,
+    workspaceId: workspaceId!,
+    action: 'campaign.create',
+    resourceType: 'campaign',
+    resourceId: campaign._id,
+    metadata: { name: campaign.name },
   });
 
   res.status(201).json({ success: true, data: campaign });
@@ -157,6 +167,15 @@ export async function deleteCampaign(req: Request, res: Response): Promise<void>
   await OutreachDraft.deleteMany({ campaignId: new mongoose.Types.ObjectId(campaignId!) });
   await Campaign.deleteOne({ _id: campaignId });
 
+  logAudit({
+    req,
+    workspaceId: workspaceId!,
+    action: 'campaign.delete',
+    resourceType: 'campaign',
+    resourceId: campaign._id,
+    metadata: { name: campaign.name },
+  });
+
   res.json({ success: true });
 }
 
@@ -187,7 +206,7 @@ export async function addLeads(req: Request, res: Response): Promise<void> {
   // Validate all leads belong to this workspace
   const matchingCount = await Lead.countDocuments({
     _id: { $in: objectIds },
-    workspaceId,
+    workspaceId: workspaceId!,
   });
 
   if (matchingCount !== objectIds.length) {

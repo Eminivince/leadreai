@@ -26,9 +26,16 @@ import type { ApiResponse } from '@leadreai/shared';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+interface PagedPayload<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 interface CampaignLeadsResponse {
   success: true;
-  data: Lead[];
+  data: PagedPayload<Lead>;
 }
 
 interface AllLeadsResponse {
@@ -39,7 +46,7 @@ interface AllLeadsResponse {
 
 interface DraftsResponse {
   success: true;
-  data: OutreachDraft[];
+  data: PagedPayload<OutreachDraft>;
 }
 
 // ─── Status badge helpers ─────────────────────────────────────────────────────
@@ -152,8 +159,18 @@ export default function CampaignDetailPage() {
   });
 
   const campaign = campaignData?.data;
-  const campaignLeads = campaignLeadsData?.data ?? [];
-  const drafts = draftsData?.data ?? [];
+  const rawCampaignLeads = campaignLeadsData?.data;
+  const campaignLeads = Array.isArray(rawCampaignLeads)
+    ? rawCampaignLeads
+    : Array.isArray(rawCampaignLeads?.data)
+      ? rawCampaignLeads.data
+      : [];
+  const rawDrafts = draftsData?.data;
+  const drafts = Array.isArray(rawDrafts)
+    ? rawDrafts
+    : Array.isArray(rawDrafts?.data)
+      ? rawDrafts.data
+      : [];
   const allLeads = allLeadsData?.data ?? [];
 
   // Already-added lead IDs for filtering
@@ -161,7 +178,7 @@ export default function CampaignDetailPage() {
 
   // ── Generation hook ────────────────────────────────────────────────────────
 
-  const { done, total, percentage, isComplete, isGenerating, startGeneration } =
+  const { done, total, percentage, isComplete, isGenerating, error: generationError, startGeneration } =
     useOutreachGeneration({
       workspaceId: workspaceId ?? '',
       campaignId,
@@ -343,6 +360,9 @@ export default function CampaignDetailPage() {
               <CheckCircle2 size={16} />
               Generation complete!
             </div>
+          )}
+          {generationError && !isGenerating && (
+            <p className="text-xs text-destructive">{generationError}</p>
           )}
           {!isGenerating && !isComplete && (
             <p className="text-xs text-muted-foreground">

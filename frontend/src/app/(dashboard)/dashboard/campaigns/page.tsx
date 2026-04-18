@@ -36,7 +36,12 @@ import type { ApiResponse } from '@leadreai/shared';
 
 interface CampaignsResponse {
   success: true;
-  data: Campaign[];
+  data: {
+    data: Campaign[];
+    total: number;
+    page: number;
+    limit: number;
+  };
 }
 
 interface CampaignFormState {
@@ -92,7 +97,8 @@ export default function CampaignsPage() {
     enabled: !!workspaceId,
   });
 
-  const campaigns = data?.data ?? [];
+  const raw = data?.data;
+  const campaigns = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
 
   // ── Mutations ──────────────────────────────────────────────────────────────
 
