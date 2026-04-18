@@ -12,6 +12,9 @@ function getHourInTz(date: Date, tz: string): number {
     hour12: false,
   }).format(date);
   const val = parseInt(formatted.replace(/\D/g, ''), 10);
+  if (isNaN(val)) {
+    throw new Error(`Could not parse hour from Intl token: "${formatted}"`);
+  }
   // Intl may return "24" for midnight in some locales
   return val === 24 ? 0 : val;
 }
@@ -22,7 +25,11 @@ function getDayOfWeekInTz(date: Date, tz: string): number {
     weekday: 'short',
   }).format(date);
   const days: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
-  return days[formatted] ?? new Date().getDay();
+  const day = days[formatted];
+  if (day === undefined) {
+    throw new Error(`Unexpected weekday token from Intl: "${formatted}"`);
+  }
+  return day;
 }
 
 export function nextSendTime(sw: SendWindow, from: Date = new Date()): Date {
