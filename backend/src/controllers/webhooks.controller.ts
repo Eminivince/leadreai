@@ -76,7 +76,10 @@ export async function handleUnsubscribe(req: Request, res: Response): Promise<vo
           { _id: enrollment._id },
           { $set: { status: 'unsubscribed', stopReason: 'unsubscribe', completedAt: new Date() } },
         );
-        await Sequence.updateOne({ _id: enrollment.sequenceId }, { $inc: { 'stats.unsubscribed': 1, 'stats.active': -1 } });
+        await Sequence.updateOne(
+          { _id: enrollment.sequenceId, 'stats.active': { $gt: 0 } },
+          { $inc: { 'stats.unsubscribed': 1, 'stats.active': -1 } },
+        );
       }
     }
 

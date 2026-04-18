@@ -20,8 +20,9 @@ export function webhookHmac(provider: 'resend' | 'sendgrid') {
     }
 
     // Resend uses svix-signature header; SendGrid uses x-twilio-email-event-webhook-signature
-    const sigHeader = (req.headers['svix-signature'] as string | undefined)
-      ?? (req.headers['x-twilio-email-event-webhook-signature'] as string | undefined);
+    const sigHeader = provider === 'resend'
+      ? (req.headers['svix-signature'] as string | undefined)
+      : (req.headers['x-twilio-email-event-webhook-signature'] as string | undefined);
 
     if (!sigHeader) {
       next(ApiError.unauthorized('Missing webhook signature header'));

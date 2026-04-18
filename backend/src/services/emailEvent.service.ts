@@ -66,12 +66,13 @@ function normalizeSendGrid(payload: Record<string, unknown>): NormalizedEvent | 
   if (!event) return null;
 
   const type = payload['type'] as string | undefined;
+  const ts = payload['timestamp'] as number | undefined;
   return {
     messageId: messageId.split('.')[0] ?? messageId,
     event,
     provider: 'sendgrid',
     bounceType: event === 'bounced' ? (type === 'bounce' ? 'hard' : 'soft') : undefined,
-    occurredAt: new Date((payload['timestamp'] as number | undefined ?? Date.now()) * 1000),
+    occurredAt: ts !== undefined ? new Date(ts * 1000) : new Date(),
     raw: payload,
     recipientEmail: payload['email'] as string | undefined,
   };
@@ -96,7 +97,10 @@ async function applyStopRules(
         { _id: enrollment._id },
         { $set: { status: 'stopped', stopReason: rule.trigger, completedAt: new Date() } },
       );
-      await Sequence.updateOne({ _id: sequence._id }, { $inc: { 'stats.active': -1 } });
+      await Sequence.updateOne(
+        { _id: sequence._id, 'stats.active': { $gt: 0 } },
+        { $inc: { 'stats.active': -1 } },
+      );
       return true;
     }
   }
@@ -160,7 +164,7 @@ export async function processEmailEvent(
       await SequenceEnrollment.updateOne({ _id: enrollment._id }, { $set: { status: 'replied' } });
       await Sequence.updateOne(
         { _id: enrollment.sequenceId },
-        { $inc: { 'stats.replied': 1, 'stats.active': -1 } },
+        { $inc: { 'stats.replied': 1 } },
       );
       await applyStopRules(enrollment, 'replied');
       break;
@@ -188,7 +192,7 @@ export async function processEmailEvent(
           { $set: { status: 'bounced', stopReason: 'hard_bounce', completedAt: new Date() } },
         );
         await Sequence.updateOne(
-          { _id: enrollment.sequenceId },
+          { _id: enrollment.sequenceId, 'stats.active': { $gt: 0 } },
           { $inc: { 'stats.bounced': 1, 'stats.active': -1 } },
         );
       }
@@ -200,7 +204,7 @@ export async function processEmailEvent(
         const workspaceId = enrollment.workspaceId.toString();
         await SuppressionEntry.updateOne(
           { workspaceId, email: normalized.recipientEmail.toLowerCase() },
-          { $setOnInsert: { workspaceId, email: normalized.recipientEmail.toLowerCase(), reason: 'bounce', addedAt: new Date() } },
+          { $setOnInsert: { workspaceId, email: normalized.recipientEmail.toLowerCase(), reason: 'manual', addedAt: new Date() } },
           { upsert: true },
         );
         await Lead.updateOne({ _id: enrollment.leadId }, { $set: { outreachStatus: 'bounced', suppressedAt: new Date(), suppressReason: 'spam_complaint' } });
@@ -209,7 +213,10 @@ export async function processEmailEvent(
         { _id: enrollment._id },
         { $set: { status: 'stopped', stopReason: 'spam_complaint', completedAt: new Date() } },
       );
-      await Sequence.updateOne({ _id: enrollment.sequenceId }, { $inc: { 'stats.active': -1 } });
+      await Sequence.updateOne(
+        { _id: enrollment.sequenceId, 'stats.active': { $gt: 0 } },
+        { $inc: { 'stats.active': -1 } },
+      );
       break;
     case 'unsubscribed':
       await SequenceEnrollment.updateOne(
@@ -217,7 +224,7 @@ export async function processEmailEvent(
         { $set: { status: 'unsubscribed', stopReason: 'unsubscribe', completedAt: new Date() } },
       );
       await Sequence.updateOne(
-        { _id: enrollment.sequenceId },
+        { _id: enrollment.sequenceId, 'stats.active': { $gt: 0 } },
         { $inc: { 'stats.unsubscribed': 1, 'stats.active': -1 } },
       );
       break;
