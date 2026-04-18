@@ -40,7 +40,7 @@ export async function listJobs(req: Request, res: Response): Promise<void> {
     ProspectingJob.countDocuments(filter),
   ]);
 
-  res.json({ success: true, data: { data: jobs, total, page, limit } });
+  res.json({ success: true, data: jobs, total, page, limit });
 }
 
 export async function getJob(req: Request, res: Response): Promise<void> {
