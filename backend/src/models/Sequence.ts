@@ -60,7 +60,7 @@ const stepSchema = new Schema({
     fromName: String,
     replyTo: String,
   },
-});
+}, { _id: false });
 
 const sequenceSchema = new Schema<ISequenceDoc>(
   {
