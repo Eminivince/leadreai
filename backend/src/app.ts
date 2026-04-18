@@ -17,6 +17,7 @@ import adminRouter from './routes/admin.routes.js';
 import { contactsRouter, leadContactsRouter } from './routes/contacts.routes.js';
 import crmRouter, { crmLeadsRouter } from './routes/crm.routes.js';
 import suppressionRouter from './routes/suppression.routes.js';
+import sequencesRouter from './routes/sequences.routes.js';
 import { authenticate } from './middleware/authenticate.js';
 import { asyncHandler } from './utils/asyncHandler.js';
 import { jobProgressStream } from './sse/jobProgressStream.js';
@@ -65,6 +66,7 @@ export function createApp(): Express {
   app.use('/api/v1/workspaces/:workspaceId/leads', crmLeadsRouter);
   app.use('/api/v1/workspaces/:workspaceId/crm', crmRouter);
   app.use('/api/v1/workspaces/:workspaceId/suppression', suppressionRouter);
+  app.use('/api/v1/workspaces/:workspaceId/sequences', sequencesRouter);
 
   app.use('/admin/queues', adminRouter);
 

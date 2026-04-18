@@ -17,6 +17,7 @@ let _outreachQueue: Queue | null = null;
 let _exportQueue: Queue | null = null;
 let _contactEnrichmentQueue: Queue | null = null;
 let _hubspotSyncQueue: Queue | null = null;
+let _sequenceStepQueue: Queue | null = null;
 
 export function getProspectingQueue(): Queue {
   if (!_prospectingQueue) {
@@ -82,4 +83,20 @@ export function getHubspotSyncQueue(): Queue {
     });
   }
   return _hubspotSyncQueue;
+}
+
+export function getSequenceStepQueue(): Queue {
+  if (!_sequenceStepQueue) {
+    _sequenceStepQueue = new Queue('sequence-step', {
+      connection: getRedis(),
+      prefix: QUEUE_PREFIX,
+      defaultJobOptions: {
+        removeOnComplete: { count: 1000 },
+        removeOnFail: { count: 2000 },
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 10_000 },
+      },
+    });
+  }
+  return _sequenceStepQueue;
 }
