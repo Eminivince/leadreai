@@ -1,7 +1,7 @@
 import { Worker, type Job } from 'bullmq';
 import { Redis } from 'ioredis';
 import mongoose, { Schema } from 'mongoose';
-import { createHmac, scryptSync, createDecipheriv } from 'crypto';
+import { scryptSync, createDecipheriv } from 'crypto';
 import { Resend } from 'resend';
 import nodemailer from 'nodemailer';
 import jwt from 'jsonwebtoken';
@@ -19,14 +19,12 @@ const QUEUE_PREFIX = `{bull}:leadreai:${env.NODE_ENV}`;
 
 // ─── Inline decrypt (mirrors backend/src/utils/encrypt.ts) ───────────────────
 function decryptValue(ciphertext: string): string {
-  const key = scryptSync(env.JWT_SECRET, 'leadreai-salt', 32);
-  const buf = Buffer.from(ciphertext, 'base64');
-  const iv = buf.subarray(0, 12);
-  const authTag = buf.subarray(12, 28);
-  const encrypted = buf.subarray(28);
-  const decipher = createDecipheriv('aes-256-gcm', key, iv);
-  decipher.setAuthTag(authTag);
-  return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf8');
+  const [ivHex, authTagHex, encryptedHex] = ciphertext.split(':');
+  if (!ivHex || !authTagHex || !encryptedHex) throw new Error('Invalid ciphertext format');
+  const key = scryptSync(env.JWT_SECRET, 'leadreai-email-salt', 32);
+  const decipher = createDecipheriv('aes-256-gcm', key, Buffer.from(ivHex, 'hex'));
+  decipher.setAuthTag(Buffer.from(authTagHex, 'hex'));
+  return decipher.update(Buffer.from(encryptedHex, 'hex')) + decipher.final('utf8');
 }
 
 // ─── Inline unsubscribe token generation ─────────────────────────────────────
@@ -262,9 +260,7 @@ async function processSequenceStep(job: Job<SequenceStepPayload>): Promise<void>
 
   // Update lead outreachStatus to 'sent' on first successful send
   if (messageId && stepNumber === 1) {
-    const LeadFullModel: mongoose.Model<any> = (mongoose.models['leads'] as mongoose.Model<any> | undefined) ??
-      mongoose.model('leads', new Schema({}, { strict: false }), 'leads');
-    await LeadFullModel.updateOne({ _id: enrollment.leadId }, { $set: { outreachStatus: 'sent' } });
+    await LeadModel.updateOne({ _id: enrollment.leadId }, { $set: { outreachStatus: 'sent' } });
   }
 
   if (messageId) {
