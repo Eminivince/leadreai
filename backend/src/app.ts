@@ -1,4 +1,5 @@
 import express, { type Express } from 'express';
+import mongoose from 'mongoose';
 import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -33,6 +34,15 @@ export function createApp(): Express {
 
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  // Validate workspaceId param is a valid ObjectId before any workspace-scoped handler runs
+  app.param('workspaceId', (_req, res, next, val) => {
+    if (!mongoose.Types.ObjectId.isValid(val as string)) {
+      res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'Invalid workspaceId' } });
+      return;
+    }
+    next();
   });
 
   app.use('/api/v1/auth', authRouter);

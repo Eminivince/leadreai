@@ -17,7 +17,7 @@ export const contactsRouter: RouterType = Router({ mergeParams: true });
 contactsRouter.use(authenticate);
 
 contactsRouter.get('/', asyncHandler(listContacts));
-contactsRouter.post('/bulk-tag', asyncHandler(bulkTagContacts));
+contactsRouter.post('/bulk-tag', authorize(['owner', 'admin']), asyncHandler(bulkTagContacts));
 contactsRouter.get('/:contactId', asyncHandler(getContact));
 contactsRouter.patch('/:contactId', asyncHandler(updateContact));
 contactsRouter.delete('/:contactId', authorize(['owner', 'admin']), asyncHandler(softDeleteContact));
@@ -27,4 +27,4 @@ export const leadContactsRouter: RouterType = Router({ mergeParams: true });
 leadContactsRouter.use(authenticate);
 
 leadContactsRouter.post('/:leadId/contacts', authorize(['owner', 'admin']), asyncHandler(addManualContact));
-leadContactsRouter.post('/:leadId/enrich-contacts', asyncHandler(triggerContactEnrichment));
+leadContactsRouter.post('/:leadId/enrich-contacts', authorize(['owner', 'admin']), asyncHandler(triggerContactEnrichment));

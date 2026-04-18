@@ -22,7 +22,7 @@ export const updateContactSchema = z.object({
 
 export const bulkTagContactsSchema = z.object({
   contactIds: z.array(z.string()).min(1).max(200),
-  tags: z.array(z.string()).min(1),
+  tags: z.array(z.string().min(1).max(50)).min(1),
 });
 
 export const manualContactSchema = z.object({
@@ -32,7 +32,7 @@ export const manualContactSchema = z.object({
   title: z.string().optional(),
   department: z.enum(['sales', 'marketing', 'engineering', 'finance', 'hr', 'legal', 'operations', 'other']).optional(),
   seniority: z.enum(['c_level', 'vp', 'director', 'manager', 'ic', 'unknown']).optional(),
-  linkedinUrl: z.string().url().optional().or(z.literal('')),
+  linkedinUrl: z.string().url().optional().or(z.literal('')).transform(v => v === '' ? undefined : v),
   emails: z.array(contactEmailSchema).optional(),
   phones: z.array(contactPhoneSchema).optional(),
   buyingRole: z.enum(['champion', 'economic_buyer', 'technical_buyer', 'blocker', 'influencer', 'unknown']).optional(),

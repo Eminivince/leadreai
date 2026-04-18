@@ -4,7 +4,7 @@ import { Contact } from '../models/Contact.js';
 import Lead from '../models/Lead.js';
 import { ApiError } from '../utils/ApiError.js';
 import { logAudit } from '../services/audit.js';
-import { updateContactSchema, bulkTagContactsSchema, manualContactSchema } from '@leadreai/shared';
+import { updateContactSchema, bulkTagContactsSchema, manualContactSchema, SENIORITY_LEVELS, DEPARTMENTS } from '@leadreai/shared';
 import { getContactEnrichmentQueue } from '../services/queue/queues.js';
 
 // GET /contacts
@@ -26,6 +26,13 @@ export async function listContacts(req: Request, res: Response): Promise<void> {
       throw ApiError.badRequest('Invalid leadId');
     }
     filter['leadId'] = new mongoose.Types.ObjectId(leadId);
+  }
+
+  if (seniority && !SENIORITY_LEVELS.includes(seniority as any)) {
+    throw ApiError.badRequest(`seniority must be one of: ${SENIORITY_LEVELS.join(', ')}`);
+  }
+  if (department && !DEPARTMENTS.includes(department as any)) {
+    throw ApiError.badRequest(`department must be one of: ${DEPARTMENTS.join(', ')}`);
   }
 
   if (seniority) filter['seniority'] = seniority;
@@ -206,10 +213,10 @@ export async function addManualContact(req: Request, res: Response): Promise<voi
 
   // Push contactId into lead.contactIds and update contactSummary
   await Lead.updateOne(
-    { _id: leadId },
+    { _id: leadId, workspaceId },
     {
       $addToSet: { contactIds: contact._id },
-      $set: { 'contactSummary.totalContacts': (lead.contactSummary?.totalContacts ?? 0) + 1 },
+      $inc: { 'contactSummary.totalContacts': 1 },
     }
   );
 
