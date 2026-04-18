@@ -1,11 +1,12 @@
 import { z } from 'zod';
+import { OUTREACH_CHANNELS } from '../../utils/constants.js';
 
 export const CreateCampaignSchema = z.object({
   name: z.string().min(1).max(200),
   description: z.string().max(1000).optional(),
   leadIds: z.array(z.string()).min(1),
   outreachConfig: z.object({
-    channel: z.enum(['email', 'linkedin', 'sms']),
+    channel: z.enum(OUTREACH_CHANNELS),
     tone: z.string().min(1),
     language: z.string().default('English'),
     personalization: z.array(z.string()).default([]),

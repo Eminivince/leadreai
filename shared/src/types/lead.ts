@@ -1,6 +1,13 @@
+import { OUTREACH_STATUSES, LEAD_EMAIL_TYPES, PHONE_TYPES, SOURCE_TYPES } from '../utils/constants.js';
+
+export type OutreachStatus = (typeof OUTREACH_STATUSES)[number];
+export type LeadEmailType = (typeof LEAD_EMAIL_TYPES)[number];
+export type PhoneType = (typeof PHONE_TYPES)[number];
+export type SourceType = (typeof SOURCE_TYPES)[number];
+
 export interface LeadEmail {
   address: string;
-  type: 'business' | 'generic' | 'personal' | 'pattern_inferred';
+  type: LeadEmailType;
   confidence: number;
   verified: boolean;
   verifiedAt?: string;
@@ -10,7 +17,7 @@ export interface LeadEmail {
 export interface LeadPhone {
   raw: string;
   normalized?: string;
-  type?: 'office' | 'mobile' | 'fax';
+  type?: PhoneType;
   countryCode?: string;
   source: string;
 }
@@ -68,16 +75,7 @@ export interface LeadOsint {
 
 export interface LeadSource {
   url: string;
-  type:
-    | 'serpapi'
-    | 'scraped_page'
-    | 'pdf'
-    | 'docx'
-    | 'xlsx'
-    | 'whois'
-    | 'dns'
-    | 'ssl'
-    | 'linkedin';
+  type: SourceType;
   scrapedAt: string;
   confidence: number;
 }
@@ -105,7 +103,7 @@ export interface Lead {
   isVerified: boolean;
   isDuplicate: boolean;
   mergedIntoId?: string;
-  outreachStatus: 'not_contacted' | 'draft_created' | 'sent' | 'replied' | 'bounced';
+  outreachStatus: OutreachStatus;
   tags: string[];
   notes?: string;
   createdAt: string;

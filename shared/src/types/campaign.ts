@@ -1,5 +1,9 @@
+import { OUTREACH_CHANNELS } from '../utils/constants.js';
+
+export type OutreachChannel = (typeof OUTREACH_CHANNELS)[number];
+
 export interface OutreachConfig {
-  channel: 'email' | 'linkedin' | 'sms';
+  channel: OutreachChannel;
   tone: string;
   language: string;
   personalization: string[];

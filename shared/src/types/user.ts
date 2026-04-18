@@ -1,6 +1,11 @@
+import { PLAN_TIERS, WORKSPACE_ROLES } from '../utils/constants.js';
+
+export type PlanTier = (typeof PLAN_TIERS)[number];
+export type WorkspaceRole = (typeof WORKSPACE_ROLES)[number];
+
 export interface WorkspaceMember {
   workspaceId: string;
-  role: 'owner' | 'admin' | 'member';
+  role: WorkspaceRole;
 }
 
 export interface User {
@@ -9,7 +14,7 @@ export interface User {
   firstName: string;
   lastName: string;
   avatarUrl?: string;
-  plan: 'free' | 'pro' | 'enterprise';
+  plan: PlanTier;
   planExpiresAt?: string;
   creditsBalance: number;
   workspaces: WorkspaceMember[];
@@ -34,7 +39,7 @@ export interface WorkspaceUsageStats {
 
 export interface WorkspaceMemberDetail {
   userId: string;
-  role: 'owner' | 'admin' | 'member';
+  role: WorkspaceRole;
   joinedAt: string;
 }
 

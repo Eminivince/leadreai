@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PLAN_TIERS } from '../../utils/constants.js';
 
 export const RegisterSchema = z.object({
   email: z.string().email(),
@@ -12,13 +13,14 @@ export const LoginSchema = z.object({
   password: z.string().min(1),
 });
 
+// Intentional projection of User — omits passwordHash, workspaces, and internal timestamps
 export const MeResponseSchema = z.object({
   _id: z.string(),
   email: z.string().email(),
   firstName: z.string(),
   lastName: z.string(),
   avatarUrl: z.string().optional(),
-  plan: z.enum(['free', 'pro', 'enterprise']),
+  plan: z.enum(PLAN_TIERS),
   creditsBalance: z.number(),
   isEmailVerified: z.boolean(),
   createdAt: z.string(),

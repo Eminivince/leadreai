@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { OUTREACH_STATUSES } from '../../utils/constants.js';
 
 export const LeadFilterSchema = z.object({
   jobId: z.string().optional(),
@@ -16,7 +17,7 @@ export const UpdateLeadSchema = z.object({
   notes: z.string().max(5000).optional(),
   tags: z.array(z.string()).optional(),
   outreachStatus: z
-    .enum(['not_contacted', 'draft_created', 'sent', 'replied', 'bounced'])
+    .enum(OUTREACH_STATUSES)
     .optional(),
 });
 
