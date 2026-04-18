@@ -23,7 +23,7 @@ export async function createProspectingWorker(connection: Redis, publisher: Redi
         await runIntentParser(jobId, workspaceId, publisher);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        logger.error('Intent parser failed', { jobId, err });
+        logger.error('Pipeline failed', { jobId, err });
 
         // Mark job as failed in DB + publish error event
         const ProspectingJob = mongoose.models['ProspectingJob'] as
@@ -34,7 +34,7 @@ export async function createProspectingWorker(connection: Redis, publisher: Redi
           await ProspectingJob.findByIdAndUpdate(jobId, {
             status: 'failed',
             'error.message': message,
-            'error.stage': 'parsing',
+            'error.stage': 'pipeline',
           });
         }
 
