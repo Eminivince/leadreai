@@ -57,6 +57,25 @@ export interface IWorkspace extends mongoose.Document {
     totalExports: number;
     creditsUsed: number;
   };
+  crmConfig?: {
+    provider: 'hubspot' | 'salesforce' | 'pipedrive' | 'close';
+    hubspot?: {
+      accessToken: string;
+      refreshToken: string;
+      expiresAt: Date;
+      portalId: string;
+      syncEnabled: boolean;
+      autoSyncOnJobComplete: boolean;
+      lastSyncAt?: Date;
+      syncLog: Array<{
+        syncedAt: Date;
+        direction: 'push' | 'pull';
+        companiesSynced: number;
+        contactsSynced: number;
+        errors: number;
+      }>;
+    };
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -126,6 +145,27 @@ const workspaceSchema = new Schema<IWorkspace>(
       totalLeadsFound: { type: Number, default: 0 },
       totalExports: { type: Number, default: 0 },
       creditsUsed: { type: Number, default: 0 },
+    },
+    crmConfig: {
+      provider: { type: String, enum: ['hubspot', 'salesforce', 'pipedrive', 'close'] },
+      hubspot: {
+        accessToken: { type: String, select: false },
+        refreshToken: { type: String, select: false },
+        expiresAt: Date,
+        portalId: String,
+        syncEnabled: { type: Boolean, default: false },
+        autoSyncOnJobComplete: { type: Boolean, default: false },
+        lastSyncAt: Date,
+        syncLog: [
+          {
+            syncedAt: { type: Date, required: true },
+            direction: { type: String, enum: ['push', 'pull'], required: true },
+            companiesSynced: { type: Number, default: 0 },
+            contactsSynced: { type: Number, default: 0 },
+            errors: { type: Number, default: 0 },
+          },
+        ],
+      },
     },
   },
   { timestamps: true }

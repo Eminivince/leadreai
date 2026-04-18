@@ -61,3 +61,10 @@ export const KNOWLEDGE_BASE_ENTRY_TYPES = [
   'other',
 ] as const;
 export type KnowledgeBaseEntryType = typeof KNOWLEDGE_BASE_ENTRY_TYPES[number];
+
+export const SENIORITY_LEVELS = ['c_level', 'vp', 'director', 'manager', 'ic', 'unknown'] as const;
+export const DEPARTMENTS = ['sales', 'marketing', 'engineering', 'finance', 'hr', 'legal', 'operations', 'other'] as const;
+export const BUYING_ROLES = ['champion', 'economic_buyer', 'technical_buyer', 'blocker', 'influencer', 'unknown'] as const;
+export const CRM_PROVIDERS = ['hubspot', 'salesforce', 'pipedrive', 'close'] as const;
+export const CONTACT_EMAIL_TYPES = ['direct', 'pattern_inferred', 'generic'] as const;
+export const CONTACT_SOURCE_TYPES = ['linkedin', 'company_website', 'press_release', 'directory', 'pattern_inferred'] as const;

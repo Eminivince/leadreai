@@ -110,6 +110,15 @@ export interface Lead {
   qualificationReason?: string;
   tags: string[];
   notes?: string;
+  contactIds?: string[];
+  contactSummary?: {
+    totalContacts: number;
+    topContact?: {
+      fullName: string;
+      title: string;
+      seniority: string;
+    };
+  };
   createdAt: string;
   updatedAt: string;
 }
