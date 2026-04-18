@@ -6,17 +6,17 @@ export const CreateJobSchema = z.object({
 
 export const ParsedIntentSchema = z.object({
   industry: z.string(),
-  subIndustry: z.string().optional(),
+  subIndustry: z.string().nullish(),
   geography: z.object({
-    country: z.string().optional(),
-    state: z.string().optional(),
-    city: z.string().optional(),
+    country: z.string().nullish(),
+    state: z.string().nullish(),
+    city: z.string().nullish(),
   }),
-  targetCount: z.number().int().min(1).max(1000),
-  desiredFields: z.array(z.string()),
-  companySize: z.string().optional(),
-  keywords: z.array(z.string()),
-  confidenceScore: z.number().min(0).max(1),
+  targetCount: z.number().int().min(1).max(1000).default(50),
+  desiredFields: z.array(z.string()).default(['businessEmail']),
+  companySize: z.string().nullish(),
+  keywords: z.array(z.string()).default([]),
+  confidenceScore: z.number().min(0).max(1).default(0.8),
 });
 
 export type CreateJobInput = z.infer<typeof CreateJobSchema>;
