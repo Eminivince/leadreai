@@ -1,9 +1,9 @@
 'use client';
 
-import { Sidebar } from '../../components/layout/Sidebar.js';
-import { Topbar } from '../../components/layout/Topbar.js';
-import { useAuth } from '../../hooks/useAuth.js';
-import { LoadingSpinner } from '../../components/shared/LoadingSpinner.js';
+import { Sidebar } from '../../components/layout/Sidebar';
+import { Topbar } from '../../components/layout/Topbar';
+import { useAuth } from '../../hooks/useAuth';
+import { LoadingSpinner } from '../../components/shared/LoadingSpinner';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isLoading } = useAuth(true); // redirects to /login if unauthenticated

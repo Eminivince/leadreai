@@ -1,4 +1,4 @@
-import { EmptyState } from '../../components/shared/EmptyState.js';
+import { EmptyState } from '../../components/shared/EmptyState';
 
 export default function DashboardPage() {
   return (

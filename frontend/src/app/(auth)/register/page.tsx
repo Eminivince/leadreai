@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { RegisterSchema, type RegisterInput } from '@leadreai/shared';
-import { apiFetch } from '../../../lib/api.js';
-import { setAccessToken } from '../../../lib/auth.js';
-import { useAppStore } from '../../../store/useAppStore.js';
+import { apiFetch } from '../../../lib/api';
+import { setAccessToken } from '../../../lib/auth';
+import { useAppStore } from '../../../store/useAppStore';
 import type { ApiResponse, User } from '@leadreai/shared';
 
 interface RegisterResponseData {

@@ -2,9 +2,9 @@
 
 import { useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
-import { useAppStore } from '../../store/useAppStore.js';
-import { clearTokens } from '../../lib/auth.js';
-import { apiFetch } from '../../lib/api.js';
+import { useAppStore } from '../../store/useAppStore';
+import { clearTokens } from '../../lib/auth';
+import { apiFetch } from '../../lib/api';
 
 export function Topbar() {
   const { user, reset } = useAppStore();
