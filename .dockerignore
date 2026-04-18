@@ -1,0 +1,12 @@
+node_modules
+**/node_modules
+**/.env
+**/.env.*
+**/dist
+**/*.tsbuildinfo
+.git
+.gitignore
+docs
+*.md
+!README.md
+frontend/
