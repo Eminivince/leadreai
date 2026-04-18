@@ -7,6 +7,7 @@ import { env } from './config/env.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import authRouter from './routes/auth.routes.js';
 import workspaceRouter from './routes/workspace.routes.js';
+import jobsRouter from './routes/jobs.routes.js';
 
 export function createApp(): Express {
   const app = express();
@@ -33,6 +34,7 @@ export function createApp(): Express {
 
   app.use('/api/v1/auth', authRouter);
   app.use('/api/v1/workspaces', workspaceRouter);
+  app.use('/api/v1/workspaces/:workspaceId/jobs', jobsRouter);
 
   app.use(errorHandler);
 
