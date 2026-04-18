@@ -20,7 +20,7 @@ const enrollmentSchema = new Schema({
 const EnrollmentModel = mongoose.models['ENROLLMENT_SCHED'] as mongoose.Model<any> ??
   mongoose.model('ENROLLMENT_SCHED', enrollmentSchema, 'sequenceenrollments');
 
-export function startSequenceScheduler(connection: Redis): NodeJS.Timeout {
+export function startSequenceScheduler(connection: Redis): { timer: NodeJS.Timeout; close: () => Promise<void> } {
   const queue = new Queue<SequenceStepPayload>('sequence-step', {
     connection,
     prefix: QUEUE_PREFIX,
@@ -66,5 +66,6 @@ export function startSequenceScheduler(connection: Redis): NodeJS.Timeout {
 
   // Run immediately then on interval
   void tick();
-  return setInterval(() => { void tick(); }, intervalMs);
+  const timer = setInterval(() => { void tick(); }, intervalMs);
+  return { timer, close: () => queue.close() };
 }

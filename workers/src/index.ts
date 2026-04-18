@@ -48,7 +48,7 @@ async function bootstrap() {
   const sequenceWorker = createSequenceWorker(sequenceConn);
   logger.info('Sequence worker ready', { concurrency: env.WORKER_CONCURRENCY });
 
-  const schedulerTimer = startSequenceScheduler(schedulerConn);
+  const scheduler = startSequenceScheduler(schedulerConn);
   logger.info('Sequence scheduler started');
 
   let isShuttingDown = false;
@@ -56,7 +56,8 @@ async function bootstrap() {
     if (isShuttingDown) return;
     isShuttingDown = true;
     logger.info(`Received ${signal}, shutting down workers`);
-    clearInterval(schedulerTimer);
+    clearInterval(scheduler.timer);
+    await scheduler.close();
     await Promise.all([prospectingWorker.close(), outreachWorker.close(), contactWorker.close(), hubspotWorker.close(), sequenceWorker.close()]);
     await publisher.quit();
     await Promise.all([prospectingConn.quit(), outreachConn.quit(), contactConn.quit(), hubspotConn.quit(), sequenceConn.quit(), schedulerConn.quit()]);
