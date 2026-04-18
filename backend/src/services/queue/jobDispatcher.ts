@@ -9,10 +9,6 @@ export async function dispatchProspectingJob(
   return queue.add(
     'prospect',
     { jobId, workspaceId },
-    {
-      jobId,
-      attempts: 3,
-      backoff: { type: 'exponential', delay: 5000 },
-    },
+    { jobId },
   );
 }
