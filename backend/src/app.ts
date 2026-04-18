@@ -14,6 +14,7 @@ import exportRouter from './routes/export.routes.js';
 import campaignsRouter from './routes/campaigns.routes.js';
 import outreachRouter from './routes/outreach.routes.js';
 import adminRouter from './routes/admin.routes.js';
+import enrollmentsRouter from './routes/enrollments.routes.js';
 import { contactsRouter, leadContactsRouter } from './routes/contacts.routes.js';
 import crmRouter, { crmLeadsRouter } from './routes/crm.routes.js';
 import suppressionRouter from './routes/suppression.routes.js';
@@ -67,6 +68,7 @@ export function createApp(): Express {
   app.use('/api/v1/workspaces/:workspaceId/crm', crmRouter);
   app.use('/api/v1/workspaces/:workspaceId/suppression', suppressionRouter);
   app.use('/api/v1/workspaces/:workspaceId/sequences', sequencesRouter);
+  app.use('/api/v1/workspaces/:workspaceId/enrollments', enrollmentsRouter);
 
   app.use('/admin/queues', adminRouter);
 
