@@ -1,6 +1,15 @@
+'use client';
+
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { BriefcaseBusiness, Users, Coins } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { QueryInput } from '@/components/prospecting/QueryInput';
+import { JobCard } from '@/components/prospecting/JobCard';
+import { useWorkspace } from '@/hooks/useWorkspace';
+import { apiFetch } from '@/lib/api';
+import type { ProspectingJob, ApiResponse } from '@leadreai/shared';
 
 const statCards = [
   {
@@ -24,6 +33,37 @@ const statCards = [
 ];
 
 export default function DashboardPage() {
+  const { workspaceId } = useWorkspace();
+  const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { data: jobsData } = useQuery({
+    queryKey: ['jobs', workspaceId],
+    queryFn: () =>
+      apiFetch<ApiResponse<ProspectingJob[]> & { total: number }>(
+        `/api/v1/workspaces/${workspaceId}/jobs?limit=5`
+      ),
+    enabled: !!workspaceId,
+  });
+
+  const jobs = jobsData?.data ?? [];
+
+  async function handleSubmit(rawQuery: string) {
+    if (!workspaceId) return;
+    setIsSubmitting(true);
+    try {
+      await apiFetch(`/api/v1/workspaces/${workspaceId}/jobs`, {
+        method: 'POST',
+        body: JSON.stringify({ rawQuery }),
+      });
+      await queryClient.invalidateQueries({ queryKey: ['jobs', workspaceId] });
+    } catch (err) {
+      console.error('Failed to create job', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -32,6 +72,16 @@ export default function DashboardPage() {
           Submit a prospecting query to start generating leads.
         </p>
       </div>
+
+      {/* Query input */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-semibold">New Prospecting Query</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <QueryInput onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+        </CardContent>
+      </Card>
 
       {/* Stat cards */}
       <div className="grid gap-4 sm:grid-cols-3">
@@ -54,14 +104,22 @@ export default function DashboardPage() {
       {/* Recent jobs */}
       <div>
         <h3 className="mb-4 text-sm font-semibold text-foreground">Recent Jobs</h3>
-        <Card>
-          <CardContent className="p-0">
-            <EmptyState
-              title="No prospecting jobs yet"
-              description="Submit a query to find your next customers using natural language."
-            />
-          </CardContent>
-        </Card>
+        {jobs.length === 0 ? (
+          <Card>
+            <CardContent className="p-0">
+              <EmptyState
+                title="No prospecting jobs yet"
+                description="Submit a query to find your next customers using natural language."
+              />
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {jobs.map((job) => (
+              <JobCard key={job._id} job={job} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
