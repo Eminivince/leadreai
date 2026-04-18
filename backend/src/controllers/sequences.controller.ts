@@ -226,13 +226,28 @@ export async function enrollLeads(req: Request, res: Response): Promise<void> {
   let enrolled = 0;
 
   if (docsToInsert.length > 0) {
-    // insertMany with ordered:false so E11000 duplicates (race) are skipped gracefully
-    const result = await SequenceEnrollment.insertMany(docsToInsert, { ordered: false }).catch((err: any) => {
-      // Mongoose insertMany throws on any error with ordered:false — extract inserted docs
-      if (err?.insertedDocs) return err.insertedDocs as (typeof docsToInsert);
-      throw err;
-    });
-    enrolled = Array.isArray(result) ? result.length : 0;
+    try {
+      const result = await SequenceEnrollment.insertMany(docsToInsert, { ordered: false });
+      enrolled = result.length;
+    } catch (err: any) {
+      // ordered:false — Mongoose throws MongoBulkWriteError on partial failure
+      // insertedDocs contains successfully inserted documents
+      if (Array.isArray(err?.insertedDocs)) {
+        enrolled = (err.insertedDocs as unknown[]).length;
+      } else if (err?.result?.insertedCount != null) {
+        enrolled = err.result.insertedCount as number;
+      } else if (err?.code === 11000 || err?.name === 'MongoBulkWriteError') {
+        // Could not recover count — re-query to get the true enrolled count
+        enrolled = await SequenceEnrollment.countDocuments({
+          sequenceId,
+          leadId: { $in: leadObjectIds },
+          status: 'active',
+          createdAt: { $gte: now },
+        });
+      } else {
+        throw err;
+      }
+    }
   }
 
   if (enrolled > 0) {
