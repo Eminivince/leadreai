@@ -41,7 +41,7 @@ const prospectingJobSchema = new Schema<IProspectingJob>(
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     rawQuery: { type: String, required: true, maxlength: 500 },
     parsedIntent: { type: Schema.Types.Mixed },
-    status: { type: String, enum: JOB_STATUSES, default: 'queued', index: true },
+    status: { type: String, enum: JOB_STATUSES, default: 'queued' },
     progress: {
       percentage: { type: Number, default: 0 },
       currentStage: { type: String, default: '' },

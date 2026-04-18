@@ -11,7 +11,11 @@ export const logger = winston.createLogger({
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.colorize(),
-        winston.format.simple()
+        winston.format.timestamp(),
+        winston.format.printf(({ level, message, timestamp, ...meta }) => {
+          const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
+          return `${String(timestamp)} ${level}: ${String(message)}${metaStr}`;
+        })
       ),
     }),
   ],

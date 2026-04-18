@@ -35,6 +35,7 @@ const workspaceSchema = new Schema<IWorkspace>(
         userId: { type: Schema.Types.ObjectId, ref: 'User' },
         role: { type: String, enum: WORKSPACE_ROLES },
         joinedAt: { type: Date, default: Date.now },
+        _id: false,
       },
     ],
     settings: {
@@ -51,5 +52,8 @@ const workspaceSchema = new Schema<IWorkspace>(
   },
   { timestamps: true }
 );
+
+workspaceSchema.index({ ownerId: 1 });
+workspaceSchema.index({ 'members.userId': 1 });
 
 export default mongoose.model<IWorkspace>('Workspace', workspaceSchema);

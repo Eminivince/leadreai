@@ -45,7 +45,7 @@ export interface ILead extends mongoose.Document {
     instagramUrl?: string;
   };
   website?: string;
-  osint?: mongoose.Schema.Types.Mixed;
+  osint?: Record<string, unknown>;
   sources: Array<{
     url: string;
     type: (typeof SOURCE_TYPES)[number];
@@ -67,12 +67,12 @@ export interface ILead extends mongoose.Document {
 
 const leadSchema = new Schema<ILead>(
   {
-    workspaceId: { type: Schema.Types.ObjectId, ref: 'Workspace', required: true, index: true },
-    jobId: { type: Schema.Types.ObjectId, ref: 'ProspectingJob', required: true, index: true },
+    workspaceId: { type: Schema.Types.ObjectId, ref: 'Workspace', required: true },
+    jobId: { type: Schema.Types.ObjectId, ref: 'ProspectingJob', required: true },
     companyName: { type: String, required: true, trim: true },
     companyDomain: { type: String, lowercase: true, trim: true },
     companyType: { type: String },
-    industry: { type: String, index: true },
+    industry: { type: String },
     subIndustry: { type: String },
     description: { type: String },
     address: {
@@ -119,10 +119,10 @@ const leadSchema = new Schema<ILead>(
       },
     ],
     rawSnippets: { type: [String], default: [] },
-    rankScore: { type: Number, default: 0, min: 0, max: 100, index: true },
+    rankScore: { type: Number, default: 0, min: 0, max: 100 },
     completenessScore: { type: Number, default: 0, min: 0, max: 100 },
     isVerified: { type: Boolean, default: false },
-    isDuplicate: { type: Boolean, default: false, index: true },
+    isDuplicate: { type: Boolean, default: false },
     mergedIntoId: { type: Schema.Types.ObjectId, ref: 'Lead' },
     outreachStatus: { type: String, enum: OUTREACH_STATUSES, default: 'not_contacted' },
     tags: { type: [String], default: [] },

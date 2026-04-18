@@ -9,11 +9,13 @@ export async function connectDatabase(): Promise<void> {
     try {
       await mongoose.connect(env.MONGODB_URI, { dbName: env.MONGODB_DB_NAME });
       logger.info('MongoDB connected');
+      mongoose.connection.on('error', (err) => logger.error('MongoDB error', { err }));
+      mongoose.connection.on('disconnected', () => logger.warn('MongoDB disconnected'));
       return;
     } catch (err) {
       attempt++;
       logger.error(`MongoDB connection attempt ${attempt} failed`, { err });
-      if (attempt === MAX_RETRIES) throw err;
+      if (attempt >= MAX_RETRIES) throw err;
       await new Promise(r => setTimeout(r, 5000));
     }
   }

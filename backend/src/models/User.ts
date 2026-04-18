@@ -3,7 +3,7 @@ import { PLAN_TIERS, WORKSPACE_ROLES } from '@leadreai/shared';
 
 export interface IUser extends mongoose.Document {
   email: string;
-  passwordHash: string;
+  passwordHash?: string;
   firstName: string;
   lastName: string;
   avatarUrl?: string;
@@ -30,12 +30,11 @@ const userSchema = new Schema<IUser>(
     plan: { type: String, enum: PLAN_TIERS, default: 'free' },
     planExpiresAt: { type: Date },
     creditsBalance: { type: Number, default: 0, min: 0 },
-    workspaces: [
-      {
-        workspaceId: { type: Schema.Types.ObjectId, ref: 'Workspace' },
-        role: { type: String, enum: WORKSPACE_ROLES },
-      },
-    ],
+    workspaces: [{
+      workspaceId: { type: Schema.Types.ObjectId, ref: 'Workspace' },
+      role: { type: String, enum: WORKSPACE_ROLES },
+      _id: false,
+    }],
     isEmailVerified: { type: Boolean, default: false },
     lastLoginAt: { type: Date },
   },

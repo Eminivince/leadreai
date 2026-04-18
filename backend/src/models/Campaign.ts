@@ -1,6 +1,8 @@
 import mongoose, { Schema } from 'mongoose';
 import { OUTREACH_CHANNELS } from '@leadreai/shared';
 
+const CAMPAIGN_STATUSES = ['draft', 'active', 'paused', 'completed', 'archived'] as const;
+
 export interface ICampaign extends mongoose.Document {
   workspaceId: mongoose.Types.ObjectId;
   createdBy: mongoose.Types.ObjectId;
@@ -35,16 +37,19 @@ const campaignSchema = new Schema<ICampaign>(
     description: { type: String, maxlength: 1000 },
     status: {
       type: String,
-      enum: ['draft', 'active', 'paused', 'completed', 'archived'],
+      enum: CAMPAIGN_STATUSES,
       default: 'draft',
     },
     leadIds: [{ type: Schema.Types.ObjectId, ref: 'Lead', default: [] }],
     outreachConfig: {
-      channel: { type: String, enum: OUTREACH_CHANNELS },
-      tone: { type: String, required: true },
-      language: { type: String, default: 'English' },
-      personalization: { type: [String], default: [] },
-      systemPromptOverride: { type: String },
+      type: new Schema({
+        channel: { type: String, enum: OUTREACH_CHANNELS },
+        tone: { type: String, required: true },
+        language: { type: String, default: 'English' },
+        personalization: { type: [String], default: [] },
+        systemPromptOverride: { type: String },
+      }, { _id: false }),
+      required: true,
     },
     stats: {
       totalLeads: { type: Number, default: 0 },
@@ -57,5 +62,7 @@ const campaignSchema = new Schema<ICampaign>(
   },
   { timestamps: true }
 );
+
+campaignSchema.index({ workspaceId: 1, status: 1 });
 
 export default mongoose.model<ICampaign>('Campaign', campaignSchema);
