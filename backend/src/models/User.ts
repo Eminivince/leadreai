@@ -42,7 +42,6 @@ const userSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
-userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ 'workspaces.workspaceId': 1 });
 
 export default mongoose.model<IUser>('User', userSchema);
