@@ -3,6 +3,8 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import type { ProspectingJob } from '@leadreai/shared';
+import { useJob } from '@/hooks/useJob';
+import { useWorkspace } from '@/hooks/useWorkspace';
 
 type BadgeVariant = 'default' | 'secondary' | 'outline' | 'indigo';
 
@@ -37,7 +39,15 @@ function formatRelativeTime(dateStr: string): string {
 }
 
 export function JobCard({ job }: JobCardProps) {
-  const statusStyle = STATUS_STYLES[job.status] ?? { variant: 'secondary' as BadgeVariant, label: job.status };
+  const { workspaceId } = useWorkspace();
+  const isActive = ['queued', 'parsing', 'collecting', 'enriching', 'deduplicating'].includes(job.status);
+  const { status: liveStatus, percentage } = useJob(
+    isActive ? workspaceId : null,
+    isActive ? job._id : null
+  );
+
+  const displayStatus = liveStatus ?? job.status;
+  const statusStyle = STATUS_STYLES[displayStatus] ?? { variant: 'secondary' as BadgeVariant, label: displayStatus };
   const geo = job.parsedIntent?.geography;
   const location = [geo?.city, geo?.state, geo?.country].filter(Boolean).join(', ');
 
@@ -61,6 +71,14 @@ export function JobCard({ job }: JobCardProps) {
             )}
             {job.status === 'complete' && job.result?.totalLeadsFound != null && (
               <p className="mt-1 text-xs text-emerald-400">{job.result.totalLeadsFound} leads found</p>
+            )}
+            {isActive && percentage != null && (
+              <div className="mt-2 h-1 w-full rounded-full bg-secondary">
+                <div
+                  className="h-1 rounded-full bg-indigo-500 transition-all duration-500"
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
             )}
           </div>
           <div className="flex flex-col items-end gap-2 shrink-0">
