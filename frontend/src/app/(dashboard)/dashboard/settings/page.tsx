@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Pencil, Trash2, Plus, Mail, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,47 @@ import { apiFetch } from '@/lib/api';
 import type { Workspace, KnowledgeBaseEntry } from '@leadreai/shared';
 import type { ApiResponse } from '@leadreai/shared';
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface ApiKeyMeta {
+  _id: string;
+  name: string;
+  prefix: string;
+  createdAt: string;
+  lastUsedAt?: string;
+}
+
+type EmailProvider = 'smtp' | 'resend' | 'sendgrid';
+
+interface EmailConfig {
+  provider: EmailProvider;
+  fromEmail: string;
+  fromName: string;
+  replyTo?: string;
+  apiKey?: string;        // only sent on save, never returned
+  smtpHost?: string;
+  smtpPort?: number;
+  smtpSecure?: boolean;
+  smtpUser?: string;
+  smtpPass?: string;      // only sent on save, never returned
+  hasApiKey?: boolean;
+  hasSmtpPass?: boolean;
+  verifiedAt?: string;
+}
+
+const EMPTY_EMAIL_FORM: Omit<EmailConfig, 'provider'> & { provider: EmailProvider } = {
+  provider: 'resend',
+  fromEmail: '',
+  fromName: '',
+  replyTo: '',
+  apiKey: '',
+  smtpHost: '',
+  smtpPort: 587,
+  smtpSecure: false,
+  smtpUser: '',
+  smtpPass: '',
+};
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const MAX_ENTRIES = 20;
@@ -45,7 +86,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 const ENTRY_TYPES = Object.keys(TYPE_LABELS) as Array<keyof typeof TYPE_LABELS>;
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── KB Types ─────────────────────────────────────────────────────────────────
 
 interface EntryFormState {
   title: string;
@@ -65,10 +106,18 @@ export default function SettingsPage() {
   const { workspaceId } = useWorkspace();
   const queryClient = useQueryClient();
 
-  // Dialog state
+  // KB dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<KnowledgeBaseEntry | null>(null);
   const [form, setForm] = useState<EntryFormState>(EMPTY_FORM);
+
+  // Email config form state
+  const [emailForm, setEmailForm] = useState<typeof EMPTY_EMAIL_FORM>(EMPTY_EMAIL_FORM);
+  const [emailFormDirty, setEmailFormDirty] = useState(false);
+
+  // API key state
+  const [newKeyName, setNewKeyName] = useState('');
+  const [createdKey, setCreatedKey] = useState<string | null>(null);
 
   // ── Queries ────────────────────────────────────────────────────────────────
 
@@ -76,6 +125,16 @@ export default function SettingsPage() {
     queryKey: ['workspace', workspaceId],
     queryFn: () => apiFetch<ApiResponse<Workspace>>(`/api/v1/workspaces/${workspaceId}`),
     enabled: !!workspaceId,
+  });
+
+  const { data: emailConfigData } = useQuery({
+    queryKey: ['email-config', workspaceId],
+    queryFn: () =>
+      apiFetch<{ success: true; data: EmailConfig | null }>(
+        `/api/v1/workspaces/${workspaceId}/email-config`
+      ),
+    enabled: !!workspaceId,
+    select: (r) => r.data,
   });
 
   const { data: kbData, isLoading: kbLoading } = useQuery({
@@ -87,9 +146,41 @@ export default function SettingsPage() {
     enabled: !!workspaceId,
   });
 
+  const { data: apiKeysQuery } = useQuery({
+    queryKey: ['api-keys', workspaceId],
+    queryFn: () =>
+      apiFetch<{ success: true; data: ApiKeyMeta[] }>(
+        `/api/v1/workspaces/${workspaceId}/api-keys`
+      ),
+    enabled: !!workspaceId,
+    select: (r) => r.data,
+  });
+
+  const apiKeysData = apiKeysQuery ?? [];
+
   const workspace = workspaceData?.data;
   const cheapMode = workspace?.settings?.cheapMode ?? false;
   const entries = kbData?.data ?? [];
+
+  // Seed email form when config loads (only if user hasn't started editing)
+  useEffect(() => {
+    if (emailConfigData && !emailFormDirty) {
+      const cfg = emailConfigData;
+      setEmailForm({
+        provider: cfg.provider,
+        fromEmail: cfg.fromEmail,
+        fromName: cfg.fromName ?? '',
+        replyTo: cfg.replyTo ?? '',
+        smtpHost: cfg.smtpHost ?? '',
+        smtpPort: cfg.smtpPort ?? 587,
+        smtpSecure: cfg.smtpSecure ?? false,
+        smtpUser: cfg.smtpUser ?? '',
+        apiKey: '',
+        smtpPass: '',
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [emailConfigData]);
 
   // ── Mutations ──────────────────────────────────────────────────────────────
 
@@ -184,6 +275,65 @@ export default function SettingsPage() {
     }
   }
 
+  const saveEmailMutation = useMutation({
+    mutationFn: (payload: typeof EMPTY_EMAIL_FORM) => {
+      const body: Record<string, unknown> = {
+        provider: payload.provider,
+        fromEmail: payload.fromEmail,
+        fromName: payload.fromName,
+        replyTo: payload.replyTo || undefined,
+      };
+      if (payload.provider !== 'smtp' && payload.apiKey) body['apiKey'] = payload.apiKey;
+      if (payload.provider === 'smtp') {
+        body['smtpHost'] = payload.smtpHost;
+        body['smtpPort'] = payload.smtpPort;
+        body['smtpSecure'] = payload.smtpSecure;
+        if (payload.smtpUser) body['smtpUser'] = payload.smtpUser;
+        if (payload.smtpPass) body['smtpPass'] = payload.smtpPass;
+      }
+      return apiFetch(`/api/v1/workspaces/${workspaceId}/email-config`, {
+        method: 'PUT',
+        body: JSON.stringify(body),
+      });
+    },
+    onSuccess: () => {
+      toast.success('Email configuration saved.');
+      setEmailFormDirty(false);
+      void queryClient.invalidateQueries({ queryKey: ['email-config', workspaceId] });
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to save email config.');
+    },
+  });
+
+  const createKeyMutation = useMutation({
+    mutationFn: (name: string) =>
+      apiFetch<{ success: true; data: { key: string; prefix: string; name: string } }>(
+        `/api/v1/workspaces/${workspaceId}/api-keys`,
+        { method: 'POST', body: JSON.stringify({ name }) }
+      ),
+    onSuccess: (res) => {
+      setCreatedKey(res.data.key);
+      setNewKeyName('');
+      void queryClient.invalidateQueries({ queryKey: ['api-keys', workspaceId] });
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to generate API key.');
+    },
+  });
+
+  const revokeKeyMutation = useMutation({
+    mutationFn: (keyId: string) =>
+      apiFetch(`/api/v1/workspaces/${workspaceId}/api-keys/${keyId}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      toast.success('API key revoked.');
+      void queryClient.invalidateQueries({ queryKey: ['api-keys', workspaceId] });
+    },
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to revoke API key.');
+    },
+  });
+
   const isSaving = createMutation.isPending || updateMutation.isPending;
   const atLimit = entries.length >= MAX_ENTRIES;
 
@@ -225,7 +375,171 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* ── Section 2: Knowledge Base ─────────────────────────────────────── */}
+      {/* ── Section 2: Email Configuration ──────────────────────────────────── */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Mail size={16} className="text-muted-foreground" />
+            <CardTitle className="text-base font-semibold">Email Configuration</CardTitle>
+          </div>
+          <CardDescription>
+            Connect your email provider so outreach is sent from your own domain and address.
+          </CardDescription>
+          {emailConfigData?.verifiedAt && (
+            <div className="flex items-center gap-1.5 text-xs text-green-400 mt-1">
+              <CheckCircle2 size={12} />
+              Connected · {emailConfigData.fromEmail}
+            </div>
+          )}
+        </CardHeader>
+        <CardContent>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              saveEmailMutation.mutate(emailForm);
+            }}
+            className="space-y-4"
+          >
+            {/* Provider */}
+            <div className="space-y-1.5">
+              <Label>Provider</Label>
+              <Select
+                value={emailForm.provider}
+                onValueChange={(v) => {
+                  setEmailFormDirty(true);
+                  setEmailForm((f) => ({ ...f, provider: v as EmailProvider }));
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="resend">Resend</SelectItem>
+                  <SelectItem value="sendgrid">SendGrid</SelectItem>
+                  <SelectItem value="smtp">SMTP (Gmail, Outlook, custom)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* From fields */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="from-name">From Name</Label>
+                <Input
+                  id="from-name"
+                  placeholder="Acme Sales"
+                  value={emailForm.fromName}
+                  onChange={(e) => { setEmailFormDirty(true); setEmailForm((f) => ({ ...f, fromName: e.target.value })); }}
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="from-email">From Email</Label>
+                <Input
+                  id="from-email"
+                  type="email"
+                  placeholder="outreach@yourcompany.com"
+                  value={emailForm.fromEmail}
+                  onChange={(e) => { setEmailFormDirty(true); setEmailForm((f) => ({ ...f, fromEmail: e.target.value })); }}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="reply-to">Reply-To <span className="text-muted-foreground">(optional)</span></Label>
+              <Input
+                id="reply-to"
+                type="email"
+                placeholder="Same as From Email"
+                value={emailForm.replyTo ?? ''}
+                onChange={(e) => { setEmailFormDirty(true); setEmailForm((f) => ({ ...f, replyTo: e.target.value })); }}
+              />
+            </div>
+
+            {/* API key providers */}
+            {(emailForm.provider === 'resend' || emailForm.provider === 'sendgrid') && (
+              <div className="space-y-1.5">
+                <Label htmlFor="api-key">
+                  API Key
+                  {emailConfigData?.hasApiKey && (
+                    <span className="ml-2 text-xs text-green-400">· saved (leave blank to keep)</span>
+                  )}
+                </Label>
+                <Input
+                  id="api-key"
+                  type="password"
+                  placeholder={emailConfigData?.hasApiKey ? '••••••••••••••••' : 'sk_live_…'}
+                  value={emailForm.apiKey ?? ''}
+                  onChange={(e) => { setEmailFormDirty(true); setEmailForm((f) => ({ ...f, apiKey: e.target.value })); }}
+                  required={!emailConfigData?.hasApiKey}
+                />
+              </div>
+            )}
+
+            {/* SMTP fields */}
+            {emailForm.provider === 'smtp' && (
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label htmlFor="smtp-host">SMTP Host</Label>
+                    <Input
+                      id="smtp-host"
+                      placeholder="smtp.gmail.com"
+                      value={emailForm.smtpHost ?? ''}
+                      onChange={(e) => { setEmailFormDirty(true); setEmailForm((f) => ({ ...f, smtpHost: e.target.value })); }}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="smtp-port">Port</Label>
+                    <Input
+                      id="smtp-port"
+                      type="number"
+                      value={emailForm.smtpPort ?? 587}
+                      onChange={(e) => { setEmailFormDirty(true); setEmailForm((f) => ({ ...f, smtpPort: Number(e.target.value) })); }}
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="smtp-user">Username</Label>
+                    <Input
+                      id="smtp-user"
+                      placeholder="you@gmail.com"
+                      value={emailForm.smtpUser ?? ''}
+                      onChange={(e) => { setEmailFormDirty(true); setEmailForm((f) => ({ ...f, smtpUser: e.target.value })); }}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="smtp-pass">
+                      Password / App Password
+                      {emailConfigData?.hasSmtpPass && (
+                        <span className="ml-2 text-xs text-green-400">· saved</span>
+                      )}
+                    </Label>
+                    <Input
+                      id="smtp-pass"
+                      type="password"
+                      placeholder={emailConfigData?.hasSmtpPass ? '••••••••' : 'App password'}
+                      value={emailForm.smtpPass ?? ''}
+                      onChange={(e) => { setEmailFormDirty(true); setEmailForm((f) => ({ ...f, smtpPass: e.target.value })); }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end pt-1">
+              <Button type="submit" size="sm" disabled={saveEmailMutation.isPending || !workspaceId}>
+                {saveEmailMutation.isPending ? 'Saving…' : 'Save Email Config'}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* ── Section 3: Knowledge Base ─────────────────────────────────────── */}
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div className="space-y-1">
@@ -302,6 +616,67 @@ export default function SettingsPage() {
                       <span className="sr-only">Delete</span>
                     </Button>
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── Section 4: API Keys ───────────────────────────────────────────── */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-semibold">API Keys</CardTitle>
+          <CardDescription>
+            Generate workspace-scoped API keys for programmatic access. Keys are shown once — save them securely.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form
+            onSubmit={(e) => { e.preventDefault(); if (newKeyName.trim()) createKeyMutation.mutate(newKeyName.trim()); }}
+            className="flex gap-2"
+          >
+            <Input
+              placeholder="Key name (e.g. Production)"
+              value={newKeyName}
+              onChange={(e) => setNewKeyName(e.target.value)}
+              maxLength={100}
+              className="flex-1"
+            />
+            <Button type="submit" size="sm" disabled={createKeyMutation.isPending || !newKeyName.trim()}>
+              Generate
+            </Button>
+          </form>
+
+          {createdKey && (
+            <div className="rounded-md border border-green-600/30 bg-green-600/10 p-3 text-xs">
+              <p className="mb-1 font-medium text-green-400">Copy this key — it will not be shown again:</p>
+              <code className="block break-all text-green-300 select-all">{createdKey}</code>
+              <Button variant="ghost" size="sm" className="mt-2 h-6 text-xs" onClick={() => { void navigator.clipboard.writeText(createdKey); toast.success('Copied'); }}>
+                Copy
+              </Button>
+            </div>
+          )}
+
+          {apiKeysData.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No API keys yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {apiKeysData.map((k) => (
+                <div key={k._id} className="flex items-center justify-between rounded-md border border-border bg-secondary/20 px-3 py-2">
+                  <div>
+                    <p className="text-sm font-medium">{k.name}</p>
+                    <p className="text-xs text-muted-foreground">{k.prefix}•••• · Created {new Date(k.createdAt).toLocaleDateString()}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    onClick={() => revokeKeyMutation.mutate(k._id)}
+                    disabled={revokeKeyMutation.isPending}
+                  >
+                    <Trash2 size={13} />
+                  </Button>
                 </div>
               ))}
             </div>

@@ -1,9 +1,10 @@
-import { randomBytes } from 'crypto';
+import { randomBytes, createHash } from 'crypto';
 import type { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import Workspace from '../models/Workspace.js';
+import Workspace, { type EmailProvider } from '../models/Workspace.js';
 import { ApiError } from '../utils/ApiError.js';
 import { KNOWLEDGE_BASE_ENTRY_TYPES, type KnowledgeBaseEntryType } from '@leadreai/shared';
+import { encrypt } from '../utils/encrypt.js';
 
 export async function listWorkspaces(req: Request, res: Response): Promise<void> {
   if (!req.user) throw ApiError.unauthorized();
@@ -118,9 +119,8 @@ export async function listKnowledgeBase(req: Request, res: Response): Promise<vo
     .select('knowledgeBase');
   if (!workspace) throw ApiError.notFound('Workspace not found');
 
-  const entries = [...workspace.knowledgeBase].sort(
-    (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-  );
+  const kb = workspace.knowledgeBase ?? [];
+  const entries = [...kb].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   res.json({ success: true, data: entries });
 }
@@ -160,9 +160,12 @@ export async function createKnowledgeBaseEntry(req: Request, res: Response): Pro
     updatedAt: now,
   };
 
-  // Atomic: only push if < 20 entries, preventing races
+  // Atomic: only push if < 20 entries, preventing races ($ifNull: older workspaces may omit knowledgeBase)
   const updated = await Workspace.findOneAndUpdate(
-    { _id: workspaceId, $expr: { $lt: [{ $size: '$knowledgeBase' }, 20] } },
+    {
+      _id: workspaceId,
+      $expr: { $lt: [{ $size: { $ifNull: ['$knowledgeBase', []] } }, 20] },
+    },
     { $push: { knowledgeBase: { $each: [newEntry], $position: 0 } } },
     { new: true, runValidators: true }
   ).select('knowledgeBase');
@@ -254,6 +257,216 @@ export async function deleteKnowledgeBaseEntry(req: Request, res: Response): Pro
 
   if (result.matchedCount === 0) throw ApiError.notFound('Workspace not found');
   if (result.modifiedCount === 0) throw ApiError.notFound('Knowledge base entry not found');
+
+  res.json({ success: true });
+}
+
+// ---------------------------------------------------------------------------
+// getEmailConfig  GET /api/v1/workspaces/:workspaceId/email-config
+// Returns config WITHOUT secret fields (apiKey / smtpPass are never sent to client)
+// ---------------------------------------------------------------------------
+
+export async function getEmailConfig(req: Request, res: Response): Promise<void> {
+  const workspace = await Workspace.findById(req.params['workspaceId']).select('emailConfig');
+  if (!workspace) throw ApiError.notFound('Workspace not found');
+
+  const cfg = workspace.emailConfig;
+  if (!cfg?.provider) {
+    res.json({ success: true, data: null });
+    return;
+  }
+
+  // Strip encrypted secrets — client only needs non-secret metadata
+  res.json({
+    success: true,
+    data: {
+      provider: cfg.provider,
+      fromEmail: cfg.fromEmail,
+      fromName: cfg.fromName,
+      replyTo: cfg.replyTo,
+      smtpHost: cfg.smtpHost,
+      smtpPort: cfg.smtpPort,
+      smtpSecure: cfg.smtpSecure,
+      smtpUser: cfg.smtpUser,
+      verifiedAt: cfg.verifiedAt,
+      // apiKey and smtpPass intentionally omitted
+      hasApiKey: !!cfg.apiKey,
+      hasSmtpPass: !!cfg.smtpPass,
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// updateEmailConfig  PUT /api/v1/workspaces/:workspaceId/email-config
+// ---------------------------------------------------------------------------
+
+const VALID_PROVIDERS: EmailProvider[] = ['smtp', 'resend', 'sendgrid'];
+
+export async function updateEmailConfig(req: Request, res: Response): Promise<void> {
+  const { workspaceId } = req.params;
+
+  const body = req.body as {
+    provider?: unknown;
+    fromEmail?: unknown;
+    fromName?: unknown;
+    replyTo?: unknown;
+    apiKey?: unknown;
+    smtpHost?: unknown;
+    smtpPort?: unknown;
+    smtpSecure?: unknown;
+    smtpUser?: unknown;
+    smtpPass?: unknown;
+  };
+
+  if (!body.provider || !VALID_PROVIDERS.includes(body.provider as EmailProvider)) {
+    throw ApiError.badRequest(`provider must be one of: ${VALID_PROVIDERS.join(', ')}`);
+  }
+  const provider = body.provider as EmailProvider;
+
+  if (!body.fromEmail || typeof body.fromEmail !== 'string') {
+    throw ApiError.badRequest('fromEmail is required');
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.fromEmail)) {
+    throw ApiError.badRequest('fromEmail must be a valid email address');
+  }
+  if (!body.fromName || typeof body.fromName !== 'string' || !String(body.fromName).trim()) {
+    throw ApiError.badRequest('fromName is required');
+  }
+
+  const setFields: Record<string, unknown> = {
+    'emailConfig.provider': provider,
+    'emailConfig.fromEmail': body.fromEmail,
+    'emailConfig.fromName': String(body.fromName).trim(),
+    'emailConfig.replyTo': body.replyTo ?? undefined,
+    'emailConfig.verifiedAt': undefined,
+  };
+
+  if (provider === 'resend' || provider === 'sendgrid') {
+    if (body.apiKey !== undefined) {
+      if (typeof body.apiKey !== 'string' || !body.apiKey.trim()) {
+        throw ApiError.badRequest('apiKey must be a non-empty string');
+      }
+      setFields['emailConfig.apiKey'] = encrypt(body.apiKey.trim());
+    }
+  }
+
+  if (provider === 'smtp') {
+    if (!body.smtpHost || typeof body.smtpHost !== 'string') {
+      throw ApiError.badRequest('smtpHost is required for SMTP provider');
+    }
+    setFields['emailConfig.smtpHost'] = body.smtpHost;
+    setFields['emailConfig.smtpPort'] = typeof body.smtpPort === 'number' ? body.smtpPort : 587;
+    setFields['emailConfig.smtpSecure'] = body.smtpSecure === true;
+    if (body.smtpUser !== undefined) {
+      setFields['emailConfig.smtpUser'] = body.smtpUser;
+    }
+    if (body.smtpPass !== undefined) {
+      if (typeof body.smtpPass !== 'string' || !body.smtpPass.trim()) {
+        throw ApiError.badRequest('smtpPass must be a non-empty string');
+      }
+      setFields['emailConfig.smtpPass'] = encrypt(body.smtpPass.trim());
+    }
+  }
+
+  const workspace = await Workspace.findByIdAndUpdate(
+    workspaceId,
+    { $set: setFields },
+    { new: true }
+  ).select('emailConfig');
+
+  if (!workspace) throw ApiError.notFound('Workspace not found');
+
+  res.json({
+    success: true,
+    data: {
+      provider: workspace.emailConfig?.provider,
+      fromEmail: workspace.emailConfig?.fromEmail,
+      fromName: workspace.emailConfig?.fromName,
+      replyTo: workspace.emailConfig?.replyTo,
+      smtpHost: workspace.emailConfig?.smtpHost,
+      smtpPort: workspace.emailConfig?.smtpPort,
+      smtpSecure: workspace.emailConfig?.smtpSecure,
+      smtpUser: workspace.emailConfig?.smtpUser,
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// deleteEmailConfig  DELETE /api/v1/workspaces/:workspaceId/email-config
+// ---------------------------------------------------------------------------
+
+export async function deleteEmailConfig(req: Request, res: Response): Promise<void> {
+  const result = await Workspace.updateOne(
+    { _id: req.params['workspaceId'] },
+    { $unset: { emailConfig: 1 } }
+  );
+  if (result.matchedCount === 0) throw ApiError.notFound('Workspace not found');
+  res.json({ success: true });
+}
+
+// ---------------------------------------------------------------------------
+// listApiKeys  GET /api/v1/workspaces/:workspaceId/api-keys
+// ---------------------------------------------------------------------------
+
+export async function listApiKeys(req: Request, res: Response): Promise<void> {
+  const workspace = await Workspace.findById(req.params['workspaceId']).select('apiKeys');
+  if (!workspace) throw ApiError.notFound('Workspace not found');
+
+  const keys = (workspace.apiKeys ?? []).map((k) => ({
+    _id: k._id,
+    name: k.name,
+    prefix: k.prefix,
+    createdAt: k.createdAt,
+    lastUsedAt: k.lastUsedAt,
+  }));
+  res.json({ success: true, data: keys });
+}
+
+// ---------------------------------------------------------------------------
+// createApiKey  POST /api/v1/workspaces/:workspaceId/api-keys
+// ---------------------------------------------------------------------------
+
+export async function createApiKey(req: Request, res: Response): Promise<void> {
+  const { workspaceId } = req.params;
+  const { name } = req.body as { name?: string };
+
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    throw ApiError.badRequest('name is required');
+  }
+
+  const workspace = await Workspace.findById(workspaceId).select('apiKeys');
+  if (!workspace) throw ApiError.notFound('Workspace not found');
+  if ((workspace.apiKeys ?? []).length >= 10) {
+    throw ApiError.conflict('Maximum of 10 API keys per workspace');
+  }
+
+  const rawKey = `sk-${randomBytes(20).toString('hex')}`;
+  const keyHash = createHash('sha256').update(rawKey).digest('hex');
+  const prefix = rawKey.slice(0, 8);
+
+  await Workspace.findByIdAndUpdate(workspaceId, {
+    $push: {
+      apiKeys: { name: name.trim(), keyHash, prefix, createdAt: new Date() },
+    },
+  });
+
+  res.status(201).json({ success: true, data: { key: rawKey, prefix, name: name.trim() } });
+}
+
+// ---------------------------------------------------------------------------
+// revokeApiKey  DELETE /api/v1/workspaces/:workspaceId/api-keys/:keyId
+// ---------------------------------------------------------------------------
+
+export async function revokeApiKey(req: Request, res: Response): Promise<void> {
+  const { workspaceId, keyId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(keyId!)) throw ApiError.badRequest('Invalid keyId');
+
+  const result = await Workspace.updateOne(
+    { _id: workspaceId },
+    { $pull: { apiKeys: { _id: new mongoose.Types.ObjectId(keyId) } } }
+  );
+  if (result.matchedCount === 0) throw ApiError.notFound('Workspace not found');
+  if (result.modifiedCount === 0) throw ApiError.notFound('API key not found');
 
   res.json({ success: true });
 }

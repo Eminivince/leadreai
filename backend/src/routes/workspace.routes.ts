@@ -35,4 +35,38 @@ router.delete(
   asyncHandler(workspaceController.deleteKnowledgeBaseEntry)
 );
 
+// Email config — owner-only (secrets stored here)
+router.get(
+  '/:workspaceId/email-config',
+  authorize(['owner', 'admin']),
+  asyncHandler(workspaceController.getEmailConfig)
+);
+router.put(
+  '/:workspaceId/email-config',
+  authorize(['owner']),
+  asyncHandler(workspaceController.updateEmailConfig)
+);
+router.delete(
+  '/:workspaceId/email-config',
+  authorize(['owner']),
+  asyncHandler(workspaceController.deleteEmailConfig)
+);
+
+// API key management — owner + admin can list, only owner can create/revoke
+router.get(
+  '/:workspaceId/api-keys',
+  authorize(['owner', 'admin']),
+  asyncHandler(workspaceController.listApiKeys)
+);
+router.post(
+  '/:workspaceId/api-keys',
+  authorize(['owner']),
+  asyncHandler(workspaceController.createApiKey)
+);
+router.delete(
+  '/:workspaceId/api-keys/:keyId',
+  authorize(['owner']),
+  asyncHandler(workspaceController.revokeApiKey)
+);
+
 export default router;
