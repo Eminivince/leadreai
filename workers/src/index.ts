@@ -9,12 +9,15 @@ async function bootstrap() {
   connection.on('connect', () => logger.info('Workers Redis connected'));
   connection.on('error', (err) => logger.error('Workers Redis error', { err }));
 
-  const _worker = createProspectingWorker(connection);
+  const worker = createProspectingWorker(connection);
   logger.info('Prospecting worker ready', { concurrency: env.WORKER_CONCURRENCY });
 
+  let isShuttingDown = false;
   async function shutdown(signal: string) {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
     logger.info(`Received ${signal}, shutting down workers`);
-    await _worker.close();
+    await worker.close();
     await connection.quit();
     logger.info('Worker shutdown complete');
     process.exit(0);
