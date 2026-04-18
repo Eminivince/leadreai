@@ -2,7 +2,7 @@ import { Queue } from 'bullmq';
 import { getRedis } from '../../config/redis.js';
 import { env } from '../../config/env.js';
 
-const QUEUE_PREFIX = `{bull}:leadreai:${env.NODE_ENV}`;
+export const QUEUE_PREFIX = `{bull}:leadreai:${env.NODE_ENV}`;
 
 const defaultJobOptions = {
   removeOnComplete: { count: 500 },
