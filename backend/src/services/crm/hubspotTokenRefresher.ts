@@ -1,3 +1,4 @@
+// Reserved for use by CRM controller future operations. Token refresh during sync is inlined in workers/src/hubspot.worker.ts.
 import { env } from '../../config/env.js';
 
 export interface HubSpotTokens {

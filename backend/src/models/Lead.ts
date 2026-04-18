@@ -75,6 +75,13 @@ export interface ILead extends mongoose.Document {
       seniority: 'c_level' | 'vp' | 'director' | 'manager' | 'ic' | 'unknown';
     };
   };
+  crmRefs: Array<{
+    provider: 'hubspot' | 'salesforce' | 'pipedrive' | 'close';
+    externalId: string;
+    syncedAt: Date;
+    syncStatus: 'synced' | 'error' | 'pending';
+    errorMessage?: string;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -152,6 +159,18 @@ const leadSchema = new Schema<ILead>(
         title: String,
         seniority: String,
       },
+    },
+    crmRefs: {
+      type: [
+        {
+          provider: { type: String, enum: ['hubspot', 'salesforce', 'pipedrive', 'close'], required: true },
+          externalId: { type: String, required: true },
+          syncedAt: { type: Date, required: true },
+          syncStatus: { type: String, enum: ['synced', 'error', 'pending'], required: true },
+          errorMessage: String,
+        },
+      ],
+      default: [],
     },
   },
   { timestamps: true }

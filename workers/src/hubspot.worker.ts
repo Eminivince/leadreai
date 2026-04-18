@@ -434,6 +434,7 @@ export function createHubspotWorker(connection: Redis): Worker {
     {
       connection,
       concurrency: env.WORKER_CONCURRENCY,
+      prefix: `{bull}:leadreai:${env.NODE_ENV}`,
     }
   );
 

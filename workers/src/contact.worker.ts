@@ -22,6 +22,7 @@ export function createContactWorker(connection: Redis): Worker {
     {
       connection,
       concurrency: env.CONTACT_ENRICHMENT_CONCURRENCY,
+      prefix: `{bull}:leadreai:${env.NODE_ENV}`,
     }
   );
 

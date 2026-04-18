@@ -30,6 +30,10 @@ export async function hubspotCallback(req: Request, res: Response): Promise<void
   const workspaceId = req.query['state'] as string;
   if (!code || !workspaceId) throw ApiError.badRequest('Missing code or state');
 
+  if (!workspaceId || !mongoose.Types.ObjectId.isValid(workspaceId)) {
+    throw ApiError.badRequest('Invalid state parameter');
+  }
+
   // Exchange code for tokens
   const body = new URLSearchParams({
     grant_type: 'authorization_code',

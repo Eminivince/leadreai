@@ -14,7 +14,7 @@ function getContactQueue(): Queue {
   if (!_contactQueue) {
     _contactQueue = new Queue('contact-enrichment', {
       connection: new Redis(env.REDIS_URL, { maxRetriesPerRequest: null }),
-      prefix: '{leadreai}',
+      prefix: `{bull}:leadreai:${env.NODE_ENV}`,
     });
   }
   return _contactQueue;

@@ -1,3 +1,4 @@
+// Reserved for future pull-sync implementation. Push-sync logic is inlined in workers/src/hubspot.worker.ts.
 export interface HubSpotCompanyInput {
   name: string;
   domain?: string;
