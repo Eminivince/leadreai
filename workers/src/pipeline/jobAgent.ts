@@ -49,9 +49,9 @@ On every turn, respond with EXACTLY ONE JSON object matching one of these shapes
 ## Core strategy
 
 1. PLAN briefly before your first action. What does the user want? How many? What fields?
-2. Cheap first: lookup_registry, guess_domains, search_web, extract_names_from_urls, verify_email — these are fast & low-cost. Exhaust these before scrape_page (heavy).
-3. For a named-entity query ("find contacts at <company>"): start with lookup_registry + guess_domains + verify_email to pin down the real domain and officers. Use search_web for aggregator profile URLs and extract_names_from_urls to mine names. Then permute_email + verify_email for each name on the real domain. write_lead per verified contact.
-4. For a demographic query ("find 50 <role> at <industry> in <geo>"): use search_web to find candidate companies, score each via quick search before committing to scrape_page. Loop.
+2. Cheap first: lookup_registry, search_web, fetch_url, extract_names_from_urls, verify_email — these are fast & low-cost. Exhaust these before scrape_page (heavy, uses full browser).
+3. For a named-entity query ("find contacts at <company>"): start with lookup_registry. Then search_web — the real website domain usually appears in the top 3 result URLs or snippets; EXTRACT IT by reading the snippets, don't guess. Once you have the domain, fetch_url the /contact, /about, /team pages directly. Use search_web with aggregator-restricted queries (site:linkedin.com OR site:zoominfo.com) + extract_names_from_urls to harvest employee names, then permute_email + verify_email per name on the real domain. write_lead per verified contact.
+4. For a demographic query ("find 50 <role> at <industry> in <geo>"): use search_web to find candidate companies, inspect snippets before committing to scrape_page. Loop.
 5. Never fabricate data. Only write_lead records you can justify from tool output you've seen.
 6. Watch your budget (${MAX_STEPS} tool calls, ${MAX_WALL_MS / 1000}s wall-clock). Prefer cheap tools. Don't scrape aggregator domains (zoominfo.com, rocketreach.co, contactout.com, signalhire.com, datanyze.com, apollo.io, hunter.io, lusha.com) — they're paywalled junk; use extract_names_from_urls on their SERP URLs instead.
 
@@ -80,7 +80,7 @@ function buildInitialUserPrompt(intent: ParsedIntent): string {
   return parts.join('\n');
 }
 
-async function callLLM(history: HistoryMsg[]): Promise<string> {
+async function callLLMOnce(history: HistoryMsg[]): Promise<{ ok: boolean; status: number; content: string }> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), LLM_TIMEOUT_MS);
   try {
@@ -100,13 +100,34 @@ async function callLLM(history: HistoryMsg[]): Promise<string> {
       }),
       signal: controller.signal,
     });
-    if (!res.ok) throw new Error(`LLM status ${res.status}`);
+    if (!res.ok) return { ok: false, status: res.status, content: '' };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const json = await res.json() as any;
-    return json?.choices?.[0]?.message?.content ?? '{}';
+    return { ok: true, status: res.status, content: json?.choices?.[0]?.message?.content ?? '{}' };
   } finally {
     clearTimeout(timeout);
   }
+}
+
+async function callLLM(history: HistoryMsg[]): Promise<string> {
+  // nvidia:free and other free-tier OpenRouter models rate-limit aggressively.
+  // Retry on 429 with exponential backoff; surface other errors immediately.
+  const backoffs = [3_000, 8_000, 18_000]; // up to 3 retries, ~29s total
+  for (let attempt = 0; attempt <= backoffs.length; attempt++) {
+    const result = await callLLMOnce(history).catch((err) => {
+      logger.warn('[jobAgent] LLM fetch threw', { attempt, err: err instanceof Error ? err.message : String(err) });
+      return { ok: false, status: 0, content: '' };
+    });
+    if (result.ok) return result.content;
+    if (result.status === 429 && attempt < backoffs.length) {
+      const waitMs = backoffs[attempt]!;
+      logger.info('[jobAgent] 429 rate-limited — backing off', { attempt: attempt + 1, waitMs });
+      await new Promise((resolve) => setTimeout(resolve, waitMs));
+      continue;
+    }
+    throw new Error(`LLM status ${result.status}`);
+  }
+  throw new Error('LLM retry budget exhausted');
 }
 
 async function runCritic(history: HistoryMsg[], ctx: ToolContext): Promise<string | null> {

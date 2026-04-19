@@ -32,7 +32,6 @@ import { searchWebTool } from './searchWeb.js';
 import { fetchUrlTool } from './fetchUrl.js';
 import { scrapePageTool } from './scrapePage.js';
 import { lookupRegistryTool } from './lookupRegistry.js';
-import { guessDomainsTool } from './guessDomains.js';
 import { extractNamesFromUrlsTool } from './extractNamesFromUrls.js';
 import { permuteEmailTool } from './permuteEmail.js';
 import { verifyEmailTool } from './verifyEmail.js';
@@ -41,7 +40,7 @@ import { writeLeadTool } from './writeLead.js';
 
 export const TOOL_REGISTRY: ToolDef[] = [
   searchWebTool, fetchUrlTool, scrapePageTool, lookupRegistryTool,
-  guessDomainsTool, extractNamesFromUrlsTool, permuteEmailTool,
+  extractNamesFromUrlsTool, permuteEmailTool,
   verifyEmailTool, scoreLeadTool, writeLeadTool,
 ];
 
