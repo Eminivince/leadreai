@@ -131,25 +131,78 @@ function StageRow({ idx, stage, pct, state, counterLabel, counterVal }: {
 }
 
 /* ── Running phase ───────────────────────────────────────── */
-function Running({ prompt, onDone }: { prompt: string; onDone: () => void }) {
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+
+const STAGE_MAP: Record<string, number> = {
+  parse_intent: 0, build_search_plans: 1, scrape: 1,
+  enrich: 2, fetch_contacts: 2, deduplicate: 3, rank: 3,
+  write_leads: 4, complete: 4,
+};
+
+function Running({
+  prompt,
+  workspaceId,
+  jobId,
+  onDone,
+}: {
+  prompt: string;
+  workspaceId: string;
+  jobId: string | null;
+  onDone: (result: { leadsFound: number; creditsUsed: number }) => void;
+}) {
   const [elapsed, setElapsed] = useState(0);
-  const total = useMemo(() => STAGES.reduce((s, x) => s + x.dur, 0), []);
-  const starts = useMemo(() => { const arr: number[] = []; let t = 0; for (const s of STAGES) { arr.push(t); t += s.dur; } return arr; }, []);
+  const [activeStageIdx, setActiveStageIdx] = useState(0);
+  const [stagePcts, setStagePcts] = useState<number[]>([0, 0, 0, 0, 0]);
+  const [stageCounters, setStageCounters] = useState<number[]>([0, 0, 0, 0, 0]);
+  const startRef = useRef(performance.now());
+  const esRef = useRef<EventSource | null>(null);
+  const doneRef = useRef(false);
 
   useEffect(() => {
-    const started = performance.now();
-    let raf: number;
-    const tick = () => {
-      const e = performance.now() - started;
-      setElapsed(e);
-      if (e < total) raf = requestAnimationFrame(tick);
-      else setTimeout(() => onDone(), 500);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [total, onDone]);
+    startRef.current = performance.now();
+    const id = setInterval(() => setElapsed(performance.now() - startRef.current), 100);
+    return () => clearInterval(id);
+  }, []);
 
-  const overall = Math.min(1, elapsed / total);
+  useEffect(() => {
+    if (!jobId || !workspaceId || doneRef.current) return;
+    const token = getAccessToken();
+    const url = `${API_BASE}/api/v1/workspaces/${workspaceId}/jobs/${jobId}/stream${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+    const es = new EventSource(url);
+    esRef.current = es;
+
+    es.onmessage = (ev: MessageEvent) => {
+      try {
+        const data = JSON.parse(ev.data as string) as Record<string, unknown>;
+        const type = data.type as string;
+        if (type === 'progress' || type === 'status') {
+          const stageKey = (data.stage as string | undefined) ?? '';
+          const idx = STAGE_MAP[stageKey] ?? 0;
+          const pct = Math.min(1, Number(data.progress ?? 0) / 100);
+          setActiveStageIdx(idx);
+          setStagePcts(prev => { const next = [...prev]; for (let i = 0; i < idx; i++) next[i] = 1; next[idx] = pct; return next; });
+          setStageCounters(prev => { const next = [...prev]; next[idx] = Number(data.leadsFound ?? 0); return next; });
+        } else if (type === 'completed') {
+          doneRef.current = true;
+          setStagePcts([1, 1, 1, 1, 1]);
+          setActiveStageIdx(5);
+          es.close();
+          esRef.current = null;
+          setTimeout(() => onDone({ leadsFound: Number(data.leadsFound ?? 0), creditsUsed: Number(data.creditsUsed ?? 0) }), 600);
+        } else if (type === 'failed') {
+          doneRef.current = true;
+          es.close();
+          esRef.current = null;
+          onDone({ leadsFound: 0, creditsUsed: 0 });
+        }
+      } catch { /* ignore parse errors */ }
+    };
+
+    es.onerror = () => { es.close(); esRef.current = null; };
+    return () => { es.close(); esRef.current = null; };
+  }, [jobId, workspaceId, onDone]);
+
+  const overall = activeStageIdx >= 5 ? 1 : (activeStageIdx + (stagePcts[activeStageIdx] ?? 0)) / 5;
 
   return (
     <div className="px-5 md:px-7 py-5 flex flex-col gap-5">
@@ -171,21 +224,22 @@ function Running({ prompt, onDone }: { prompt: string; onDone: () => void }) {
           </div>
         </div>
         <div className="mt-3 h-[3px] rounded-full bg-white/[0.08] overflow-hidden relative">
-          <div className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-white/80 via-white to-white rounded-full" style={{ width: `${overall * 100}%` }}/>
-          <div className="absolute inset-y-0 w-20 bg-gradient-to-r from-transparent via-white/50 to-transparent" style={{ animation: 'nqBarShimmer 1.4s ease-in-out infinite' }}/>
+          <div className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-white/80 via-white to-white rounded-full"
+            style={{ width: `${overall * 100}%`, transition: 'width .4s ease' }}/>
+          <div className="absolute inset-y-0 w-20 bg-gradient-to-r from-transparent via-white/50 to-transparent"
+            style={{ animation: 'nqBarShimmer 1.4s ease-in-out infinite' }}/>
         </div>
         <div className="mt-2 flex items-center justify-between text-[10.5px] font-mono text-white/45 whitespace-nowrap">
           <span>Overall {Math.floor(overall * 100)}%</span>
-          <span>ETA {Math.max(0, (total - elapsed) / 1000).toFixed(1)}s</span>
+          {!jobId && <span className="text-amber-300/70">Queuing job…</span>}
         </div>
       </div>
       <div className="flex flex-col gap-2.5">
         {STAGES.map((s, i) => {
-          const startedAt = starts[i]!;
-          const localE = Math.max(0, elapsed - startedAt);
-          const pct = Math.min(1, localE / s.dur);
-          const state = elapsed < startedAt ? 'queued' : (elapsed < startedAt + s.dur ? 'running' : 'done');
-          const { label: cLabel, val: cVal } = s.counter(pct);
+          const pct = stagePcts[i] ?? 0;
+          const state = i < activeStageIdx ? 'done' : i === activeStageIdx ? (pct > 0 ? 'running' : 'queued') : 'queued';
+          const { label: cLabel } = s.counter(pct);
+          const cVal = stageCounters[i] ?? 0;
           return <StageRow key={s.k} idx={i} stage={s} pct={pct} state={state} counterLabel={cLabel} counterVal={cVal}/>;
         })}
       </div>
@@ -402,7 +456,14 @@ export function NewQueryModal({ workspaceId, onSubmit }: NewQueryModalProps) {
                 </div>
               </div>
             )}
-            {phase === 'running' && <Running prompt={prompt} onDone={() => setPhase('summary')}/>}
+            {phase === 'running' && (
+              <Running
+                prompt={prompt}
+                workspaceId={workspaceId}
+                jobId={jobId}
+                onDone={(result) => { setJobResult(result); setPhase('summary'); }}
+              />
+            )}
             {phase === 'summary' && <Summary onClose={closeNewQuery}/>}
           </div>
 
