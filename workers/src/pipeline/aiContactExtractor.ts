@@ -96,7 +96,7 @@ export async function extractContacts(input: ExtractInput): Promise<ContactCandi
         'HTTP-Referer': 'https://leadreai.app',
       },
       body: JSON.stringify({
-        model: 'google/gemini-flash-1.5',
+        model: env.OPENROUTER_MODEL,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: buildUserPrompt(input) },

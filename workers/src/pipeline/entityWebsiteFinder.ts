@@ -4,9 +4,16 @@ import type { SerpResult } from './serpScraper.js';
 import type { ParsedIntent } from '@leadreai/shared';
 
 const SKIP_DOMAINS = [
+  // Social & generic aggregators
   'linkedin.com', 'facebook.com', 'twitter.com', 'instagram.com',
   'wikipedia.org', 'youtube.com', 'bloomberg.com', 'reuters.com',
   'forbes.com', 'crunchbase.com', 'glassdoor.com',
+  // Lead-database aggregators (paywalled, never the actual company website)
+  'zoominfo.com', 'rocketreach.co', 'contactout.com', 'signalhire.com', 'datanyze.com',
+  'apollo.io', 'hunter.io', 'lusha.com', 'clearbit.com', 'leadiq.com', 'snov.io',
+  'seamless.ai', 'lead411.com', 'uplead.com', 'anymailfinder.com',
+  // Job boards
+  'myjobmag.com', 'jobberman.com', 'indeed.com', 'monster.com',
 ];
 
 function isAggregator(url: string): boolean {
@@ -72,7 +79,9 @@ export async function findEntityWebsites(
     // Pick first non-aggregator result as the "official" site
     const officialResult = combined.find(r => !isAggregator(r.url));
     if (!officialResult) {
-      logger.debug('[entityWebsiteFinder] No official site found for entity', { name });
+      logger.info('[entityWebsiteFinder] No official site found — all results were aggregators', {
+        name, sampleUrls: combined.slice(0, 3).map(r => r.url),
+      });
       continue;
     }
 

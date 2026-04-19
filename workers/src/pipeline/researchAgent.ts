@@ -88,7 +88,7 @@ async function callLLM(history: HistoryMsg[]): Promise<string> {
         'HTTP-Referer': 'https://leadreai.app',
       },
       body: JSON.stringify({
-        model: 'google/gemini-flash-1.5',
+        model: env.OPENROUTER_MODEL,
         messages: history,
         max_tokens: 800,
         temperature: 0,

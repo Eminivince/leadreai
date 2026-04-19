@@ -3,10 +3,18 @@ import type { ParsedIntent } from '@leadreai/shared';
 
 // Domains that are aggregators/directories, never direct company pages
 const SKIP_DOMAIN_FRAGMENTS = [
+  // Social & generic aggregators
   'wikipedia.org', 'linkedin.com', 'facebook.com', 'twitter.com', 'instagram.com',
   'youtube.com', 'yelp.com', 'yellowpages', 'tripadvisor', 'glassdoor', 'indeed.com',
   'crunchbase.com', 'bloomberg.com', 'reuters.com', 'forbes.com', 'statista.com',
   'quora.com', 'reddit.com', 'trustpilot', 'clutch.co', 'g2.com', 'capterra.com',
+  // Lead-database aggregators — they paywall their data and scraping produces junk
+  'zoominfo.com', 'rocketreach.co', 'contactout.com', 'signalhire.com', 'datanyze.com',
+  'apollo.io', 'hunter.io', 'lusha.com', 'clearbit.com', 'leadiq.com', 'snov.io',
+  'seamless.ai', 'lead411.com', 'uplead.com', 'prospect.io', 'anymailfinder.com',
+  // Job boards (useful for jobs, but not for finding a specific company's contacts)
+  'myjobmag.com', 'jobberman.com', 'indeed.com', 'monster.com', 'ziprecruiter.com',
+  'simplyhired.com',
 ];
 
 // Title/snippet patterns that indicate aggregator pages rather than company homepages
