@@ -249,7 +249,7 @@ function Running({
 }
 
 /* ── Summary phase ───────────────────────────────────────── */
-function Summary({ onClose }: { onClose: () => void }) {
+function Summary({ onClose, result }: { onClose: () => void; result: { leadsFound: number; creditsUsed: number } | null }) {
   const router = useRouter();
   return (
     <div className="px-5 md:px-7 py-5 flex flex-col gap-5">
@@ -267,10 +267,10 @@ function Summary({ onClose }: { onClose: () => void }) {
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { k: 'Status',    v: 'Complete', sub: 'all stages done' },
-          { k: 'Verified',  v: '—',        sub: 'email + phone' },
-          { k: 'Hot',       v: '—',        sub: 'score ≥ 0.9', tone: 'emerald' },
-          { k: 'Credits',   v: '—',        sub: 'used this run' },
+          { k: 'Status',   v: 'Complete',                                          sub: 'all stages done' },
+          { k: 'Verified', v: result ? result.leadsFound.toLocaleString() : '—',  sub: 'leads found' },
+          { k: 'Hot',      v: '—',                                                 sub: 'score ≥ 0.9', tone: 'emerald' },
+          { k: 'Credits',  v: result ? result.creditsUsed.toLocaleString() : '—', sub: 'used this run' },
         ].map((s, i) => (
           <div key={i} className="rounded-xl border border-white/10 bg-white/[0.02] p-3.5">
             <div className="text-[10px] font-mono uppercase tracking-wider text-white/45">{s.k}</div>
@@ -464,7 +464,7 @@ export function NewQueryModal({ workspaceId, onSubmit }: NewQueryModalProps) {
                 onDone={(result) => { setJobResult(result); setPhase('summary'); }}
               />
             )}
-            {phase === 'summary' && <Summary onClose={closeNewQuery}/>}
+            {phase === 'summary' && <Summary onClose={closeNewQuery} result={jobResult}/>}
           </div>
 
           {/* Footer — composer only */}
