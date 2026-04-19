@@ -23,6 +23,10 @@ export interface ParsedIntent {
   companySize?: string | null;
   keywords: string[];
   confidenceScore: number;
+  /** 'named_entity_list' = "top 10 law firms in Nigeria"; 'contact_lookup' = asking for specific contact of a named org; 'demographic_filter' = filter-based prospecting */
+  queryType: 'named_entity_list' | 'demographic_filter' | 'contact_lookup';
+  /** For named_entity_list: specific company/org names mentioned or to be resolved. null = resolve via search. */
+  namedEntities: string[] | null;
 }
 
 export interface JobProgress {

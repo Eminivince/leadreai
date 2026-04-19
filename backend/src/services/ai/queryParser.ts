@@ -18,7 +18,9 @@ Output EXACTLY this JSON schema (all keys required unless marked optional):
   "desiredFields": "<array of strings> — data fields inferred from the query context; pick any subset of: 'businessEmail', 'officePhone', 'mobilePhone', 'address', 'website', 'linkedin', 'whois', 'techStack'; default to ['businessEmail'] if none are implied",
   "companySize": "<string | null> — e.g. '50-200', 'startup', 'enterprise', or null if unspecified",
   "keywords": "<string[]> — relevant search terms extracted from the query",
-  "confidenceScore": "<number 0–1> — your confidence that you have correctly parsed the intent"
+  "confidenceScore": "<number 0–1> — your confidence that you have correctly parsed the intent",
+  "queryType": "<string> — classify the query as one of: 'named_entity_list' (user wants top-N or specific named organizations, e.g. 'top 10 law firms in Nigeria', 'biggest banks in Ghana'), 'contact_lookup' (user wants contact info for a specific known company, e.g. 'phone number of Aluko and Oyebode'), or 'demographic_filter' (filter-based prospecting, e.g. 'Series B fintechs in NYC using Salesforce')",
+  "namedEntities": "<string[] | null> — ONLY for named_entity_list or contact_lookup: list specific company or organization names explicitly mentioned in the query (e.g. ['Aluko & Oyebode', 'Templars']); use null if no specific names are mentioned (they will be resolved via search)"
 }
 
 Rules:
@@ -26,7 +28,9 @@ Rules:
 - Use null (not the string "null") for missing optional fields.
 - targetCount must be an integer between 1 and 1000.
 - confidenceScore must be a decimal between 0 and 1.
-- desiredFields must be a non-empty array; default to ["businessEmail"] when the query gives no field hints.`;
+- desiredFields must be a non-empty array; default to ["businessEmail"] when the query gives no field hints.
+- For named_entity_list queries: if the user says 'top 10' set targetCount=10. namedEntities is null if no specific names are mentioned.
+- For contact_lookup queries: if specific companies ARE named in the query, list them in namedEntities.`;
 
 /**
  * Parses a raw natural-language prospecting query into a structured ParsedIntent

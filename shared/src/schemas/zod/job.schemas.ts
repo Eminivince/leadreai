@@ -18,6 +18,8 @@ export const ParsedIntentSchema = z.object({
   companySize: z.string().nullish(),
   keywords: z.array(z.string()).default([]),
   confidenceScore: z.number().min(0).max(1).default(0.8),
+  queryType: z.enum(['named_entity_list', 'demographic_filter', 'contact_lookup']).default('demographic_filter'),
+  namedEntities: z.array(z.string()).nullable().default(null),
 });
 
 export type CreateJobInput = z.infer<typeof CreateJobSchema>;
