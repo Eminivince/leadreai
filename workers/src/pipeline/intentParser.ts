@@ -21,6 +21,7 @@ import { buildRound2Dorks } from './queryBuilder.js';
 import { passesHeuristicFilter } from './heuristicFilter.js';
 import { SerpCache } from '../utils/serpCache.js';
 import { scoreLeadRelevance } from './leadScorer.js';
+import { researchDomain } from './researchAgent.js';
 import { env } from '../config/env.js';
 
 const prospectingJobSchema = new mongoose.Schema(
@@ -371,6 +372,9 @@ export async function runIntentParser(
     let batchAiAccepted = 0;
     const batchRejectSamples: Array<{ domain: string; score: number; reason: string }> = [];
 
+    let agentRunsThisBatch = 0;
+    const AGENT_BUDGET_PER_BATCH = 3;
+
     for (const [domain, data] of batchDomainMap.entries()) {
       processedDomains.add(domain);
 
@@ -426,6 +430,81 @@ export async function runIntentParser(
         } : undefined,
       } : undefined;
 
+      // Pillar 2: if the lead is thin, dispatch the research agent
+      const hasNamedContact = data.contacts.some(c => c.name && c.email);
+      const wantsEmail = parsedIntent.desiredFields.includes('businessEmail') || parsedIntent.desiredFields.length === 0;
+      const wantsPhone = parsedIntent.desiredFields.some(f => f === 'officePhone' || f === 'mobilePhone');
+      const missingWanted = (wantsEmail && mergedEmails.length === 0) || (wantsPhone && mergedPhones.length === 0);
+      const isThin = !hasNamedContact || missingWanted;
+
+      let agentContacts: typeof mergedEmails = [];
+      let agentPhones: typeof mergedPhones = [];
+      let agentContactSummary = contactSummary;
+
+      if (isThin && agentRunsThisBatch < AGENT_BUDGET_PER_BATCH) {
+        agentRunsThisBatch++;
+        logger.info('[Pipeline] Dispatching research agent', {
+          jobId, domain, reason: !hasNamedContact ? 'no_named_contact' : 'missing_field',
+        });
+        const agentResult = await researchDomain({
+          domain,
+          entityName: parsedIntent.namedEntities?.[0],
+          desiredFields: parsedIntent.desiredFields,
+          knownContacts: data.contacts,
+          pagesAlreadyScraped: data.pageUrls,
+        }).catch((err) => {
+          logger.warn('[Pipeline] research agent threw', { jobId, domain, err: err instanceof Error ? err.message : String(err) });
+          return null;
+        });
+
+        if (agentResult && agentResult.additionalContacts.length > 0) {
+          const existingEmailAddrs = new Set(mergedEmails.map(e => e.address.toLowerCase()));
+          agentContacts = agentResult.additionalContacts
+            .filter(c => c.email && c.confidence >= 0.5 && !existingEmailAddrs.has(c.email.toLowerCase()))
+            .map(c => ({
+              address: c.email!.toLowerCase().trim(),
+              type: (c.name ? 'business' : 'generic') as 'business' | 'generic',
+              confidence: c.confidence,
+              source: 'ai_extracted' as const,
+              name: c.name,
+              title: c.title,
+              department: c.department,
+            }));
+
+          const existingPhoneDigits = new Set(mergedPhones.map(p => (p.normalized ?? p.raw).replace(/\D/g, '')));
+          agentPhones = agentResult.additionalContacts
+            .filter(c => c.phone && c.confidence >= 0.5 && !existingPhoneDigits.has(c.phone.replace(/\D/g, '')))
+            .map(c => ({
+              raw: c.phone!,
+              normalized: undefined as string | undefined,
+              type: undefined as string | undefined,
+              countryCode: undefined as string | undefined,
+              source: 'ai_extracted' as const,
+            }));
+
+          const agentNamed = agentResult.additionalContacts.filter(c => c.name && c.name.length > 1);
+          if (agentNamed.length > 0 && !agentContactSummary) {
+            agentContactSummary = {
+              totalContacts: agentNamed.length,
+              topContact: agentNamed[0] ? {
+                fullName: agentNamed[0].name!,
+                title: agentNamed[0].title ?? '',
+                seniority: '',
+              } : undefined,
+            };
+          }
+
+          logger.info('[Pipeline] Research agent enriched lead', {
+            jobId, domain, addedEmails: agentContacts.length, addedPhones: agentPhones.length,
+            stopReason: agentResult.stopReason, steps: agentResult.toolCallsUsed,
+          });
+        }
+      }
+
+      const finalEmails = [...mergedEmails, ...agentContacts];
+      const finalPhones = [...mergedPhones, ...agentPhones];
+      const finalContactSummary = agentContactSummary;
+
       const lead: LeadRecord = {
         workspaceId,
         jobId,
@@ -438,9 +517,9 @@ export async function runIntentParser(
           city: parsedIntent.geography?.city ?? undefined,
           state: parsedIntent.geography?.state ?? undefined,
         },
-        emails: mergedEmails,
-        phones: mergedPhones,
-        contactSummary,
+        emails: finalEmails,
+        phones: finalPhones,
+        contactSummary: finalContactSummary,
         socialProfiles: data.linkedinUrl ? { linkedinUrl: data.linkedinUrl } : undefined,
         osint: osint as Record<string, unknown>,
         sources: data.pageUrls.map(url => ({
