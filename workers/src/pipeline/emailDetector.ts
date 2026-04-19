@@ -9,7 +9,22 @@ export interface DetectedEmail {
   source: string;
 }
 
-const GENERIC_PREFIXES = ['info', 'contact', 'hello', 'admin', 'support', 'enquiries', 'enquiry', 'sales', 'office', 'mail', 'team'];
+const GENERIC_PREFIXES = [
+  'info', 'contact', 'hello', 'admin', 'support', 'enquiries', 'enquiry',
+  'sales', 'office', 'mail', 'team', 'help', 'service', 'services',
+];
+
+const NOISE_PREFIXES = [
+  'noreply', 'no-reply', 'donotreply', 'do-not-reply',
+  'bounce', 'bounces', 'mailer-daemon', 'maildaemon',
+  'newsletter', 'newsletters', 'unsubscribe',
+  'privacy', 'legal', 'compliance', 'dpo',
+  'billing', 'invoice', 'invoices', 'accounts', 'accounting',
+  'hr', 'careers', 'jobs', 'recruitment', 'hiring',
+  'marketing', 'notifications', 'notify', 'alerts',
+  'webmaster', 'postmaster', 'abuse', 'spam',
+  'security', 'cert', 'soc',
+];
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
 
@@ -28,11 +43,13 @@ export async function detectEmails(
     if (!EMAIL_REGEX.test(addr) || seen.has(addr)) continue;
     seen.add(addr);
     const prefix = addr.split('@')[0] ?? '';
+    // Reject noise addresses outright — they are never useful contacts
+    if (NOISE_PREFIXES.some(p => prefix === p || prefix.startsWith(p + '-') || prefix.startsWith(p + '.'))) continue;
     const isGeneric = GENERIC_PREFIXES.some(p => prefix === p || prefix.startsWith(p));
     results.push({
       address: addr,
       type: isGeneric ? 'generic' : 'business',
-      confidence: 0.95,
+      confidence: isGeneric ? 0.6 : 0.95,
       source: 'scraped',
     });
   }
