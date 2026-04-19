@@ -3,30 +3,10 @@ import { Redis } from 'ioredis';
 import { logger } from '../utils/logger.js';
 import { JOB_STATUSES } from '@leadreai/shared';
 import type { ParsedIntent } from '@leadreai/shared';
-import { buildDorkQueries } from './queryBuilder.js';
-import { runSerpSearch } from './serpScraper.js';
-import { runPageScraper } from './pageScraper.js';
-import { runFileExtractor } from './fileExtractor.js';
-import { enrichDomain } from './osintEnricher.js';
-import { detectEmails } from './emailDetector.js';
-import { normalizePhones, countryNameToCode } from './phoneNormalizer.js';
-import { deduplicateLeads, type LeadRecord } from './deduplicator.js';
-import type { ContactCandidate } from './aiContactExtractor.js';
+import { deduplicateLeads } from './deduplicator.js';
 import { rankLeads } from './ranker.js';
 import { writeLeads } from './leadWriter.js';
-import { runLeadQualifier } from './leadQualifier.js';
-import { resolveNamedEntities } from './entityResolver.js';
-import { findEntityWebsites } from './entityWebsiteFinder.js';
-import { buildRound2Dorks } from './queryBuilder.js';
-import { passesHeuristicFilter } from './heuristicFilter.js';
-import { SerpCache } from '../utils/serpCache.js';
-import { scoreLeadRelevance } from './leadScorer.js';
-import { researchDomain } from './researchAgent.js';
-import { enrichEntity } from './registries/opencorporates.js';
-import { collectAggregatorNames, type AggregatorName } from './aggregatorNameExtractor.js';
-import { guessCompanyDomains } from './domainGuesser.js';
-import { verifyEmail } from './tools/verifyEmail.js';
-import { env } from '../config/env.js';
+import { runJobAgent } from './jobAgent.js';
 
 const prospectingJobSchema = new mongoose.Schema(
   {
@@ -41,8 +21,9 @@ const prospectingJobSchema = new mongoose.Schema(
     },
     error: { message: String, stack: String, stage: String },
     startedAt: Date,
+    activityLog: { type: [mongoose.Schema.Types.Mixed], default: [] },
   },
-  { timestamps: true, strict: false }
+  { timestamps: true, strict: false },
 );
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -51,14 +32,13 @@ const ProspectingJob: mongoose.Model<any> =
   (mongoose.models['ProspectingJob'] as mongoose.Model<any> | undefined) ??
   mongoose.model('ProspectingJob', prospectingJobSchema);
 
-// Helper: update DB status + publish SSE event
-async function progress(
+async function pushProgress(
   jobId: string,
   publisher: Redis,
   status: string,
   percentage: number,
-  stage: string
-) {
+  stage: string,
+): Promise<void> {
   await ProspectingJob.findByIdAndUpdate(jobId, {
     status,
     'progress.percentage': percentage,
@@ -67,13 +47,12 @@ async function progress(
   });
   await publisher.publish(
     `job:progress:${jobId}`,
-    JSON.stringify({ type: 'status', status, percentage, stage })
+    JSON.stringify({ type: 'status', status, percentage, stage }),
   );
 }
 
-const ACTIVITY_LOG_CAP = 250;
-
-/** Persist + stream a human-readable pipeline step (for tuning / debugging). */
+// Preserved for prospecting.worker.ts error-path activity logging.
+// Individual pipeline stages no longer emit via this helper — the JobAgent owns per-step activity events.
 export async function jobActivity(
   jobId: string,
   publisher: Redis,
@@ -93,7 +72,7 @@ export async function jobActivity(
       $push: {
         activityLog: {
           $each: [doc],
-          $slice: -ACTIVITY_LOG_CAP,
+          $slice: -200,
         },
       },
     });
@@ -109,25 +88,13 @@ export async function jobActivity(
   }
 }
 
-// Timing helper
-function timer() {
-  const t = Date.now();
-  return () => Date.now() - t;
-}
-
-function getDomain(url: string): string {
-  try { return new URL(url).hostname.replace(/^www\./, ''); }
-  catch { return url; }
-}
-
 export async function runIntentParser(
   jobId: string,
   workspaceId: string,
   publisher: Redis,
 ): Promise<void> {
-  logger.info('[Pipeline] Starting job', { jobId, workspaceId });
+  logger.info('[Pipeline] Starting job (agent-orchestrated)', { jobId, workspaceId });
 
-  // ── Stage 0: Mark parsing started ───────────────────────────────────
   await ProspectingJob.findByIdAndUpdate(jobId, {
     status: 'parsing',
     startedAt: new Date(),
@@ -136,13 +103,13 @@ export async function runIntentParser(
   });
   await publisher.publish(
     `job:progress:${jobId}`,
-    JSON.stringify({ type: 'status', status: 'parsing', percentage: 3, stage: 'parsing' })
+    JSON.stringify({ type: 'status', status: 'parsing', percentage: 3, stage: 'parsing' }),
   );
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const jobDoc = await ProspectingJob.findById(jobId).lean() as any;
   if (!jobDoc) throw new Error(`Job ${jobId} not found`);
-  let parsedIntent = jobDoc.parsedIntent as ParsedIntent;
+  const parsedIntent = jobDoc.parsedIntent as ParsedIntent;
   if (!parsedIntent) throw new Error(`Job ${jobId} has no parsedIntent`);
 
   logger.info('[Pipeline] parsedIntent loaded', {
@@ -150,697 +117,39 @@ export async function runIntentParser(
     industry: parsedIntent.industry, targetCount: parsedIntent.targetCount,
   });
 
-  await jobActivity(jobId, publisher, 'intent', 'Loaded parsed intent from job record.', {
-    queryType: parsedIntent.queryType,
-    industry: parsedIntent.industry,
-    targetCount: parsedIntent.targetCount,
-    desiredFields: parsedIntent.desiredFields,
-    geography: parsedIntent.geography,
-    namedEntityCount: parsedIntent.namedEntities?.length ?? 0,
-    hasSerpApiKey: Boolean(env.SERPAPI_KEY),
+  await pushProgress(jobId, publisher, 'collecting', 10, 'jobAgentStart');
+
+  // ── AGENT OWNS THE PIPELINE ───────────────────────────────────────────
+  const agentResult = await runJobAgent({
+    jobId, workspaceId, parsedIntent, publisher,
   });
 
-  // ── Stage 1: Entity resolution (named_entity_list + contact_lookup) ────
-  if ((parsedIntent.queryType === 'named_entity_list' || parsedIntent.queryType === 'contact_lookup') && !parsedIntent.namedEntities?.length) {
-    await progress(jobId, publisher, 'parsing', 7, 'parsing');
-    logger.info('[Pipeline] [1] Resolving named entities', { jobId });
-    const resolvedEntities = await resolveNamedEntities(parsedIntent).catch((err) => {
-      logger.warn('[Pipeline] Entity resolution failed — continuing without entities', { jobId, err });
-      return [] as string[];
-    });
-    if (resolvedEntities.length > 0) {
-      parsedIntent = { ...parsedIntent, namedEntities: resolvedEntities } as ParsedIntent;
-      await ProspectingJob.findByIdAndUpdate(jobId, {
-        'parsedIntent.namedEntities': resolvedEntities,
-      });
-    }
-    logger.info('[Pipeline] [1] Entity resolution done', { jobId, count: parsedIntent.namedEntities?.length ?? 0 });
-    await jobActivity(jobId, publisher, 'entities', 'Resolved named entities for this query.', {
-      count: parsedIntent.namedEntities?.length ?? 0,
-      sample: (parsedIntent.namedEntities ?? []).slice(0, 8),
-    });
-  }
-
-  // ── Stage 1b: Registry enrichment via OpenCorporates ─────────────────
-  const registryEntities: Array<{ name: string; officers: string[]; address?: string }> = [];
-  if (
-    (parsedIntent.queryType === 'named_entity_list' || parsedIntent.queryType === 'contact_lookup') &&
-    (parsedIntent.namedEntities?.length ?? 0) > 0
-  ) {
-    logger.info('[Pipeline] [1b] Querying OpenCorporates for registered officers', { jobId });
-    for (const entityName of parsedIntent.namedEntities!.slice(0, 5)) {
-      const enriched = await enrichEntity(entityName, parsedIntent.geography?.country ?? undefined).catch(() => null);
-      if (enriched && enriched.officers.length > 0) {
-        registryEntities.push({
-          name: enriched.name,
-          officers: enriched.officers.map(o => o.name).filter(Boolean),
-          address: enriched.registeredAddress,
-        });
-        logger.info('[Pipeline] [1b] Registry hit', {
-          jobId, entity: enriched.name, officers: enriched.officers.length,
-        });
-      }
-    }
-  }
-
-  // ── Stage 2: Build initial dork queries ─────────────────────────────
-  await progress(jobId, publisher, 'collecting', 10, 'queryBuilder');
-  let t = timer();
-  const round1Queries = buildDorkQueries(parsedIntent);
-  logger.info('[Pipeline] [2] queryBuilder done', { jobId, ms: t(), count: round1Queries.length });
-  await jobActivity(jobId, publisher, 'dorks', `Built ${round1Queries.length} search queries (round 1).`, {
-    queryCount: round1Queries.length,
-    sampleQueries: round1Queries.slice(0, 6),
-    ms: t(),
+  logger.info('[Pipeline] JobAgent finished', {
+    jobId,
+    leadsEmitted: agentResult.leads.length,
+    stepsUsed: agentResult.stepsUsed,
+    stopReason: agentResult.stopReason,
   });
 
-  // ── Stage 3: SERP initial round → populate cache ─────────────────────
-  await progress(jobId, publisher, 'collecting', 18, 'serpSearch');
-  t = timer();
+  // ── Dedup + Rank + Persist ───────────────────────────────────────────
+  await pushProgress(jobId, publisher, 'deduplicating', 85, 'deduplication');
+  const deduped = deduplicateLeads(agentResult.leads);
 
-  const cacheRedis = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
-  const serpCache = new SerpCache(cacheRedis);
-
-  try {
-  // For entity queries: find each firm's official website FIRST and inject into cache
-  // so they're processed before generic dork results (highest signal, lowest noise)
-  const isEntityQuery = (parsedIntent.queryType === 'named_entity_list' || parsedIntent.queryType === 'contact_lookup')
-    && (parsedIntent.namedEntities?.length ?? 0) > 0;
-
-  if (isEntityQuery) {
-    await progress(jobId, publisher, 'collecting', 12, 'queryBuilder');
-    logger.info('[Pipeline] [2b] Entity website discovery starting', { jobId });
-    const entityUrls = await findEntityWebsites(parsedIntent.namedEntities!, parsedIntent).catch((err) => {
-      logger.warn('[Pipeline] Entity website finder failed — continuing', { jobId, err });
-      return [];
-    });
-    if (entityUrls.length > 0) {
-      await serpCache.addLinks(jobId, entityUrls);
-      logger.info('[Pipeline] [2b] Entity websites injected into cache', { jobId, count: entityUrls.length });
-      await jobActivity(jobId, publisher, 'entity_urls', `Injected ${entityUrls.length} high-priority entity URLs into crawl queue.`, {
-        urls: entityUrls.slice(0, 12).map((r) => r.url),
-      });
-    }
-  }
-
-  const serpResults = await runSerpSearch(round1Queries);
-  await serpCache.addLinks(jobId, serpResults);
-  // Mine aggregator profile URLs (zoominfo, rocketreach, contactout, datanyze, linkedin)
-  // for person names. We don't scrape those sites (paywalled), but the URL path itself
-  // is strong signal that person X is associated with the target company.
-  const aggregatorNames: Map<string, AggregatorName> = new Map();
-  collectAggregatorNames(serpResults, aggregatorNames);
-  logger.info('[Pipeline] [3] SERP round 1 done → cached', {
-    jobId, ms: t(), fetched: serpResults.length, cached: await serpCache.size(jobId),
-    aggregatorNames: aggregatorNames.size,
-  });
-  await jobActivity(jobId, publisher, 'serp', `SERP round 1 returned ${serpResults.length} organic URLs (SerpAPI).`, {
-    organicUrlCount: serpResults.length,
-    cacheSizeAfter: await serpCache.size(jobId),
-    ms: t(),
-    sampleUrls: serpResults.slice(0, 8).map((r) => r.url),
-  });
-
-  // ── Stage 4–7: Iterative batch loop ─────────────────────────────────
-  const BATCH_SIZE = 8;
-  const MAX_SERP_ROUNDS = 3;
-  const STOP_THRESHOLD = Math.max(1, parsedIntent.targetCount);
-  const countryHint = countryNameToCode(parsedIntent.geography?.country);
-
-  const allLeads: LeadRecord[] = [];
-  const verifiedLeads: LeadRecord[] = [];
-  const processedDomains = new Set<string>();
-  let serpRound = 1;
-  let shouldStop = false;
-  let domainsScored = 0;
-  let adaptiveDorkFired = false;
-
-  const enrichPct = (done: number) =>
-    Math.round(20 + Math.min(done / Math.max(1, STOP_THRESHOLD * 3), 1) * 60);
-
-  await progress(jobId, publisher, 'enriching', 22, 'osintEnrichment');
-
-  while (!shouldStop) {
-    const batch = await serpCache.getNextBatch(jobId, BATCH_SIZE);
-
-    if (batch.length === 0) {
-      if (serpRound >= MAX_SERP_ROUNDS) {
-        logger.info('[Pipeline] Max SERP rounds reached — stopping', { jobId, serpRound });
-        await jobActivity(jobId, publisher, 'serp', 'Stopped: reached max SERP replenishment rounds.', {
-          maxRounds: MAX_SERP_ROUNDS,
-          serpRound,
-        });
-        break;
-      }
-      serpRound++;
-      logger.info('[Pipeline] Cache empty — running SERP round', { jobId, serpRound });
-      await jobActivity(jobId, publisher, 'serp', `URL queue empty — running SERP replenishment round ${serpRound}.`, {
-        serpRound,
-      });
-
-      await progress(jobId, publisher, 'collecting', 18, 'serpSearch');
-      const round2Queries = buildRound2Dorks(parsedIntent);
-      const newResults = await runSerpSearch(round2Queries);
-      if (newResults.length === 0) {
-        logger.info('[Pipeline] SERP round returned nothing — stopping', { jobId, serpRound });
-        await jobActivity(jobId, publisher, 'serp', 'SERP replenishment returned 0 URLs — stopping crawl loop.', {
-          serpRound,
-        });
-        break;
-      }
-      await serpCache.addLinks(jobId, newResults);
-      collectAggregatorNames(newResults, aggregatorNames);
-      logger.info('[Pipeline] SERP replenished cache', { jobId, serpRound, added: newResults.length, aggregatorNames: aggregatorNames.size });
-      await jobActivity(jobId, publisher, 'serp', `SERP round ${serpRound} added ${newResults.length} URLs to queue.`, {
-        added: newResults.length,
-        sampleUrls: newResults.slice(0, 6).map((r) => r.url),
-      });
-      await progress(jobId, publisher, 'enriching', 22, 'osintEnrichment');
-      continue;
-    }
-
-    const filtered = batch.filter(r => passesHeuristicFilter(r, parsedIntent));
-    logger.info('[Pipeline] Batch heuristic filter', {
-      jobId, before: batch.length, after: filtered.length,
-    });
-    const keptUrls = new Set(filtered.map((r) => r.url));
-    await jobActivity(jobId, publisher, 'filter', `Heuristic URL filter: ${batch.length} → ${filtered.length} URLs kept for this batch.`, {
-      batchIn: batch.length,
-      batchKept: filtered.length,
-      sampleDropped: batch.filter((r) => !keptUrls.has(r.url)).slice(0, 4).map((r) => r.url),
-    });
-
-    if (filtered.length === 0) continue;
-
-    let pageData: Awaited<ReturnType<typeof runPageScraper>> = [];
-    try {
-      pageData = await runPageScraper(filtered, publisher, jobId);
-    } catch (err) {
-      logger.warn('[Pipeline] pageScraper failed for batch', {
-        jobId, err: err instanceof Error ? err.message : String(err),
-      });
-      await jobActivity(jobId, publisher, 'scrape', `Playwright page scrape failed for batch: ${err instanceof Error ? err.message : String(err)}`, {});
-    }
-
-    await jobActivity(jobId, publisher, 'scrape', `Playwright scraped ${pageData.length} page result(s); extracting emails/phones from HTML.`, {
-      pages: pageData.filter((p) => p.url !== 'collected-files').length,
-      fileLinksFound: pageData.reduce((n, p) => n + (p.fileUrls?.length ?? 0), 0),
-    });
-
-    const fileUrls = pageData.flatMap(p => p.fileUrls);
-    let fileData: Awaited<ReturnType<typeof runFileExtractor>> = [];
-    if (fileUrls.length > 0) {
-      try {
-        fileData = await runFileExtractor(fileUrls);
-      } catch (err) {
-        logger.warn('[Pipeline] fileExtractor failed for batch', {
-          jobId, err: err instanceof Error ? err.message : String(err),
-        });
-        await jobActivity(jobId, publisher, 'files', `File extraction error: ${err instanceof Error ? err.message : String(err)}`, {
-          fileUrlCount: fileUrls.length,
-        });
-      }
-    }
-    if (fileUrls.length > 0) {
-      await jobActivity(jobId, publisher, 'files', `Processed ${fileUrls.length} file URL(s); ${fileData.length} yielded text/emails.`, {
-        fileUrlsAttempted: fileUrls.length,
-        filesExtracted: fileData.length,
-      });
-    }
-
-    const batchDomainMap = new Map<string, {
-      emails: string[]; phones: string[]; pageUrls: string[];
-      linkedinUrl?: string; companyName?: string;
-      contacts: ContactCandidate[];
-    }>();
-
-    for (const page of pageData) {
-      if (page.url === 'collected-files') continue;
-      const domain = getDomain(page.url);
-      if (processedDomains.has(domain)) continue;
-      const existing = batchDomainMap.get(domain) ?? { emails: [], phones: [], pageUrls: [], contacts: [] };
-      existing.emails.push(...page.emails);
-      existing.phones.push(...page.phones);
-      existing.pageUrls.push(page.url);
-      existing.contacts.push(...page.extractedContacts);
-      if (page.linkedinUrl && !existing.linkedinUrl) existing.linkedinUrl = page.linkedinUrl;
-      if (page.companyName && !existing.companyName) existing.companyName = page.companyName;
-      batchDomainMap.set(domain, existing);
-    }
-    for (const file of fileData) {
-      const domain = getDomain(file.url);
-      if (processedDomains.has(domain)) continue;
-      const existing = batchDomainMap.get(domain) ?? { emails: [], phones: [], pageUrls: [], contacts: [] };
-      existing.emails.push(...file.emails);
-      existing.phones.push(...file.phones);
-      batchDomainMap.set(domain, existing);
-    }
-
-    if (batchDomainMap.size > 0) {
-      await jobActivity(jobId, publisher, 'aggregate', `Aggregated scrape + file hits into ${batchDomainMap.size} unique domain(s) in this batch.`, {
-        domains: [...batchDomainMap.keys()].slice(0, 15),
-      });
-    }
-
-    let batchAiAccepted = 0;
-    const batchRejectSamples: Array<{ domain: string; score: number; reason: string }> = [];
-
-    let agentRunsThisBatch = 0;
-    const AGENT_BUDGET_PER_BATCH = 3;
-
-    for (const [domain, data] of batchDomainMap.entries()) {
-      processedDomains.add(domain);
-
-      const osint = await enrichDomain(domain).catch(() => ({}));
-      const detectedEmails = await detectEmails(
-        domain, data.emails, (osint as { hasMx?: boolean }).hasMx ?? false
-      ).catch(() => []);
-      const normalizedPhones = normalizePhones([...new Set(data.phones)], countryHint);
-
-      // AI-extracted contacts are primary; regex hits fill gaps
-      const aiEmails = data.contacts
-        .filter(c => c.email && c.confidence >= 0.4)
-        .map(c => ({
-          address: c.email!.toLowerCase().trim(),
-          type: (c.name ? 'business' : 'generic') as 'business' | 'generic',
-          confidence: c.confidence,
-          source: 'ai_extracted' as const,
-          name: c.name,
-          title: c.title,
-          department: c.department,
-        }));
-      const aiEmailAddrs = new Set(aiEmails.map(e => e.address));
-      const regexEmails = detectedEmails
-        .filter(e => !aiEmailAddrs.has(e.address.toLowerCase()))
-        .map(e => ({ address: e.address, type: e.type, confidence: e.confidence, source: e.source }));
-      const mergedEmails = [...aiEmails, ...regexEmails];
-
-      const aiPhones = data.contacts
-        .filter(c => c.phone && c.confidence >= 0.4)
-        .map(c => ({
-          raw: c.phone!,
-          normalized: undefined as string | undefined,
-          type: undefined as string | undefined,
-          countryCode: undefined as string | undefined,
-          source: 'ai_extracted' as const,
-        }));
-      const aiPhoneDigits = new Set(aiPhones.map(p => p.raw.replace(/\D/g, '')));
-      const regexPhones = normalizedPhones
-        .filter(p => p.isValid && !aiPhoneDigits.has((p.normalized ?? p.raw).replace(/\D/g, '')))
-        .map(p => ({
-          raw: p.raw, normalized: p.normalized, type: p.type,
-          countryCode: p.countryCode, source: 'scraped' as const,
-        }));
-      const mergedPhones = [...aiPhones, ...regexPhones];
-
-      const namedContacts = data.contacts.filter(c => c.name && c.name.length > 1);
-      const contactSummary = namedContacts.length > 0 ? {
-        totalContacts: namedContacts.length,
-        topContact: namedContacts[0] ? {
-          fullName: namedContacts[0].name!,
-          title: namedContacts[0].title ?? '',
-          seniority: '',
-        } : undefined,
-      } : undefined;
-
-      // Pillar 2: if the lead is thin, dispatch the research agent
-      const hasNamedContact = data.contacts.some(c => c.name && c.email);
-      const wantsEmail = parsedIntent.desiredFields.includes('businessEmail') || parsedIntent.desiredFields.length === 0;
-      const wantsPhone = parsedIntent.desiredFields.some(f => f === 'officePhone' || f === 'mobilePhone');
-      const missingWanted = (wantsEmail && mergedEmails.length === 0) || (wantsPhone && mergedPhones.length === 0);
-      const isThin = !hasNamedContact || missingWanted;
-
-      let agentContacts: typeof mergedEmails = [];
-      let agentPhones: typeof mergedPhones = [];
-      let agentContactSummary = contactSummary;
-
-      if (isThin && agentRunsThisBatch < AGENT_BUDGET_PER_BATCH) {
-        agentRunsThisBatch++;
-        logger.info('[Pipeline] Dispatching research agent', {
-          jobId, domain, reason: !hasNamedContact ? 'no_named_contact' : 'missing_field',
-        });
-        const matchingRegistryOfficers = registryEntities
-          .filter(e => {
-            const entityDomainHint = e.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-            const currentDomain = domain.toLowerCase().replace(/[^a-z0-9]/g, '');
-            return currentDomain.includes(entityDomainHint.slice(0, Math.min(entityDomainHint.length, 12))) ||
-                   entityDomainHint.includes(currentDomain.replace(/(com|net|org|io|co|ng|uk)$/, ''));
-          })
-          .flatMap(e => e.officers.slice(0, 6).map(name => ({
-            name,
-            confidence: 0.6,
-            sourceType: 'structured_data' as const,
-          })));
-        // Names mined from aggregator profile URLs (zoominfo, rocketreach, contactout, etc.)
-        // — likely employees of the target company. Cap at 10 to keep the agent prompt bounded.
-        const aggregatorContactCandidates: ContactCandidate[] = [...aggregatorNames.values()]
-          .slice(0, 10)
-          .map(n => ({
-            name: n.fullName,
-            confidence: 0.5,
-            sourceType: 'structured_data' as const,
-            reasoning: `aggregator URL: ${n.sourceHost}`,
-          }));
-        const agentKnownContacts = [...data.contacts, ...matchingRegistryOfficers, ...aggregatorContactCandidates];
-        const agentResult = await researchDomain({
-          domain,
-          entityName: parsedIntent.namedEntities?.[0],
-          desiredFields: parsedIntent.desiredFields,
-          knownContacts: agentKnownContacts,
-          pagesAlreadyScraped: data.pageUrls,
-        }).catch((err) => {
-          logger.warn('[Pipeline] research agent threw', { jobId, domain, err: err instanceof Error ? err.message : String(err) });
-          return null;
-        });
-
-        if (agentResult && agentResult.additionalContacts.length > 0) {
-          const existingEmailAddrs = new Set(mergedEmails.map(e => e.address.toLowerCase()));
-          agentContacts = agentResult.additionalContacts
-            .filter(c => c.email && c.confidence >= 0.5 && !existingEmailAddrs.has(c.email.toLowerCase()))
-            .map(c => ({
-              address: c.email!.toLowerCase().trim(),
-              type: (c.name ? 'business' : 'generic') as 'business' | 'generic',
-              confidence: c.confidence,
-              source: 'ai_extracted' as const,
-              name: c.name,
-              title: c.title,
-              department: c.department,
-            }));
-
-          const existingPhoneDigits = new Set(mergedPhones.map(p => (p.normalized ?? p.raw).replace(/\D/g, '')));
-          agentPhones = agentResult.additionalContacts
-            .filter(c => c.phone && c.confidence >= 0.5 && !existingPhoneDigits.has(c.phone.replace(/\D/g, '')))
-            .map(c => ({
-              raw: c.phone!,
-              normalized: undefined as string | undefined,
-              type: undefined as string | undefined,
-              countryCode: undefined as string | undefined,
-              source: 'ai_extracted' as const,
-            }));
-
-          const agentNamed = agentResult.additionalContacts.filter(c => c.name && c.name.length > 1);
-          if (agentNamed.length > 0 && !agentContactSummary) {
-            agentContactSummary = {
-              totalContacts: agentNamed.length,
-              topContact: agentNamed[0] ? {
-                fullName: agentNamed[0].name!,
-                title: agentNamed[0].title ?? '',
-                seniority: '',
-              } : undefined,
-            };
-          }
-
-          logger.info('[Pipeline] Research agent enriched lead', {
-            jobId, domain, addedEmails: agentContacts.length, addedPhones: agentPhones.length,
-            stopReason: agentResult.stopReason, steps: agentResult.toolCallsUsed,
-          });
-        }
-      }
-
-      const finalEmails = [...mergedEmails, ...agentContacts];
-      const finalPhones = [...mergedPhones, ...agentPhones];
-      const finalContactSummary = agentContactSummary;
-
-      const lead: LeadRecord = {
-        workspaceId,
-        jobId,
-        companyName: data.companyName ?? domain,
-        companyDomain: domain,
-        website: data.pageUrls[0],
-        industry: parsedIntent.industry,
-        address: {
-          country: parsedIntent.geography?.country ?? undefined,
-          city: parsedIntent.geography?.city ?? undefined,
-          state: parsedIntent.geography?.state ?? undefined,
-        },
-        emails: finalEmails,
-        phones: finalPhones,
-        contactSummary: finalContactSummary,
-        socialProfiles: data.linkedinUrl ? { linkedinUrl: data.linkedinUrl } : undefined,
-        osint: osint as Record<string, unknown>,
-        sources: data.pageUrls.map(url => ({
-          url, type: 'scraped_page' as const, scrapedAt: new Date(), confidence: 0.7,
-        })),
-        rawSnippets: [],
-        rankScore: 0,
-        completenessScore: 0,
-        isDuplicate: false,
-        tags: [],
-      };
-
-      // Inline AI quality gate — only count leads the AI believes are good
-      const aiScore = await scoreLeadRelevance(lead, parsedIntent);
-      lead.rankScore = Math.round(aiScore.score * 100);
-      allLeads.push(lead);
-      domainsScored++;
-
-      if (aiScore.isVerified) {
-        verifiedLeads.push(lead);
-        batchAiAccepted++;
-        logger.info('[Pipeline] Lead verified by AI', {
-          jobId, domain, score: aiScore.score, reason: aiScore.reason,
-          verifiedCount: verifiedLeads.length, target: STOP_THRESHOLD,
-        });
-      } else {
-        logger.debug('[Pipeline] Lead rejected by AI', {
-          jobId, domain, score: aiScore.score, reason: aiScore.reason,
-        });
-        if (batchRejectSamples.length < 8) {
-          batchRejectSamples.push({
-            domain,
-            score: aiScore.score,
-            reason: aiScore.reason,
-          });
-        }
-      }
-
-      // Adaptive strategy: if pass rate < 25% after 5+ domains, fire round2 dorks immediately
-      const passRate = domainsScored >= 5 ? verifiedLeads.length / domainsScored : 1;
-      if (!adaptiveDorkFired && domainsScored >= 5 && passRate < 0.25) {
-        adaptiveDorkFired = true;
-        logger.info('[Pipeline] Low AI pass rate — firing adaptive round2 dorks', {
-          jobId, passRate, domainsScored, verifiedLeads: verifiedLeads.length,
-        });
-        const adaptiveQueries = buildRound2Dorks(parsedIntent);
-        const adaptiveResults = await runSerpSearch(adaptiveQueries).catch(() => []);
-        if (adaptiveResults.length > 0) {
-          await serpCache.addLinks(jobId, adaptiveResults);
-          collectAggregatorNames(adaptiveResults, aggregatorNames);
-        }
-        await jobActivity(jobId, publisher, 'adaptive', 'Low AI pass rate — fired adaptive round-2 style dorks and merged new SERP URLs.', {
-          passRate,
-          domainsScored,
-          adaptiveUrlsAdded: adaptiveResults.length,
-        });
-      }
-
-      if (verifiedLeads.length >= STOP_THRESHOLD) {
-        logger.info('[Pipeline] Quality target reached — stopping loop', {
-          jobId, verifiedLeads: verifiedLeads.length, STOP_THRESHOLD,
-        });
-        await jobActivity(jobId, publisher, 'stop', `Quality target met: ${verifiedLeads.length} AI-verified lead(s) (target ${STOP_THRESHOLD}).`, {
-          verifiedLeads: verifiedLeads.length,
-          target: STOP_THRESHOLD,
-        });
-        shouldStop = true;
-        break;
-      }
-    }
-
-    if (batchDomainMap.size > 0) {
-      const rejected = batchDomainMap.size - batchAiAccepted;
-      await jobActivity(
-        jobId,
-        publisher,
-        'ai_gate',
-        `AI relevance gate (batch): ${batchAiAccepted} accepted, ${rejected} rejected.`,
-        {
-          accepted: batchAiAccepted,
-          rejected,
-          rejectSamples: batchRejectSamples,
-          verifiedRunningTotal: verifiedLeads.length,
-          target: STOP_THRESHOLD,
-        },
-      );
-    }
-
-    // Publish progress once per batch (not per domain)
-    await ProspectingJob.findByIdAndUpdate(jobId, {
-      'progress.leadsFoundSoFar': verifiedLeads.length,
-    });
-    await publisher.publish(
-      `job:progress:${jobId}`,
-      JSON.stringify({ type: 'progress', leadsFoundSoFar: verifiedLeads.length })
-    );
-    await publisher.publish(
-      `job:progress:${jobId}`,
-      JSON.stringify({
-        type: 'status', status: 'enriching',
-        percentage: enrichPct(processedDomains.size), stage: 'osintEnrichment',
-      })
-    );
-  }
-
-  // ── Stage 7b: Fallback research pass ─────────────────────────────────
-  // If scraping produced nothing useful but we DO have entity names + aggregator-mined
-  // person names, try MX-verifying guessed domains for the entity and dispatch the
-  // research agent directly. This is the "last-ditch" path for companies that have no
-  // findable web presence (common for Nigerian SMEs).
-  const isFallbackEligible = parsedIntent.queryType === 'named_entity_list' || parsedIntent.queryType === 'contact_lookup';
-  const nothingUseful = verifiedLeads.length === 0;
-  if (isFallbackEligible && nothingUseful && (parsedIntent.namedEntities?.length ?? 0) > 0) {
-    logger.info('[Pipeline] Fallback: main loop produced 0 verified leads — attempting domain guess + agent research');
-    await jobActivity(jobId, publisher, 'fallback', 'No verified leads — guessing candidate domains for entity and dispatching research agent.', {});
-
-    for (const entityName of parsedIntent.namedEntities!.slice(0, 2)) {
-      const candidates = guessCompanyDomains(entityName, parsedIntent.geography?.country ?? undefined);
-      logger.info('[Pipeline] Fallback: generated domain guesses', { entityName, count: candidates.length, sample: candidates.slice(0, 6) });
-
-      const livingDomains: string[] = [];
-      for (const d of candidates) {
-        const result = await verifyEmail(`info@${d}`).catch(() => null);
-        if (result?.hasMx) livingDomains.push(d);
-        if (livingDomains.length >= 2) break;
-      }
-      logger.info('[Pipeline] Fallback: MX-verified candidates', { entityName, livingDomains });
-
-      if (livingDomains.length === 0) continue;
-
-      // Pre-seed agent with registry officers + aggregator names we harvested earlier
-      const registryOfficers = registryEntities
-        .filter(e => e.name.toLowerCase().replace(/[^a-z0-9]/g, '').includes(entityName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 6)))
-        .flatMap(e => e.officers.slice(0, 6).map(name => ({
-          name, confidence: 0.6, sourceType: 'structured_data' as const,
-        })));
-      const aggregatorSeeds: ContactCandidate[] = [...aggregatorNames.values()].slice(0, 10).map(n => ({
-        name: n.fullName, confidence: 0.5, sourceType: 'structured_data' as const,
-        reasoning: `aggregator URL: ${n.sourceHost}`,
-      }));
-
-      for (const d of livingDomains) {
-        logger.info('[Pipeline] Fallback: dispatching research agent on guessed domain', { entityName, domain: d });
-        const agentResult = await researchDomain({
-          domain: d,
-          entityName,
-          desiredFields: parsedIntent.desiredFields,
-          knownContacts: [...registryOfficers, ...aggregatorSeeds],
-          pagesAlreadyScraped: [],
-        }).catch((err) => {
-          logger.warn('[Pipeline] Fallback: agent error', { domain: d, err: err instanceof Error ? err.message : String(err) });
-          return null;
-        });
-
-        if (!agentResult || agentResult.additionalContacts.length === 0) continue;
-
-        const fallbackEmails = agentResult.additionalContacts
-          .filter(c => c.email && c.confidence >= 0.5)
-          .map(c => ({
-            address: c.email!.toLowerCase().trim(),
-            type: (c.name ? 'business' : 'generic') as 'business' | 'generic',
-            confidence: c.confidence,
-            source: 'ai_extracted' as const,
-            name: c.name,
-            title: c.title,
-            department: c.department,
-          }));
-        const fallbackPhones = agentResult.additionalContacts
-          .filter(c => c.phone && c.confidence >= 0.5)
-          .map(c => ({
-            raw: c.phone!,
-            normalized: undefined as string | undefined,
-            type: undefined as string | undefined,
-            countryCode: undefined as string | undefined,
-            source: 'ai_extracted' as const,
-          }));
-        const named = agentResult.additionalContacts.filter(c => c.name && c.name.length > 1);
-        const contactSummary = named.length > 0 ? {
-          totalContacts: named.length,
-          topContact: named[0] ? {
-            fullName: named[0].name!,
-            title: named[0].title ?? '',
-            seniority: '',
-          } : undefined,
-        } : undefined;
-
-        const fallbackLead: LeadRecord = {
-          workspaceId, jobId,
-          companyName: entityName,
-          companyDomain: d,
-          website: `https://${d}`,
-          industry: parsedIntent.industry,
-          address: {
-            country: parsedIntent.geography?.country ?? undefined,
-            city: parsedIntent.geography?.city ?? undefined,
-            state: parsedIntent.geography?.state ?? undefined,
-          },
-          emails: fallbackEmails,
-          phones: fallbackPhones,
-          socialProfiles: undefined,
-          osint: { fallback: true, mxVerified: true } as Record<string, unknown>,
-          sources: [{ url: `https://${d}`, type: 'scraped_page' as const, scrapedAt: new Date(), confidence: 0.5 }],
-          rawSnippets: [],
-          rankScore: 60,
-          completenessScore: 0,
-          isDuplicate: false,
-          tags: ['fallback_research'],
-          contactSummary,
-        };
-        allLeads.push(fallbackLead);
-        verifiedLeads.push(fallbackLead);
-        logger.info('[Pipeline] Fallback: agent produced lead', {
-          domain: d, emails: fallbackEmails.length, phones: fallbackPhones.length, named: named.length,
-        });
-
-        if (verifiedLeads.length >= STOP_THRESHOLD) break;
-      }
-
-      if (verifiedLeads.length >= STOP_THRESHOLD) break;
-    }
-  }
-
-  // ── Stage 8: Deduplication ───────────────────────────────────────────
-  // Use allLeads (not just verifiedLeads) so near-misses are still deduplicated and
-  // written — they just rank lower since their rankScore was set by the AI scorer.
-  logger.info('[Pipeline] Deduplication starting', {
-    jobId, total: allLeads.length, verified: verifiedLeads.length,
-  });
-  await jobActivity(jobId, publisher, 'dedupe', `Starting deduplication: ${allLeads.length} raw lead(s), ${verifiedLeads.length} passed AI gate.`, {
-    rawLeads: allLeads.length,
-    aiVerified: verifiedLeads.length,
-    uniqueDomainsProcessed: processedDomains.size,
-  });
-  await progress(jobId, publisher, 'deduplicating', 85, 'deduplication');
-  const deduped = deduplicateLeads(allLeads);
-  await jobActivity(jobId, publisher, 'dedupe', `Deduplication finished: ${deduped.length} lead record(s) (includes duplicates flagged).`, {
-    afterDedupe: deduped.length,
-  });
-
-  // ── Stage 9: Ranking ─────────────────────────────────────────────────
-  await progress(jobId, publisher, 'deduplicating', 92, 'ranking');
+  await pushProgress(jobId, publisher, 'deduplicating', 92, 'ranking');
   const ranked = rankLeads(deduped, parsedIntent.desiredFields);
-  await jobActivity(jobId, publisher, 'rank', `Ranked ${ranked.length} lead(s) against desired fields.`, {
-    desiredFields: parsedIntent.desiredFields,
-    count: ranked.length,
-  });
 
-  // ── Stage 10: Write to DB ────────────────────────────────────────────
-  await progress(jobId, publisher, 'deduplicating', 97, 'leadWrite');
+  await pushProgress(jobId, publisher, 'deduplicating', 97, 'leadWrite');
   await writeLeads(ranked, jobId, workspaceId, publisher);
-  await jobActivity(jobId, publisher, 'persist', 'Upserted leads into workspace collection and updated job result.', {
-    writtenApprox: ranked.filter((l) => !l.isDuplicate).length,
-  });
 
-  // ── Stage 11: AI Qualification ───────────────────────────────────────
-  await progress(jobId, publisher, 'complete', 99, 'qualification');
-  await jobActivity(jobId, publisher, 'qualify', 'Running batch AI qualification (qualified vs dust) on written leads…', {});
-  await runLeadQualifier(jobId, workspaceId, publisher);
-  await jobActivity(jobId, publisher, 'done', 'Pipeline finished (qualification pass scheduled / complete).', {
-    totalRanked: ranked.length,
+  await pushProgress(jobId, publisher, 'complete', 100, 'done');
+
+  // Persist a compact agent transcript for post-hoc debugging
+  await ProspectingJob.findByIdAndUpdate(jobId, {
+    'progress.leadsFoundSoFar': ranked.length,
+    agentTranscript: agentResult.transcript.slice(-40),
+    agentStopReason: agentResult.stopReason,
+    agentStepsUsed: agentResult.stepsUsed,
   });
 
   logger.info('[Pipeline] Job complete', { jobId, totalLeads: ranked.length });
-  } finally {
-    await serpCache.clear(jobId).catch(() => {});
-    cacheRedis.quit().catch(() => {});
-  }
 }
