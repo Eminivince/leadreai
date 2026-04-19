@@ -23,6 +23,7 @@ import { SerpCache } from '../utils/serpCache.js';
 import { scoreLeadRelevance } from './leadScorer.js';
 import { researchDomain } from './researchAgent.js';
 import { enrichEntity } from './registries/opencorporates.js';
+import { collectAggregatorNames, type AggregatorName } from './aggregatorNameExtractor.js';
 import { env } from '../config/env.js';
 
 const prospectingJobSchema = new mongoose.Schema(
@@ -242,8 +243,14 @@ export async function runIntentParser(
 
   const serpResults = await runSerpSearch(round1Queries);
   await serpCache.addLinks(jobId, serpResults);
+  // Mine aggregator profile URLs (zoominfo, rocketreach, contactout, datanyze, linkedin)
+  // for person names. We don't scrape those sites (paywalled), but the URL path itself
+  // is strong signal that person X is associated with the target company.
+  const aggregatorNames: Map<string, AggregatorName> = new Map();
+  collectAggregatorNames(serpResults, aggregatorNames);
   logger.info('[Pipeline] [3] SERP round 1 done → cached', {
     jobId, ms: t(), fetched: serpResults.length, cached: await serpCache.size(jobId),
+    aggregatorNames: aggregatorNames.size,
   });
   await jobActivity(jobId, publisher, 'serp', `SERP round 1 returned ${serpResults.length} organic URLs (SerpAPI).`, {
     organicUrlCount: serpResults.length,
@@ -300,7 +307,8 @@ export async function runIntentParser(
         break;
       }
       await serpCache.addLinks(jobId, newResults);
-      logger.info('[Pipeline] SERP replenished cache', { jobId, serpRound, added: newResults.length });
+      collectAggregatorNames(newResults, aggregatorNames);
+      logger.info('[Pipeline] SERP replenished cache', { jobId, serpRound, added: newResults.length, aggregatorNames: aggregatorNames.size });
       await jobActivity(jobId, publisher, 'serp', `SERP round ${serpRound} added ${newResults.length} URLs to queue.`, {
         added: newResults.length,
         sampleUrls: newResults.slice(0, 6).map((r) => r.url),
@@ -481,7 +489,17 @@ export async function runIntentParser(
             confidence: 0.6,
             sourceType: 'structured_data' as const,
           })));
-        const agentKnownContacts = [...data.contacts, ...matchingRegistryOfficers];
+        // Names mined from aggregator profile URLs (zoominfo, rocketreach, contactout, etc.)
+        // — likely employees of the target company. Cap at 10 to keep the agent prompt bounded.
+        const aggregatorContactCandidates: ContactCandidate[] = [...aggregatorNames.values()]
+          .slice(0, 10)
+          .map(n => ({
+            name: n.fullName,
+            confidence: 0.5,
+            sourceType: 'structured_data' as const,
+            reasoning: `aggregator URL: ${n.sourceHost}`,
+          }));
+        const agentKnownContacts = [...data.contacts, ...matchingRegistryOfficers, ...aggregatorContactCandidates];
         const agentResult = await researchDomain({
           domain,
           entityName: parsedIntent.namedEntities?.[0],
@@ -605,6 +623,7 @@ export async function runIntentParser(
         const adaptiveResults = await runSerpSearch(adaptiveQueries).catch(() => []);
         if (adaptiveResults.length > 0) {
           await serpCache.addLinks(jobId, adaptiveResults);
+          collectAggregatorNames(adaptiveResults, aggregatorNames);
         }
         await jobActivity(jobId, publisher, 'adaptive', 'Low AI pass rate — fired adaptive round-2 style dorks and merged new SERP URLs.', {
           passRate,
