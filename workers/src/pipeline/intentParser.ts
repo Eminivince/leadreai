@@ -19,6 +19,7 @@ import { findEntityWebsites } from './entityWebsiteFinder.js';
 import { buildRound2Dorks } from './queryBuilder.js';
 import { passesHeuristicFilter } from './heuristicFilter.js';
 import { SerpCache } from '../utils/serpCache.js';
+import { scoreLeadRelevance } from './leadScorer.js';
 import { env } from '../config/env.js';
 
 const prospectingJobSchema = new mongoose.Schema(
@@ -166,11 +167,13 @@ export async function runIntentParser(
   const STOP_THRESHOLD = Math.max(1, parsedIntent.targetCount);
   const countryHint = countryNameToCode(parsedIntent.geography?.country);
 
-  const accumulatedLeads: LeadRecord[] = [];
+  const allLeads: LeadRecord[] = [];
+  const verifiedLeads: LeadRecord[] = [];
   const processedDomains = new Set<string>();
   let serpRound = 1;
   let shouldStop = false;
-  let leadsWithContact = 0;
+  let domainsScored = 0;
+  let adaptiveDorkFired = false;
 
   const enrichPct = (done: number) =>
     Math.round(20 + Math.min(done / Math.max(1, STOP_THRESHOLD * 3), 1) * 60);
@@ -295,12 +298,41 @@ export async function runIntentParser(
         tags: [],
       };
 
-      accumulatedLeads.push(lead);
-      if (lead.emails.length > 0 || lead.phones.length > 0) leadsWithContact++;
+      // Inline AI quality gate — only count leads the AI believes are good
+      const aiScore = await scoreLeadRelevance(lead, parsedIntent);
+      lead.rankScore = Math.round(aiScore.score * 100);
+      allLeads.push(lead);
+      domainsScored++;
 
-      if (leadsWithContact >= STOP_THRESHOLD) {
-        logger.info('[Pipeline] Target count reached — stopping loop', {
-          jobId, leadsWithContact, STOP_THRESHOLD,
+      if (aiScore.isVerified) {
+        verifiedLeads.push(lead);
+        logger.info('[Pipeline] Lead verified by AI', {
+          jobId, domain, score: aiScore.score, reason: aiScore.reason,
+          verifiedCount: verifiedLeads.length, target: STOP_THRESHOLD,
+        });
+      } else {
+        logger.debug('[Pipeline] Lead rejected by AI', {
+          jobId, domain, score: aiScore.score, reason: aiScore.reason,
+        });
+      }
+
+      // Adaptive strategy: if pass rate < 25% after 5+ domains, fire round2 dorks immediately
+      const passRate = domainsScored >= 5 ? verifiedLeads.length / domainsScored : 1;
+      if (!adaptiveDorkFired && domainsScored >= 5 && passRate < 0.25) {
+        adaptiveDorkFired = true;
+        logger.info('[Pipeline] Low AI pass rate — firing adaptive round2 dorks', {
+          jobId, passRate, domainsScored, verifiedLeads: verifiedLeads.length,
+        });
+        const adaptiveQueries = buildRound2Dorks(parsedIntent);
+        const adaptiveResults = await runSerpSearch(adaptiveQueries).catch(() => []);
+        if (adaptiveResults.length > 0) {
+          await serpCache.addLinks(jobId, adaptiveResults);
+        }
+      }
+
+      if (verifiedLeads.length >= STOP_THRESHOLD) {
+        logger.info('[Pipeline] Quality target reached — stopping loop', {
+          jobId, verifiedLeads: verifiedLeads.length, STOP_THRESHOLD,
         });
         shouldStop = true;
         break;
@@ -309,11 +341,11 @@ export async function runIntentParser(
 
     // Publish progress once per batch (not per domain)
     await ProspectingJob.findByIdAndUpdate(jobId, {
-      'progress.leadsFoundSoFar': accumulatedLeads.length,
+      'progress.leadsFoundSoFar': verifiedLeads.length,
     });
     await publisher.publish(
       `job:progress:${jobId}`,
-      JSON.stringify({ type: 'progress', leadsFoundSoFar: accumulatedLeads.length })
+      JSON.stringify({ type: 'progress', leadsFoundSoFar: verifiedLeads.length })
     );
     await publisher.publish(
       `job:progress:${jobId}`,
@@ -325,9 +357,13 @@ export async function runIntentParser(
   }
 
   // ── Stage 8: Deduplication ───────────────────────────────────────────
-  logger.info('[Pipeline] Deduplication starting', { jobId, total: accumulatedLeads.length });
+  // Use allLeads (not just verifiedLeads) so near-misses are still deduplicated and
+  // written — they just rank lower since their rankScore was set by the AI scorer.
+  logger.info('[Pipeline] Deduplication starting', {
+    jobId, total: allLeads.length, verified: verifiedLeads.length,
+  });
   await progress(jobId, publisher, 'deduplicating', 85, 'deduplication');
-  const deduped = deduplicateLeads(accumulatedLeads);
+  const deduped = deduplicateLeads(allLeads);
 
   // ── Stage 9: Ranking ─────────────────────────────────────────────────
   await progress(jobId, publisher, 'deduplicating', 92, 'ranking');
