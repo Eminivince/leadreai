@@ -133,11 +133,31 @@ function StageRow({ idx, stage, pct, state, counterLabel, counterVal }: {
 /* ── Running phase ───────────────────────────────────────── */
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
+// Map worker stage names → 0-4 display index
 const STAGE_MAP: Record<string, number> = {
-  parse_intent: 0, build_search_plans: 1, scrape: 1,
-  enrich: 2, fetch_contacts: 2, deduplicate: 3, rank: 3,
-  write_leads: 4, complete: 4,
+  parsing:         0,
+  queryBuilder:    1,
+  serpSearch:      1,
+  pageScraping:    2,
+  fileExtraction:  2,
+  osintEnrichment: 3,
+  deduplication:   4,
+  ranking:         4,
+  leadWrite:       4,
+  qualification:   4,
 };
+
+function formatElapsed(ms: number): { time: string; tenths: number } {
+  const totalSecs = Math.floor(ms / 1000);
+  const hrs  = Math.floor(totalSecs / 3600);
+  const mins = Math.floor((totalSecs % 3600) / 60);
+  const secs = totalSecs % 60;
+  const tenths = Math.floor((ms % 1000) / 100);
+  const time = hrs > 0
+    ? `${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`
+    : `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+  return { time, tenths };
+}
 
 function Running({
   prompt,
@@ -150,46 +170,77 @@ function Running({
   jobId: string | null;
   onDone: (result: { leadsFound: number; creditsUsed: number }) => void;
 }) {
-  const [elapsed, setElapsed] = useState(0);
+  const [elapsed, setElapsed]         = useState(0);
+  const [overallPct, setOverallPct]   = useState(0);
   const [activeStageIdx, setActiveStageIdx] = useState(0);
-  const [stagePcts, setStagePcts] = useState<number[]>([0, 0, 0, 0, 0]);
-  const [stageCounters, setStageCounters] = useState<number[]>([0, 0, 0, 0, 0]);
-  const startRef = useRef(performance.now());
-  const esRef = useRef<EventSource | null>(null);
-  const doneRef = useRef(false);
+  const [stagePcts, setStagePcts]     = useState<number[]>([0, 0, 0, 0, 0]);
+  const [leadsFound, setLeadsFound]   = useState(0);
+  const activeIdxRef = useRef(0);
+  const esRef        = useRef<EventSource | null>(null);
+  const doneRef      = useRef(false);
 
   useEffect(() => {
-    startRef.current = performance.now();
-    const id = setInterval(() => setElapsed(performance.now() - startRef.current), 100);
+    const start = performance.now();
+    const id = setInterval(() => setElapsed(performance.now() - start), 100);
     return () => clearInterval(id);
   }, []);
 
   useEffect(() => {
     if (!jobId || !workspaceId || doneRef.current) return;
+
     const token = getAccessToken();
     const url = `${API_BASE}/api/v1/workspaces/${workspaceId}/jobs/${jobId}/stream${token ? `?token=${encodeURIComponent(token)}` : ''}`;
     const es = new EventSource(url);
     esRef.current = es;
 
+    const finish = (result: { leadsFound: number; creditsUsed: number }) => {
+      doneRef.current = true;
+      setStagePcts([1, 1, 1, 1, 1]);
+      setOverallPct(1);
+      setActiveStageIdx(5);
+      es.close();
+      esRef.current = null;
+      setTimeout(() => onDone(result), 700);
+    };
+
     es.onmessage = (ev: MessageEvent) => {
       try {
         const data = JSON.parse(ev.data as string) as Record<string, unknown>;
         const type = data.type as string;
-        if (type === 'progress' || type === 'status') {
+
+        if (type === 'status') {
+          const jobStatus = (data.status as string | undefined) ?? '';
+          // Bootstrap: job already finished before we connected
+          if (jobStatus === 'complete' || jobStatus === 'qualified') {
+            finish({ leadsFound: 0, creditsUsed: 0 });
+            return;
+          }
           const stageKey = (data.stage as string | undefined) ?? '';
-          const idx = STAGE_MAP[stageKey] ?? 0;
-          const pct = Math.min(1, Number(data.progress ?? 0) / 100);
+          const idx = STAGE_MAP[stageKey] ?? activeIdxRef.current;
+          const pct = Math.min(1, Number(data.percentage ?? 0) / 100);
+          activeIdxRef.current = idx;
           setActiveStageIdx(idx);
-          setStagePcts(prev => { const next = [...prev]; for (let i = 0; i < idx; i++) next[i] = 1; next[idx] = pct; return next; });
-          setStageCounters(prev => { const next = [...prev]; next[idx] = Number(data.leadsFound ?? 0); return next; });
-        } else if (type === 'completed') {
-          doneRef.current = true;
-          setStagePcts([1, 1, 1, 1, 1]);
-          setActiveStageIdx(5);
-          es.close();
-          esRef.current = null;
-          setTimeout(() => onDone({ leadsFound: Number(data.leadsFound ?? 0), creditsUsed: Number(data.creditsUsed ?? 0) }), 600);
-        } else if (type === 'failed') {
+          setOverallPct(pct);
+          setStagePcts(prev => {
+            const next = [...prev];
+            for (let i = 0; i < idx; i++) next[i] = 1;
+            next[idx] = 0; // shimmer handles visual; don't set artificial pct
+            return next;
+          });
+
+        } else if (type === 'progress') {
+          setLeadsFound(Number(data.leadsFoundSoFar ?? 0));
+
+        } else if (type === 'complete') {
+          finish({
+            leadsFound: Number(data.totalAfterDedup ?? data.totalLeadsFound ?? 0),
+            creditsUsed: 0,
+          });
+
+        } else if (type === 'qualification_complete') {
+          finish({ leadsFound: Number(data.qualified ?? 0), creditsUsed: 0 });
+
+        } else if (type === 'error') {
           doneRef.current = true;
           es.close();
           esRef.current = null;
@@ -202,7 +253,7 @@ function Running({
     return () => { es.close(); esRef.current = null; };
   }, [jobId, workspaceId, onDone]);
 
-  const overall = activeStageIdx >= 5 ? 1 : (activeStageIdx + (stagePcts[activeStageIdx] ?? 0)) / 5;
+  const { time, tenths } = formatElapsed(elapsed);
 
   return (
     <div className="px-5 md:px-7 py-5 flex flex-col gap-5">
@@ -218,32 +269,32 @@ function Running({
           <div className="text-right shrink-0">
             <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/45">Elapsed</div>
             <div className="text-[15px] font-body font-medium text-white tabular-nums">
-              00:{String(Math.floor(elapsed / 1000)).padStart(2, '0')}
-              <span className="text-white/40">.{String(Math.floor((elapsed % 1000) / 100))}</span>
+              {time}<span className="text-white/40">.{tenths}</span>
             </div>
           </div>
         </div>
         <div className="mt-3 h-[3px] rounded-full bg-white/[0.08] overflow-hidden relative">
           <div className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-white/80 via-white to-white rounded-full"
-            style={{ width: `${overall * 100}%`, transition: 'width .4s ease' }}/>
+            style={{ width: `${overallPct * 100}%`, transition: 'width .6s ease' }}/>
           <div className="absolute inset-y-0 w-20 bg-gradient-to-r from-transparent via-white/50 to-transparent"
             style={{ animation: 'nqBarShimmer 1.4s ease-in-out infinite' }}/>
         </div>
         <div className="mt-2 flex items-center justify-between text-[10.5px] font-mono text-white/45 whitespace-nowrap">
-          <span>Overall {Math.floor(overall * 100)}%</span>
+          <span>Overall {Math.floor(overallPct * 100)}%</span>
           {!jobId && <span className="text-amber-300/70">Queuing job…</span>}
         </div>
       </div>
       <div className="flex flex-col gap-2.5">
         {STAGES.map((s, i) => {
-          const pct = stagePcts[i] ?? 0;
-          const state = i < activeStageIdx ? 'done' : i === activeStageIdx ? (pct > 0 ? 'running' : 'queued') : 'queued';
+          const pct   = stagePcts[i] ?? 0;
+          const state = i < activeStageIdx ? 'done' : i === activeStageIdx ? 'running' : 'queued';
           const { label: cLabel } = s.counter(pct);
-          const cVal = stageCounters[i] ?? 0;
+          // Show live lead count on the enrichment stage
+          const cVal  = i === 3 ? leadsFound : (state === 'done' ? s.counter(1).val : 0);
           return <StageRow key={s.k} idx={i} stage={s} pct={pct} state={state} counterLabel={cLabel} counterVal={cVal}/>;
         })}
       </div>
-      <div className="text-[11px] font-body text-white/45 italic text-center">You can close this — we&apos;ll notify you when it&apos;s done.</div>
+      <div className="text-[11px] font-body text-white/45 italic text-center">You can close this — the job keeps running in the background.</div>
     </div>
   );
 }
@@ -305,31 +356,39 @@ interface NewQueryModalProps {
 }
 
 export function NewQueryModal({ workspaceId, onSubmit }: NewQueryModalProps) {
-  const { newQueryOpen, closeNewQuery } = useAppStore();
+  const { newQueryOpen, closeNewQuery, activeJobId, activeJobPrompt, setActiveJob, clearActiveJob } = useAppStore();
   const [phase, setPhase] = useState<'composer' | 'running' | 'summary'>('composer');
   const [prompt, setPrompt] = useState('');
   const [tone, setTone] = useState('direct');
   const [goal, setGoal] = useState('demo');
   const [schedule, setSchedule] = useState('once');
-  const [blocklist, setBlocklist] = useState('existing-crm');
+  const [blocklist] = useState('existing-crm');
   const taRef = useRef<HTMLTextAreaElement>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [jobResult, setJobResult] = useState<{ leadsFound: number; creditsUsed: number } | null>(null);
 
   useEffect(() => {
-    if (newQueryOpen) {
+    if (!newQueryOpen) return;
+    // If there's an active job in the store, reconnect to it instead of showing the composer
+    if (activeJobId) {
+      setPhase('running');
+      setPrompt(activeJobPrompt ?? '');
+      setJobId(activeJobId);
+      setJobResult(null);
+    } else {
       setPhase('composer');
       setPrompt('');
       setJobId(null);
       setJobResult(null);
       setTimeout(() => taRef.current?.focus(), 120);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newQueryOpen]);
 
   useEffect(() => {
     if (!newQueryOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && phase !== 'running') closeNewQuery();
+      if (e.key === 'Escape') closeNewQuery();
       if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && phase === 'composer' && prompt.trim()) {
         void handleRun();
       }
@@ -346,8 +405,17 @@ export function NewQueryModal({ workspaceId, onSubmit }: NewQueryModalProps) {
     setPhase('running');
     try {
       const id = await onSubmit(prompt);
-      setJobId(id);
+      if (id) {
+        setJobId(id);
+        setActiveJob(id, prompt);
+      }
     } catch { /* SSE phase handles its own error display */ }
+  }
+
+  function handleJobDone(result: { leadsFound: number; creditsUsed: number }) {
+    clearActiveJob();
+    setJobResult(result);
+    setPhase('summary');
   }
 
   if (!newQueryOpen) return null;
@@ -364,7 +432,7 @@ export function NewQueryModal({ workspaceId, onSubmit }: NewQueryModalProps) {
 
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/55 backdrop-blur-md" style={{ animation: 'nqFadeIn .25s ease-out both' }}
-        onClick={() => phase !== 'running' && closeNewQuery()}/>
+        onClick={closeNewQuery}/>
 
       {/* Panel */}
       <div className="relative w-full md:max-w-[1000px] max-h-[92vh] md:max-h-[86vh] overflow-hidden rounded-t-3xl md:rounded-3xl liquid-glass-strong flex flex-col"
@@ -385,8 +453,8 @@ export function NewQueryModal({ workspaceId, onSubmit }: NewQueryModalProps) {
                 </div>
               </div>
             </div>
-            <button onClick={() => phase !== 'running' && closeNewQuery()} disabled={phase === 'running'}
-              className="w-8 h-8 rounded-full liquid-glass flex items-center justify-center text-white/75 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed">
+            <button onClick={closeNewQuery}
+              className="w-8 h-8 rounded-full liquid-glass flex items-center justify-center text-white/75 hover:text-white">
               <span className="relative z-[1] text-[18px] leading-none">×</span>
             </button>
           </div>
@@ -461,7 +529,7 @@ export function NewQueryModal({ workspaceId, onSubmit }: NewQueryModalProps) {
                 prompt={prompt}
                 workspaceId={workspaceId}
                 jobId={jobId}
-                onDone={(result) => { setJobResult(result); setPhase('summary'); }}
+                onDone={handleJobDone}
               />
             )}
             {phase === 'summary' && <Summary onClose={closeNewQuery} result={jobResult}/>}
