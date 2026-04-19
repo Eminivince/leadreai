@@ -25,12 +25,15 @@ async function extractEntityNamesWithAI(
     return [];
   }
 
-  const userMessage = `Search query: "${searchQuery}"\n\nSearch result snippets:\n${snippets.slice(0, 15).map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\nExtract the top ${targetCount * 2} company/organization names from these results.`;
+  // Ask for 2× headroom; downstream (queryBuilder) uses slice(0, 10) so extra names are fine
+  const askFor = Math.min(targetCount * 2, 20);
+  const userMessage = `Search query: "${searchQuery}"\n\nSearch result snippets:\n${snippets.slice(0, 15).map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\nExtract the top ${askFor} company/organization names from these results.`;
 
   let res: Response;
   try {
     res = await fetch(`${env.OPENROUTER_BASE_URL}/chat/completions`, {
       method: 'POST',
+      signal: AbortSignal.timeout(15_000),
       headers: {
         Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json',
@@ -60,13 +63,18 @@ async function extractEntityNamesWithAI(
   const json: any = await res.json().catch(() => null);
   const content: string = json?.choices?.[0]?.message?.content ?? '';
 
+  if (!content) {
+    logger.warn('[entityResolver] OpenRouter returned empty content', { status: res.status });
+    return [];
+  }
+
   const match = content.match(/\[[\s\S]*\]/);
   if (!match) return [];
 
   try {
     const parsed = JSON.parse(match[0]);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter((x): x is string => typeof x === 'string').slice(0, targetCount * 2);
+    return parsed.filter((x): x is string => typeof x === 'string').slice(0, askFor);
   } catch {
     return [];
   }
@@ -90,7 +98,8 @@ export async function resolveNamedEntities(intent: ParsedIntent): Promise<string
   }
 
   const { industry, geography, targetCount } = intent;
-  const location = [geography.city, geography.state, geography.country].filter(Boolean).join(', ');
+  const locationParts = [geography.city, geography.state, geography.country].filter(Boolean);
+  const location = locationParts.length > 0 ? locationParts.join(', ') : 'worldwide';
   const searchQuery = `top ${targetCount} ${industry} in ${location}`;
 
   logger.info('[entityResolver] Resolving named entities via SerpAPI', { searchQuery });
