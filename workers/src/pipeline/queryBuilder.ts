@@ -1,24 +1,66 @@
 import type { ParsedIntent } from '@leadreai/shared';
 
-/** Build dorks targeting specific named entities (for named_entity_list queries). */
+/** Build dorks targeting specific named entities (for named_entity_list / contact_lookup queries). */
 function buildEntityDorks(entityNames: string[], geography: ParsedIntent['geography'], desiredFields: string[]): string[] {
   const country = geography.country ?? '';
   const city = geography.city ?? geography.state ?? '';
   const queries: string[] = [];
+  const wantsPhone = desiredFields.includes('officePhone') || desiredFields.includes('mobilePhone');
+  const wantsEmail = desiredFields.includes('businessEmail') || desiredFields.length === 0;
 
   for (const name of entityNames.slice(0, 10)) {
-    // Direct company website contact page
+    // Direct contact page search
     queries.push(`"${name}" contact email`);
     if (country) queries.push(`"${name}" "${country}" contact`);
-    // Try to find their domain
     queries.push(`"${name}" official website ${city || country}`);
-    if (desiredFields.includes('officePhone') || desiredFields.includes('mobilePhone')) {
-      queries.push(`"${name}" phone number ${country}`);
+
+    if (wantsPhone) queries.push(`"${name}" phone number ${country}`);
+
+    // Government & regulatory databases — often contain registered business contact info
+    if (country) {
+      queries.push(`"${name}" "${country}" filetype:pdf`);
+      queries.push(`"${name}" "${country}" filetype:xlsx`);
+      queries.push(`"${name}" "${country}" filetype:xls`);
+      queries.push(`"${name}" "${country}" site:gov`);
+      queries.push(`"${name}" "${country}" registered company contact`);
+    } else {
+      // No country: broad file search
+      queries.push(`"${name}" filetype:pdf contact`);
+      queries.push(`"${name}" filetype:xlsx`);
     }
+
+    // Business registries and directories that list contact info
+    queries.push(`"${name}" company registration contact`);
+    if (wantsEmail) queries.push(`"${name}" email address`);
+    if (wantsPhone) queries.push(`"${name}" telephone address`);
+
+    // Press releases and news often contain PR contact details
+    queries.push(`"${name}" press contact email phone`);
   }
 
   // Drop any query that contains "" (empty quoted string from a missing country/city)
-  return [...new Set(queries.filter(q => !q.includes('""')))].slice(0, 20);
+  return [...new Set(queries.filter(q => !q.includes('""')))].slice(0, 25);
+}
+
+/** Round 2 dorks for entity queries — deeper file/registry/news angles. */
+function buildEntityRound2Dorks(entityNames: string[], geography: ParsedIntent['geography']): string[] {
+  const country = geography.country ?? '';
+  const queries: string[] = [];
+
+  for (const name of entityNames.slice(0, 5)) {
+    queries.push(`"${name}" annual report`);
+    queries.push(`"${name}" company profile`);
+    if (country) {
+      queries.push(`"${name}" "${country}" business registry`);
+      queries.push(`"${name}" "${country}" company house`);
+      queries.push(`"${name}" "${country}" filetype:pdf email`);
+      queries.push(`"${name}" site:businesslist.ng OR site:ngocdir.com OR site:companiesinnigeria.com`);
+    }
+    queries.push(`"${name}" linkedin.com email contact`);
+    queries.push(`"${name}" "contact us" OR "get in touch" OR "reach us"`);
+  }
+
+  return [...new Set(queries.filter(q => !q.includes('""')))].slice(0, 12);
 }
 
 /** Round 1 dorks — contact pages, directories, files. */
@@ -60,6 +102,17 @@ function buildRound1Dorks(intent: ParsedIntent): string[] {
 
 /** Round 2 dorks — different angles: news, press releases, regulatory filings. */
 export function buildRound2Dorks(intent: ParsedIntent): string[] {
+  // For entity queries, use entity-specific round2 strategy
+  if (
+    (intent.queryType === 'named_entity_list' || intent.queryType === 'contact_lookup') &&
+    (intent.namedEntities?.length ?? 0) > 0
+  ) {
+    return buildEntityRound2Dorks(intent.namedEntities!, intent.geography);
+  }
+  return buildRound2DorksGeneric(intent);
+}
+
+function buildRound2DorksGeneric(intent: ParsedIntent): string[] {
   const { industry, geography, keywords } = intent;
   const country = (geography.country ?? '').trim();
   const city = ((geography.city ?? geography.state) ?? '').trim();

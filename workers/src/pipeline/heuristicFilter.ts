@@ -39,27 +39,30 @@ export function passesHeuristicFilter(
   // Reject known aggregator domains
   if (SKIP_DOMAIN_FRAGMENTS.some(frag => domain.includes(frag))) return false;
 
-  // Reject aggregator-style titles (unless this is an entity dork where the URL IS the entity)
-  if (intent.queryType !== 'named_entity_list') {
+  const isEntityQuery =
+    (intent.queryType === 'named_entity_list' || intent.queryType === 'contact_lookup') &&
+    (intent.namedEntities?.length ?? 0) > 0;
+
+  // Reject aggregator-style titles — but not for entity queries (a "list" page may contain the firm)
+  if (!isEntityQuery) {
     if (SKIP_TITLE_PATTERNS.some(pat => pat.test(result.title))) return false;
   }
 
-  // For named_entity_list: require at least one entity name to appear in the text OR the domain
-  if (
-    intent.queryType === 'named_entity_list' &&
-    intent.namedEntities &&
-    intent.namedEntities.length > 0
-  ) {
+  // For entity queries: entity name match in text OR domain is sufficient — skip industry/geo check
+  if (isEntityQuery) {
     const cleanedDomain = domain.replace(/[^a-z0-9]/g, '');
-    const entityMatch = intent.namedEntities.some(name => {
+    const entityMatch = intent.namedEntities!.some(name => {
       const nameLower = name.toLowerCase();
       return text.includes(nameLower) || cleanedDomain.includes(nameLower.replace(/[^a-z0-9]/g, ''));
     });
-    if (!entityMatch) return false;
+    // Pass if entity name found; reject if not (no point scraping an unrelated page)
+    return entityMatch;
   }
 
-  // For all query types: skip if neither industry keyword nor geographic hint appears in text
-  const industryWords = intent.industry.toLowerCase().split(/\s+/);
+  // For demographic queries: skip if neither industry keyword nor geographic hint appears
+  const industry = intent.industry.toLowerCase().trim();
+  // "other" is a placeholder — don't use it as a filter signal
+  const industryWords = industry === 'other' ? [] : industry.split(/\s+/);
   const geo = [intent.geography.country, intent.geography.city, intent.geography.state]
     .filter(Boolean)
     .map(s => s!.toLowerCase());
@@ -67,7 +70,9 @@ export function passesHeuristicFilter(
   const industryHit = industryWords.some(w => w.length > 3 && text.includes(w));
   const geoHit = geo.some(g => text.includes(g));
 
-  // Require EITHER industry OR geo keyword in the snippet/title
+  // If industry is "other" and no geo is set, pass everything through (no useful filter signal)
+  if (industryWords.length === 0 && geo.length === 0) return true;
+
   if (!industryHit && !geoHit) return false;
 
   return true;

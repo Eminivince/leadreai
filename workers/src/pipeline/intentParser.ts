@@ -65,6 +65,44 @@ async function progress(
   );
 }
 
+const ACTIVITY_LOG_CAP = 250;
+
+/** Persist + stream a human-readable pipeline step (for tuning / debugging). */
+export async function jobActivity(
+  jobId: string,
+  publisher: Redis,
+  step: string,
+  message: string,
+  meta?: Record<string, unknown>,
+): Promise<void> {
+  const at = new Date().toISOString();
+  const doc: { at: string; step: string; message: string; meta?: Record<string, unknown> } = {
+    at,
+    step,
+    message,
+  };
+  if (meta && Object.keys(meta).length > 0) doc.meta = meta;
+  try {
+    await ProspectingJob.findByIdAndUpdate(jobId, {
+      $push: {
+        activityLog: {
+          $each: [doc],
+          $slice: -ACTIVITY_LOG_CAP,
+        },
+      },
+    });
+    await publisher.publish(
+      `job:progress:${jobId}`,
+      JSON.stringify({ type: 'activity', ...doc }),
+    );
+  } catch (err) {
+    logger.warn('[Pipeline] jobActivity failed', {
+      jobId,
+      err: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
 // Timing helper
 function timer() {
   const t = Date.now();
@@ -106,8 +144,18 @@ export async function runIntentParser(
     industry: parsedIntent.industry, targetCount: parsedIntent.targetCount,
   });
 
-  // ── Stage 1: Entity resolution (named_entity_list only) ─────────────
-  if (parsedIntent.queryType === 'named_entity_list' && !parsedIntent.namedEntities?.length) {
+  await jobActivity(jobId, publisher, 'intent', 'Loaded parsed intent from job record.', {
+    queryType: parsedIntent.queryType,
+    industry: parsedIntent.industry,
+    targetCount: parsedIntent.targetCount,
+    desiredFields: parsedIntent.desiredFields,
+    geography: parsedIntent.geography,
+    namedEntityCount: parsedIntent.namedEntities?.length ?? 0,
+    hasSerpApiKey: Boolean(env.SERPAPI_KEY),
+  });
+
+  // ── Stage 1: Entity resolution (named_entity_list + contact_lookup) ────
+  if ((parsedIntent.queryType === 'named_entity_list' || parsedIntent.queryType === 'contact_lookup') && !parsedIntent.namedEntities?.length) {
     await progress(jobId, publisher, 'parsing', 7, 'parsing');
     logger.info('[Pipeline] [1] Resolving named entities', { jobId });
     const resolvedEntities = await resolveNamedEntities(parsedIntent).catch((err) => {
@@ -121,6 +169,10 @@ export async function runIntentParser(
       });
     }
     logger.info('[Pipeline] [1] Entity resolution done', { jobId, count: parsedIntent.namedEntities?.length ?? 0 });
+    await jobActivity(jobId, publisher, 'entities', 'Resolved named entities for this query.', {
+      count: parsedIntent.namedEntities?.length ?? 0,
+      sample: (parsedIntent.namedEntities ?? []).slice(0, 8),
+    });
   }
 
   // ── Stage 2: Build initial dork queries ─────────────────────────────
@@ -128,6 +180,11 @@ export async function runIntentParser(
   let t = timer();
   const round1Queries = buildDorkQueries(parsedIntent);
   logger.info('[Pipeline] [2] queryBuilder done', { jobId, ms: t(), count: round1Queries.length });
+  await jobActivity(jobId, publisher, 'dorks', `Built ${round1Queries.length} search queries (round 1).`, {
+    queryCount: round1Queries.length,
+    sampleQueries: round1Queries.slice(0, 6),
+    ms: t(),
+  });
 
   // ── Stage 3: SERP initial round → populate cache ─────────────────────
   await progress(jobId, publisher, 'collecting', 18, 'serpSearch');
@@ -152,6 +209,9 @@ export async function runIntentParser(
     if (entityUrls.length > 0) {
       await serpCache.addLinks(jobId, entityUrls);
       logger.info('[Pipeline] [2b] Entity websites injected into cache', { jobId, count: entityUrls.length });
+      await jobActivity(jobId, publisher, 'entity_urls', `Injected ${entityUrls.length} high-priority entity URLs into crawl queue.`, {
+        urls: entityUrls.slice(0, 12).map((r) => r.url),
+      });
     }
   }
 
@@ -159,6 +219,12 @@ export async function runIntentParser(
   await serpCache.addLinks(jobId, serpResults);
   logger.info('[Pipeline] [3] SERP round 1 done → cached', {
     jobId, ms: t(), fetched: serpResults.length, cached: await serpCache.size(jobId),
+  });
+  await jobActivity(jobId, publisher, 'serp', `SERP round 1 returned ${serpResults.length} organic URLs (SerpAPI).`, {
+    organicUrlCount: serpResults.length,
+    cacheSizeAfter: await serpCache.size(jobId),
+    ms: t(),
+    sampleUrls: serpResults.slice(0, 8).map((r) => r.url),
   });
 
   // ── Stage 4–7: Iterative batch loop ─────────────────────────────────
@@ -186,20 +252,34 @@ export async function runIntentParser(
     if (batch.length === 0) {
       if (serpRound >= MAX_SERP_ROUNDS) {
         logger.info('[Pipeline] Max SERP rounds reached — stopping', { jobId, serpRound });
+        await jobActivity(jobId, publisher, 'serp', 'Stopped: reached max SERP replenishment rounds.', {
+          maxRounds: MAX_SERP_ROUNDS,
+          serpRound,
+        });
         break;
       }
       serpRound++;
       logger.info('[Pipeline] Cache empty — running SERP round', { jobId, serpRound });
+      await jobActivity(jobId, publisher, 'serp', `URL queue empty — running SERP replenishment round ${serpRound}.`, {
+        serpRound,
+      });
 
       await progress(jobId, publisher, 'collecting', 18, 'serpSearch');
       const round2Queries = buildRound2Dorks(parsedIntent);
       const newResults = await runSerpSearch(round2Queries);
       if (newResults.length === 0) {
         logger.info('[Pipeline] SERP round returned nothing — stopping', { jobId, serpRound });
+        await jobActivity(jobId, publisher, 'serp', 'SERP replenishment returned 0 URLs — stopping crawl loop.', {
+          serpRound,
+        });
         break;
       }
       await serpCache.addLinks(jobId, newResults);
       logger.info('[Pipeline] SERP replenished cache', { jobId, serpRound, added: newResults.length });
+      await jobActivity(jobId, publisher, 'serp', `SERP round ${serpRound} added ${newResults.length} URLs to queue.`, {
+        added: newResults.length,
+        sampleUrls: newResults.slice(0, 6).map((r) => r.url),
+      });
       await progress(jobId, publisher, 'enriching', 22, 'osintEnrichment');
       continue;
     }
@@ -207,6 +287,12 @@ export async function runIntentParser(
     const filtered = batch.filter(r => passesHeuristicFilter(r, parsedIntent));
     logger.info('[Pipeline] Batch heuristic filter', {
       jobId, before: batch.length, after: filtered.length,
+    });
+    const keptUrls = new Set(filtered.map((r) => r.url));
+    await jobActivity(jobId, publisher, 'filter', `Heuristic URL filter: ${batch.length} → ${filtered.length} URLs kept for this batch.`, {
+      batchIn: batch.length,
+      batchKept: filtered.length,
+      sampleDropped: batch.filter((r) => !keptUrls.has(r.url)).slice(0, 4).map((r) => r.url),
     });
 
     if (filtered.length === 0) continue;
@@ -218,7 +304,13 @@ export async function runIntentParser(
       logger.warn('[Pipeline] pageScraper failed for batch', {
         jobId, err: err instanceof Error ? err.message : String(err),
       });
+      await jobActivity(jobId, publisher, 'scrape', `Playwright page scrape failed for batch: ${err instanceof Error ? err.message : String(err)}`, {});
     }
+
+    await jobActivity(jobId, publisher, 'scrape', `Playwright scraped ${pageData.length} page result(s); extracting emails/phones from HTML.`, {
+      pages: pageData.filter((p) => p.url !== 'collected-files').length,
+      fileLinksFound: pageData.reduce((n, p) => n + (p.fileUrls?.length ?? 0), 0),
+    });
 
     const fileUrls = pageData.flatMap(p => p.fileUrls);
     let fileData: Awaited<ReturnType<typeof runFileExtractor>> = [];
@@ -229,7 +321,16 @@ export async function runIntentParser(
         logger.warn('[Pipeline] fileExtractor failed for batch', {
           jobId, err: err instanceof Error ? err.message : String(err),
         });
+        await jobActivity(jobId, publisher, 'files', `File extraction error: ${err instanceof Error ? err.message : String(err)}`, {
+          fileUrlCount: fileUrls.length,
+        });
       }
+    }
+    if (fileUrls.length > 0) {
+      await jobActivity(jobId, publisher, 'files', `Processed ${fileUrls.length} file URL(s); ${fileData.length} yielded text/emails.`, {
+        fileUrlsAttempted: fileUrls.length,
+        filesExtracted: fileData.length,
+      });
     }
 
     const batchDomainMap = new Map<string, {
@@ -257,6 +358,15 @@ export async function runIntentParser(
       existing.phones.push(...file.phones);
       batchDomainMap.set(domain, existing);
     }
+
+    if (batchDomainMap.size > 0) {
+      await jobActivity(jobId, publisher, 'aggregate', `Aggregated scrape + file hits into ${batchDomainMap.size} unique domain(s) in this batch.`, {
+        domains: [...batchDomainMap.keys()].slice(0, 15),
+      });
+    }
+
+    let batchAiAccepted = 0;
+    const batchRejectSamples: Array<{ domain: string; score: number; reason: string }> = [];
 
     for (const [domain, data] of batchDomainMap.entries()) {
       processedDomains.add(domain);
@@ -306,6 +416,7 @@ export async function runIntentParser(
 
       if (aiScore.isVerified) {
         verifiedLeads.push(lead);
+        batchAiAccepted++;
         logger.info('[Pipeline] Lead verified by AI', {
           jobId, domain, score: aiScore.score, reason: aiScore.reason,
           verifiedCount: verifiedLeads.length, target: STOP_THRESHOLD,
@@ -314,6 +425,13 @@ export async function runIntentParser(
         logger.debug('[Pipeline] Lead rejected by AI', {
           jobId, domain, score: aiScore.score, reason: aiScore.reason,
         });
+        if (batchRejectSamples.length < 8) {
+          batchRejectSamples.push({
+            domain,
+            score: aiScore.score,
+            reason: aiScore.reason,
+          });
+        }
       }
 
       // Adaptive strategy: if pass rate < 25% after 5+ domains, fire round2 dorks immediately
@@ -328,15 +446,41 @@ export async function runIntentParser(
         if (adaptiveResults.length > 0) {
           await serpCache.addLinks(jobId, adaptiveResults);
         }
+        await jobActivity(jobId, publisher, 'adaptive', 'Low AI pass rate — fired adaptive round-2 style dorks and merged new SERP URLs.', {
+          passRate,
+          domainsScored,
+          adaptiveUrlsAdded: adaptiveResults.length,
+        });
       }
 
       if (verifiedLeads.length >= STOP_THRESHOLD) {
         logger.info('[Pipeline] Quality target reached — stopping loop', {
           jobId, verifiedLeads: verifiedLeads.length, STOP_THRESHOLD,
         });
+        await jobActivity(jobId, publisher, 'stop', `Quality target met: ${verifiedLeads.length} AI-verified lead(s) (target ${STOP_THRESHOLD}).`, {
+          verifiedLeads: verifiedLeads.length,
+          target: STOP_THRESHOLD,
+        });
         shouldStop = true;
         break;
       }
+    }
+
+    if (batchDomainMap.size > 0) {
+      const rejected = batchDomainMap.size - batchAiAccepted;
+      await jobActivity(
+        jobId,
+        publisher,
+        'ai_gate',
+        `AI relevance gate (batch): ${batchAiAccepted} accepted, ${rejected} rejected.`,
+        {
+          accepted: batchAiAccepted,
+          rejected,
+          rejectSamples: batchRejectSamples,
+          verifiedRunningTotal: verifiedLeads.length,
+          target: STOP_THRESHOLD,
+        },
+      );
     }
 
     // Publish progress once per batch (not per domain)
@@ -362,20 +506,39 @@ export async function runIntentParser(
   logger.info('[Pipeline] Deduplication starting', {
     jobId, total: allLeads.length, verified: verifiedLeads.length,
   });
+  await jobActivity(jobId, publisher, 'dedupe', `Starting deduplication: ${allLeads.length} raw lead(s), ${verifiedLeads.length} passed AI gate.`, {
+    rawLeads: allLeads.length,
+    aiVerified: verifiedLeads.length,
+    uniqueDomainsProcessed: processedDomains.size,
+  });
   await progress(jobId, publisher, 'deduplicating', 85, 'deduplication');
   const deduped = deduplicateLeads(allLeads);
+  await jobActivity(jobId, publisher, 'dedupe', `Deduplication finished: ${deduped.length} lead record(s) (includes duplicates flagged).`, {
+    afterDedupe: deduped.length,
+  });
 
   // ── Stage 9: Ranking ─────────────────────────────────────────────────
   await progress(jobId, publisher, 'deduplicating', 92, 'ranking');
   const ranked = rankLeads(deduped, parsedIntent.desiredFields);
+  await jobActivity(jobId, publisher, 'rank', `Ranked ${ranked.length} lead(s) against desired fields.`, {
+    desiredFields: parsedIntent.desiredFields,
+    count: ranked.length,
+  });
 
   // ── Stage 10: Write to DB ────────────────────────────────────────────
   await progress(jobId, publisher, 'deduplicating', 97, 'leadWrite');
   await writeLeads(ranked, jobId, workspaceId, publisher);
+  await jobActivity(jobId, publisher, 'persist', 'Upserted leads into workspace collection and updated job result.', {
+    writtenApprox: ranked.filter((l) => !l.isDuplicate).length,
+  });
 
   // ── Stage 11: AI Qualification ───────────────────────────────────────
   await progress(jobId, publisher, 'complete', 99, 'qualification');
+  await jobActivity(jobId, publisher, 'qualify', 'Running batch AI qualification (qualified vs dust) on written leads…', {});
   await runLeadQualifier(jobId, workspaceId, publisher);
+  await jobActivity(jobId, publisher, 'done', 'Pipeline finished (qualification pass scheduled / complete).', {
+    totalRanked: ranked.length,
+  });
 
   logger.info('[Pipeline] Job complete', { jobId, totalLeads: ranked.length });
   } finally {
