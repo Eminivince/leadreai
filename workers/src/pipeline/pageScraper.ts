@@ -4,6 +4,7 @@ import { load as cheerioLoad } from 'cheerio';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 import type { SerpResult } from './serpScraper.js';
+import { extractContacts, type ContactCandidate } from './aiContactExtractor.js';
 
 const PROXIES: Array<{ server: string; username?: string; password?: string }> = (
   env.PROXY_LIST ? env.PROXY_LIST.split(',').map((p) => p.trim()).filter(Boolean) : []
@@ -40,6 +41,7 @@ export interface PageScrapedData {
   companyName?: string;    // from OpenGraph og:site_name or JSON-LD
   linkedinUrl?: string;    // linkedin.com/company/... URL found on page
   pageText: string;        // first 2000 chars of visible text (for fallback extraction)
+  extractedContacts: ContactCandidate[];
 }
 
 const MAX_PAGES = 25;
@@ -102,6 +104,7 @@ export async function runPageScraper(
       phones: [],
       fileUrls,
       pageText: '',
+      extractedContacts: [],
     };
     results.push(fileOnlyData);
   }
@@ -142,7 +145,19 @@ async function scrapePage(
     const html = await page.content();
     const $ = cheerioLoad(html);
 
-    // Remove script/style noise
+    // Extract JSON-LD structured data BEFORE stripping script tags
+    const jsonLdBlobs: unknown[] = [];
+    $('script[type="application/ld+json"]').each((_, el) => {
+      const raw = $(el).contents().text().trim();
+      if (!raw) return;
+      try {
+        const parsed: unknown = JSON.parse(raw);
+        if (Array.isArray(parsed)) jsonLdBlobs.push(...parsed);
+        else jsonLdBlobs.push(parsed);
+      } catch { /* ignore malformed JSON-LD */ }
+    });
+
+    // Remove script/style noise for text extraction
     $('script, style, nav, footer').remove();
 
     const bodyText = $('body').text().replace(/\s+/g, ' ').trim();
@@ -201,14 +216,30 @@ async function scrapePage(
     // Small rate-limit delay
     await new Promise(resolve => setTimeout(resolve, PAGE_DELAY_MS));
 
+    const cleanEmails = emailMatches.filter(e => e.includes('@') && !e.includes('example.com'));
+
+    // LLM contact extraction — understands context, filters noise, pulls from JSON-LD + staff cards
+    const extractedContacts = await extractContacts({
+      url,
+      domain: new URL(url).hostname.replace(/^www\./, ''),
+      bodyText,
+      jsonLd: jsonLdBlobs,
+      rawEmails: cleanEmails,
+      rawPhones: phoneMatches,
+    }).catch((err) => {
+      logger.warn('pageScraper: extractContacts threw', { url, err: err instanceof Error ? err.message : String(err) });
+      return [] as ContactCandidate[];
+    });
+
     return {
       url,
-      emails: emailMatches.filter(e => e.includes('@') && !e.includes('example.com')),
+      emails: cleanEmails,
       phones: phoneMatches,
       fileUrls: foundFileUrls,
       companyName,
       linkedinUrl,
       pageText: bodyText.slice(0, 2000),
+      extractedContacts,
     };
   } catch (err) {
     logger.warn('scrapePage error', { url, err });
