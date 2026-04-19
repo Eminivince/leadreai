@@ -50,11 +50,10 @@ export function passesHeuristicFilter(
     intent.namedEntities &&
     intent.namedEntities.length > 0
   ) {
+    const cleanedDomain = domain.replace(/[^a-z0-9]/g, '');
     const entityMatch = intent.namedEntities.some(name => {
       const nameLower = name.toLowerCase();
-      const cleanedDomain = domain.replace(/[^a-z0-9]/g, '');
-      const cleanedName = nameLower.replace(/[^a-z0-9]/g, '');
-      return text.includes(nameLower) || cleanedDomain.includes(cleanedName);
+      return text.includes(nameLower) || cleanedDomain.includes(nameLower.replace(/[^a-z0-9]/g, ''));
     });
     if (!entityMatch) return false;
   }
