@@ -17,14 +17,15 @@ function buildEntityDorks(entityNames: string[], geography: ParsedIntent['geogra
     }
   }
 
-  return [...new Set(queries)].slice(0, 20);
+  // Drop any query that contains "" (empty quoted string from a missing country/city)
+  return [...new Set(queries.filter(q => !q.includes('""')))].slice(0, 20);
 }
 
 /** Round 1 dorks — contact pages, directories, files. */
 function buildRound1Dorks(intent: ParsedIntent): string[] {
   const { industry, geography, keywords, desiredFields } = intent;
-  const country = geography.country ?? '';
-  const city = geography.city ?? geography.state ?? '';
+  const country = (geography.country ?? '').trim();
+  const city = ((geography.city ?? geography.state) ?? '').trim();
   const loc = city || country;
   const queries: string[] = [];
 
@@ -54,14 +55,14 @@ function buildRound1Dorks(intent: ParsedIntent): string[] {
     queries.push(`"${industry}" "${country}" "phone" "address" -site:linkedin.com`);
   }
 
-  return [...new Set(queries)].slice(0, 15);
+  return [...new Set(queries.filter(q => !q.includes('""')))].slice(0, 15);
 }
 
 /** Round 2 dorks — different angles: news, press releases, regulatory filings. */
 export function buildRound2Dorks(intent: ParsedIntent): string[] {
   const { industry, geography, keywords } = intent;
-  const country = geography.country ?? '';
-  const city = geography.city ?? geography.state ?? '';
+  const country = (geography.country ?? '').trim();
+  const city = ((geography.city ?? geography.state) ?? '').trim();
   const queries: string[] = [];
 
   // News/press release sources often list company contact details
@@ -91,7 +92,7 @@ export function buildRound2Dorks(intent: ParsedIntent): string[] {
     queries.push(`"${kw}" "${country}" company email contact`);
   }
 
-  return [...new Set(queries)].slice(0, 12);
+  return [...new Set(queries.filter(q => !q.includes('""')))].slice(0, 12);
 }
 
 /**
