@@ -22,6 +22,7 @@ import { passesHeuristicFilter } from './heuristicFilter.js';
 import { SerpCache } from '../utils/serpCache.js';
 import { scoreLeadRelevance } from './leadScorer.js';
 import { researchDomain } from './researchAgent.js';
+import { enrichEntity } from './registries/opencorporates.js';
 import { env } from '../config/env.js';
 
 const prospectingJobSchema = new mongoose.Schema(
@@ -175,6 +176,28 @@ export async function runIntentParser(
       count: parsedIntent.namedEntities?.length ?? 0,
       sample: (parsedIntent.namedEntities ?? []).slice(0, 8),
     });
+  }
+
+  // ── Stage 1b: Registry enrichment via OpenCorporates ─────────────────
+  const registryEntities: Array<{ name: string; officers: string[]; address?: string }> = [];
+  if (
+    (parsedIntent.queryType === 'named_entity_list' || parsedIntent.queryType === 'contact_lookup') &&
+    (parsedIntent.namedEntities?.length ?? 0) > 0
+  ) {
+    logger.info('[Pipeline] [1b] Querying OpenCorporates for registered officers', { jobId });
+    for (const entityName of parsedIntent.namedEntities!.slice(0, 5)) {
+      const enriched = await enrichEntity(entityName, parsedIntent.geography?.country ?? undefined).catch(() => null);
+      if (enriched && enriched.officers.length > 0) {
+        registryEntities.push({
+          name: enriched.name,
+          officers: enriched.officers.map(o => o.name).filter(Boolean),
+          address: enriched.registeredAddress,
+        });
+        logger.info('[Pipeline] [1b] Registry hit', {
+          jobId, entity: enriched.name, officers: enriched.officers.length,
+        });
+      }
+    }
   }
 
   // ── Stage 2: Build initial dork queries ─────────────────────────────
@@ -446,11 +469,24 @@ export async function runIntentParser(
         logger.info('[Pipeline] Dispatching research agent', {
           jobId, domain, reason: !hasNamedContact ? 'no_named_contact' : 'missing_field',
         });
+        const matchingRegistryOfficers = registryEntities
+          .filter(e => {
+            const entityDomainHint = e.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const currentDomain = domain.toLowerCase().replace(/[^a-z0-9]/g, '');
+            return currentDomain.includes(entityDomainHint.slice(0, Math.min(entityDomainHint.length, 12))) ||
+                   entityDomainHint.includes(currentDomain.replace(/(com|net|org|io|co|ng|uk)$/, ''));
+          })
+          .flatMap(e => e.officers.slice(0, 6).map(name => ({
+            name,
+            confidence: 0.6,
+            sourceType: 'structured_data' as const,
+          })));
+        const agentKnownContacts = [...data.contacts, ...matchingRegistryOfficers];
         const agentResult = await researchDomain({
           domain,
           entityName: parsedIntent.namedEntities?.[0],
           desiredFields: parsedIntent.desiredFields,
-          knownContacts: data.contacts,
+          knownContacts: agentKnownContacts,
           pagesAlreadyScraped: data.pageUrls,
         }).catch((err) => {
           logger.warn('[Pipeline] research agent threw', { jobId, domain, err: err instanceof Error ? err.message : String(err) });
