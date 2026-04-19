@@ -1,5 +1,6 @@
 import { load as cheerioLoad } from 'cheerio';
 import { logger } from '../../utils/logger.js';
+import type { ToolDef } from './index.js';
 
 export interface FetchedPage {
   url: string;
@@ -78,3 +79,24 @@ export async function fetchUrl(url: string): Promise<FetchedPage> {
     clearTimeout(timeout);
   }
 }
+
+export const fetchUrlTool: ToolDef = {
+  name: 'fetch_url',
+  description: 'Fetch a specific URL (no JS execution). Returns short preview of text, plus emails/phones/JSON-LD extracted.',
+  parametersSchema: '{"url": string}',
+  handler: async (args) => {
+    const url = String(args?.url ?? '').trim();
+    if (!url.startsWith('http')) return { ok: false, output: 'absolute URL required' };
+    const r = await fetchUrl(url);
+    return {
+      ok: r.status > 0 && r.status < 400,
+      output: JSON.stringify({
+        status: r.status,
+        emails: r.emails,
+        phones: r.phones,
+        jsonLdCount: r.jsonLd.length,
+        bodyTextPreview: r.bodyText.slice(0, 1800),
+      }),
+    };
+  },
+};

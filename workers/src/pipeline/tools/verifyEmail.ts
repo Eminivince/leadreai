@@ -1,6 +1,7 @@
 import { promises as dns } from 'dns';
 import { env } from '../../config/env.js';
 import { logger } from '../../utils/logger.js';
+import type { ToolDef } from './index.js';
 
 export interface VerifyResult {
   address: string;
@@ -104,3 +105,15 @@ export async function verifyEmail(address: string): Promise<VerifyResult> {
   }
   return verifyMxOnly(address);
 }
+
+export const verifyEmailTool: ToolDef = {
+  name: 'verify_email',
+  description: 'Verify an email via MX lookup (+ SMTP probe if reacher.email is configured). Returns { hasMx, verdict }.',
+  parametersSchema: '{"address": string}',
+  handler: async (args) => {
+    const address = String(args?.address ?? '').trim();
+    if (!address.includes('@')) return { ok: false, output: 'valid email required' };
+    const result = await verifyEmail(address);
+    return { ok: true, output: JSON.stringify(result) };
+  },
+};

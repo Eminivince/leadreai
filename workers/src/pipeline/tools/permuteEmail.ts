@@ -1,3 +1,5 @@
+import type { ToolDef } from './index.js';
+
 export interface EmailPermutation {
   address: string;
   pattern: string;
@@ -39,3 +41,15 @@ export function permuteEmail(
 
   return [...named, ...generic];
 }
+
+export const permuteEmailTool: ToolDef = {
+  name: 'permute_email',
+  description: 'Generate up to 12 common email patterns for a domain, optionally scoped to a named person. You MUST verify_email each pattern before emitting as a contact.',
+  parametersSchema: '{"domain": string, "firstName"?: string, "lastName"?: string}',
+  handler: async (args) => {
+    const domain = String(args?.domain ?? '').trim();
+    if (!domain) return { ok: false, output: 'domain required' };
+    const patterns = permuteEmail(domain, args?.firstName, args?.lastName);
+    return { ok: true, output: JSON.stringify(patterns) };
+  },
+};
