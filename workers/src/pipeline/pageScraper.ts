@@ -113,11 +113,38 @@ export async function runPageScraper(
   return results;
 }
 
+// Per-worker cache of domains that recently timed out / failed hard.
+// Prevents us from wasting 30s × N URLs on a dead or Playwright-hostile host.
+const FAILED_DOMAIN_CACHE = new Map<string, number>();
+const FAILED_DOMAIN_TTL_MS = 5 * 60 * 1000;
+
+function getPlainDomain(u: string): string {
+  try { return new URL(u).hostname.toLowerCase().replace(/^www\./, ''); }
+  catch { return ''; }
+}
+
+function isDomainFailing(domain: string): boolean {
+  const expiry = FAILED_DOMAIN_CACHE.get(domain);
+  if (!expiry) return false;
+  if (Date.now() > expiry) { FAILED_DOMAIN_CACHE.delete(domain); return false; }
+  return true;
+}
+
+function markDomainFailing(domain: string): void {
+  FAILED_DOMAIN_CACHE.set(domain, Date.now() + FAILED_DOMAIN_TTL_MS);
+}
+
 async function scrapePage(
   browser: Browser,
   url: string,
   collectedFileUrls: string[]
 ): Promise<PageScrapedData | null> {
+  const plainDomain = getPlainDomain(url);
+  if (plainDomain && isDomainFailing(plainDomain)) {
+    logger.info('pageScraper: skipping known-failing domain', { url, domain: plainDomain });
+    return null;
+  }
+
   let context: BrowserContext | null = null;
   try {
     context = await browser.newContext({
@@ -242,6 +269,15 @@ async function scrapePage(
       extractedContacts,
     };
   } catch (err) {
+    // If the whole domain is timing out, blocklist it so subsequent URL variants
+    // don't waste another 30s each.
+    const msg = err instanceof Error ? err.message : String(err);
+    const isTimeout = msg.includes('Timeout') || msg.includes('timeout');
+    const isSslErr = msg.includes('SSL') || msg.includes('ERR_SSL') || msg.includes('ERR_CERT');
+    if (plainDomain && (isTimeout || isSslErr)) {
+      markDomainFailing(plainDomain);
+      logger.info('pageScraper: marked domain as failing', { domain: plainDomain, reason: isTimeout ? 'timeout' : 'ssl' });
+    }
     logger.warn('scrapePage error', { url, err });
     return null;
   } finally {

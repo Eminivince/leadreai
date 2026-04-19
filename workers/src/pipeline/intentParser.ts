@@ -24,6 +24,8 @@ import { scoreLeadRelevance } from './leadScorer.js';
 import { researchDomain } from './researchAgent.js';
 import { enrichEntity } from './registries/opencorporates.js';
 import { collectAggregatorNames, type AggregatorName } from './aggregatorNameExtractor.js';
+import { guessCompanyDomains } from './domainGuesser.js';
+import { verifyEmail } from './tools/verifyEmail.js';
 import { env } from '../config/env.js';
 
 const prospectingJobSchema = new mongoose.Schema(
@@ -677,6 +679,123 @@ export async function runIntentParser(
         percentage: enrichPct(processedDomains.size), stage: 'osintEnrichment',
       })
     );
+  }
+
+  // ── Stage 7b: Fallback research pass ─────────────────────────────────
+  // If scraping produced nothing useful but we DO have entity names + aggregator-mined
+  // person names, try MX-verifying guessed domains for the entity and dispatch the
+  // research agent directly. This is the "last-ditch" path for companies that have no
+  // findable web presence (common for Nigerian SMEs).
+  const isFallbackEligible = parsedIntent.queryType === 'named_entity_list' || parsedIntent.queryType === 'contact_lookup';
+  const nothingUseful = verifiedLeads.length === 0;
+  if (isFallbackEligible && nothingUseful && (parsedIntent.namedEntities?.length ?? 0) > 0) {
+    logger.info('[Pipeline] Fallback: main loop produced 0 verified leads — attempting domain guess + agent research');
+    await jobActivity(jobId, publisher, 'fallback', 'No verified leads — guessing candidate domains for entity and dispatching research agent.', {});
+
+    for (const entityName of parsedIntent.namedEntities!.slice(0, 2)) {
+      const candidates = guessCompanyDomains(entityName, parsedIntent.geography?.country ?? undefined);
+      logger.info('[Pipeline] Fallback: generated domain guesses', { entityName, count: candidates.length, sample: candidates.slice(0, 6) });
+
+      const livingDomains: string[] = [];
+      for (const d of candidates) {
+        const result = await verifyEmail(`info@${d}`).catch(() => null);
+        if (result?.hasMx) livingDomains.push(d);
+        if (livingDomains.length >= 2) break;
+      }
+      logger.info('[Pipeline] Fallback: MX-verified candidates', { entityName, livingDomains });
+
+      if (livingDomains.length === 0) continue;
+
+      // Pre-seed agent with registry officers + aggregator names we harvested earlier
+      const registryOfficers = registryEntities
+        .filter(e => e.name.toLowerCase().replace(/[^a-z0-9]/g, '').includes(entityName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 6)))
+        .flatMap(e => e.officers.slice(0, 6).map(name => ({
+          name, confidence: 0.6, sourceType: 'structured_data' as const,
+        })));
+      const aggregatorSeeds: ContactCandidate[] = [...aggregatorNames.values()].slice(0, 10).map(n => ({
+        name: n.fullName, confidence: 0.5, sourceType: 'structured_data' as const,
+        reasoning: `aggregator URL: ${n.sourceHost}`,
+      }));
+
+      for (const d of livingDomains) {
+        logger.info('[Pipeline] Fallback: dispatching research agent on guessed domain', { entityName, domain: d });
+        const agentResult = await researchDomain({
+          domain: d,
+          entityName,
+          desiredFields: parsedIntent.desiredFields,
+          knownContacts: [...registryOfficers, ...aggregatorSeeds],
+          pagesAlreadyScraped: [],
+        }).catch((err) => {
+          logger.warn('[Pipeline] Fallback: agent error', { domain: d, err: err instanceof Error ? err.message : String(err) });
+          return null;
+        });
+
+        if (!agentResult || agentResult.additionalContacts.length === 0) continue;
+
+        const fallbackEmails = agentResult.additionalContacts
+          .filter(c => c.email && c.confidence >= 0.5)
+          .map(c => ({
+            address: c.email!.toLowerCase().trim(),
+            type: (c.name ? 'business' : 'generic') as 'business' | 'generic',
+            confidence: c.confidence,
+            source: 'ai_extracted' as const,
+            name: c.name,
+            title: c.title,
+            department: c.department,
+          }));
+        const fallbackPhones = agentResult.additionalContacts
+          .filter(c => c.phone && c.confidence >= 0.5)
+          .map(c => ({
+            raw: c.phone!,
+            normalized: undefined as string | undefined,
+            type: undefined as string | undefined,
+            countryCode: undefined as string | undefined,
+            source: 'ai_extracted' as const,
+          }));
+        const named = agentResult.additionalContacts.filter(c => c.name && c.name.length > 1);
+        const contactSummary = named.length > 0 ? {
+          totalContacts: named.length,
+          topContact: named[0] ? {
+            fullName: named[0].name!,
+            title: named[0].title ?? '',
+            seniority: '',
+          } : undefined,
+        } : undefined;
+
+        const fallbackLead: LeadRecord = {
+          workspaceId, jobId,
+          companyName: entityName,
+          companyDomain: d,
+          website: `https://${d}`,
+          industry: parsedIntent.industry,
+          address: {
+            country: parsedIntent.geography?.country ?? undefined,
+            city: parsedIntent.geography?.city ?? undefined,
+            state: parsedIntent.geography?.state ?? undefined,
+          },
+          emails: fallbackEmails,
+          phones: fallbackPhones,
+          socialProfiles: undefined,
+          osint: { fallback: true, mxVerified: true } as Record<string, unknown>,
+          sources: [{ url: `https://${d}`, type: 'scraped_page' as const, scrapedAt: new Date(), confidence: 0.5 }],
+          rawSnippets: [],
+          rankScore: 60,
+          completenessScore: 0,
+          isDuplicate: false,
+          tags: ['fallback_research'],
+          contactSummary,
+        };
+        allLeads.push(fallbackLead);
+        verifiedLeads.push(fallbackLead);
+        logger.info('[Pipeline] Fallback: agent produced lead', {
+          domain: d, emails: fallbackEmails.length, phones: fallbackPhones.length, named: named.length,
+        });
+
+        if (verifiedLeads.length >= STOP_THRESHOLD) break;
+      }
+
+      if (verifiedLeads.length >= STOP_THRESHOLD) break;
+    }
   }
 
   // ── Stage 8: Deduplication ───────────────────────────────────────────
