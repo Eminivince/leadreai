@@ -134,6 +134,7 @@ export async function runIntentParser(
   const cacheRedis = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
   const serpCache = new SerpCache(cacheRedis);
 
+  try {
   const serpResults = await runSerpSearch(round1Queries);
   await serpCache.addLinks(jobId, serpResults);
   logger.info('[Pipeline] [3] SERP round 1 done → cached', {
@@ -150,6 +151,7 @@ export async function runIntentParser(
   const processedDomains = new Set<string>();
   let serpRound = 1;
   let shouldStop = false;
+  let leadsWithContact = 0;
 
   const enrichPct = (done: number) =>
     Math.round(20 + Math.min(done / Math.max(1, STOP_THRESHOLD * 3), 1) * 60);
@@ -201,7 +203,11 @@ export async function runIntentParser(
     if (fileUrls.length > 0) {
       try {
         fileData = await runFileExtractor(fileUrls);
-      } catch { /* non-fatal */ }
+      } catch (err) {
+        logger.warn('[Pipeline] fileExtractor failed for batch', {
+          jobId, err: err instanceof Error ? err.message : String(err),
+        });
+      }
     }
 
     const batchDomainMap = new Map<string, {
@@ -271,25 +277,7 @@ export async function runIntentParser(
       };
 
       accumulatedLeads.push(lead);
-
-      const leadsWithContact = accumulatedLeads.filter(
-        l => l.emails.length > 0 || l.phones.length > 0
-      ).length;
-
-      await ProspectingJob.findByIdAndUpdate(jobId, {
-        'progress.leadsFoundSoFar': accumulatedLeads.length,
-      });
-      await publisher.publish(
-        `job:progress:${jobId}`,
-        JSON.stringify({ type: 'progress', leadsFoundSoFar: accumulatedLeads.length })
-      );
-      await publisher.publish(
-        `job:progress:${jobId}`,
-        JSON.stringify({
-          type: 'status', status: 'enriching',
-          percentage: enrichPct(processedDomains.size), stage: 'osintEnrichment',
-        })
-      );
+      if (lead.emails.length > 0 || lead.phones.length > 0) leadsWithContact++;
 
       if (leadsWithContact >= STOP_THRESHOLD) {
         logger.info('[Pipeline] Target count reached — stopping loop', {
@@ -299,6 +287,22 @@ export async function runIntentParser(
         break;
       }
     }
+
+    // Publish progress once per batch (not per domain)
+    await ProspectingJob.findByIdAndUpdate(jobId, {
+      'progress.leadsFoundSoFar': accumulatedLeads.length,
+    });
+    await publisher.publish(
+      `job:progress:${jobId}`,
+      JSON.stringify({ type: 'progress', leadsFoundSoFar: accumulatedLeads.length })
+    );
+    await publisher.publish(
+      `job:progress:${jobId}`,
+      JSON.stringify({
+        type: 'status', status: 'enriching',
+        percentage: enrichPct(processedDomains.size), stage: 'osintEnrichment',
+      })
+    );
   }
 
   // ── Stage 8: Deduplication ───────────────────────────────────────────
@@ -318,9 +322,9 @@ export async function runIntentParser(
   await progress(jobId, publisher, 'complete', 99, 'qualification');
   await runLeadQualifier(jobId, workspaceId, publisher);
 
-  // ── Cleanup ──────────────────────────────────────────────────────────
-  await serpCache.clear(jobId);
-  cacheRedis.quit().catch(() => {});
-
   logger.info('[Pipeline] Job complete', { jobId, totalLeads: ranked.length });
+  } finally {
+    await serpCache.clear(jobId).catch(() => {});
+    cacheRedis.quit().catch(() => {});
+  }
 }
