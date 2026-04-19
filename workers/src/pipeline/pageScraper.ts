@@ -28,7 +28,7 @@ function nextProxy(): { server: string; username?: string; password?: string } |
 }
 
 const EMAIL_REGEX = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
-const PHONE_REGEX = /(?:\+?[\d\s\-().]{7,20})/g;
+const PHONE_REGEX = /(?:\+?[\d]{1,3}[\s\-.])?(?:\([\d]{1,4}\)[\s\-.])?[\d]{3,5}[\s\-.][\d]{3,5}(?:[\s\-.][\d]{2,5})?/g;
 const FILE_EXT_REGEX = /\.(pdf|docx?|xlsx?)(\?[^"']*)?$/i;
 const SKIP_DOMAINS = ['linkedin.com', 'facebook.com', 'twitter.com', 'instagram.com', 'google.com'];
 
@@ -157,13 +157,23 @@ async function scrapePage(
     });
     const emailMatches = [...emailSet];
 
-    // Extract phones from tel: links (PHONE_REGEX kept for reference but tel: links are more reliable)
-    const phoneMatches: string[] = [];
+    // Extract phones from tel: links (highest confidence) + body text regex
+    const phoneSet = new Set<string>();
     $('a[href^="tel:"]').each((_, el) => {
       const href = $(el).attr('href') ?? '';
-      const phone = href.replace('tel:', '');
-      if (phone) phoneMatches.push(phone);
+      const phone = href.replace('tel:', '').trim();
+      if (phone && phone.replace(/\D/g, '').length >= 7) phoneSet.add(phone);
     });
+    // Body text regex extraction — filter out obvious false positives (zip codes, years, prices)
+    const bodyPhoneMatches = bodyText.match(PHONE_REGEX) ?? [];
+    for (const raw of bodyPhoneMatches) {
+      const digits = raw.replace(/\D/g, '');
+      if (digits.length < 7 || digits.length > 15) continue;
+      // Skip 4-digit years (1900-2099) and plain integers under 8 digits
+      if (/^(19|20)\d{2}$/.test(digits)) continue;
+      phoneSet.add(raw.trim());
+    }
+    const phoneMatches = [...phoneSet];
 
     // Extract file links
     const foundFileUrls: string[] = [];
@@ -253,5 +263,3 @@ function randomUserAgent(): string {
   return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)] ?? USER_AGENTS[0]!;
 }
 
-// Suppress unused-variable warning for PHONE_REGEX — retained for future text-based extraction
-void PHONE_REGEX;
