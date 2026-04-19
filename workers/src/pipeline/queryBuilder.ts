@@ -1,6 +1,7 @@
 import type { ParsedIntent } from '@leadreai/shared';
 
 export function buildDorkQueries(intent: ParsedIntent): string[] {
+  // TODO(Task 5): Branch on intent.queryType — use buildEntityDorks() for named_entity_list and contact_lookup
   const { industry, geography, keywords, desiredFields } = intent;
   const country = geography.country ?? '';
   const city = geography.city ?? geography.state ?? '';

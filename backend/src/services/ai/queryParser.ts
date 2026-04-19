@@ -30,7 +30,8 @@ Rules:
 - confidenceScore must be a decimal between 0 and 1.
 - desiredFields must be a non-empty array; default to ["businessEmail"] when the query gives no field hints.
 - For named_entity_list queries: if the user says 'top 10' set targetCount=10. namedEntities is null if no specific names are mentioned.
-- For contact_lookup queries: if specific companies ARE named in the query, list them in namedEntities.`;
+- For contact_lookup queries: if specific companies ARE named in the query, list them in namedEntities.
+- For demographic_filter queries: always set namedEntities to null.`;
 
 /**
  * Parses a raw natural-language prospecting query into a structured ParsedIntent
