@@ -15,6 +15,7 @@ import { rankLeads } from './ranker.js';
 import { writeLeads } from './leadWriter.js';
 import { runLeadQualifier } from './leadQualifier.js';
 import { resolveNamedEntities } from './entityResolver.js';
+import { findEntityWebsites } from './entityWebsiteFinder.js';
 import { buildRound2Dorks } from './queryBuilder.js';
 import { passesHeuristicFilter } from './heuristicFilter.js';
 import { SerpCache } from '../utils/serpCache.js';
@@ -135,6 +136,24 @@ export async function runIntentParser(
   const serpCache = new SerpCache(cacheRedis);
 
   try {
+  // For entity queries: find each firm's official website FIRST and inject into cache
+  // so they're processed before generic dork results (highest signal, lowest noise)
+  const isEntityQuery = (parsedIntent.queryType === 'named_entity_list' || parsedIntent.queryType === 'contact_lookup')
+    && (parsedIntent.namedEntities?.length ?? 0) > 0;
+
+  if (isEntityQuery) {
+    await progress(jobId, publisher, 'collecting', 12, 'queryBuilder');
+    logger.info('[Pipeline] [2b] Entity website discovery starting', { jobId });
+    const entityUrls = await findEntityWebsites(parsedIntent.namedEntities!, parsedIntent).catch((err) => {
+      logger.warn('[Pipeline] Entity website finder failed — continuing', { jobId, err });
+      return [];
+    });
+    if (entityUrls.length > 0) {
+      await serpCache.addLinks(jobId, entityUrls);
+      logger.info('[Pipeline] [2b] Entity websites injected into cache', { jobId, count: entityUrls.length });
+    }
+  }
+
   const serpResults = await runSerpSearch(round1Queries);
   await serpCache.addLinks(jobId, serpResults);
   logger.info('[Pipeline] [3] SERP round 1 done → cached', {

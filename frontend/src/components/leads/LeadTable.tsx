@@ -99,33 +99,36 @@ export function LeadTable({
       },
       {
         id: 'emails',
-        header: 'Emails',
-        cell: ({ row }) => (
-          <span className="text-sm">
-            {row.original.emails.length > 0 ? (
-              <span className="text-foreground">
-                {row.original.emails.length} email{row.original.emails.length > 1 ? 's' : ''}
-              </span>
-            ) : (
-              <span className="text-muted-foreground">—</span>
-            )}
-          </span>
-        ),
+        header: 'Email',
+        cell: ({ row }) => {
+          const emails = row.original.emails;
+          if (emails.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
+          return (
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-xs text-foreground truncate max-w-[180px]">{emails[0].address}</span>
+              {emails.length > 1 && (
+                <span className="shrink-0 text-[10px] font-mono text-muted-foreground bg-secondary rounded px-1">+{emails.length - 1}</span>
+              )}
+            </div>
+          );
+        },
       },
       {
         id: 'phones',
-        header: 'Phones',
-        cell: ({ row }) => (
-          <span className="text-sm">
-            {row.original.phones.length > 0 ? (
-              <span className="text-foreground">
-                {row.original.phones.length} phone{row.original.phones.length > 1 ? 's' : ''}
-              </span>
-            ) : (
-              <span className="text-muted-foreground">—</span>
-            )}
-          </span>
-        ),
+        header: 'Phone',
+        cell: ({ row }) => {
+          const phones = row.original.phones;
+          if (phones.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
+          const display = phones[0].normalized ?? phones[0].raw;
+          return (
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-xs text-foreground font-mono whitespace-nowrap">{display}</span>
+              {phones.length > 1 && (
+                <span className="shrink-0 text-[10px] font-mono text-muted-foreground bg-secondary rounded px-1">+{phones.length - 1}</span>
+              )}
+            </div>
+          );
+        },
       },
       {
         id: 'contacts',
