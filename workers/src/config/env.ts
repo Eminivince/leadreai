@@ -16,7 +16,7 @@ const envSchema = z.object({
   DEDUP_SIMILARITY_THRESHOLD: z.coerce.number().default(0.25),
   PROXY_LIST: z.string().optional(),
   OPENROUTER_API_KEY: z.string().optional(),
-  OPENROUTER_MODEL: z.string().default('google/gemini-2.0-flash-001'),
+  OPENROUTER_MODEL: z.string().default('nvidia/nemotron-3-super-120b-a12b:free'),
   OPENROUTER_BASE_URL: z.string().default('https://openrouter.ai/api/v1'),
   OPENCORPORATES_API_KEY: z.string().optional(),
   REACHER_URL: z.string().url().optional(),
