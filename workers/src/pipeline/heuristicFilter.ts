@@ -52,7 +52,9 @@ export function passesHeuristicFilter(
   ) {
     const entityMatch = intent.namedEntities.some(name => {
       const nameLower = name.toLowerCase();
-      return text.includes(nameLower) || domain.includes(nameLower.replace(/[^a-z0-9]/g, ''));
+      const cleanedDomain = domain.replace(/[^a-z0-9]/g, '');
+      const cleanedName = nameLower.replace(/[^a-z0-9]/g, '');
+      return text.includes(nameLower) || cleanedDomain.includes(cleanedName);
     });
     if (!entityMatch) return false;
   }
