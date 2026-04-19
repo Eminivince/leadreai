@@ -11,6 +11,7 @@ import { enrichDomain } from './osintEnricher.js';
 import { detectEmails } from './emailDetector.js';
 import { normalizePhones, countryNameToCode } from './phoneNormalizer.js';
 import { deduplicateLeads, type LeadRecord } from './deduplicator.js';
+import type { ContactCandidate } from './aiContactExtractor.js';
 import { rankLeads } from './ranker.js';
 import { writeLeads } from './leadWriter.js';
 import { runLeadQualifier } from './leadQualifier.js';
@@ -336,16 +337,18 @@ export async function runIntentParser(
     const batchDomainMap = new Map<string, {
       emails: string[]; phones: string[]; pageUrls: string[];
       linkedinUrl?: string; companyName?: string;
+      contacts: ContactCandidate[];
     }>();
 
     for (const page of pageData) {
       if (page.url === 'collected-files') continue;
       const domain = getDomain(page.url);
       if (processedDomains.has(domain)) continue;
-      const existing = batchDomainMap.get(domain) ?? { emails: [], phones: [], pageUrls: [] };
+      const existing = batchDomainMap.get(domain) ?? { emails: [], phones: [], pageUrls: [], contacts: [] };
       existing.emails.push(...page.emails);
       existing.phones.push(...page.phones);
       existing.pageUrls.push(page.url);
+      existing.contacts.push(...page.extractedContacts);
       if (page.linkedinUrl && !existing.linkedinUrl) existing.linkedinUrl = page.linkedinUrl;
       if (page.companyName && !existing.companyName) existing.companyName = page.companyName;
       batchDomainMap.set(domain, existing);
@@ -353,7 +356,7 @@ export async function runIntentParser(
     for (const file of fileData) {
       const domain = getDomain(file.url);
       if (processedDomains.has(domain)) continue;
-      const existing = batchDomainMap.get(domain) ?? { emails: [], phones: [], pageUrls: [] };
+      const existing = batchDomainMap.get(domain) ?? { emails: [], phones: [], pageUrls: [], contacts: [] };
       existing.emails.push(...file.emails);
       existing.phones.push(...file.phones);
       batchDomainMap.set(domain, existing);
@@ -377,6 +380,52 @@ export async function runIntentParser(
       ).catch(() => []);
       const normalizedPhones = normalizePhones([...new Set(data.phones)], countryHint);
 
+      // AI-extracted contacts are primary; regex hits fill gaps
+      const aiEmails = data.contacts
+        .filter(c => c.email && c.confidence >= 0.4)
+        .map(c => ({
+          address: c.email!.toLowerCase().trim(),
+          type: (c.name ? 'business' : 'generic') as 'business' | 'generic',
+          confidence: c.confidence,
+          source: 'ai_extracted' as const,
+          name: c.name,
+          title: c.title,
+          department: c.department,
+        }));
+      const aiEmailAddrs = new Set(aiEmails.map(e => e.address));
+      const regexEmails = detectedEmails
+        .filter(e => !aiEmailAddrs.has(e.address.toLowerCase()))
+        .map(e => ({ address: e.address, type: e.type, confidence: e.confidence, source: e.source }));
+      const mergedEmails = [...aiEmails, ...regexEmails];
+
+      const aiPhones = data.contacts
+        .filter(c => c.phone && c.confidence >= 0.4)
+        .map(c => ({
+          raw: c.phone!,
+          normalized: undefined as string | undefined,
+          type: undefined as string | undefined,
+          countryCode: undefined as string | undefined,
+          source: 'ai_extracted' as const,
+        }));
+      const aiPhoneDigits = new Set(aiPhones.map(p => p.raw.replace(/\D/g, '')));
+      const regexPhones = normalizedPhones
+        .filter(p => p.isValid && !aiPhoneDigits.has((p.normalized ?? p.raw).replace(/\D/g, '')))
+        .map(p => ({
+          raw: p.raw, normalized: p.normalized, type: p.type,
+          countryCode: p.countryCode, source: 'scraped' as const,
+        }));
+      const mergedPhones = [...aiPhones, ...regexPhones];
+
+      const namedContacts = data.contacts.filter(c => c.name && c.name.length > 1);
+      const contactSummary = namedContacts.length > 0 ? {
+        totalContacts: namedContacts.length,
+        topContact: namedContacts[0] ? {
+          fullName: namedContacts[0].name!,
+          title: namedContacts[0].title ?? '',
+          seniority: '',
+        } : undefined,
+      } : undefined;
+
       const lead: LeadRecord = {
         workspaceId,
         jobId,
@@ -389,13 +438,9 @@ export async function runIntentParser(
           city: parsedIntent.geography?.city ?? undefined,
           state: parsedIntent.geography?.state ?? undefined,
         },
-        emails: detectedEmails.map(e => ({
-          address: e.address, type: e.type, confidence: e.confidence, source: e.source,
-        })),
-        phones: normalizedPhones.filter(p => p.isValid).map(p => ({
-          raw: p.raw, normalized: p.normalized, type: p.type,
-          countryCode: p.countryCode, source: 'scraped',
-        })),
+        emails: mergedEmails,
+        phones: mergedPhones,
+        contactSummary,
         socialProfiles: data.linkedinUrl ? { linkedinUrl: data.linkedinUrl } : undefined,
         osint: osint as Record<string, unknown>,
         sources: data.pageUrls.map(url => ({

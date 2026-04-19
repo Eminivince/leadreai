@@ -12,9 +12,27 @@ export interface LeadRecord {
   address?: { city?: string; state?: string; country?: string; fullText?: string };
 
   // Contact data
-  emails: Array<{ address: string; type: string; confidence: number; source: string }>;
-  phones: Array<{ raw: string; normalized?: string; type?: string; countryCode?: string; source: string }>;
+  emails: Array<{
+    address: string;
+    type: string;
+    confidence: number;
+    source: string;
+    name?: string;
+    title?: string;
+    department?: string;
+  }>;
+  phones: Array<{
+    raw: string;
+    normalized?: string;
+    type?: string;
+    countryCode?: string;
+    source: string;
+  }>;
   socialProfiles?: { linkedinUrl?: string };
+  contactSummary?: {
+    totalContacts: number;
+    topContact?: { fullName: string; title: string; seniority: string };
+  };
 
   // Metadata
   osint?: Record<string, unknown>;
