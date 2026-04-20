@@ -34,6 +34,10 @@ export interface LlmResponse {
 }
 
 const DEFAULT_TIMEOUT_MS = 25_000;
+// Local models on consumer hardware are slow (first-token latency can exceed 30s,
+// generation at ~15-30 tok/s). Enforce a floor so per-caller short timeouts don't
+// kill the request before the model can respond. Only applies when USE_LOCAL_LLM is on.
+const LOCAL_TIMEOUT_FLOOR_MS = 180_000;
 
 function resolveEndpoint(): { url: string; apiKey: string; model: string; provider: 'local' | 'openrouter' } {
   if (env.USE_LOCAL_LLM) {
@@ -60,7 +64,8 @@ export function isLlmConfigured(): boolean {
 
 export async function callLlmOnce(req: LlmRequest): Promise<LlmResponse> {
   const ep = resolveEndpoint();
-  const timeoutMs = req.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const requested = req.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const timeoutMs = ep.provider === 'local' ? Math.max(requested, LOCAL_TIMEOUT_FLOOR_MS) : requested;
 
   // Local LiteLLM uses whatever model the proxy advertises; remote honors the caller's
   // requested model (falling back to env default).
