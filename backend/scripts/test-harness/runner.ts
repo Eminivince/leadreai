@@ -43,6 +43,16 @@ async function runOne(spec: PromptSpec): Promise<GradedReport> {
 
   console.log('[harness] parsing intent');
   const parsedIntent = await parseQuery(spec.query);
+  // Optional override for fast baselining: HARNESS_TARGET_OVERRIDE=10 cuts a
+  // "top 100 law firms" query down to a 10-lead sanity run so we can measure
+  // in 10-20min instead of 60+.
+  const override = process.env['HARNESS_TARGET_OVERRIDE']
+    ? parseInt(process.env['HARNESS_TARGET_OVERRIDE'], 10)
+    : undefined;
+  if (override && Number.isFinite(override) && override > 0) {
+    parsedIntent.targetCount = override;
+    console.log('[harness] TARGET_OVERRIDE active — targetCount=%d (spec expected=%d)', override, spec.expectedTargetCount);
+  }
   console.log('[harness] parsed: queryType=%s targetCount=%s industry=%j',
     parsedIntent.queryType, parsedIntent.targetCount, parsedIntent.industry);
 
@@ -98,7 +108,7 @@ async function runOne(spec: PromptSpec): Promise<GradedReport> {
   }));
 
   console.log(`[harness] ${leads.length} leads persisted — grading`);
-  const report = gradeJob(spec, job._id.toString(), leads);
+  const report = gradeJob(spec, job._id.toString(), leads, override);
   return report;
 }
 

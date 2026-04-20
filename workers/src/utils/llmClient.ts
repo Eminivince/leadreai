@@ -119,7 +119,10 @@ export async function callLlmOnce(req: LlmRequest): Promise<LlmResponse> {
  * Used by anything that runs inside the agent loop or in tight repeated cycles.
  */
 export async function callLlm(req: LlmRequest): Promise<string> {
-  const backoffs = [3_000, 8_000, 18_000];
+  // Longer backoff chain for strict free-tier rate limits (e.g. Nemotron).
+  // Total wait if all trip: ~2.5 min. Lets a rate-limited agent ride out the
+  // window rather than abandoning the job with leads in flight.
+  const backoffs = [5_000, 15_000, 30_000, 60_000];
   for (let attempt = 0; attempt <= backoffs.length; attempt++) {
     const result = await callLlmOnce(req).catch((err) => {
       logger.warn('[llmClient] fetch threw', {

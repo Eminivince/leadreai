@@ -1,5 +1,15 @@
 import { z } from 'zod';
 
+// `z.coerce.boolean()` treats any non-empty string as true — including "false"
+// and "0". This helper parses common boolean strings ("true"/"1"/"yes") properly.
+const booleanFlag = z
+  .union([z.boolean(), z.string()])
+  .transform((v) => {
+    if (typeof v === 'boolean') return v;
+    const s = v.trim().toLowerCase();
+    return s === 'true' || s === '1' || s === 'yes' || s === 'y' || s === 'on';
+  });
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   REDIS_URL: z.string().default('redis://localhost:6379'),
@@ -9,7 +19,7 @@ const envSchema = z.object({
   MONGODB_URI: z.string().default('mongodb://localhost:27017'),
   MONGODB_DB_NAME: z.string().default('leadreai'),
   SERPAPI_KEY: z.string().optional(),
-  PLAYWRIGHT_HEADLESS: z.coerce.boolean().default(true),
+  PLAYWRIGHT_HEADLESS: booleanFlag.default(true),
   PLAYWRIGHT_TIMEOUT_MS: z.coerce.number().default(30000),
   PLAYWRIGHT_CONCURRENCY: z.coerce.number().default(3),
   MAX_FILE_DOWNLOAD_SIZE_MB: z.coerce.number().default(25),
@@ -20,7 +30,7 @@ const envSchema = z.object({
   OPENROUTER_BASE_URL: z.string().default('https://openrouter.ai/api/v1'),
   // Local LiteLLM proxy — OpenAI-compatible endpoint on the user's machine.
   // When USE_LOCAL_LLM=true, all LLM calls route here instead of OpenRouter.
-  USE_LOCAL_LLM: z.coerce.boolean().default(false),
+  USE_LOCAL_LLM: booleanFlag.default(false),
   LOCAL_LLM_BASE_URL: z.string().default('http://localhost:4400'),
   LOCAL_LLM_API_KEY: z.string().optional(),
   LOCAL_LLM_MODEL: z.string().default('qwen3.5'),
