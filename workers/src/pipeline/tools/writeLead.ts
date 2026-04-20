@@ -1,6 +1,18 @@
 import type { ToolDef } from './index.js';
 import type { LeadRecord } from '../deduplicator.js';
 import { logger } from '../../utils/logger.js';
+import { normalizePhones, countryNameToCode } from '../phoneNormalizer.js';
+
+/**
+ * Parses an unknown value into a finite number in [min, max]; falls back to `fallback`.
+ * Guards against NaN sneaking into BSON (where NaN is persisted as null, which breaks
+ * downstream ranking/filtering that expects a number).
+ */
+function clampToFiniteNumber(value: unknown, fallback: number, min: number, max: number): number {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(min, Math.min(max, n));
+}
 
 export const writeLeadTool: ToolDef = {
   name: 'write_lead',
@@ -21,21 +33,29 @@ export const writeLeadTool: ToolDef = {
     const emails = Array.isArray(args?.emails) ? args.emails.map((e: any) => ({
       address: String(e.address ?? '').toLowerCase().trim(),
       type: (e.type ?? (e.name ? 'business' : 'generic')) as 'business' | 'generic',
-      confidence: Math.max(0, Math.min(1, Number(e.confidence ?? 0.6))),
+      confidence: clampToFiniteNumber(e.confidence, 0.6, 0, 1),
       source: String(e.source ?? 'ai_extracted'),
       name: e.name ? String(e.name) : undefined,
       title: e.title ? String(e.title) : undefined,
       department: e.department ? String(e.department) : undefined,
     })).filter((e: { address: string }) => e.address.includes('@')) : [];
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const phones = Array.isArray(args?.phones) ? args.phones.map((p: any) => ({
-      raw: String(p.raw ?? ''),
-      normalized: p.normalized ? String(p.normalized) : undefined,
-      type: p.type ? String(p.type) : undefined,
-      countryCode: p.countryCode ? String(p.countryCode) : undefined,
-      source: String(p.source ?? 'ai_extracted'),
-    })).filter((p: { raw: string }) => p.raw) : [];
+    // Normalize phones through libphonenumber-js so downstream consumers get E.164 +
+    // type classification (office/mobile/fax). Country hint comes from parsed intent
+    // when present, else libphonenumber will try to infer from the number itself.
+    const rawPhoneStrings: string[] = Array.isArray(args?.phones)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ? args.phones.map((p: any) => String(p?.raw ?? p ?? '').trim()).filter(Boolean)
+      : [];
+    const countryHint = countryNameToCode(ctx.parsedIntent.geography?.country);
+    const normalized = normalizePhones(rawPhoneStrings, countryHint);
+    const phones = normalized.map((p) => ({
+      raw: p.raw,
+      normalized: p.normalized,
+      type: p.type,
+      countryCode: p.countryCode,
+      source: 'agent_extracted',
+    })).filter((p) => p.raw);
 
     const lead: LeadRecord = {
       workspaceId: ctx.workspaceId,
@@ -43,7 +63,7 @@ export const writeLeadTool: ToolDef = {
       companyName,
       companyDomain,
       website: args?.website ? String(args.website) : `https://${companyDomain}`,
-      industry: ctx.parsedIntent.industry,
+      industry: ctx.parsedIntent.industry ?? undefined,
       address: {
         country: ctx.parsedIntent.geography?.country ?? undefined,
         city: ctx.parsedIntent.geography?.city ?? undefined,
@@ -61,7 +81,7 @@ export const writeLeadTool: ToolDef = {
         confidence: 0.6,
       })) : [],
       rawSnippets: [],
-      rankScore: Math.max(0, Math.min(100, Number(args?.rankScore ?? 70))),
+      rankScore: clampToFiniteNumber(args?.rankScore, 70, 0, 100),
       completenessScore: 0,
       isDuplicate: false,
       tags: ['agent_emitted'],

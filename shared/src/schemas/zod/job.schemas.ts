@@ -6,7 +6,9 @@ export const CreateJobSchema = z.object({
 });
 
 export const ParsedIntentSchema = z.object({
-  industry: z.string(),
+  // Nullable: for named-entity / contact-lookup queries ("anyone at Acme Corp") the
+  // industry is unknowable from the query text alone — enrichment fills it in later.
+  industry: z.string().nullish(),
   subIndustry: z.string().nullish(),
   geography: z.object({
     country: z.string().nullish(),

@@ -15,7 +15,8 @@ export interface JobGeography {
 }
 
 export interface ParsedIntent {
-  industry: string;
+  /** Null when the query names a specific company without industry context; enrichment fills it in later. */
+  industry?: string | null;
   subIndustry?: string | null;
   geography: JobGeography;
   targetCount: number;
@@ -51,6 +52,14 @@ export interface JobError {
   stage: string;
 }
 
+/** Human-readable pipeline step for debugging / tuning (streamed over SSE + stored on job). */
+export interface JobActivityLogEntry {
+  at: string;
+  step: string;
+  message: string;
+  meta?: Record<string, unknown>;
+}
+
 export interface ProspectingJob {
   _id: string;
   workspaceId: string;
@@ -61,6 +70,8 @@ export interface ProspectingJob {
   progress: JobProgress;
   result?: JobResult;
   error?: JobError;
+  /** Append-only run log (newest capped server-side). Shown in dashboard job cards. */
+  activityLog?: JobActivityLogEntry[];
   bullmqJobId?: string;
   creditsCharged: number;
   startedAt?: string;

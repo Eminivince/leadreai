@@ -7,7 +7,7 @@ export interface AiMessage {
 
 export interface AiResponse {
   text: string;
-  provider: 'anthropic' | 'google' | 'openrouter';
+  provider: 'anthropic' | 'google' | 'openrouter' | 'local';
   inputTokens?: number;
   outputTokens?: number;
 }
@@ -149,13 +149,69 @@ async function generateWithOpenRouter(
 }
 
 /**
+ * Local LiteLLM proxy (OpenAI-compatible endpoint on the user's machine).
+ * Mirrors workers/src/utils/llmClient.ts behavior — longer timeout floor because
+ * consumer-hardware models have high first-token latency.
+ */
+async function generateWithLocal(
+  messages: AiMessage[],
+  options: GenerateOptions,
+): Promise<AiResponse> {
+  const body = {
+    model: env.LOCAL_LLM_MODEL,
+    max_tokens: options.maxTokens ?? env.ANTHROPIC_MAX_TOKENS,
+    messages: [
+      ...(options.systemPrompt ? [{ role: 'system', content: options.systemPrompt }] : []),
+      ...messages.map((m) => ({ role: m.role, content: m.content })),
+    ],
+  };
+
+  const controller = new AbortController();
+  const timeoutMs = 180_000;
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (env.LOCAL_LLM_API_KEY) headers['Authorization'] = `Bearer ${env.LOCAL_LLM_API_KEY}`;
+
+  try {
+    const url = `${env.LOCAL_LLM_BASE_URL.replace(/\/$/, '')}/v1/chat/completions`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      const detail = await res.text().catch(() => '');
+      throw new Error(`Local LLM error ${res.status}: ${detail.slice(0, 500)}`);
+    }
+    const data = await res.json() as {
+      choices: Array<{ message: { content: string } }>;
+      usage?: { prompt_tokens?: number; completion_tokens?: number };
+    };
+    const text = data.choices[0]?.message.content ?? '';
+    return {
+      text,
+      provider: 'local',
+      inputTokens: data.usage?.prompt_tokens,
+      outputTokens: data.usage?.completion_tokens,
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
  * Unified AI text generation.
- * Priority: USE_OPENROUTER → USE_GOOGLE → Anthropic (default)
+ * Priority: USE_LOCAL_LLM → USE_OPENROUTER → USE_GOOGLE → Anthropic (default)
  */
 export async function generateText(
   messages: AiMessage[],
   options: GenerateOptions = {},
 ): Promise<AiResponse> {
+  if (env.USE_LOCAL_LLM) {
+    return generateWithLocal(messages, options);
+  }
   if (env.USE_OPENROUTER) {
     return generateWithOpenRouter(messages, options);
   }

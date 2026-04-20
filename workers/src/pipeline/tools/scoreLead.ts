@@ -12,7 +12,7 @@ export const scoreLeadTool: ToolDef = {
       jobId: ctx.jobId,
       companyName: String(args?.companyName ?? ''),
       companyDomain: String(args?.companyDomain ?? ''),
-      industry: ctx.parsedIntent.industry,
+      industry: ctx.parsedIntent.industry ?? undefined,
       address: {
         country: ctx.parsedIntent.geography?.country ?? undefined,
         city: ctx.parsedIntent.geography?.city ?? undefined,

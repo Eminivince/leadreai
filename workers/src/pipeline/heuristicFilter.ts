@@ -68,9 +68,10 @@ export function passesHeuristicFilter(
   }
 
   // For demographic queries: skip if neither industry keyword nor geographic hint appears
-  const industry = intent.industry.toLowerCase().trim();
-  // "other" is a placeholder — don't use it as a filter signal
-  const industryWords = industry === 'other' ? [] : industry.split(/\s+/);
+  const industry = (intent.industry ?? '').toLowerCase().trim();
+  // Empty/"other"/"unknown" are placeholders — don't use them as a filter signal
+  const isPlaceholder = industry === '' || industry === 'other' || industry === 'unknown';
+  const industryWords = isPlaceholder ? [] : industry.split(/\s+/);
   const geo = [intent.geography.country, intent.geography.city, intent.geography.state]
     .filter(Boolean)
     .map(s => s!.toLowerCase());

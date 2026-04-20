@@ -7,6 +7,7 @@ import {
   type ToolContext,
 } from './tools/index.js';
 import { callLlm, isLlmConfigured } from '../utils/llmClient.js';
+import { estimateWallClockMs } from './wallClockBudget.js';
 
 export interface JobAgentInput {
   jobId: string;
@@ -22,14 +23,17 @@ export interface JobAgentResult {
   transcript: string[];
 }
 
-const MAX_STEPS = 30;
-const MAX_WALL_MS = 5 * 60 * 1000;
+// Step budget scales linearly with target count (min 30, max 200) — large demographic
+// jobs need many more tool calls than a single contact_lookup.
+const BASE_MAX_STEPS = 30;
+const STEPS_PER_LEAD = 4;
+const ABSOLUTE_MAX_STEPS = 200;
 const LLM_TIMEOUT_MS = 25_000;
 const CRITIC_INTERVAL = 5;
 
 type HistoryMsg = { role: 'system' | 'user' | 'assistant'; content: string };
 
-function buildSystemPrompt(): string {
+function buildSystemPrompt(maxSteps: number, budgetMs: number): string {
   return `You are an autonomous lead-research agent. Given a user query, you drive a tool-using research process that ends with one or more qualified leads written via the write_lead tool.
 
 ## Available tools
@@ -50,10 +54,10 @@ On every turn, respond with EXACTLY ONE JSON object matching one of these shapes
 
 1. PLAN briefly before your first action. What does the user want? How many? What fields?
 2. Cheap first: lookup_registry, search_web, fetch_url, extract_names_from_urls, verify_email — these are fast & low-cost. Exhaust these before scrape_page (heavy, uses full browser).
-3. For a named-entity query ("find contacts at <company>"): start with lookup_registry. Then search_web — the real website domain usually appears in the top 3 result URLs or snippets; EXTRACT IT by reading the snippets, don't guess. Once you have the domain, fetch_url the /contact, /about, /team pages directly. Use search_web with aggregator-restricted queries (site:linkedin.com OR site:zoominfo.com) + extract_names_from_urls to harvest employee names, then permute_email + verify_email per name on the real domain. write_lead per verified contact.
+3. For a named-entity query ("find contacts at <company>"): start with lookup_registry. Then search_web — the real website domain usually appears in the top 3 result URLs or snippets; EXTRACT IT by reading the snippets, don't guess. Once you have the domain, fetch_url the /contact, /about, /team pages directly. Use search_web with aggregator-restricted queries (site:linkedin.com OR site:zoominfo.com) + extract_names_from_urls to harvest employee names, then permute_email + verify_email per name on the real domain. **write_lead EAGERLY — the moment you have a company_domain and at least one email (verified OR the generic info@/contact@ address scraped from the site), call write_lead immediately. Don't batch. Don't wait for more verification rounds. A written lead is a real lead; unwritten work is lost.** You can always call write_lead again for additional contacts at the same company.
 4. For a demographic query ("find 50 <role> at <industry> in <geo>"): use search_web to find candidate companies, inspect snippets before committing to scrape_page. Loop.
 5. Never fabricate data. Only write_lead records you can justify from tool output you've seen.
-6. Watch your budget (${MAX_STEPS} tool calls, ${MAX_WALL_MS / 1000}s wall-clock). Prefer cheap tools. Don't scrape aggregator domains (zoominfo.com, rocketreach.co, contactout.com, signalhire.com, datanyze.com, apollo.io, hunter.io, lusha.com) — they're paywalled junk; use extract_names_from_urls on their SERP URLs instead.
+6. Watch your budget (${maxSteps} tool calls, ${Math.round(budgetMs / 1000)}s wall-clock). Prefer cheap tools. Don't scrape aggregator domains (zoominfo.com, rocketreach.co, contactout.com, signalhire.com, datanyze.com, apollo.io, hunter.io, lusha.com) — they're paywalled junk; use extract_names_from_urls on their SERP URLs instead.
 
 ## Completion criteria
 
@@ -138,21 +142,30 @@ export async function runJobAgent(input: JobAgentInput): Promise<JobAgentResult>
     pagesScrapedThisJob: new Set<string>(),
   };
 
-  const history: HistoryMsg[] = [
-    { role: 'system', content: buildSystemPrompt() },
-    { role: 'user', content: buildInitialUserPrompt(parsedIntent) },
-  ];
   const transcript: string[] = [];
   const startedAt = Date.now();
-  const targetCount = parsedIntent.targetCount;
+  const targetCount = parsedIntent.targetCount ?? 10;
 
-  for (let step = 0; step < MAX_STEPS; step++) {
+  // Compute per-job wall-clock budget and step cap from parsed intent.
+  const { budgetMs, explanation } = estimateWallClockMs(parsedIntent);
+  const maxSteps = Math.min(
+    ABSOLUTE_MAX_STEPS,
+    Math.max(BASE_MAX_STEPS, BASE_MAX_STEPS + targetCount * STEPS_PER_LEAD),
+  );
+  logger.info('[jobAgent] budget', { jobId, budgetMs, maxSteps, explanation });
+
+  const history: HistoryMsg[] = [
+    { role: 'system', content: buildSystemPrompt(maxSteps, budgetMs) },
+    { role: 'user', content: buildInitialUserPrompt(parsedIntent) },
+  ];
+
+  for (let step = 0; step < maxSteps; step++) {
     if (ctx.leadsSoFar.length >= targetCount) {
       logger.info('[jobAgent] target reached', { step, leads: ctx.leadsSoFar.length });
       return { leads: ctx.leadsSoFar, stepsUsed: step, stopReason: 'target_reached', transcript };
     }
-    if (Date.now() - startedAt > MAX_WALL_MS) {
-      logger.info('[jobAgent] wall-clock budget exhausted', { step });
+    if (Date.now() - startedAt > budgetMs) {
+      logger.info('[jobAgent] wall-clock budget exhausted', { step, budgetMs, leads: ctx.leadsSoFar.length });
       return { leads: ctx.leadsSoFar, stepsUsed: step, stopReason: 'wall_clock', transcript };
     }
 
@@ -216,6 +229,6 @@ export async function runJobAgent(input: JobAgentInput): Promise<JobAgentResult>
     }
   }
 
-  logger.info('[jobAgent] max steps reached', { leads: ctx.leadsSoFar.length });
-  return { leads: ctx.leadsSoFar, stepsUsed: MAX_STEPS, stopReason: 'max_steps', transcript };
+  logger.info('[jobAgent] max steps reached', { leads: ctx.leadsSoFar.length, maxSteps });
+  return { leads: ctx.leadsSoFar, stepsUsed: maxSteps, stopReason: 'max_steps', transcript };
 }

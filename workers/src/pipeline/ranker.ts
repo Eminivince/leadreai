@@ -49,9 +49,11 @@ function computeRankScore(lead: LeadRecord, desiredFields: string[]): number {
   return Math.min(Math.round(score), 100);
 }
 
-function computeCompletenessScore(lead: LeadRecord, desiredFields: string[]): number {
-  const total = desiredFields.length || 8;
-  const present = [
+function computeCompletenessScore(lead: LeadRecord, _desiredFields: string[]): number {
+  // Completeness is a universal 0-100 measure — count how many of the 8 possible
+  // signals are present. Denominator is always 8 (the number of checks below),
+  // independent of what the user asked for (that's what rankScore is for).
+  const checks = [
     lead.emails.length > 0,
     lead.phones.length > 0,
     !!lead.address?.country,
@@ -60,6 +62,7 @@ function computeCompletenessScore(lead: LeadRecord, desiredFields: string[]): nu
     !!(lead.osint as Record<string, unknown> | undefined)?.whois,
     !!lead.companyDomain,
     lead.sources.length > 1,
-  ].filter(Boolean).length;
-  return Math.round((present / total) * 100);
+  ];
+  const present = checks.filter(Boolean).length;
+  return Math.round((present / checks.length) * 100);
 }
