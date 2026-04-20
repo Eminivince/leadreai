@@ -79,7 +79,12 @@ export async function callLlmOnce(req: LlmRequest): Promise<LlmResponse> {
     };
     if (req.max_tokens !== undefined) body['max_tokens'] = req.max_tokens;
     if (req.temperature !== undefined) body['temperature'] = req.temperature;
-    if (req.response_format !== undefined) body['response_format'] = req.response_format;
+    // response_format: OpenRouter supports it. Local LiteLLM backends (llama.cpp, vLLM,
+    // Ollama) often reject unknown fields with 400. Skip it when USE_LOCAL_LLM is on —
+    // the model instruction in the prompt still asks for JSON-only output.
+    if (req.response_format !== undefined && ep.provider === 'openrouter') {
+      body['response_format'] = req.response_format;
+    }
 
     const res = await fetch(ep.url, {
       method: 'POST',
@@ -89,7 +94,11 @@ export async function callLlmOnce(req: LlmRequest): Promise<LlmResponse> {
     });
 
     if (!res.ok) {
-      logger.warn('[llmClient] non-200', { provider: ep.provider, status: res.status, model });
+      const errBody = await res.text().catch(() => '');
+      logger.warn('[llmClient] non-200', {
+        provider: ep.provider, status: res.status, model,
+        errBody: errBody.slice(0, 500),
+      });
       return { ok: false, status: res.status, content: '' };
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
