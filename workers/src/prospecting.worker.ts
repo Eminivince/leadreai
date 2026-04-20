@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 import { logger } from './utils/logger.js';
 import { env } from './config/env.js';
 import { fireWebhook } from './services/webhook.js';
-import { runIntentParser } from './pipeline/intentParser.js';
+import { runIntentParser, jobActivity } from './pipeline/intentParser.js';
 
 async function connectDB(): Promise<void> {
   await mongoose.connect(env.MONGODB_URI, { dbName: env.MONGODB_DB_NAME });
@@ -40,6 +40,11 @@ export async function createProspectingWorker(connection: Redis, publisher: Redi
             'error.stage': 'pipeline',
           });
         }
+
+        await jobActivity(jobId, publisher, 'error', `Pipeline failed: ${message}`, {
+          stage: 'pipeline',
+          stackPreview: err instanceof Error ? err.stack?.slice(0, 800) : undefined,
+        }).catch(() => {});
 
         await publisher.publish(
           `job:progress:${jobId}`,

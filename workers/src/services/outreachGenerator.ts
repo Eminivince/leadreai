@@ -1,5 +1,6 @@
 import { logger } from '../utils/logger.js';
 import { env } from '../config/env.js';
+import { callLlmOnce, isLlmConfigured } from '../utils/llmClient.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -149,61 +150,27 @@ export async function generateOutreachDraft(
   campaign: CampaignForOutreach,
   snippets: string[],
 ): Promise<OutreachDraftResult> {
-  if (!env.OPENROUTER_API_KEY) {
-    throw new Error('OPENROUTER_API_KEY is not set — cannot generate outreach draft');
+  if (!isLlmConfigured()) {
+    throw new Error('LLM is not configured — set USE_LOCAL_LLM or OPENROUTER_API_KEY');
   }
 
   const systemPrompt = buildSystemPrompt(workspace, campaign);
   const userMessage = buildUserMessage(lead, snippets);
 
-  const controller = new AbortController();
-  const t = setTimeout(() => controller.abort(), 30_000);
+  const llmResult = await callLlmOnce({
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage },
+    ],
+    max_tokens: 1000,
+    timeoutMs: 30_000,
+  });
 
-  let res: Response;
-  try {
-    res = await fetch(`${env.OPENROUTER_BASE_URL}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://leadreai.app',
-        'X-Title': 'LeadreAI',
-      },
-      body: JSON.stringify({
-        model: env.OPENROUTER_MODEL,
-        max_tokens: 1000,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userMessage },
-        ],
-      }),
-      signal: controller.signal,
-    });
-  } catch (err) {
-    clearTimeout(t);
-    throw new Error(
-      `OpenRouter fetch failed: ${err instanceof Error ? err.message : String(err)}`
-    );
+  if (!llmResult.ok) {
+    throw new Error(`LLM returned non-OK status ${llmResult.status}`);
   }
 
-  clearTimeout(t);
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`OpenRouter returned non-OK status ${res.status}: ${body.slice(0, 200)}`);
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let json: any;
-  try {
-    json = await res.json();
-  } catch (err) {
-    throw new Error(
-      `Failed to parse OpenRouter JSON response: ${err instanceof Error ? err.message : String(err)}`
-    );
-  }
-
-  const content: string = json?.choices?.[0]?.message?.content ?? '';
+  const content = llmResult.content;
 
   // Attempt to parse JSON — strip markdown fences if present
   let parsed: unknown;

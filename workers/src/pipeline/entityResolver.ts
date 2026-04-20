@@ -1,5 +1,5 @@
 import { logger } from '../utils/logger.js';
-import { env } from '../config/env.js';
+import { callLlmOnce, isLlmConfigured } from '../utils/llmClient.js';
 import { runSerpSearch } from './serpScraper.js';
 import type { ParsedIntent } from '@leadreai/shared';
 
@@ -20,8 +20,8 @@ async function extractEntityNamesWithAI(
   snippets: string[],
   targetCount: number,
 ): Promise<string[]> {
-  if (!env.OPENROUTER_API_KEY || snippets.length === 0) {
-    logger.warn('[entityResolver] No API key or snippets — skipping AI extraction');
+  if (!isLlmConfigured() || snippets.length === 0) {
+    logger.warn('[entityResolver] No LLM or snippets — skipping AI extraction');
     return [];
   }
 
@@ -29,44 +29,23 @@ async function extractEntityNamesWithAI(
   const askFor = Math.min(targetCount * 2, 20);
   const userMessage = `Search query: "${searchQuery}"\n\nSearch result snippets:\n${snippets.slice(0, 15).map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\nExtract the top ${askFor} company/organization names from these results.`;
 
-  let res: Response;
-  try {
-    res = await fetch(`${env.OPENROUTER_BASE_URL}/chat/completions`, {
-      method: 'POST',
-      signal: AbortSignal.timeout(15_000),
-      headers: {
-        Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://leadreai.app',
-        'X-Title': 'LeadreAI',
-      },
-      body: JSON.stringify({
-        model: env.OPENROUTER_MODEL,
-        max_tokens: 512,
-        messages: [
-          { role: 'system', content: ENTITY_EXTRACT_PROMPT },
-          { role: 'user', content: userMessage },
-        ],
-      }),
-    });
-  } catch (err) {
-    logger.warn('[entityResolver] OpenRouter fetch failed', { err });
+  const result = await callLlmOnce({
+    messages: [
+      { role: 'system', content: ENTITY_EXTRACT_PROMPT },
+      { role: 'user', content: userMessage },
+    ],
+    max_tokens: 512,
+    timeoutMs: 15_000,
+  }).catch((err) => {
+    logger.warn('[entityResolver] LLM fetch failed', { err: err instanceof Error ? err.message : String(err) });
+    return null;
+  });
+
+  if (!result || !result.ok || !result.content) {
+    logger.warn('[entityResolver] LLM returned empty/non-OK', { status: result?.status });
     return [];
   }
-
-  if (!res.ok) {
-    logger.warn('[entityResolver] OpenRouter non-OK response', { status: res.status });
-    return [];
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const json: any = await res.json().catch(() => null);
-  const content: string = json?.choices?.[0]?.message?.content ?? '';
-
-  if (!content) {
-    logger.warn('[entityResolver] OpenRouter returned empty content', { status: res.status });
-    return [];
-  }
+  const content = result.content;
 
   const match = content.match(/\[[\s\S]*\]/);
   if (!match) return [];

@@ -1,5 +1,5 @@
 import { logger } from '../utils/logger.js';
-import { env } from '../config/env.js';
+import { callLlm, isLlmConfigured } from '../utils/llmClient.js';
 import type { ContactCandidate } from './aiContactExtractor.js';
 import { fetchUrl } from './tools/fetchUrl.js';
 import { searchWeb } from './tools/searchWeb.js';
@@ -77,32 +77,13 @@ What is your first action?`;
 }
 
 async function callLLM(history: HistoryMsg[]): Promise<string> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
-  try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://leadreai.app',
-      },
-      body: JSON.stringify({
-        model: env.OPENROUTER_MODEL,
-        messages: history,
-        max_tokens: 800,
-        temperature: 0,
-        response_format: { type: 'json_object' },
-      }),
-      signal: controller.signal,
-    });
-    if (!res.ok) throw new Error(`LLM status ${res.status}`);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const json = await res.json() as any;
-    return json?.choices?.[0]?.message?.content ?? '{}';
-  } finally {
-    clearTimeout(timeout);
-  }
+  return callLlm({
+    messages: history,
+    max_tokens: 800,
+    temperature: 0,
+    response_format: { type: 'json_object' },
+    timeoutMs: AI_TIMEOUT_MS,
+  });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -136,8 +117,8 @@ async function executeTool(tool: string, args: any, domain: string): Promise<str
 }
 
 export async function researchDomain(input: AgentInput): Promise<AgentResult> {
-  if (!env.OPENROUTER_API_KEY) {
-    return { additionalContacts: [], toolCallsUsed: 0, stopReason: 'error', transcript: 'no OPENROUTER_API_KEY' };
+  if (!isLlmConfigured()) {
+    return { additionalContacts: [], toolCallsUsed: 0, stopReason: 'error', transcript: 'LLM not configured' };
   }
 
   const startedAt = Date.now();

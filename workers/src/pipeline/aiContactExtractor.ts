@@ -1,5 +1,5 @@
 import { logger } from '../utils/logger.js';
-import { env } from '../config/env.js';
+import { callLlm, isLlmConfigured } from '../utils/llmClient.js';
 
 export interface ContactCandidate {
   name?: string;
@@ -77,7 +77,7 @@ function fallbackFromHints(input: ExtractInput): ContactCandidate[] {
 }
 
 export async function extractContacts(input: ExtractInput): Promise<ContactCandidate[]> {
-  if (!env.OPENROUTER_API_KEY) {
+  if (!isLlmConfigured()) {
     return fallbackFromHints(input);
   }
   if (!input.bodyText.trim() && input.rawEmails.length === 0 && input.rawPhones.length === 0) {
@@ -85,38 +85,18 @@ export async function extractContacts(input: ExtractInput): Promise<ContactCandi
   }
 
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
+    const content = await callLlm({
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: buildUserPrompt(input) },
+      ],
+      max_tokens: 1200,
+      temperature: 0,
+      response_format: { type: 'json_object' },
+      timeoutMs: AI_TIMEOUT_MS,
+    });
 
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://leadreai.app',
-      },
-      body: JSON.stringify({
-        model: env.OPENROUTER_MODEL,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: buildUserPrompt(input) },
-        ],
-        max_tokens: 1200,
-        temperature: 0,
-        response_format: { type: 'json_object' },
-      }),
-      signal: controller.signal,
-    }).finally(() => clearTimeout(timeout));
-
-    if (!res.ok) {
-      logger.warn('[aiContactExtractor] OpenRouter non-200', { status: res.status, domain: input.domain });
-      return fallbackFromHints(input);
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const json = await res.json() as any;
-    const content: string = json?.choices?.[0]?.message?.content ?? '{}';
-    const parsed = JSON.parse(content) as { contacts?: ContactCandidate[] };
+    const parsed = JSON.parse(content || '{}') as { contacts?: ContactCandidate[] };
     const contacts = Array.isArray(parsed.contacts) ? parsed.contacts : [];
 
     const cleaned = contacts

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { Redis } from 'ioredis';
 import { logger } from '../utils/logger.js';
-import { env } from '../config/env.js';
+import { callLlmOnce, isLlmConfigured } from '../utils/llmClient.js';
 import type { ParsedIntent } from '@leadreai/shared';
 
 // ---------------------------------------------------------------------------
@@ -90,57 +90,29 @@ async function qualifyBatch(rawQuery: string, parsedIntent: ParsedIntent | null 
     qualificationReason: 'Defaulted to qualified (AI qualification skipped).',
   }));
 
-  if (!env.OPENROUTER_API_KEY) {
+  if (!isLlmConfigured()) {
     return defaultQualified;
   }
 
-  let res: Response;
-  try {
-    res = await fetch(`${env.OPENROUTER_BASE_URL}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://leadreai.app',
-        'X-Title': 'LeadreAI',
-      },
-      body: JSON.stringify({
-        model: env.OPENROUTER_MODEL,
-        max_tokens: 1500,
-        messages: [
-          { role: 'system', content: QUALIFIER_SYSTEM_PROMPT },
-          { role: 'user', content: buildUserMessage(rawQuery, parsedIntent, leads) },
-        ],
-      }),
-    });
-  } catch (err) {
-    logger.warn('[leadQualifier] OpenRouter fetch failed — defaulting batch to qualified', {
+  const result = await callLlmOnce({
+    messages: [
+      { role: 'system', content: QUALIFIER_SYSTEM_PROMPT },
+      { role: 'user', content: buildUserMessage(rawQuery, parsedIntent, leads) },
+    ],
+    max_tokens: 1500,
+  }).catch((err) => {
+    logger.warn('[leadQualifier] LLM fetch failed — defaulting batch to qualified', {
       err: err instanceof Error ? err.message : String(err),
     });
+    return null;
+  });
+
+  if (!result || !result.ok) {
+    logger.warn('[leadQualifier] LLM non-OK — defaulting batch to qualified', { status: result?.status });
     return defaultQualified;
   }
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    logger.warn('[leadQualifier] OpenRouter returned non-OK status — defaulting batch to qualified', {
-      status: res.status,
-      body,
-    });
-    return defaultQualified;
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let json: any;
-  try {
-    json = await res.json();
-  } catch (err) {
-    logger.warn('[leadQualifier] Failed to parse OpenRouter JSON response — defaulting batch to qualified', {
-      err: err instanceof Error ? err.message : String(err),
-    });
-    return defaultQualified;
-  }
-
-  const content: string = json?.choices?.[0]?.message?.content ?? '';
+  const content = result.content;
   let parsed: unknown;
   try {
     parsed = JSON.parse(content);
@@ -224,8 +196,8 @@ export async function runLeadQualifier(
   const rawQuery: string = jobDoc?.rawQuery ?? jobDoc?.parsedIntent?.rawQuery ?? '';
   const parsedIntent = jobDoc?.parsedIntent ?? {};
 
-  if (!env.OPENROUTER_API_KEY) {
-    logger.warn('[leadQualifier] OPENROUTER_API_KEY not set — skipping AI qualification, marking all leads qualified', { jobId });
+  if (!isLlmConfigured()) {
+    logger.warn('[leadQualifier] LLM not configured — skipping AI qualification, marking all leads qualified', { jobId });
   }
 
   // 3. Batch leads into groups of 5

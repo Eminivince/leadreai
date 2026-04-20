@@ -1,12 +1,12 @@
 import { Redis } from 'ioredis';
 import { logger } from '../utils/logger.js';
-import { env } from '../config/env.js';
 import type { ParsedIntent } from '@leadreai/shared';
 import type { LeadRecord } from './deduplicator.js';
 import {
   TOOL_REGISTRY, executeTool, renderToolMenu,
   type ToolContext,
 } from './tools/index.js';
+import { callLlm, isLlmConfigured } from '../utils/llmClient.js';
 
 export interface JobAgentInput {
   jobId: string;
@@ -80,54 +80,14 @@ function buildInitialUserPrompt(intent: ParsedIntent): string {
   return parts.join('\n');
 }
 
-async function callLLMOnce(history: HistoryMsg[]): Promise<{ ok: boolean; status: number; content: string }> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), LLM_TIMEOUT_MS);
-  try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://leadreai.app',
-      },
-      body: JSON.stringify({
-        model: env.OPENROUTER_MODEL,
-        messages: history,
-        max_tokens: 1200,
-        temperature: 0,
-        response_format: { type: 'json_object' },
-      }),
-      signal: controller.signal,
-    });
-    if (!res.ok) return { ok: false, status: res.status, content: '' };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const json = await res.json() as any;
-    return { ok: true, status: res.status, content: json?.choices?.[0]?.message?.content ?? '{}' };
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
 async function callLLM(history: HistoryMsg[]): Promise<string> {
-  // nvidia:free and other free-tier OpenRouter models rate-limit aggressively.
-  // Retry on 429 with exponential backoff; surface other errors immediately.
-  const backoffs = [3_000, 8_000, 18_000]; // up to 3 retries, ~29s total
-  for (let attempt = 0; attempt <= backoffs.length; attempt++) {
-    const result = await callLLMOnce(history).catch((err) => {
-      logger.warn('[jobAgent] LLM fetch threw', { attempt, err: err instanceof Error ? err.message : String(err) });
-      return { ok: false, status: 0, content: '' };
-    });
-    if (result.ok) return result.content;
-    if (result.status === 429 && attempt < backoffs.length) {
-      const waitMs = backoffs[attempt]!;
-      logger.info('[jobAgent] 429 rate-limited — backing off', { attempt: attempt + 1, waitMs });
-      await new Promise((resolve) => setTimeout(resolve, waitMs));
-      continue;
-    }
-    throw new Error(`LLM status ${result.status}`);
-  }
-  throw new Error('LLM retry budget exhausted');
+  return callLlm({
+    messages: history,
+    max_tokens: 1200,
+    temperature: 0,
+    response_format: { type: 'json_object' },
+    timeoutMs: LLM_TIMEOUT_MS,
+  });
 }
 
 async function runCritic(history: HistoryMsg[], ctx: ToolContext): Promise<string | null> {
@@ -167,9 +127,9 @@ Decide:
 export async function runJobAgent(input: JobAgentInput): Promise<JobAgentResult> {
   const { jobId, workspaceId, parsedIntent, publisher } = input;
 
-  if (!env.OPENROUTER_API_KEY) {
-    logger.error('[jobAgent] OPENROUTER_API_KEY missing — cannot run');
-    return { leads: [], stepsUsed: 0, stopReason: 'error', transcript: ['missing API key'] };
+  if (!isLlmConfigured()) {
+    logger.error('[jobAgent] LLM not configured — set USE_LOCAL_LLM or OPENROUTER_API_KEY');
+    return { leads: [], stepsUsed: 0, stopReason: 'error', transcript: ['LLM not configured'] };
   }
 
   const ctx: ToolContext = {

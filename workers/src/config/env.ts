@@ -18,6 +18,12 @@ const envSchema = z.object({
   OPENROUTER_API_KEY: z.string().optional(),
   OPENROUTER_MODEL: z.string().default('nvidia/nemotron-3-super-120b-a12b:free'),
   OPENROUTER_BASE_URL: z.string().default('https://openrouter.ai/api/v1'),
+  // Local LiteLLM proxy — OpenAI-compatible endpoint on the user's machine.
+  // When USE_LOCAL_LLM=true, all LLM calls route here instead of OpenRouter.
+  USE_LOCAL_LLM: z.coerce.boolean().default(false),
+  LOCAL_LLM_BASE_URL: z.string().default('http://localhost:4400'),
+  LOCAL_LLM_API_KEY: z.string().optional(),
+  LOCAL_LLM_MODEL: z.string().default('qwen3.5'),
   OPENCORPORATES_API_KEY: z.string().optional(),
   REACHER_URL: z.string().url().optional(),
   EMAIL_VERIFIER_PROVIDER: z.enum(['mx_only', 'reacher']).default('mx_only'),

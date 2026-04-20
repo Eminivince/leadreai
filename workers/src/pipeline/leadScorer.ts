@@ -1,5 +1,5 @@
 import { logger } from '../utils/logger.js';
-import { env } from '../config/env.js';
+import { callLlm, isLlmConfigured } from '../utils/llmClient.js';
 import type { ParsedIntent } from '@leadreai/shared';
 import type { LeadRecord } from './deduplicator.js';
 
@@ -67,42 +67,22 @@ export async function scoreLeadRelevance(
   lead: LeadRecord,
   intent: ParsedIntent,
 ): Promise<LeadScore> {
-  if (!env.OPENROUTER_API_KEY) {
+  if (!isLlmConfigured()) {
     return heuristicScore(lead);
   }
 
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
+    const content = await callLlm({
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: buildUserPrompt(lead, intent) },
+      ],
+      max_tokens: 120,
+      temperature: 0,
+      timeoutMs: AI_TIMEOUT_MS,
+    });
 
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://leadreai.app',
-      },
-      body: JSON.stringify({
-        model: env.OPENROUTER_MODEL,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: buildUserPrompt(lead, intent) },
-        ],
-        max_tokens: 120,
-        temperature: 0,
-      }),
-      signal: controller.signal,
-    }).finally(() => clearTimeout(timeout));
-
-    if (!res.ok) {
-      logger.warn('[leadScorer] OpenRouter non-200', { status: res.status, domain: lead.companyDomain });
-      return heuristicScore(lead);
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const json = await res.json() as any;
-    const content: string = json?.choices?.[0]?.message?.content ?? '';
-    const parsed = JSON.parse(content) as { score?: number; reason?: string };
+    const parsed = JSON.parse(content || '{}') as { score?: number; reason?: string };
     const score = Math.max(0, Math.min(1, Number(parsed.score ?? 0)));
     const reason = String(parsed.reason ?? 'no reason given');
 
