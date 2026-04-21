@@ -19,6 +19,12 @@ const envSchema = z.object({
   MONGODB_URI: z.string().default('mongodb://localhost:27017'),
   MONGODB_DB_NAME: z.string().default('leadreai'),
   SERPAPI_KEY: z.string().optional(),
+  BRAVE_SEARCH_API_KEY: z.string().optional(),
+  SERPER_API_KEY: z.string().optional(),
+  // Comma-separated provider priority list. First configured + non-exhausted wins.
+  SEARCH_PROVIDER_ORDER: z.string().default('brave,serper,serpapi'),
+  SEARCH_CACHE_ENABLED: booleanFlag.default(true),
+  SEARCH_CACHE_TTL_SECONDS: z.coerce.number().int().min(60).default(86400), // 24h
   PLAYWRIGHT_HEADLESS: booleanFlag.default(true),
   PLAYWRIGHT_TIMEOUT_MS: z.coerce.number().default(30000),
   PLAYWRIGHT_CONCURRENCY: z.coerce.number().default(3),
