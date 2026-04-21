@@ -54,8 +54,8 @@ function clampToFiniteNumber(value: unknown, fallback: number, min: number, max:
 
 export const writeLeadTool: ToolDef = {
   name: 'write_lead',
-  description: 'Commit a lead to the job results. Deduplicates on companyDomain + primary email within this job. Call this ONLY for leads you are confident in (ideally after score_lead returns isVerified:true).',
-  parametersSchema: '{"companyName": string, "companyDomain": string, "website"?: string, "emails": [{address,type?,confidence,name?,title?,department?,source?}], "phones": [{raw,normalized?,source?}], "topContact"?: {fullName,title?,seniority?}, "rankScore"?: number, "sources"?: [{url,type?}], "reasoning"?: string}',
+  description: 'Commit a lead to the job results. Deduplicates on companyDomain + primary email within this job. Call this ONLY for leads you are confident in (ideally after score_lead returns isVerified:true). Pass `facts` to fill in the query-specific columns the user asked for (see outputSchema in the initial prompt).',
+  parametersSchema: '{"companyName": string, "companyDomain": string, "website"?: string, "emails": [{address,type?,confidence,name?,title?,department?,source?}], "phones": [{raw,normalized?,source?}], "topContact"?: {fullName,title?,seniority?}, "rankScore"?: number, "sources"?: [{url,type?}], "facts"?: {[key]: {value, unit?, sourceUrl?, confidence?, raw?}}, "reasoning"?: string}',
   handler: async (args, ctx) => {
     const companyName = String(args?.companyName ?? '').trim();
     const companyDomain = String(args?.companyDomain ?? '').trim().toLowerCase().replace(/^www\./, '');
@@ -96,6 +96,54 @@ export const writeLeadTool: ToolDef = {
       source: 'agent_extracted',
     })).filter((p) => p.raw);
 
+    // Facts: query-specific payload fields. Only accept keys declared in the
+    // job's outputSchema — silently drop anything else so agent hallucinations
+    // don't leak into Mongo. Each value is clamped: `value` is preserved,
+    // `confidence` forced to [0,1] finite, `sourceUrl` truncated to a sane size.
+    const schemaKeys = new Set((ctx.parsedIntent.outputSchema ?? []).map((c) => c.key));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rawFacts = (args?.facts && typeof args.facts === 'object') ? args.facts as Record<string, any> : {};
+    const facts: Record<string, {
+      value: string | number | boolean | string[] | null;
+      unit?: string;
+      sourceUrl?: string;
+      confidence?: number;
+      raw?: string;
+    }> = {};
+    for (const [k, v] of Object.entries(rawFacts)) {
+      if (!schemaKeys.has(k)) {
+        logger.warn('[writeLead] fact key not in outputSchema — dropping', { companyName, key: k });
+        continue;
+      }
+      if (!v || typeof v !== 'object') continue;
+      const value = v.value !== undefined ? v.value : null;
+      const entry: {
+        value: string | number | boolean | string[] | null;
+        unit?: string;
+        sourceUrl?: string;
+        confidence?: number;
+        raw?: string;
+      } = { value };
+      if (typeof v.unit === 'string') entry.unit = v.unit;
+      if (typeof v.sourceUrl === 'string') entry.sourceUrl = v.sourceUrl.slice(0, 500);
+      if (v.confidence !== undefined) {
+        const c = clampToFiniteNumber(v.confidence, 0.6, 0, 1);
+        entry.confidence = c;
+      }
+      if (typeof v.raw === 'string') entry.raw = v.raw.slice(0, 500);
+      facts[k] = entry;
+    }
+
+    // schemaFulfillmentPct = (# of required schema keys present in facts)
+    //                        / (# of required schema keys), or 1 if no required.
+    const requiredKeys = (ctx.parsedIntent.outputSchema ?? []).filter((c) => c.required).map((c) => c.key);
+    const schemaFulfillmentPct = requiredKeys.length === 0
+      ? 1
+      : requiredKeys.filter((k) => {
+          const f = facts[k];
+          return f !== undefined && f.value !== null && f.value !== '' && !(Array.isArray(f.value) && f.value.length === 0);
+        }).length / requiredKeys.length;
+
     const lead: LeadRecord = {
       workspaceId: ctx.workspaceId,
       jobId: ctx.jobId,
@@ -112,6 +160,8 @@ export const writeLeadTool: ToolDef = {
       phones,
       socialProfiles: undefined,
       osint: { viaAgent: true } as Record<string, unknown>,
+      ...(Object.keys(facts).length > 0 && { facts }),
+      schemaFulfillmentPct,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       sources: Array.isArray(args?.sources) ? args.sources.map((s: any) => ({
         url: String(s.url ?? ''),

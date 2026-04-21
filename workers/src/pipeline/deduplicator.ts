@@ -43,6 +43,16 @@ export interface LeadRecord {
   isDuplicate: boolean;
   mergedIntoId?: string;
   tags: string[];
+  /** Query-specific fact values keyed by outputSchema column key. */
+  facts?: Record<string, {
+    value: string | number | boolean | string[] | null;
+    unit?: string;
+    sourceUrl?: string;
+    confidence?: number;
+    raw?: string;
+  }>;
+  /** Fraction 0-1 of REQUIRED schema columns that have a value. */
+  schemaFulfillmentPct?: number;
 }
 
 export function deduplicateLeads(leads: LeadRecord[], threshold = 0.25): LeadRecord[] {

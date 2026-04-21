@@ -25,8 +25,27 @@ Output EXACTLY this JSON schema (all keys required; use null only where explicit
   "keywords": "<string[]> — relevant search terms extracted from the query",
   "confidenceScore": "<number 0-1> — decimal confidence",
   "queryType": "<'named_entity_list' | 'demographic_filter' | 'contact_lookup'>",
-  "namedEntities": "<string[] | null> — specific company/org names ONLY if query mentions them (e.g. ['Aluko & Oyebode']); null otherwise"
+  "namedEntities": "<string[] | null> — specific company/org names ONLY if query mentions them (e.g. ['Aluko & Oyebode']); null otherwise",
+  "outputSchema": "<array> — extra columns the user wants beyond standard contact fields. One entry per column. Empty [] if the query only asks for standard fields (name/email/phone/website)."
 }
+
+outputSchema entries: each object has {key, label, type, description, required}.
+- key: lowercase_snake_case slug (e.g. 'amount_raised', 'funding_round', 'raised_on', 'hire_count')
+- label: human header (e.g. 'Amount Raised', 'Funding Round')
+- type: one of 'text','number','currency','percentage','date','url','email','phone','tags'. PICK FROM THIS LIST ONLY.
+- description: one-line meaning (optional, <200 chars)
+- required: true if the user explicitly names this column; false if you're inferring it would be useful
+Examples:
+  "top 20 fintechs with funding info"
+    → [{"key":"amount_raised","label":"Amount Raised","type":"currency","required":true},
+       {"key":"funding_round","label":"Funding Round","type":"text","required":true},
+       {"key":"raised_on","label":"Date Raised","type":"date","required":false}]
+  "companies hiring engineers in Lagos"
+    → [{"key":"open_roles","label":"Open Roles","type":"tags","required":true},
+       {"key":"hire_count","label":"Hires Announced","type":"number","required":false}]
+  "list 50 Nigerian fintechs, show company email and phone"
+    → [] (email + phone are standard contact fields — use desiredFields, NOT outputSchema)
+  Rule: if a requested column is already covered by standard contact fields (businessEmail, officePhone, mobilePhone, address, website, linkedin, whois, techStack), do NOT duplicate it in outputSchema — add it to desiredFields instead.
 
 queryType classification:
 - 'named_entity_list': user wants top-N or specific named orgs (e.g. 'top 10 law firms in Nigeria', 'biggest banks in Ghana')
@@ -40,6 +59,7 @@ Rules:
 - For named_entity_list with 'top N': set targetCount=N. If no specific names, namedEntities is null.
 - For contact_lookup with explicit company names: list them in namedEntities.
 - For demographic_filter: namedEntities is ALWAYS null.
+- outputSchema is ALWAYS an array (possibly empty []), never null. Keys must be unique.
 
 REMINDER: Your entire response must be a single valid JSON object. No prose before, no prose after. Start with "{". End with "}".`;
 

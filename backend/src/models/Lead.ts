@@ -84,6 +84,23 @@ export interface ILead extends mongoose.Document {
     syncStatus: 'synced' | 'error' | 'pending';
     errorMessage?: string;
   }>;
+  /**
+   * Query-specific payload fields. Keys match the job's `parsedIntent.outputSchema[i].key`.
+   * Empty/undefined when the query requested only standard contact fields.
+   *
+   * Each value is { value, unit?, sourceUrl?, confidence?, raw? }; shape
+   * mirrors FactValue in shared. Using Mixed because the value types vary
+   * by the column's declared type (currency, date, tags, etc.).
+   */
+  facts?: Record<string, {
+    value: string | number | boolean | string[] | null;
+    unit?: string;
+    sourceUrl?: string;
+    confidence?: number;
+    raw?: string;
+  }>;
+  /** Rollup: fraction (0-1) of the job's required schema columns that have a value. */
+  schemaFulfillmentPct?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -176,6 +193,10 @@ const leadSchema = new Schema<ILead>(
       ],
       default: [],
     },
+    // Query-specific column values. Keys match job.parsedIntent.outputSchema[i].key.
+    // Mixed because value types are determined per-column by the schema's `type`.
+    facts: { type: Schema.Types.Mixed, default: undefined },
+    schemaFulfillmentPct: { type: Number, min: 0, max: 1 },
   },
   { timestamps: true }
 );

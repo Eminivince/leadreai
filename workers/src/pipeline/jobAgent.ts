@@ -119,9 +119,22 @@ function buildInitialUserPrompt(intent: ParsedIntent, rawQuery?: string): string
   if (intent.namedEntities?.length) {
     parts.push(`Named entities: ${intent.namedEntities.join(', ')}`);
   }
+
+  // Query-specific output columns (e.g. amount_raised, funding_round) — the
+  // agent is expected to fill these in via write_lead's `facts` parameter.
+  const schema = intent.outputSchema ?? [];
+  if (schema.length > 0) {
+    parts.push(``, `OUTPUT SCHEMA — extra columns the user wants beyond standard contact fields. Fill these in on write_lead via the \`facts\` parameter, keyed by \`key\`. Each fact should include {value, unit? (e.g. "USD"), sourceUrl, confidence (0-1), raw? (original snippet)}. Only include a fact when you can justify it from tool output. Required columns must be filled if possible; non-required are nice-to-haves.`);
+    for (const col of schema) {
+      const req = col.required ? 'REQUIRED' : 'optional';
+      const desc = col.description ? ` — ${col.description}` : '';
+      parts.push(`  - ${col.key} (${col.type}, ${req}): "${col.label}"${desc}`);
+    }
+  }
+
   parts.push(
     ``,
-    `Before your first tool call, briefly re-read the original query in your "thought" field and note any exclusions, quality filters, or personas that aren't in the parsed intent. Then act.`,
+    `Before your first tool call, briefly re-read the original query in your "thought" field and note any exclusions, quality filters, personas, or output columns that aren't obvious from the parsed fields. Then act.`,
   );
   return parts.join('\n');
 }

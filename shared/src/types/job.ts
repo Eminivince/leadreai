@@ -14,6 +14,11 @@ export interface JobGeography {
   city?: string | null;
 }
 
+// FactType / OutputSchemaColumn / FactValue are defined in
+// ../schemas/zod/job.schemas.ts (as Zod-inferred types, the source of truth
+// for runtime validation). Re-export here for convenience; don't re-declare.
+export type { FactType, OutputSchemaColumn, FactValue } from '../schemas/zod/job.schemas.js';
+
 export interface ParsedIntent {
   /** Null when the query names a specific company without industry context; enrichment fills it in later. */
   industry?: string | null;
@@ -28,6 +33,8 @@ export interface ParsedIntent {
   queryType: 'named_entity_list' | 'demographic_filter' | 'contact_lookup';
   /** For named_entity_list: specific company/org names mentioned or to be resolved. null = resolve via search. */
   namedEntities: string[] | null;
+  /** Extra columns the user asked for. Empty array for queries that only ask for the standard contact fields. */
+  outputSchema?: import('../schemas/zod/job.schemas.js').OutputSchemaColumn[];
 }
 
 export interface JobProgress {
