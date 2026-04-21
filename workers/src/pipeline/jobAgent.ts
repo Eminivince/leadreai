@@ -13,6 +13,10 @@ export interface JobAgentInput {
   jobId: string;
   workspaceId: string;
   parsedIntent: ParsedIntent;
+  /** Raw natural-language query as typed by the user. Passed verbatim to the
+   * agent so constraint phrases ("outside blue-chip names", "not B2C", etc.)
+   * that the parser discarded still influence decisions. */
+  rawQuery?: string;
   publisher: Redis;
 }
 
@@ -92,19 +96,31 @@ You must stop when either:
 Return ONLY JSON. No markdown fences.`;
 }
 
-function buildInitialUserPrompt(intent: ParsedIntent): string {
-  const parts = [
+function buildInitialUserPrompt(intent: ParsedIntent, rawQuery?: string): string {
+  const parts: string[] = [];
+  if (rawQuery) {
+    parts.push(
+      `USER'S ORIGINAL QUERY (verbatim — honor any constraints it mentions, especially exclusions like "outside X", "not Y", "excluding Z"):`,
+      `  ${rawQuery}`,
+      ``,
+      `Parsed intent (derived fields — use these as structured hints, but if they conflict with the original query, the query wins):`,
+    );
+  }
+  parts.push(
     `Query type: ${intent.queryType}`,
     `Target count: ${intent.targetCount}`,
     `Industry: ${intent.industry}`,
     `Geography: ${JSON.stringify(intent.geography)}`,
     `Desired fields: ${intent.desiredFields.join(', ') || '(none specified → any business contact data)'}`,
     `Keywords: ${intent.keywords?.join(', ') || '(none)'}`,
-  ];
+  );
   if (intent.namedEntities?.length) {
     parts.push(`Named entities: ${intent.namedEntities.join(', ')}`);
   }
-  parts.push(`\nWhat is your first action? Plan briefly in the "thought" field, then call one tool.`);
+  parts.push(
+    ``,
+    `Before your first tool call, briefly re-read the original query in your "thought" field and note any exclusions, quality filters, or personas that aren't in the parsed intent. Then act.`,
+  );
   return parts.join('\n');
 }
 
@@ -153,7 +169,7 @@ Decide:
 }
 
 export async function runJobAgent(input: JobAgentInput): Promise<JobAgentResult> {
-  const { jobId, workspaceId, parsedIntent, publisher } = input;
+  const { jobId, workspaceId, parsedIntent, rawQuery, publisher } = input;
 
   if (!isLlmConfigured()) {
     logger.error('[jobAgent] LLM not configured — set USE_LOCAL_LLM or OPENROUTER_API_KEY');
@@ -180,7 +196,7 @@ export async function runJobAgent(input: JobAgentInput): Promise<JobAgentResult>
 
   const history: HistoryMsg[] = [
     { role: 'system', content: buildSystemPrompt(maxSteps, budgetMs) },
-    { role: 'user', content: buildInitialUserPrompt(parsedIntent) },
+    { role: 'user', content: buildInitialUserPrompt(parsedIntent, rawQuery) },
   ];
 
   for (let step = 0; step < maxSteps; step++) {

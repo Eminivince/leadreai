@@ -111,6 +111,7 @@ export async function runIntentParser(
   if (!jobDoc) throw new Error(`Job ${jobId} not found`);
   const parsedIntent = jobDoc.parsedIntent as ParsedIntent;
   if (!parsedIntent) throw new Error(`Job ${jobId} has no parsedIntent`);
+  const rawQuery = typeof jobDoc.rawQuery === 'string' ? jobDoc.rawQuery : undefined;
 
   logger.info('[Pipeline] parsedIntent loaded', {
     jobId, queryType: parsedIntent.queryType,
@@ -121,7 +122,7 @@ export async function runIntentParser(
 
   // ── AGENT OWNS THE PIPELINE ───────────────────────────────────────────
   const agentResult = await runJobAgent({
-    jobId, workspaceId, parsedIntent, publisher,
+    jobId, workspaceId, parsedIntent, rawQuery, publisher,
   });
 
   logger.info('[Pipeline] JobAgent finished', {

@@ -79,11 +79,36 @@ export async function enrichContacts(job: Job<ContactEnrichmentPayload>): Promis
       };
     });
 
-    const result = await Contact.bulkWrite(ops, { ordered: false });
+    // Tolerate E11000 duplicates: same email can legitimately appear on multiple
+    // leads (e.g. founder at CoA is also advisor at CoB). With `ordered:false`
+    // MongoDB continues the batch past a dupe, but the mongoose driver still
+    // throws afterward — so we catch the error and extract the partial result
+    // to keep the successful writes. Other error codes we re-throw.
+    let upsertedCount = 0;
+    let matchedCount = 0;
+    try {
+      const result = await Contact.bulkWrite(ops, { ordered: false });
+      upsertedCount = result.upsertedCount;
+      matchedCount = result.matchedCount;
+    } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const e = err as any;
+      const writeErrors: Array<{ code?: number }> = e?.writeErrors ?? e?.result?.result?.writeErrors ?? [];
+      const allDupes = writeErrors.length > 0 && writeErrors.every((w) => w.code === 11000);
+      if (allDupes) {
+        upsertedCount = e?.result?.result?.nUpserted ?? e?.insertedCount ?? 0;
+        matchedCount = e?.result?.result?.nMatched ?? 0;
+        logger.info('contactEnricher: tolerated duplicate key errors', {
+          leadId, dupes: writeErrors.length, upsertedCount,
+        });
+      } else {
+        throw err;
+      }
+    }
     logger.info('contactEnricher: contacts upserted', {
       leadId,
-      upserted: result.upsertedCount,
-      matched: result.matchedCount,
+      upserted: upsertedCount,
+      matched: matchedCount,
     });
 
     // Update lead contactSummary
