@@ -13,8 +13,10 @@ import { normalizePhones, countryNameToCode } from '../phoneNormalizer.js';
  *   - does not match common UI-navigation labels
  *   - does not contain section-header verbs (History, Vision, About...)
  */
-const UI_CHROME_PATTERNS = /^(related\s+pages?|our\s+(team|people|history|values|story)|about(\s+us)?|contact(\s+us)?|home|leadership|meet\s+(our|the)\s+team|vision\s+and\s+values|management\s+team|board\s+of\s+directors|menu|navigation|read\s+more|learn\s+more|click\s+here)$/i;
-const SECTION_HEADER_WORDS = /\b(History|Vision|Mission|Values|Story|Overview|Approach|Services|Expertise|Practice Areas?|Locations?|News|Careers|Portfolio)\b/;
+const UI_CHROME_PATTERNS = /^(related\s+pages?|our\s+(team|people|history|values|story)|about(\s+us)?|contact(\s+us)?|home|leadership|meet\s+(our|the)\s+team|vision\s+and\s+values|management\s+team|board\s+of\s+directors|menu|navigation|read\s+more|learn\s+more|click\s+here|the\s+pivot|the\s+team|the\s+story|the\s+mission|the\s+vision|the\s+history|the\s+company|the\s+firm)$/i;
+const SECTION_HEADER_WORDS = /\b(History|Vision|Mission|Values|Story|Overview|Approach|Services|Expertise|Practice Areas?|Locations?|News|Careers|Portfolio|Pivot)\b/;
+// Determiners/pronouns as first word — never a real human first name.
+const DETERMINER_LEADING = /^(the|our|a|an|this|that|these|those|your|my|his|her|its)\s+/i;
 
 function looksLikePersonName(value: string | undefined): boolean {
   if (!value) return false;
@@ -23,12 +25,19 @@ function looksLikePersonName(value: string | undefined): boolean {
   if (v.includes('\n')) return false;
   if (UI_CHROME_PATTERNS.test(v)) return false;
   if (SECTION_HEADER_WORDS.test(v)) return false;
-  // Require at least one space (first + last name) OR a recognized single-word
-  // name pattern like "Templars" — but for a topContact we want two-word minimum.
+  if (DETERMINER_LEADING.test(v)) return false;
+  // Require at least one space (first + last name).
   if (!/\s/.test(v)) return false;
   // Too many capitalized words (>4) is usually a title string, not a name.
   const capWords = v.match(/\b[A-Z][a-z]+\b/g) ?? [];
   if (capWords.length > 4) return false;
+  // Each word should start with a capital and contain only letters/apostrophes/hyphens
+  // (allow e.g. "O'Brien", "Jean-Paul", middle initials). Rejects numbers and
+  // mixed-case junk.
+  const tokens = v.split(/\s+/);
+  for (const t of tokens) {
+    if (!/^[A-Z][a-zA-Z'.-]{0,}$/.test(t)) return false;
+  }
   return true;
 }
 

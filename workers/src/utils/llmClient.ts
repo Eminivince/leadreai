@@ -33,7 +33,10 @@ export interface LlmResponse {
   content: string;
 }
 
-const DEFAULT_TIMEOUT_MS = 25_000;
+// Bumped from 25s: OpenRouter occasionally takes 25-40s on complex prompts
+// (large system prompt + full chat history). A too-tight timeout multiplied
+// across a 20-step agent loop creates a compounding failure surface.
+const DEFAULT_TIMEOUT_MS = 45_000;
 // Local models on consumer hardware are slow (first-token latency can exceed 30s,
 // generation at ~15-30 tok/s). Enforce a floor so per-caller short timeouts don't
 // kill the request before the model can respond. Only applies when USE_LOCAL_LLM is on.
@@ -119,10 +122,13 @@ export async function callLlmOnce(req: LlmRequest): Promise<LlmResponse> {
  * Used by anything that runs inside the agent loop or in tight repeated cycles.
  */
 export async function callLlm(req: LlmRequest): Promise<string> {
-  // Longer backoff chain for strict free-tier rate limits (e.g. Nemotron).
-  // Total wait if all trip: ~2.5 min. Lets a rate-limited agent ride out the
-  // window rather than abandoning the job with leads in flight.
-  const backoffs = [5_000, 15_000, 30_000, 60_000];
+  // Backoff chain covers two failure modes:
+  //   - 429 rate limit (strict free-tier, recovers in seconds-to-minutes)
+  //   - status 0 (timeout/abort/network fail — very common with OpenRouter;
+  //     retry-after-short-wait usually succeeds)
+  // Total wait if all trip: ~2 min. Lets a transient blip ride out within a
+  // single agent step rather than ending the entire run.
+  const backoffs = [3_000, 8_000, 20_000, 45_000];
   for (let attempt = 0; attempt <= backoffs.length; attempt++) {
     const result = await callLlmOnce(req).catch((err) => {
       logger.warn('[llmClient] fetch threw', {
@@ -131,9 +137,12 @@ export async function callLlm(req: LlmRequest): Promise<string> {
       return { ok: false, status: 0, content: '' } as LlmResponse;
     });
     if (result.ok) return result.content;
-    if (result.status === 429 && attempt < backoffs.length) {
+
+    // Retry on: 429 (rate limit), 0 (abort/network), 5xx (server errors).
+    const isRetryable = result.status === 429 || result.status === 0 || (result.status >= 500 && result.status < 600);
+    if (isRetryable && attempt < backoffs.length) {
       const waitMs = backoffs[attempt]!;
-      logger.info('[llmClient] 429 rate-limited — backing off', { attempt: attempt + 1, waitMs });
+      logger.info('[llmClient] retryable error — backing off', { attempt: attempt + 1, status: result.status, waitMs });
       await new Promise((resolve) => setTimeout(resolve, waitMs));
       continue;
     }

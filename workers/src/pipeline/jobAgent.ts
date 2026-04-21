@@ -28,7 +28,10 @@ export interface JobAgentResult {
 const BASE_MAX_STEPS = 30;
 const STEPS_PER_LEAD = 4;
 const ABSOLUTE_MAX_STEPS = 200;
-const LLM_TIMEOUT_MS = 25_000;
+// 45s per-call timeout. Complex prompts with full chat history occasionally
+// exceed 25s; a tight timeout compounds into whole-job failures (one abort
+// ends the agent loop).
+const LLM_TIMEOUT_MS = 45_000;
 const CRITIC_INTERVAL = 5;
 
 type HistoryMsg = { role: 'system' | 'user' | 'assistant'; content: string };

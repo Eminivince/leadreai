@@ -10,7 +10,20 @@ export interface ExtractedContact {
   sources: Array<{ url: string; type: 'company_website'; scrapedAt: Date; confidence: number }>;
 }
 
-const TEAM_PATHS = ['/team', '/about', '/about-us', '/people', '/leadership'];
+/**
+ * Team/people page path guesses. Ordered by frequency across corporate + pro-services
+ * sites. Law firms in particular favor /partners, /attorneys, /our-lawyers.
+ */
+const TEAM_PATHS = [
+  '/team', '/our-team', '/team-members',
+  '/people', '/our-people',
+  '/leadership', '/management', '/executives',
+  '/partners', '/our-partners',
+  '/attorneys', '/lawyers', '/our-lawyers',
+  '/professionals', '/practitioners',
+  '/staff',
+  '/about', '/about-us',
+];
 
 async function tryPage(page: Page, url: string): Promise<ExtractedContact[]> {
   try {
@@ -42,17 +55,32 @@ async function tryPage(page: Page, url: string): Promise<ExtractedContact[]> {
       });
 
       // 3. Heading + paragraph pairs (name + title heuristic)
-      const headings = Array.from(document.querySelectorAll('h2, h3, h4'));
+      //    Matches: "Firstname Lastname", "Firstname M. Lastname", "Firstname-Smith Lastname"
+      //    Rejects: all-caps pure headers, single words, 5+ word phrases
+      const NAME_PATTERN = /^[A-Z][a-z'-]+(?: [A-Z]\.?)?(?: [A-Z][a-z'-]+){1,3}$/;
+      const headings = Array.from(document.querySelectorAll('h2, h3, h4, h5, a.person, a.attorney, a.lawyer, .member-name, .team-member-name, .attorney-name, .person-name, .partner-name'));
       for (const h of headings) {
-        const text = h.textContent?.trim() ?? '';
-        // Name heuristic: 2-4 words, each capitalised, no common stop-words
-        if (/^[A-Z][a-z]+ [A-Z][a-z]+/.test(text) && text.split(' ').length <= 4) {
-          const next = h.nextElementSibling;
-          const titleText = next?.textContent?.trim();
-          if (titleText && titleText.length < 80) {
-            results.push({ name: text, title: titleText });
+        const text = h.textContent?.trim().replace(/\s+/g, ' ') ?? '';
+        if (!NAME_PATTERN.test(text)) continue;
+        // Rough chrome-filter: skip if heading text matches known non-person labels.
+        if (/^(about|our|the|home|contact|news|careers|services|practice areas|locations|partners?$|people$|team$|leadership$)$/i.test(text)) continue;
+
+        // Look for an adjacent title element — sibling, or a child of the same card.
+        const candidates: (Element | null)[] = [
+          h.nextElementSibling,
+          h.parentElement?.querySelector('.title, .role, .position, .job-title, .attorney-title, .member-title') ?? null,
+          h.parentElement?.nextElementSibling ?? null,
+        ];
+        let titleText: string | undefined;
+        for (const c of candidates) {
+          if (!c) continue;
+          const t = c.textContent?.trim().replace(/\s+/g, ' ');
+          if (t && t.length >= 2 && t.length <= 120 && t !== text) {
+            titleText = t;
+            break;
           }
         }
+        results.push({ name: text, title: titleText });
       }
 
       return results;
