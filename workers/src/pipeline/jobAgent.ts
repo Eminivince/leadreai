@@ -27,11 +27,14 @@ export interface JobAgentResult {
   transcript: string[];
 }
 
-// Step budget scales linearly with target count (min 30, max 200) — large demographic
-// jobs need many more tool calls than a single contact_lookup.
-const BASE_MAX_STEPS = 30;
+// Step budget scales linearly with target count (min 100, max 300) — large
+// demographic jobs need many more tool calls than a single contact_lookup.
+// Raised floor from 30 to 100 after observing small-target jobs (e.g. the
+// funding e2e with targetCount=5) run out at 50 while still productively
+// enriching.
+const BASE_MAX_STEPS = 100;
 const STEPS_PER_LEAD = 4;
-const ABSOLUTE_MAX_STEPS = 200;
+const ABSOLUTE_MAX_STEPS = 300;
 // 45s per-call timeout. Complex prompts with full chat history occasionally
 // exceed 25s; a tight timeout compounds into whole-job failures (one abort
 // ends the agent loop).
