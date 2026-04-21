@@ -32,6 +32,7 @@ import { searchWebTool } from './searchWeb.js';
 import { fetchUrlTool } from './fetchUrl.js';
 import { scrapePageTool } from './scrapePage.js';
 import { lookupRegistryTool } from './lookupRegistry.js';
+import { listCompaniesTool } from './listCompanies.js';
 import { extractNamesFromUrlsTool } from './extractNamesFromUrls.js';
 import { permuteEmailTool } from './permuteEmail.js';
 import { verifyEmailTool } from './verifyEmail.js';
@@ -39,9 +40,14 @@ import { scoreLeadTool } from './scoreLead.js';
 import { writeLeadTool } from './writeLead.js';
 
 export const TOOL_REGISTRY: ToolDef[] = [
-  searchWebTool, fetchUrlTool, scrapePageTool, lookupRegistryTool,
-  extractNamesFromUrlsTool, permuteEmailTool,
-  verifyEmailTool, scoreLeadTool, writeLeadTool,
+  // Discovery — always try these first for any listing/demographic query.
+  listCompaniesTool, lookupRegistryTool,
+  // Search — fall back to these when registry coverage is insufficient.
+  searchWebTool, fetchUrlTool, scrapePageTool,
+  // Enrichment — person/contact extraction on discovered domains.
+  extractNamesFromUrlsTool, permuteEmailTool, verifyEmailTool,
+  // Scoring / finalize.
+  scoreLeadTool, writeLeadTool,
 ];
 
 export function renderToolMenu(): string {
