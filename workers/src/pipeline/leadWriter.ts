@@ -1,23 +1,36 @@
 import mongoose from 'mongoose';
 import { Redis } from 'ioredis';
-import { Queue } from 'bullmq';
+import { Queue, QueueEvents } from 'bullmq';
 import { logger } from '../utils/logger.js';
 import { fireWebhook } from '../services/webhook.js';
 import { env } from '../config/env.js';
 import type { LeadRecord } from './deduplicator.js';
 
 // ---------------------------------------------------------------------------
-// Lazy contact-enrichment queue
+// Lazy contact-enrichment queue + queue events (for waitUntilFinished)
 // ---------------------------------------------------------------------------
+const PREFIX = `{bull}:leadreai:${env.NODE_ENV}`;
+
 let _contactQueue: Queue | null = null;
 function getContactQueue(): Queue {
   if (!_contactQueue) {
     _contactQueue = new Queue('contact-enrichment', {
       connection: new Redis(env.REDIS_URL, { maxRetriesPerRequest: null }),
-      prefix: `{bull}:leadreai:${env.NODE_ENV}`,
+      prefix: PREFIX,
     });
   }
   return _contactQueue;
+}
+
+let _contactQueueEvents: QueueEvents | null = null;
+function getContactQueueEvents(): QueueEvents {
+  if (!_contactQueueEvents) {
+    _contactQueueEvents = new QueueEvents('contact-enrichment', {
+      connection: new Redis(env.REDIS_URL, { maxRetriesPerRequest: null }),
+      prefix: PREFIX,
+    });
+  }
+  return _contactQueueEvents;
 }
 
 // Inline Lead model (strict: false — picks up all fields without re-specifying)
@@ -74,7 +87,13 @@ export async function writeLeads(
       modified: result.modifiedCount,
     });
 
-    // Dispatch contact-enrichment jobs for written leads that have a companyDomain
+    // Dispatch contact-enrichment jobs and await their completion before
+    // marking the parent job complete. Previously these jobs were fire-and-
+    // forget, so the parent's `status=complete` would race ahead of the
+    // enrichment that populates `contactSummary.topContact` — the harness
+    // (and the UI on job-complete) would see leads with no named contacts
+    // even when extraction would have found them. Awaiting costs 10-60s
+    // extra per job but makes relevance scores honest.
     const domainsToEnrich = nonDupes.filter(l => l.companyDomain).map(l => l.companyDomain);
     if (domainsToEnrich.length > 0) {
       const writtenLeads = await Lead.find(
@@ -88,7 +107,7 @@ export async function writeLeads(
       if (writtenLeads.length > 0) {
         const queue = getContactQueue();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await queue.addBulk(
+        const dispatched = await queue.addBulk(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (writtenLeads as any[]).map((lead: any) => ({
             name: 'enrich',
@@ -102,7 +121,25 @@ export async function writeLeads(
             },
           }))
         );
-        logger.info('leadWriter: enqueued contact enrichment jobs', { count: writtenLeads.length });
+        logger.info('leadWriter: enqueued contact enrichment jobs', { count: dispatched.length });
+
+        // Wait for all enrichment jobs to finish — bounded so a stuck
+        // enricher can't block the parent job indefinitely. Each enricher
+        // already has its own Playwright timeout; this is a belt-and-
+        // suspenders ceiling.
+        const PER_LEAD_WAIT_MS = 30_000;
+        const ceilingMs = Math.min(120_000, PER_LEAD_WAIT_MS * dispatched.length);
+        try {
+          const events = getContactQueueEvents();
+          await Promise.allSettled(
+            dispatched.map((j) => j.waitUntilFinished(events, ceilingMs)),
+          );
+          logger.info('leadWriter: contact enrichment complete', { count: dispatched.length });
+        } catch (err) {
+          logger.warn('leadWriter: enrichment wait hit timeout', {
+            err: err instanceof Error ? err.message : String(err),
+          });
+        }
       }
     }
   }
