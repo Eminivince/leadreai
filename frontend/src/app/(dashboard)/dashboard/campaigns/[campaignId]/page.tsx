@@ -1,501 +1,301 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Trash2, Plus, Zap, CheckCircle2, ChevronRight } from 'lucide-react';
-import { toast } from 'sonner';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import { EmptyState } from '@/components/shared/EmptyState';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useWorkspace } from '@/hooks/useWorkspace';
-import { useOutreachGeneration } from '@/hooks/useOutreachGeneration';
 import { apiFetch } from '@/lib/api';
-import type { Campaign, Lead, OutreachDraft } from '@leadreai/shared';
-import type { ApiResponse } from '@leadreai/shared';
+import type { ApiResponse, Campaign } from '@leadreai/shared';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+/* ─────────────────────────────────────────────────────────────────
+ * Campaign detail — analytics-first view of a saved + (optionally)
+ * activated campaign. Matches the editorial shell of the builder:
+ * paper sections divided by hairline rules, numbered kickers, forest
+ * for active state. Primary surfaces: KPIs, per-step breakdown,
+ * pause/resume. Legacy bulk-draft review UI lives elsewhere.
+ * ───────────────────────────────────────────────────────────────── */
 
-interface PagedPayload<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
+interface SequenceStepLite {
+  stepNumber: number;
+  channel: string;
+  delayDays: number;
+  useAI?: boolean;
+  goal?: string;
+  tone?: string;
+  emailTemplate?: { subject?: string; body?: string };
 }
 
-interface CampaignLeadsResponse {
-  success: true;
-  data: PagedPayload<Lead>;
+interface StatsResponse {
+  campaign: Campaign;
+  sequence: { _id: string; name: string; status: string; steps: SequenceStepLite[] } | null;
+  enrollments: {
+    active: number; paused: number; completed: number; stopped: number;
+    bounced: number; unsubscribed: number; replied: number; total: number;
+  };
+  perStep: Array<{ stepNumber: number; sent: number; bounced: number; replied: number }>;
+  campaignStats: {
+    totalLeads: number; draftsCreated: number; sent: number;
+    opened: number; replied: number; bounced: number;
+  };
 }
 
-interface AllLeadsResponse {
-  success: true;
-  data: Lead[];
-  total: number;
-}
-
-interface DraftsResponse {
-  success: true;
-  data: PagedPayload<OutreachDraft>;
-}
-
-// ─── Status badge helpers ─────────────────────────────────────────────────────
-
-const CAMPAIGN_STATUS_STYLES: Record<Campaign['status'], string> = {
-  draft: 'bg-muted text-muted-foreground border-border',
-  active: 'bg-green-500/15 text-green-400 border-green-500/30',
-  paused: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30',
-  completed: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-  archived: 'bg-muted text-muted-foreground border-border',
+const STATUS_STYLES: Record<string, string> = {
+  draft:     'bg-[color:var(--paper-3)] text-[color:var(--ink-2)] border-[color:var(--rule)]',
+  active:    'bg-[color:var(--forest)]/10 text-[color:var(--forest)] border-[color:var(--forest)]/40',
+  paused:    'bg-[color:var(--warn)]/10 text-[color:var(--warn)] border-[color:var(--warn)]/40',
+  completed: 'bg-[color:var(--paper-3)] text-[color:var(--ink-2)] border-[color:var(--rule)]',
+  archived:  'bg-[color:var(--paper-3)] text-[color:var(--ink-3)] border-[color:var(--rule)]',
 };
 
-function CampaignStatusBadge({ status }: { status: Campaign['status'] }) {
+function StatusPill({ status }: { status: string }) {
+  const cls = STATUS_STYLES[status] ?? STATUS_STYLES.draft!;
   return (
-    <span
-      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${CAMPAIGN_STATUS_STYLES[status]}`}
-    >
+    <span className={`inline-flex items-center rounded-full border px-3 py-0.5 font-[family-name:var(--font-jetbrains-mono)] text-[10.5px] tracking-[0.18em] uppercase ${cls}`}>
       {status}
     </span>
   );
 }
 
-const DRAFT_STATUS_STYLES: Record<string, string> = {
-  draft: 'bg-muted text-muted-foreground border-border',
-  approved: 'bg-green-500/15 text-green-400 border-green-500/30',
-  sent: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-  failed: 'bg-red-500/15 text-red-400 border-red-500/30',
-};
-
-function DraftStatusBadge({ status }: { status: string }) {
+function Kpi({ label, value, accent = false }: { label: string; value: number | string; accent?: boolean }) {
   return (
-    <span
-      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${DRAFT_STATUS_STYLES[status] ?? DRAFT_STATUS_STYLES.draft}`}
-    >
-      {status}
-    </span>
-  );
-}
-
-// ─── Progress bar ─────────────────────────────────────────────────────────────
-
-function ProgressBar({ value }: { value: number }) {
-  const pct = Math.max(0, Math.min(100, value));
-  return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
-      <div
-        className="h-full rounded-full bg-indigo-500 transition-all duration-300"
-        style={{ width: `${pct}%` }}
-      />
+    <div className="border border-[color:var(--rule)] bg-[color:var(--paper-3)]/60 rounded-sm p-5">
+      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block">
+        {label}
+      </span>
+      <div className={`mt-2 font-[family-name:var(--font-instrument-serif)] text-[44px] leading-none tabular-nums ${accent ? 'text-[color:var(--forest)]' : 'text-[color:var(--ink)]'}`}>
+        {value}
+      </div>
     </div>
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+function Section({ chapter, title, children, action }: {
+  chapter: string;
+  title: React.ReactNode;
+  children: React.ReactNode;
+  action?: React.ReactNode;
+}) {
+  return (
+    <section className="border-t border-[color:var(--rule)] pt-8 pb-2">
+      <div className="flex items-baseline gap-5 mb-5">
+        <span className="font-[family-name:var(--font-instrument-serif)] text-[36px] leading-none text-[color:var(--forest)]">
+          {chapter}
+        </span>
+        <div className="flex-1 border-t border-[color:var(--rule)] pb-1" />
+        <span className="font-[family-name:var(--font-instrument-serif)] italic text-[18px] text-[color:var(--ink)] self-end pb-0.5">
+          {title}
+        </span>
+        {action && <div className="self-end pb-0.5">{action}</div>}
+      </div>
+      <div className="pl-0 md:pl-[54px]">{children}</div>
+    </section>
+  );
+}
 
 export default function CampaignDetailPage() {
   const params = useParams();
-  const campaignId = params.campaignId as string;
+  const campaignId = (params.campaignId as string) ?? '';
   const { workspaceId } = useWorkspace();
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
 
-  const [addLeadsOpen, setAddLeadsOpen] = useState(false);
-  const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
-  const [leadSearch, setLeadSearch] = useState('');
-
-  // ── Queries ────────────────────────────────────────────────────────────────
-
-  const { data: campaignData, isLoading: campaignLoading } = useQuery({
-    queryKey: ['campaign', workspaceId, campaignId],
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['campaign-stats', workspaceId, campaignId],
     queryFn: () =>
-      apiFetch<ApiResponse<Campaign>>(
-        `/api/v1/workspaces/${workspaceId}/campaigns/${campaignId}`
+      apiFetch<ApiResponse<StatsResponse>>(
+        `/api/v1/workspaces/${workspaceId}/campaigns/${campaignId}/stats`,
       ),
     enabled: !!workspaceId && !!campaignId,
+    refetchInterval: 15_000,
   });
 
-  const { data: campaignLeadsData, isLoading: leadsLoading } = useQuery({
-    queryKey: ['campaign-leads', workspaceId, campaignId],
-    queryFn: () =>
-      apiFetch<CampaignLeadsResponse>(
-        `/api/v1/workspaces/${workspaceId}/campaigns/${campaignId}/leads`
-      ),
-    enabled: !!workspaceId && !!campaignId,
-  });
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [busy, setBusy] = useState<null | 'pause' | 'resume'>(null);
 
-  const { data: draftsData, isLoading: draftsLoading } = useQuery({
-    queryKey: ['campaign-drafts', workspaceId, campaignId],
-    queryFn: () =>
-      apiFetch<DraftsResponse>(
-        `/api/v1/workspaces/${workspaceId}/outreach?campaignId=${campaignId}`
-      ),
-    enabled: !!workspaceId && !!campaignId,
-  });
-
-  const { data: allLeadsData } = useQuery({
-    queryKey: ['leads-all-qualified', workspaceId, leadSearch],
-    queryFn: () => {
-      const params = new URLSearchParams({
-        limit: '100',
-        qualificationStatus: 'qualified',
-        isDuplicate: 'false',
-      });
-      if (leadSearch) params.set('q', leadSearch);
-      return apiFetch<AllLeadsResponse>(
-        `/api/v1/workspaces/${workspaceId}/leads?${params}`
+  async function runAction(action: 'pause' | 'resume') {
+    if (!workspaceId || !campaignId || busy) return;
+    setBusy(action);
+    setActionError(null);
+    try {
+      await apiFetch<ApiResponse<unknown>>(
+        `/api/v1/workspaces/${workspaceId}/campaigns/${campaignId}/${action}`,
+        { method: 'POST' },
       );
-    },
-    enabled: !!workspaceId && addLeadsOpen,
-  });
-
-  const campaign = campaignData?.data;
-  const rawCampaignLeads = campaignLeadsData?.data;
-  const campaignLeads = Array.isArray(rawCampaignLeads)
-    ? rawCampaignLeads
-    : Array.isArray(rawCampaignLeads?.data)
-      ? rawCampaignLeads.data
-      : [];
-  const rawDrafts = draftsData?.data;
-  const drafts = Array.isArray(rawDrafts)
-    ? rawDrafts
-    : Array.isArray(rawDrafts?.data)
-      ? rawDrafts.data
-      : [];
-  const allLeads = allLeadsData?.data ?? [];
-
-  // Already-added lead IDs for filtering
-  const addedLeadIdSet = new Set(campaignLeads.map((l) => l._id));
-
-  // ── Generation hook ────────────────────────────────────────────────────────
-
-  const { done, total, percentage, isComplete, isGenerating, error: generationError, startGeneration } =
-    useOutreachGeneration({
-      workspaceId: workspaceId ?? '',
-      campaignId,
-      onComplete: () => {
-        void queryClient.invalidateQueries({ queryKey: ['campaign-drafts', workspaceId, campaignId] });
-        toast.success('Draft generation complete!');
-      },
-    });
-
-  // ── Mutations ──────────────────────────────────────────────────────────────
-
-  const addLeadsMutation = useMutation({
-    mutationFn: (leadIds: string[]) =>
-      apiFetch(`/api/v1/workspaces/${workspaceId}/campaigns/${campaignId}/leads`, {
-        method: 'POST',
-        body: JSON.stringify({ leadIds }),
-      }),
-    onSuccess: () => {
-      toast.success('Leads added to campaign.');
-      void queryClient.invalidateQueries({ queryKey: ['campaign-leads', workspaceId, campaignId] });
-      void queryClient.invalidateQueries({ queryKey: ['campaign', workspaceId, campaignId] });
-      setAddLeadsOpen(false);
-      setSelectedLeadIds(new Set());
-    },
-    onError: (err) => {
-      toast.error(err instanceof Error ? err.message : 'Failed to add leads.');
-    },
-  });
-
-  const removeLeadMutation = useMutation({
-    mutationFn: (leadId: string) =>
-      apiFetch(
-        `/api/v1/workspaces/${workspaceId}/campaigns/${campaignId}/leads/${leadId}`,
-        { method: 'DELETE' }
-      ),
-    onSuccess: () => {
-      toast.success('Lead removed.');
-      void queryClient.invalidateQueries({ queryKey: ['campaign-leads', workspaceId, campaignId] });
-      void queryClient.invalidateQueries({ queryKey: ['campaign', workspaceId, campaignId] });
-    },
-    onError: (err) => {
-      toast.error(err instanceof Error ? err.message : 'Failed to remove lead.');
-    },
-  });
-
-  // ── Handlers ───────────────────────────────────────────────────────────────
-
-  function toggleLeadSelection(id: string) {
-    setSelectedLeadIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+      await qc.invalidateQueries({ queryKey: ['campaign-stats', workspaceId, campaignId] });
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : `${action} failed`);
+    } finally {
+      setBusy(null);
+    }
   }
 
-  function handleAddSelected() {
-    if (selectedLeadIds.size === 0) return;
-    addLeadsMutation.mutate(Array.from(selectedLeadIds));
-  }
-
-  // ── Render ─────────────────────────────────────────────────────────────────
-
-  if (campaignLoading) {
+  if (isLoading) {
     return (
-      <div className="py-16 text-center text-sm text-muted-foreground">Loading campaign…</div>
+      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-3)]">
+        Loading campaign…
+      </div>
     );
   }
 
-  if (!campaign) {
+  if (error || !data?.data) {
     return (
-      <div className="py-16 text-center text-sm text-muted-foreground">Campaign not found.</div>
+      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center">
+        <p className="font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--warn)]">
+          Couldn&rsquo;t load this campaign.
+        </p>
+        <button
+          onClick={() => router.push('/dashboard')}
+          className="mt-4 font-[family-name:var(--font-jetbrains-mono)] text-[11px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
+        >
+          Back to dispatches
+        </button>
+      </div>
     );
   }
 
-  const canGenerate = campaignLeads.length > 0 && !isGenerating;
+  const { campaign, sequence, enrollments, perStep, campaignStats } = data.data;
 
   return (
-    <div className="space-y-8">
-      {/* ── Campaign header ─────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h2 className="text-2xl font-bold text-foreground">{campaign.name}</h2>
-            <CampaignStatusBadge status={campaign.status} />
+    <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-10 md:py-12">
+      {/* ── Header ────────────────────────────────── */}
+      <section className="mb-10 flex items-end justify-between gap-6 flex-wrap">
+        <div className="max-w-[720px]">
+          <div className="flex items-center gap-3 mb-4">
+            <Link
+              href="/dashboard"
+              className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
+            >
+              Dispatches
+            </Link>
+            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">/</span>
+            <Link
+              href="/dashboard/campaigns"
+              className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
+            >
+              Campaigns
+            </Link>
+            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">/</span>
+            <StatusPill status={campaign.status} />
           </div>
+          <h1 className="font-[family-name:var(--font-instrument-serif)] text-[44px] md:text-[56px] leading-[0.97] tracking-[-0.015em] text-[color:var(--ink)]">
+            {campaign.name}
+          </h1>
           {campaign.description && (
-            <p className="text-sm text-muted-foreground mb-2">{campaign.description}</p>
+            <p className="mt-3 font-[family-name:var(--font-barlow)] text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
+              {campaign.description}
+            </p>
           )}
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span>Tone: <span className="text-foreground capitalize">{campaign.outreachConfig.tone}</span></span>
-            <span>Language: <span className="text-foreground">{campaign.outreachConfig.language}</span></span>
-            <span>Created: {new Date(campaign.createdAt).toLocaleDateString()}</span>
-          </div>
         </div>
-      </div>
+        <div className="flex items-center gap-2">
+          {campaign.status === 'active' && (
+            <button
+              onClick={() => void runAction('pause')}
+              disabled={busy !== null}
+              className="inline-flex items-center gap-2 border border-[color:var(--rule)] bg-[color:var(--paper-3)] text-[color:var(--ink)] hover:border-[color:var(--ink)] px-4 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] disabled:opacity-50 transition"
+            >
+              {busy === 'pause' ? 'Pausing…' : 'Pause'}
+            </button>
+          )}
+          {campaign.status === 'paused' && (
+            <button
+              onClick={() => void runAction('resume')}
+              disabled={busy !== null}
+              className="inline-flex items-center gap-2 bg-[color:var(--forest)] text-[color:var(--paper)] hover:bg-[color:var(--forest-2)] px-4 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium disabled:opacity-50 transition"
+            >
+              {busy === 'resume' ? 'Resuming…' : 'Resume'}
+            </button>
+          )}
+        </div>
+      </section>
 
-      {/* ── Leads section ───────────────────────────────────────────────── */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-4 pb-3">
-          <CardTitle className="text-base font-semibold">
-            Leads{' '}
-            <Badge variant="secondary" className="ml-1 text-xs">
-              {campaignLeads.length}
-            </Badge>
-          </CardTitle>
-          <Button size="sm" onClick={() => setAddLeadsOpen(true)}>
-            <Plus size={14} className="mr-1.5" />
-            Add Leads
-          </Button>
-        </CardHeader>
-        <CardContent className="p-0">
-          {leadsLoading ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">Loading leads…</div>
-          ) : campaignLeads.length === 0 ? (
-            <EmptyState title="No leads added yet." description="Add qualified leads to this campaign." />
-          ) : (
-            <div className="divide-y divide-border">
-              {campaignLeads.map((lead) => (
+      {actionError && (
+        <div role="alert" className="mb-6 border border-[color:var(--warn)]/60 bg-[color:var(--warn)]/10 rounded-sm p-4 font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink)]">
+          {actionError}
+        </div>
+      )}
+
+      {/* ── KPI grid ────────────────────────────────── */}
+      <Section chapter="01" title="At a glance">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <Kpi label="Enrolled" value={enrollments.total} accent />
+          <Kpi label="Active" value={enrollments.active} />
+          <Kpi label="Sent" value={campaignStats.sent} />
+          <Kpi label="Replied" value={enrollments.replied + campaignStats.replied} />
+          <Kpi label="Bounced" value={enrollments.bounced + campaignStats.bounced} />
+          <Kpi label="Unsubscribed" value={enrollments.unsubscribed} />
+        </div>
+        <p className="mt-4 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-3)]">
+          {enrollments.paused > 0 ? `${enrollments.paused} enrollments paused. ` : ''}
+          {enrollments.completed > 0 ? `${enrollments.completed} completed. ` : ''}
+          {enrollments.stopped > 0 ? `${enrollments.stopped} stopped. ` : ''}
+          {enrollments.total === 0 && 'Not activated yet — enroll leads from the campaigns index.'}
+        </p>
+      </Section>
+
+      {/* ── Per-step ────────────────────────────────── */}
+      <Section chapter="02" title="Per-step">
+        {sequence ? (
+          <div className="border-t border-[color:var(--rule)]">
+            {sequence.steps.map((step) => {
+              const stats = perStep.find((p) => p.stepNumber === step.stepNumber) ?? { sent: 0, bounced: 0, replied: 0 };
+              return (
                 <div
-                  key={lead._id}
-                  className="flex items-center gap-4 px-5 py-3"
+                  key={step.stepNumber}
+                  className="grid grid-cols-[48px_auto_1fr_auto_auto_auto] gap-4 items-center py-4 border-b border-[color:var(--rule)]"
                 >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {lead.companyName}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {lead.companyDomain ?? '—'}
-                      {lead.industry ? ` · ${lead.industry}` : ''}
-                    </p>
+                  <span className="font-[family-name:var(--font-instrument-serif)] italic text-[26px] leading-none text-[color:var(--ink-3)] tabular-nums">
+                    {String(step.stepNumber).padStart(2, '0')}
+                  </span>
+                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
+                    {step.channel}{step.useAI ? ' · AI' : ''}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink)] truncate">
+                      {step.emailTemplate?.subject || <span className="italic text-[color:var(--ink-3)]">No subject</span>}
+                    </div>
+                    <div className="font-[family-name:var(--font-jetbrains-mono)] text-[10.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] mt-1 truncate">
+                      Day {step.delayDays}{step.tone ? ` · ${step.tone}` : ''}{step.goal ? ` · goal: ${step.goal}` : ''}
+                    </div>
                   </div>
-                  <div className="flex shrink-0 items-center gap-3 text-xs text-muted-foreground">
-                    <span>{lead.emails.length} email{lead.emails.length !== 1 ? 's' : ''}</span>
-                    <span className="capitalize">{lead.outreachStatus}</span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                      onClick={() => removeLeadMutation.mutate(lead._id)}
-                      disabled={removeLeadMutation.isPending}
-                    >
-                      <Trash2 size={13} />
-                      <span className="sr-only">Remove</span>
-                    </Button>
-                  </div>
+                  <StepCount label="sent" n={stats.sent} />
+                  <StepCount label="replied" n={stats.replied} />
+                  <StepCount label="bounced" n={stats.bounced} tone={stats.bounced > 0 ? 'warn' : 'muted'} />
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* ── Generate Drafts section ──────────────────────────────────────── */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-4 pb-3">
-          <CardTitle className="text-base font-semibold">Generate Drafts</CardTitle>
-          <Button
-            size="sm"
-            onClick={startGeneration}
-            disabled={!canGenerate || !workspaceId}
-          >
-            <Zap size={14} className="mr-1.5" />
-            {isGenerating ? 'Generating…' : 'Generate Drafts'}
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {isGenerating && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Generating drafts…</span>
-                <span>{done}/{total}</span>
-              </div>
-              <ProgressBar value={percentage} />
-            </div>
-          )}
-          {isComplete && !isGenerating && (
-            <div className="flex items-center gap-2 text-sm text-green-400">
-              <CheckCircle2 size={16} />
-              Generation complete!
-            </div>
-          )}
-          {generationError && !isGenerating && (
-            <p className="text-xs text-destructive">{generationError}</p>
-          )}
-          {!isGenerating && !isComplete && (
-            <p className="text-xs text-muted-foreground">
-              {campaignLeads.length === 0
-                ? 'Add leads first to enable draft generation.'
-                : `Generate personalized outreach drafts for ${campaignLeads.length} lead${campaignLeads.length !== 1 ? 's' : ''}.`}
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* ── Drafts section ──────────────────────────────────────────────── */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold">
-            Drafts{' '}
-            <Badge variant="secondary" className="ml-1 text-xs">
-              {drafts.length}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {draftsLoading ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">Loading drafts…</div>
-          ) : drafts.length === 0 ? (
-            <EmptyState title="No drafts generated yet." description="Generate drafts from the section above." />
-          ) : (
-            <div className="divide-y divide-border">
-              {drafts.map((draft) => (
-                <button
-                  key={draft._id}
-                  onClick={() =>
-                    router.push(`/dashboard/campaigns/${campaignId}/drafts/${draft._id}`)
-                  }
-                  className="flex w-full items-center gap-4 px-5 py-3 text-left transition-colors hover:bg-secondary/40"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {draft.subject ?? '(No subject)'}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {draft.firstLine ?? draft.body.slice(0, 80)}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    <DraftStatusBadge status={draft.status} />
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(draft.createdAt).toLocaleDateString()}
-                    </span>
-                    <ChevronRight size={14} className="text-muted-foreground" />
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* ── Add Leads dialog ────────────────────────────────────────────── */}
-      <Dialog open={addLeadsOpen} onOpenChange={(open) => { if (!open) { setAddLeadsOpen(false); setSelectedLeadIds(new Set()); } }}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Add Leads</DialogTitle>
-            <DialogDescription>
-              Select qualified leads to add to this campaign.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3">
-            <Input
-              placeholder="Search leads…"
-              value={leadSearch}
-              onChange={(e) => setLeadSearch(e.target.value)}
-            />
-
-            <div className="max-h-72 overflow-y-auto divide-y divide-border rounded-md border border-border">
-              {allLeads.length === 0 ? (
-                <div className="py-8 text-center text-sm text-muted-foreground">
-                  No qualified leads found.
-                </div>
-              ) : (
-                allLeads.map((lead) => {
-                  const alreadyAdded = addedLeadIdSet.has(lead._id);
-                  const selected = selectedLeadIds.has(lead._id);
-                  return (
-                    <label
-                      key={lead._id}
-                      className={`flex cursor-pointer items-center gap-3 px-4 py-2.5 transition-colors ${alreadyAdded ? 'opacity-40 cursor-not-allowed' : 'hover:bg-secondary/40'}`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selected}
-                        disabled={alreadyAdded}
-                        onChange={() => toggleLeadSelection(lead._id)}
-                        className="h-4 w-4 rounded border-border accent-indigo-500"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {lead.companyName}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {lead.companyDomain ?? '—'}
-                          {alreadyAdded ? ' · already added' : ''}
-                        </p>
-                      </div>
-                    </label>
-                  );
-                })
-              )}
-            </div>
-
-            <p className="text-xs text-muted-foreground">
-              {selectedLeadIds.size} selected
-            </p>
+              );
+            })}
           </div>
+        ) : (
+          <p className="font-[family-name:var(--font-barlow)] italic text-[13.5px] text-[color:var(--ink-3)]">
+            This campaign has no linked sequence. (Legacy campaigns created before the builder update.)
+          </p>
+        )}
+      </Section>
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => { setAddLeadsOpen(false); setSelectedLeadIds(new Set()); }}
-              disabled={addLeadsMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddSelected}
-              disabled={selectedLeadIds.size === 0 || addLeadsMutation.isPending}
-            >
-              {addLeadsMutation.isPending ? 'Adding…' : `Add Selected (${selectedLeadIds.size})`}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* ── Activity footer ────────────────────────────────── */}
+      <Section chapter="03" title="Notes">
+        <ul className="font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink-2)] space-y-2">
+          <li>Stats refresh every 15 seconds. <span className="text-[color:var(--ink-3)]">Sent counter is maintained by the sequence worker per successful delivery.</span></li>
+          <li>Reply + bounce ingestion comes online with the webhook milestone; those columns will stay at zero until then.</li>
+          <li>Drafts generated via AI per-send are persisted under <Link href={`/dashboard/leads?campaignId=${campaign._id}`} className="underline decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]">leads</Link> for audit.</li>
+        </ul>
+      </Section>
+    </div>
+  );
+}
+
+function StepCount({ label, n, tone = 'muted' }: { label: string; n: number; tone?: 'muted' | 'warn' }) {
+  const numCls = tone === 'warn' && n > 0
+    ? 'text-[color:var(--warn)]'
+    : n > 0 ? 'text-[color:var(--ink)]' : 'text-[color:var(--ink-3)]';
+  return (
+    <div className="w-[76px] text-right">
+      <div className={`font-[family-name:var(--font-instrument-serif)] text-[22px] leading-none tabular-nums ${numCls}`}>
+        {n}
+      </div>
+      <div className="mt-1 font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+        {label}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { X, Globe, Mail, Phone, Linkedin } from 'lucide-react';
+import { X, Globe, Mail, Phone, Linkedin, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -28,6 +28,13 @@ interface Lead {
     totalContacts: number;
     topContact?: { fullName: string; title: string; seniority: string };
   };
+  /** AI-generated one-line justification from the post-hoc grader —
+   *  "why this lead qualified". */
+  qualificationReason?: string;
+  qualificationScore?: number;
+  /** Research agent's own rationale captured at `write_lead` time —
+   *  "why I'm emitting this lead". Complements qualificationReason. */
+  agentReasoning?: string;
 }
 
 interface LeadDetailDrawerProps {
@@ -51,6 +58,13 @@ export function LeadDetailDrawer({ lead, onClose }: LeadDetailDrawerProps) {
         </div>
 
         <div className="p-6 space-y-6">
+          {/* AI justification — always first so the reader sees WHY
+              before they see the data. When neither reason is present
+              (e.g. a manually-inserted lead) we render a quiet
+              placeholder so the section stays anchored and the layout
+              doesn't jump as users page through leads. */}
+          <LeadJustification lead={lead} />
+
           {/* Basic info */}
           <section className="space-y-3">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Company</h3>
@@ -185,5 +199,110 @@ export function LeadDetailDrawer({ lead, onClose }: LeadDetailDrawerProps) {
         </div>
       </div>
     </>
+  );
+}
+
+/**
+ * Top-of-drawer "Why this lead" block. Renders up to two AI-authored
+ * justifications — the research agent's commit-time reason and the
+ * grader's qualification reason — plus a compact evidence strip
+ * summarizing the top source URLs.
+ *
+ * Shows a muted placeholder when no reasons are available (e.g.
+ * manually-inserted leads or pre-pivot records from before the
+ * `agentReasoning` / `qualificationReason` fields existed). This
+ * keeps the drawer layout stable across leads instead of collapsing
+ * to reveal different sections above the fold.
+ */
+function LeadJustification({ lead }: { lead: Lead }) {
+  const hasAgent = Boolean(lead.agentReasoning && lead.agentReasoning.trim());
+  const hasQual = Boolean(lead.qualificationReason && lead.qualificationReason.trim());
+  const topSources = (lead.sources ?? []).slice(0, 3);
+
+  // Placeholder — still visually anchors the section, doesn't leave
+  // the drawer feeling like it's missing something.
+  if (!hasAgent && !hasQual) {
+    return (
+      <section className="rounded-lg border border-dashed border-border bg-secondary/30 p-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Sparkles size={13} className="text-muted-foreground" />
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Why this lead
+          </h3>
+        </div>
+        <p className="text-xs text-muted-foreground italic">
+          No AI justification recorded — this lead was added before reasoning was captured, or imported manually.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="rounded-lg border border-border bg-secondary/40 p-4 space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Sparkles size={13} className="text-foreground" />
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Why this lead
+          </h3>
+        </div>
+        {typeof lead.qualificationScore === 'number' && (
+          <span
+            className="text-[10px] font-mono tabular-nums text-muted-foreground"
+            title="Grader confidence (0–1)"
+          >
+            {Math.round(lead.qualificationScore * 100)}%
+          </span>
+        )}
+      </div>
+
+      {hasAgent && (
+        <div>
+          <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-1">
+            Research agent
+          </div>
+          <p className="text-sm text-foreground leading-relaxed">
+            {lead.agentReasoning}
+          </p>
+        </div>
+      )}
+
+      {hasQual && (
+        <div>
+          <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-1">
+            Qualifier
+          </div>
+          <p className="text-sm text-foreground leading-relaxed">
+            {lead.qualificationReason}
+          </p>
+        </div>
+      )}
+
+      {topSources.length > 0 && (
+        <div className="pt-2 border-t border-border/60">
+          <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-1.5">
+            Evidence
+          </div>
+          <ul className="space-y-1">
+            {topSources.map((s, i) => (
+              <li key={i} className="flex items-baseline gap-2 min-w-0">
+                <span className="text-[10px] font-mono text-muted-foreground shrink-0">
+                  {s.type}
+                </span>
+                <a
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-foreground hover:underline truncate min-w-0"
+                  title={s.url}
+                >
+                  {s.url}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
   );
 }

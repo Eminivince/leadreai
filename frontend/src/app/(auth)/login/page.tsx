@@ -1,19 +1,25 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
-import { LoginSchema, type LoginInput } from '@leadreai/shared';
 import { apiFetch } from '@/lib/api';
 import { setAccessToken } from '@/lib/auth';
 import { useAppStore } from '@/store/useAppStore';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { AuthShell } from '@/components/auth/AuthShell';
 import type { ApiResponse, User } from '@leadreai/shared';
+
+const OAUTH_ERROR_MESSAGES: Record<string, string> = {
+  missing_code: 'Google didn\u2019t return a code. Please try again.',
+  state_mismatch: 'Sign-in session expired. Please try again.',
+  token_exchange_failed: 'Google rejected the sign-in. Please try again.',
+  userinfo_failed: 'Couldn\u2019t read your Google profile. Please try again.',
+  missing_email: 'Your Google account has no primary email. Use email + password instead.',
+  user_create_failed: 'We couldn\u2019t create your account. Please try again.',
+  no_user: 'Sign-in failed. Please try again.',
+  oauth_bootstrap_failed: 'Session bootstrap failed. Please sign in again.',
+  access_denied: 'You cancelled the Google sign-in.',
+};
 
 interface LoginResponseData {
   accessToken: string;
@@ -22,83 +28,57 @@ interface LoginResponseData {
 
 export default function LoginPage() {
   const router = useRouter();
+  const params = useSearchParams();
   const { setUser } = useAppStore();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginInput>({ resolver: zodResolver(LoginSchema) });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  async function onSubmit(data: LoginInput) {
+  // Surface any OAuth error that bounced back from the backend redirect.
+  useEffect(() => {
+    const err = params.get('error');
+    if (!err) return;
+    const msg = OAUTH_ERROR_MESSAGES[err] ?? 'Sign-in failed. Please try again.';
+    setSubmitError(msg);
+    toast.error(msg);
+    // Clear the query param so a manual reload doesn't re-trigger the toast.
+    router.replace('/login');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitError(null);
     try {
       const res = await apiFetch<ApiResponse<LoginResponseData>>('/api/v1/auth/login', {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify({ email, password }),
       });
       setAccessToken(res.data.accessToken);
       setUser(res.data.user);
       router.push('/dashboard');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Login failed');
+      const msg = err instanceof Error ? err.message : 'Login failed';
+      setSubmitError(msg);
+      toast.error(msg);
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="pointer-events-none absolute left-1/2 top-1/4 h-96 w-96 -translate-x-1/2 rounded-full bg-white/[0.06] blur-[100px]" />
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.97, y: 8 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-        className="relative w-full max-w-md rounded-2xl border border-border/60 bg-card p-8 shadow-2xl"
-      >
-        <div className="mb-8 text-center">
-          <span className="mb-2 block text-2xl font-bold tracking-tight text-foreground">LeadreAI</span>
-          <h1 className="text-xl font-semibold text-foreground">Welcome back</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Sign in to your account</p>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          <div className="space-y-1.5">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@company.com"
-              {...register('email')}
-            />
-            {errors.email && (
-              <p className="text-xs text-destructive">{errors.email.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              {...register('password')}
-            />
-            {errors.password && (
-              <p className="text-xs text-destructive">{errors.password.message}</p>
-            )}
-          </div>
-
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? 'Signing in…' : 'Sign in'}
-          </Button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{' '}
-          <Link href="/register" className="font-medium text-foreground underline-offset-4 hover:underline">
-            Create one
-          </Link>
-        </p>
-      </motion.div>
-    </div>
+    <AuthShell
+      mode="signin"
+      onSubmit={onSubmit}
+      isSubmitting={isSubmitting}
+      submitError={submitError}
+      email={email}
+      onEmailChange={setEmail}
+      password={password}
+      onPasswordChange={setPassword}
+    />
   );
 }

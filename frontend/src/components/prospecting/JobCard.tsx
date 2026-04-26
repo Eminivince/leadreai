@@ -2,7 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import type { ProspectingJob } from '@leadreai/shared';
+import type { ProspectingJob, JobActivityLogEntry } from '@leadreai/shared';
 import { useJob } from '@/hooks/useJob';
 import { useWorkspace } from '@/hooks/useWorkspace';
 
@@ -42,11 +42,16 @@ function formatRelativeTime(dateStr: string): string {
 export function JobCard({ job, onRefresh }: JobCardProps) {
   const { workspaceId } = useWorkspace();
   const isActive = ['queued', 'parsing', 'collecting', 'enriching', 'deduplicating'].includes(job.status);
-  const { status: liveStatus, percentage } = useJob(
+  const { status: liveStatus, percentage, activityLog: liveActivityLog } = useJob(
     isActive ? workspaceId : null,
     isActive ? job._id : null,
     onRefresh,
   );
+
+  const activityLog: JobActivityLogEntry[] =
+    isActive && liveActivityLog.length > 0
+      ? liveActivityLog
+      : (job.activityLog ?? []);
 
   const displayStatus = liveStatus ?? job.status;
   const statusStyle = STATUS_STYLES[displayStatus] ?? { variant: 'secondary' as BadgeVariant, label: displayStatus };
@@ -81,6 +86,34 @@ export function JobCard({ job, onRefresh }: JobCardProps) {
                   style={{ width: `${percentage}%` }}
                 />
               </div>
+            )}
+            {activityLog.length > 0 && (
+              <details className="mt-3 group rounded-md border border-border/80 bg-muted/30 text-left">
+                <summary className="cursor-pointer select-none list-none px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden flex items-center gap-1.5">
+                  <span className="inline-block transition-transform group-open:rotate-90 text-[10px]">▸</span>
+                  Run log ({activityLog.length} steps)
+                </summary>
+                <div className="max-h-56 overflow-y-auto border-t border-border/60 px-2 py-2 space-y-2 font-mono text-[10px] leading-relaxed">
+                  {activityLog.map((line, idx) => (
+                    <div key={`${line.at}-${idx}`} className="border-b border-border/40 pb-2 last:border-0 last:pb-0">
+                      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                        <span className="shrink-0 text-muted-foreground tabular-nums">
+                          {new Date(line.at).toLocaleTimeString(undefined, { hour12: false })}
+                        </span>
+                        <span className="rounded bg-secondary px-1.5 py-0 text-[9px] font-semibold uppercase tracking-wide text-secondary-foreground">
+                          {line.step}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 text-foreground/90 whitespace-pre-wrap break-words">{line.message}</p>
+                      {line.meta && Object.keys(line.meta).length > 0 && (
+                        <pre className="mt-1 max-h-24 overflow-auto rounded bg-background/80 p-1.5 text-[9px] text-muted-foreground">
+                          {JSON.stringify(line.meta, null, 2)}
+                        </pre>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </details>
             )}
           </div>
           <div className="flex flex-col items-end gap-2 shrink-0">
