@@ -79,6 +79,18 @@ export default function TableDetailPage() {
     }
     const rows = rowsResp.data?.data ?? [];
     if (rows.length === 0) return;
+    // Fast-path: if nothing is filled yet, skip the full scan.
+    const anyFilled = rows.some((r) => {
+      const cells = r.cells as Record<string, unknown> | undefined;
+      if (!cells) return false;
+      const cell = cells[enrichingColKey];
+      if (cell === null || cell === undefined) return false;
+      if (typeof cell === 'object' && 'value' in (cell as Record<string, unknown>)) {
+        return (cell as { value: unknown }).value !== null && (cell as { value: unknown }).value !== undefined;
+      }
+      return true;
+    });
+    if (!anyFilled) return;
     const allFilled = rows.every((r) => {
       const cells = r.cells as Record<string, unknown> | undefined;
       if (!cells) return false;
@@ -318,8 +330,8 @@ export default function TableDetailPage() {
           onLaunched={async (ck) => {
             enrichingStartRef.current = Date.now();
             setEnrichingColKey(ck);
-            await invalidate();
             setActionOpen(false);
+            void invalidate();
           }}
         />
       )}
