@@ -979,6 +979,26 @@ function EditableCell({
   const [draft, setDraft] = useState<string>(valueToString(rawValue));
   const [saving, setSaving] = useState(false);
 
+  const isEnrichedColumn = column.definition?.type === 'enriched';
+  const [reEnriching, setReEnriching] = useState(false);
+
+  async function handleReEnrich(e: React.MouseEvent) {
+    e.stopPropagation(); // prevent entering edit mode
+    if (reEnriching) return;
+    setReEnriching(true);
+    try {
+      await apiFetch<ApiResponse<unknown>>(
+        `/api/v1/workspaces/${workspaceId}/tables/${table._id}/columns/${column.key}/rows/${row._id}/enrich`,
+        { method: 'POST' },
+      );
+      await onSaved();
+    } catch {
+      // keep existing cell value on error
+    } finally {
+      setReEnriching(false);
+    }
+  }
+
   const displayValue = useMemo(() => formatCell(rawValue, column.type), [rawValue, column.type]);
   const tone = useMemo(
     () => classifyCell({ columnKey: column.key, value: rawValue }),
@@ -1079,6 +1099,19 @@ function EditableCell({
           >
             ◆
           </span>
+        )}
+        {isEnrichedColumn && (
+          <button
+            onClick={handleReEnrich}
+            title={reEnriching ? 'Enriching…' : 'Re-enrich this cell'}
+            className={`shrink-0 font-[family-name:var(--font-jetbrains-mono)] text-[11px] text-[color:var(--forest)] transition ml-0.5 ${
+              reEnriching
+                ? 'animate-pulse opacity-100'
+                : 'opacity-0 group-hover/cell:opacity-100'
+            }`}
+          >
+            ↻
+          </button>
         )}
       </div>
     </td>
