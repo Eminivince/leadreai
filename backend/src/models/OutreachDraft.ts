@@ -7,6 +7,7 @@ export interface IOutreachDraft extends mongoose.Document {
   leadId: mongoose.Types.ObjectId;
   createdBy: mongoose.Types.ObjectId;
   channel: (typeof OUTREACH_CHANNELS)[number];
+  firstLine?: string;
   subject?: string;
   body: string;
   tone: string;
@@ -15,6 +16,7 @@ export interface IOutreachDraft extends mongoose.Document {
   modelResponse: string;
   version: number;
   status: 'draft' | 'approved' | 'sent' | 'failed';
+  reasoning?: string;
   sentAt?: Date;
   deliveryMetadata?: {
     provider?: string;
@@ -32,6 +34,7 @@ const outreachDraftSchema = new Schema<IOutreachDraft>(
     leadId: { type: Schema.Types.ObjectId, ref: 'Lead', required: true },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     channel: { type: String, enum: OUTREACH_CHANNELS, required: true },
+    firstLine: { type: String },
     subject: { type: String },
     body: { type: String, required: true },
     tone: { type: String, required: true },
@@ -40,6 +43,7 @@ const outreachDraftSchema = new Schema<IOutreachDraft>(
     modelResponse: { type: String, required: true, select: false },
     version: { type: Number, default: 1 },
     status: { type: String, enum: ['draft', 'approved', 'sent', 'failed'], default: 'draft' },
+    reasoning: { type: String, select: false },
     sentAt: { type: Date },
     deliveryMetadata: {
       provider: { type: String },
@@ -49,5 +53,10 @@ const outreachDraftSchema = new Schema<IOutreachDraft>(
   },
   { timestamps: true }
 );
+
+outreachDraftSchema.index({ workspaceId: 1 });
+outreachDraftSchema.index({ campaignId: 1 });
+outreachDraftSchema.index({ leadId: 1 });
+outreachDraftSchema.index({ campaignId: 1, status: 1 });
 
 export default mongoose.model<IOutreachDraft>('OutreachDraft', outreachDraftSchema);

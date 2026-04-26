@@ -1,17 +1,68 @@
 import { Worker, type Job } from 'bullmq';
 import { Redis } from 'ioredis';
+import mongoose from 'mongoose';
 import { logger } from './utils/logger.js';
 import { env } from './config/env.js';
+import { fireWebhook } from './services/webhook.js';
+import { runIntentParser, jobActivity } from './pipeline/intentParser.js';
 
-export function createProspectingWorker(connection: Redis): Worker {
+async function connectDB(): Promise<void> {
+  await mongoose.connect(env.MONGODB_URI, { dbName: env.MONGODB_DB_NAME });
+  logger.info('Worker MongoDB connected');
+}
+
+export async function createProspectingWorker(connection: Redis, publisher: Redis): Promise<Worker> {
+  await connectDB();
+
+  const prefix = `{bull}:leadreai:${env.NODE_ENV}`;
+
   const worker = new Worker(
     'prospecting',
     async (job: Job) => {
-      logger.info('Prospecting job received', { jobId: job.id, data: job.data });
-      // Phase 1: no-op processor — pipeline implemented in Phase 3
+      const { jobId, workspaceId } = job.data as { jobId: string; workspaceId: string };
+      logger.info('Prospecting job received', { jobId, workspaceId });
+
+      try {
+        await runIntentParser(jobId, workspaceId, publisher);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        logger.error('Pipeline failed', { jobId, err });
+
+        // Mark job as failed in DB + publish error event
+        const ProspectingJob = mongoose.models['ProspectingJob'] as
+          | mongoose.Model<mongoose.Document>
+          | undefined;
+
+        if (ProspectingJob) {
+          await ProspectingJob.findByIdAndUpdate(jobId, {
+            status: 'failed',
+            'error.message': message,
+            'error.stage': 'pipeline',
+          });
+        }
+
+        await jobActivity(jobId, publisher, 'error', `Pipeline failed: ${message}`, {
+          stage: 'pipeline',
+          stackPreview: err instanceof Error ? err.stack?.slice(0, 800) : undefined,
+        }).catch(() => {});
+
+        await publisher.publish(
+          `job:progress:${jobId}`,
+          JSON.stringify({ type: 'error', message })
+        );
+
+        // Fire webhook to workspace
+        const ws = await mongoose.model('Workspace').findById(workspaceId, { 'settings.webhookUrl': 1 }).lean() as { settings?: { webhookUrl?: string } } | null;
+        if (ws?.settings?.webhookUrl) {
+          fireWebhook(ws.settings.webhookUrl, { event: 'job:failed', jobId, workspaceId, status: 'failed', error: message }, env.WEBHOOK_TIMEOUT_MS);
+        }
+
+        throw err; // re-throw so BullMQ marks job as failed and retries
+      }
     },
     {
       connection,
+      prefix,
       concurrency: env.WORKER_CONCURRENCY,
     }
   );

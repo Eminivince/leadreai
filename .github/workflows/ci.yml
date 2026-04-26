@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main, staging, 'feature/**']
+  pull_request:
+    branches: [main, staging]
+
+jobs:
+  lint-typecheck:
+    name: Lint & Type-check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type-check shared
+        run: pnpm --filter @leadreai/shared type-check
+
+      - name: Type-check backend
+        run: pnpm --filter @leadreai/backend type-check
+
+      - name: Type-check workers
+        run: pnpm --filter @leadreai/workers type-check
+
+      - name: Type-check frontend
+        run: pnpm --filter @leadreai/frontend type-check
+
+      - name: Build shared
+        run: pnpm --filter @leadreai/shared build
+
+      - name: Build backend
+        run: pnpm --filter @leadreai/backend build
+
+      - name: Build workers
+        run: pnpm --filter @leadreai/workers build
+
+      - name: Lint shared
+        run: pnpm --filter @leadreai/shared lint
+
+      - name: Lint backend
+        run: pnpm --filter @leadreai/backend lint
+
+      - name: Lint workers
+        run: pnpm --filter @leadreai/workers lint
+
+      - name: Lint frontend
+        run: pnpm --filter @leadreai/frontend lint

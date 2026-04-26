@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppStore } from '../store/useAppStore.js';
-import { apiFetch } from '../lib/api.js';
+import { useAppStore } from '../store/useAppStore';
+import { apiFetch } from '../lib/api';
 import type { ApiResponse, User } from '@leadreai/shared';
 
 export function useAuth(redirectIfUnauth = false) {

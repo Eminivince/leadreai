@@ -4,6 +4,8 @@ import {
   PHONE_TYPES,
   OUTREACH_STATUSES,
   SOURCE_TYPES,
+  QUALIFICATION_STATUSES,
+  QualificationStatus,
 } from '@leadreai/shared';
 
 export interface ILead extends mongoose.Document {
@@ -59,8 +61,46 @@ export interface ILead extends mongoose.Document {
   isDuplicate: boolean;
   mergedIntoId?: mongoose.Types.ObjectId;
   outreachStatus: (typeof OUTREACH_STATUSES)[number];
+  qualificationStatus: QualificationStatus;
+  qualificationScore?: number;
+  qualificationReason?: string;
   tags: string[];
   notes?: string;
+  suppressedAt?: Date;
+  suppressReason?: string;
+  contactIds: mongoose.Types.ObjectId[];
+  contactSummary?: {
+    totalContacts: number;
+    topContact?: {
+      fullName: string;
+      title: string;
+      seniority: 'c_level' | 'vp' | 'director' | 'manager' | 'ic' | 'unknown';
+    };
+  };
+  crmRefs: Array<{
+    provider: 'hubspot' | 'salesforce' | 'pipedrive' | 'close';
+    externalId: string;
+    syncedAt: Date;
+    syncStatus: 'synced' | 'error' | 'pending';
+    errorMessage?: string;
+  }>;
+  /**
+   * Query-specific payload fields. Keys match the job's `parsedIntent.outputSchema[i].key`.
+   * Empty/undefined when the query requested only standard contact fields.
+   *
+   * Each value is { value, unit?, sourceUrl?, confidence?, raw? }; shape
+   * mirrors FactValue in shared. Using Mixed because the value types vary
+   * by the column's declared type (currency, date, tags, etc.).
+   */
+  facts?: Record<string, {
+    value: string | number | boolean | string[] | null;
+    unit?: string;
+    sourceUrl?: string;
+    confidence?: number;
+    raw?: string;
+  }>;
+  /** Rollup: fraction (0-1) of the job's required schema columns that have a value. */
+  schemaFulfillmentPct?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -125,8 +165,38 @@ const leadSchema = new Schema<ILead>(
     isDuplicate: { type: Boolean, default: false },
     mergedIntoId: { type: Schema.Types.ObjectId, ref: 'Lead' },
     outreachStatus: { type: String, enum: OUTREACH_STATUSES, default: 'not_contacted' },
+    qualificationStatus: { type: String, enum: QUALIFICATION_STATUSES, default: 'pending' },
+    qualificationScore: { type: Number, min: 0, max: 1 },
+    qualificationReason: { type: String },
     tags: { type: [String], default: [] },
     notes: { type: String, maxlength: 5000 },
+    suppressedAt: { type: Date },
+    suppressReason: { type: String },
+    contactIds: [{ type: Schema.Types.ObjectId, ref: 'Contact' }],
+    contactSummary: {
+      totalContacts: { type: Number, default: 0 },
+      topContact: {
+        fullName: String,
+        title: String,
+        seniority: String,
+      },
+    },
+    crmRefs: {
+      type: [
+        {
+          provider: { type: String, enum: ['hubspot', 'salesforce', 'pipedrive', 'close'], required: true },
+          externalId: { type: String, required: true },
+          syncedAt: { type: Date, required: true },
+          syncStatus: { type: String, enum: ['synced', 'error', 'pending'], required: true },
+          errorMessage: String,
+        },
+      ],
+      default: [],
+    },
+    // Query-specific column values. Keys match job.parsedIntent.outputSchema[i].key.
+    // Mixed because value types are determined per-column by the schema's `type`.
+    facts: { type: Schema.Types.Mixed, default: undefined },
+    schemaFulfillmentPct: { type: Number, min: 0, max: 1 },
   },
   { timestamps: true }
 );
@@ -140,5 +210,6 @@ leadSchema.index({ 'address.country': 1 });
 leadSchema.index({ companyName: 'text', description: 'text' });
 leadSchema.index({ workspaceId: 1, companyDomain: 1 }, { unique: true, sparse: true });
 leadSchema.index({ workspaceId: 1, isDuplicate: 1, rankScore: -1 });
+leadSchema.index({ workspaceId: 1, qualificationStatus: 1 });
 
 export default mongoose.model<ILead>('Lead', leadSchema);

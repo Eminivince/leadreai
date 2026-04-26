@@ -1,5 +1,19 @@
 import { z } from 'zod';
 
+/**
+ * Zod's built-in `z.coerce.boolean()` uses JS Boolean(string), so any non-empty
+ * string — including "false", "0", "no" — coerces to `true`. That's a footgun
+ * for feature flags from .env. This helper parses the common human-readable
+ * boolean strings correctly.
+ */
+const booleanFlag = z
+  .union([z.boolean(), z.string()])
+  .transform((v) => {
+    if (typeof v === 'boolean') return v;
+    const s = v.trim().toLowerCase();
+    return s === 'true' || s === '1' || s === 'yes' || s === 'y' || s === 'on';
+  });
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(4000),
@@ -12,16 +26,41 @@ const envSchema = z.object({
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('30d'),
   BCRYPT_ROUNDS: z.coerce.number().int().min(10).max(14).default(12),
+  USE_GOOGLE: booleanFlag.default(false),
+  USE_OPENROUTER: booleanFlag.default(false),
+  USE_LOCAL_LLM: booleanFlag.default(false),
   ANTHROPIC_API_KEY: z.string().optional(),
   ANTHROPIC_MODEL: z.string().default('claude-sonnet-4-6'),
   ANTHROPIC_MAX_TOKENS: z.coerce.number().default(2048),
+  GOOGLE_API_KEY: z.string().optional(),
+  GOOGLE_MODEL: z.string().default('gemini-2.0-flash-lite'),
+  OPENROUTER_API_KEY: z.string().optional(),
+  OPENROUTER_MODEL: z.string().default('nvidia/nemotron-3-super-120b-a12b:free'),
+  OPENROUTER_BASE_URL: z.string().default('https://openrouter.ai/api/v1'),
+  LOCAL_LLM_BASE_URL: z.string().default('http://localhost:4400'),
+  LOCAL_LLM_API_KEY: z.string().optional(),
+  LOCAL_LLM_MODEL: z.string().default('qwen3.5'),
   SERPAPI_KEY: z.string().optional(),
+  RESEND_API_KEY: z.string().optional(),
+  FROM_EMAIL: z.string().email().default('outreach@leadreai.app'),
+  FROM_NAME: z.string().default('LeadreAI'),
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
-  LOG_TO_MONGODB: z.coerce.boolean().default(false),
+  LOG_TO_MONGODB: booleanFlag.default(false),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(900000),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(100),
   JOB_RATE_LIMIT_PER_HOUR: z.coerce.number().default(10),
   WORKER_CONCURRENCY: z.coerce.number().default(3),
+  ADMIN_SECRET: z.string().min(16).optional(),
+  HUBSPOT_CLIENT_ID: z.string().optional(),
+  HUBSPOT_CLIENT_SECRET: z.string().optional(),
+  HUBSPOT_REDIRECT_URI: z.string().url().optional(),
+  CREDITS_PER_JOB: z.coerce.number().int().min(0).default(0),
+  WEBHOOK_TIMEOUT_MS: z.coerce.number().default(5000),
+  RESEND_WEBHOOK_SECRET: z.string().optional(),
+  SENDGRID_WEBHOOK_SECRET: z.string().optional(),
+  UNSUBSCRIBE_BASE_URL: z.string().url().default('http://localhost:4000/unsubscribe'),
+  UNSUBSCRIBE_TOKEN_SECRET: z.string().min(16).optional(),
+  SEQUENCE_MAX_SENDS_PER_MINUTE: z.coerce.number().int().min(1).default(50),
 });
 
 const parsed = envSchema.safeParse(process.env);
