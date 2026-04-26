@@ -1172,9 +1172,27 @@ function AddColumnDialog({
   const [type, setType] = useState<ColumnValueType>('text');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<'static' | 'enriched'>('static');
+  const [sourceId, setSourceId] = useState('');
+  const [outputPath, setOutputPath] = useState('');
+  // inputMappings: sourceField → column reference
+  const [inputMappings, setInputMappings] = useState<
+    Record<string, { kind: 'column'; key: string } | { kind: 'literal'; value: string } | { kind: 'row_type_id' }>
+  >({});
 
   const key = useMemo(() => slugify(label), [label]);
   const keyConflict = table.columns.some((c) => c.key === key);
+
+  const { data: sourcesResp } = useQuery({
+    queryKey: ['data-sources', workspaceId],
+    queryFn: () => apiFetch<ApiResponse<DataSourceSummary[]>>(
+      `/api/v1/workspaces/${workspaceId}/data-sources`,
+    ),
+    enabled: mode === 'enriched' && Boolean(workspaceId),
+    staleTime: 60_000,
+  });
+  const availableSources = sourcesResp?.data ?? [];
+  const selectedSource = availableSources.find((s) => s.id === sourceId) ?? null;
 
   async function handleSave() {
     if (!label.trim() || !key) return;
@@ -1182,19 +1200,22 @@ function AddColumnDialog({
       setError('A column with this key already exists.');
       return;
     }
+    if (mode === 'enriched' && !sourceId) {
+      setError('Select a data source.');
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
+      const definition =
+        mode === 'enriched'
+          ? { type: 'enriched' as const, sourceId, inputMappings, outputPath }
+          : { type: 'static' as const };
       await apiFetch<ApiResponse<unknown>>(
         `/api/v1/workspaces/${workspaceId}/tables/${table._id}/columns`,
         {
           method: 'POST',
-          body: JSON.stringify({
-            key,
-            label: label.trim(),
-            type,
-            definition: { type: 'static' }, // Enriched columns land with 15D
-          }),
+          body: JSON.stringify({ key, label: label.trim(), type, definition }),
         },
       );
       onAdded();
@@ -1239,9 +1260,113 @@ function AddColumnDialog({
             ))}
           </div>
         </div>
-        <p className="font-[family-name:var(--font-barlow)] italic text-[12px] text-[color:var(--ink-3)]">
-          Columns start as manual-entry. Connecting a column to a data source (Apollo, Hunter, etc.) ships next.
-        </p>
+
+        {/* Mode toggle */}
+        <div className="flex items-center gap-0 border border-[color:var(--rule)] rounded-full overflow-hidden w-fit">
+          {(['static', 'enriched'] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={`px-4 py-1.5 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase transition-colors ${
+                mode === m
+                  ? 'bg-[color:var(--ink)] text-[color:var(--paper)]'
+                  : 'text-[color:var(--ink-2)] hover:text-[color:var(--ink)]'
+              }`}
+            >
+              {m === 'static' ? 'Manual' : 'Data source'}
+            </button>
+          ))}
+        </div>
+
+        {mode === 'enriched' && (
+          <div className="flex flex-col gap-4 border border-[color:var(--rule)] rounded-sm px-4 py-4 bg-[color:var(--paper-3)]/60">
+            {/* Source picker */}
+            <div>
+              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
+                Data source
+              </span>
+              <select
+                value={sourceId}
+                onChange={(e) => {
+                  setSourceId(e.target.value);
+                  setInputMappings({});
+                  setOutputPath('');
+                }}
+                className="w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-1.5 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] outline-none"
+              >
+                <option value="">— Pick a source —</option>
+                {availableSources.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Input mappings — one row per source input field */}
+            {selectedSource && selectedSource.inputFields.length > 0 && (
+              <div>
+                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
+                  Inputs
+                </span>
+                <div className="flex flex-col gap-2">
+                  {selectedSource.inputFields.map((field) => {
+                    const mapping = inputMappings[field.key];
+                    return (
+                      <div key={field.key} className="flex items-center gap-3">
+                        <span className="font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink-2)] w-28 shrink-0">
+                          {field.label}
+                          {field.required && <span className="text-[color:var(--warn)]"> *</span>}
+                        </span>
+                        <select
+                          value={mapping?.kind === 'column' ? mapping.key : ''}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setInputMappings((cur) => {
+                              const next = { ...cur };
+                              if (!v) delete next[field.key];
+                              else next[field.key] = { kind: 'column', key: v };
+                              return next;
+                            });
+                          }}
+                          className="flex-1 bg-transparent border-b border-[color:var(--rule)] py-1 font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink)] outline-none"
+                        >
+                          <option value="">— Column —</option>
+                          {table.columns.map((c) => (
+                            <option key={c.key} value={c.key}>
+                              {c.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Output field picker */}
+            {selectedSource && selectedSource.outputFields.length > 0 && (
+              <div>
+                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
+                  Extract field
+                </span>
+                <select
+                  value={outputPath}
+                  onChange={(e) => setOutputPath(e.target.value)}
+                  className="w-full bg-transparent border-b border-[color:var(--rule)] py-1.5 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] outline-none"
+                >
+                  <option value="">— Whole response —</option>
+                  {selectedSource.outputFields.map((f) => (
+                    <option key={f.key} value={f.key}>
+                      {f.label} ({f.key})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {error && (
@@ -1259,7 +1384,7 @@ function AddColumnDialog({
         </button>
         <button
           onClick={() => void handleSave()}
-          disabled={!label.trim() || saving || keyConflict}
+          disabled={!label.trim() || saving || keyConflict || (mode === 'enriched' && !sourceId)}
           className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40"
         >
           {saving ? 'Adding…' : 'Add column'}
