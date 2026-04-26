@@ -1,5 +1,6 @@
 import { env } from '../config/env.js';
 import { logger } from './logger.js';
+import { recordLlmCost } from '../services/costTracker.js';
 
 /**
  * Unified LLM client. Reads env to decide between:
@@ -111,6 +112,30 @@ export async function callLlmOnce(req: LlmRequest): Promise<LlmResponse> {
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const json = await res.json() as any;
+
+    // Cost telemetry — OpenRouter/OpenAI-compatible `usage` block.
+    // Shape: { prompt_tokens, completion_tokens, total_tokens,
+    //          prompt_tokens_details?: { cached_tokens? } }
+    // Skipped for local provider (priced at $0 anyway).
+    if (ep.provider === 'openrouter') {
+      const usage = json?.usage ?? {};
+      const input  = typeof usage.prompt_tokens === 'number' ? usage.prompt_tokens : 0;
+      const output = typeof usage.completion_tokens === 'number' ? usage.completion_tokens : 0;
+      const cached = typeof usage.prompt_tokens_details?.cached_tokens === 'number'
+        ? usage.prompt_tokens_details.cached_tokens
+        : 0;
+      // "Cached" tokens are a subset of prompt tokens in OpenAI's contract.
+      // Subtract to avoid double-counting — input billed at full rate is
+      // (prompt_tokens - cached_tokens); cached_tokens billed at cache-read rate.
+      const billableInput = Math.max(0, input - cached);
+      if (billableInput > 0 || output > 0 || cached > 0) {
+        // Fire-and-forget — cost write failure must never surface to caller.
+        // Model slug passed as `openrouter/<model>` to match pricing table keys.
+        const slug = `openrouter/${model}`;
+        void recordLlmCost(slug, { input: billableInput, output, cached });
+      }
+    }
+
     return { ok: true, status: res.status, content: json?.choices?.[0]?.message?.content ?? '' };
   } finally {
     clearTimeout(timeout);
