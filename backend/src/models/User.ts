@@ -1,15 +1,34 @@
 import mongoose, { Schema } from 'mongoose';
 import { PLAN_TIERS, WORKSPACE_ROLES } from '@leadreai/shared';
 
+export type AuthProviderId = 'google' | 'github' | 'linkedin' | 'microsoft';
+
+export interface IUserAuthProvider {
+  provider: AuthProviderId;
+  providerId: string;
+  email?: string;
+  connectedAt: Date;
+}
+
 export interface IUser extends mongoose.Document {
   email: string;
   passwordHash?: string;
   firstName: string;
-  lastName: string;
+  // Optional — passwordless + social sign-ups may not have one. The
+  // password-register path still enforces it via the zod schema.
+  lastName?: string;
   avatarUrl?: string;
+  providers?: IUserAuthProvider[];
   plan: (typeof PLAN_TIERS)[number];
   planExpiresAt?: Date;
+  // Plan-granted credits. Resets on subscription renewal.
+  monthlyCreditsBalance: number;
+  // Top-up credits bought separately. Roll over forever.
   creditsBalance: number;
+  // When the monthly bucket is next refilled. Set by subscribe /
+  // renewIfDue. null when not on a plan (free users keep a monthly
+  // grant too — see PLAN_CONFIG — so this is populated for them as well).
+  subscriptionRenewsAt?: Date;
   workspaces: Array<{
     workspaceId: mongoose.Types.ObjectId;
     role: (typeof WORKSPACE_ROLES)[number];
@@ -23,13 +42,25 @@ export interface IUser extends mongoose.Document {
 const userSchema = new Schema<IUser>(
   {
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    passwordHash: { type: String, required: true, select: false },
+    // Optional — social-only users never set a password.
+    passwordHash: { type: String, select: false },
     firstName: { type: String, required: true, trim: true, maxlength: 100 },
-    lastName: { type: String, required: true, trim: true, maxlength: 100 },
+    lastName: { type: String, trim: true, maxlength: 100 },
     avatarUrl: { type: String },
+    providers: [
+      {
+        provider: { type: String, enum: ['google', 'github', 'linkedin', 'microsoft'], required: true },
+        providerId: { type: String, required: true },
+        email: { type: String },
+        connectedAt: { type: Date, default: Date.now },
+        _id: false,
+      },
+    ],
     plan: { type: String, enum: PLAN_TIERS, default: 'free' },
     planExpiresAt: { type: Date },
+    monthlyCreditsBalance: { type: Number, default: 0, min: 0 },
     creditsBalance: { type: Number, default: 0, min: 0 },
+    subscriptionRenewsAt: { type: Date },
     workspaces: [{
       workspaceId: { type: Schema.Types.ObjectId, ref: 'Workspace' },
       role: { type: String, enum: WORKSPACE_ROLES },
@@ -42,5 +73,11 @@ const userSchema = new Schema<IUser>(
 );
 
 userSchema.index({ 'workspaces.workspaceId': 1 });
+// Fast provider-id lookup on OAuth callback. Partial + sparse so it's
+// free for users who never connect a social provider.
+userSchema.index(
+  { 'providers.provider': 1, 'providers.providerId': 1 },
+  { sparse: true },
+);
 
 export default mongoose.model<IUser>('User', userSchema);

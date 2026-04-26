@@ -30,6 +30,10 @@ export interface ToolDef {
 // Re-export handlers from individual tool files
 import { searchWebTool } from './searchWeb.js';
 import { fetchUrlTool } from './fetchUrl.js';
+import { fetchFileTool, getFileChunkTool } from './fetchFile.js';
+import { transcribeUrlTool } from './transcribeUrl.js';
+import { readDocumentTool } from './readDocument.js';
+import { searchWorkspaceLeadsTool } from './searchWorkspaceLeads.js';
 import { scrapePageTool } from './scrapePage.js';
 import { lookupRegistryTool } from './lookupRegistry.js';
 import { listCompaniesTool } from './listCompanies.js';
@@ -40,10 +44,15 @@ import { scoreLeadTool } from './scoreLead.js';
 import { writeLeadTool } from './writeLead.js';
 
 export const TOOL_REGISTRY: ToolDef[] = [
-  // Discovery — always try these first for any listing/demographic query.
+  // Library tier — cheapest, try first. User's own uploaded docs +
+  // this workspace's accumulated prior research. Both are free, zero-
+  // latency, and reuse work instead of paying to recreate it.
+  readDocumentTool,
+  searchWorkspaceLeadsTool,
+  // Discovery — registry-first, SERP-second for demographic queries.
   listCompaniesTool, lookupRegistryTool,
-  // Search — fall back to these when registry coverage is insufficient.
-  searchWebTool, fetchUrlTool, scrapePageTool,
+  // Search — fall back to these when registry + library coverage is thin.
+  searchWebTool, fetchUrlTool, fetchFileTool, getFileChunkTool, transcribeUrlTool, scrapePageTool,
   // Enrichment — person/contact extraction on discovered domains.
   extractNamesFromUrlsTool, permuteEmailTool, verifyEmailTool,
   // Scoring / finalize.

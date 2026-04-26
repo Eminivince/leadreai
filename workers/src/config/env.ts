@@ -1,4 +1,12 @@
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 import { z } from 'zod';
+
+// See backend env for rationale — anchor storage path to the monorepo
+// root so backend (writer) and worker (reader) see the same directory
+// regardless of which cwd launched them.
+const _moduleDir = dirname(fileURLToPath(import.meta.url));
+const DEFAULT_DOCUMENTS_STORAGE_PATH = resolve(_moduleDir, '../../..', 'storage/documents');
 
 // `z.coerce.boolean()` treats any non-empty string as true — including "false"
 // and "0". This helper parses common boolean strings ("true"/"1"/"yes") properly.
@@ -48,6 +56,25 @@ const envSchema = z.object({
   UNSUBSCRIBE_BASE_URL: z.string().url().default('http://localhost:4000/unsubscribe'),
   UNSUBSCRIBE_TOKEN_SECRET: z.string().optional(),
   SEQUENCE_SCHEDULER_INTERVAL_MS: z.coerce.number().int().min(10000).default(60000),
+  // Document library
+  DOCUMENTS_STORAGE_PATH: z.string().default(DEFAULT_DOCUMENTS_STORAGE_PATH),
+  EMBEDDING_API_KEY: z.string().optional(),
+  EMBEDDING_BASE_URL: z.string().default('https://api.openai.com/v1'),
+  EMBEDDING_MODEL: z.string().default('text-embedding-3-small'),
+  EMBEDDING_DIMS: z.coerce.number().default(1536),
+  // Transcription (Whisper-style). Falls back to EMBEDDING_API_KEY /
+  // EMBEDDING_BASE_URL when unset so one OpenAI key unlocks both.
+  TRANSCRIPTION_API_KEY: z.string().optional(),
+  TRANSCRIPTION_BASE_URL: z.string().optional(),
+  TRANSCRIPTION_MODEL: z.string().default('whisper-1'),
+  TRANSCRIPTION_MAX_MB: z.coerce.number().default(25),
+  // Dev ergonomic — when true, drain every queue (active, waiting, delayed,
+  // failed) at worker boot. BullMQ otherwise redelivers jobs that were
+  // `active` when the previous process died (stalled-job recovery), which
+  // is the right behavior in prod but means a fresh `pnpm dev` resurrects
+  // the job you thought you killed. MUST stay false in prod — turning it
+  // on there would wipe live jobs on every deploy.
+  CLEAR_QUEUES_ON_BOOT: booleanFlag.default(false),
 });
 
 const parsed = envSchema.safeParse(process.env);

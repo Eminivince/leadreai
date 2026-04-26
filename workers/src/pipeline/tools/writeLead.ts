@@ -2,6 +2,7 @@ import type { ToolDef } from './index.js';
 import type { LeadRecord } from '../deduplicator.js';
 import { logger } from '../../utils/logger.js';
 import { normalizePhones, countryNameToCode } from '../phoneNormalizer.js';
+import { jobActivity } from '../intentParser.js';
 
 /**
  * Rejects strings that look like page chrome / navigation text rather than a
@@ -52,14 +53,64 @@ function clampToFiniteNumber(value: unknown, fallback: number, min: number, max:
   return Math.max(min, Math.min(max, n));
 }
 
+/**
+ * Hosts where the "domain" is a shared platform, not an identity. Many
+ * distinct leads legitimately share instagram.com / tiktok.com / etc.,
+ * so we disambiguate them by appending a slug of the company/person
+ * name to the domain. Without this the dedup layer (both the in-memory
+ * leadsSoFar scan below and the downstream bulkWrite upsert filter)
+ * collapses every influencer on the same platform into one record.
+ */
+const SOCIAL_PLATFORM_HOSTS = new Set([
+  'instagram.com',
+  'tiktok.com',
+  'x.com',
+  'twitter.com',
+  'linkedin.com',
+  'facebook.com',
+  'youtube.com',
+  'threads.net',
+  'snapchat.com',
+  'pinterest.com',
+]);
+
+export function isSocialPlatformHost(host: string): boolean {
+  return SOCIAL_PLATFORM_HOSTS.has(host);
+}
+
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .trim()
+    .replace(/@/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+}
+
+/**
+ * If the domain is a social platform, return `<host>/<slug(name)>` so
+ * distinct profiles don't collide on the dedup key. Otherwise return
+ * the domain unchanged.
+ */
+function identityDomain(rawDomain: string, companyName: string): string {
+  if (!isSocialPlatformHost(rawDomain)) return rawDomain;
+  const slug = slugify(companyName);
+  return slug ? `${rawDomain}/${slug}` : rawDomain;
+}
+
 export const writeLeadTool: ToolDef = {
   name: 'write_lead',
   description: 'Commit a lead to the job results. Deduplicates on companyDomain + primary email within this job. Call this ONLY for leads you are confident in (ideally after score_lead returns isVerified:true). Pass `facts` to fill in the query-specific columns the user asked for (see outputSchema in the initial prompt).',
   parametersSchema: '{"companyName": string, "companyDomain": string, "website"?: string, "emails": [{address,type?,confidence,name?,title?,department?,source?}], "phones": [{raw,normalized?,source?}], "topContact"?: {fullName,title?,seniority?}, "rankScore"?: number, "sources"?: [{url,type?}], "facts"?: {[key]: {value, unit?, sourceUrl?, confidence?, raw?}}, "reasoning"?: string}',
   handler: async (args, ctx) => {
     const companyName = String(args?.companyName ?? '').trim();
-    const companyDomain = String(args?.companyDomain ?? '').trim().toLowerCase().replace(/^www\./, '');
-    if (!companyName || !companyDomain) return { ok: false, output: 'companyName and companyDomain required' };
+    const rawDomain = String(args?.companyDomain ?? '').trim().toLowerCase().replace(/^www\./, '');
+    if (!companyName || !rawDomain) return { ok: false, output: 'companyName and companyDomain required' };
+
+    // Disambiguate social-platform leads so two influencers on
+    // instagram.com don't collapse into one row.
+    const companyDomain = identityDomain(rawDomain, companyName);
 
     // Same-domain handling — we support UPGRADES: a second write_lead on the same
     // domain can replace the prior record if the new one has strictly better data
@@ -173,6 +224,13 @@ export const writeLeadTool: ToolDef = {
       rankScore: clampToFiniteNumber(args?.rankScore, 70, 0, 100),
       completenessScore: 0,
       isDuplicate: false,
+      // Persist the agent's "why I'm writing this" string onto the
+      // lead record. The grader's qualificationReason covers "why it
+      // qualified" post-hoc; agentReasoning covers "why I collected
+      // it" at commit-time. Both surface in the UI drawer.
+      ...(typeof args?.reasoning === 'string' && args.reasoning.trim()
+        ? { agentReasoning: args.reasoning.trim().slice(0, 2000) }
+        : {}),
       tags: ['agent_emitted'],
       contactSummary: (() => {
         const rawName = args?.topContact?.fullName ? String(args.topContact.fullName) : undefined;
@@ -229,13 +287,32 @@ export const writeLeadTool: ToolDef = {
       `job:progress:${ctx.jobId}`,
       JSON.stringify({ type: 'progress', leadsFoundSoFar: ctx.leadsSoFar.length }),
     );
-    await ctx.publisher.publish(
-      `job:progress:${ctx.jobId}`,
-      JSON.stringify({
-        type: 'activity', stage: 'agent', ts: Date.now(),
-        title: `Agent ${writeAction === 'new' ? 'emitted' : writeAction === 'upgrade' ? 'upgraded' : writeAction} lead: ${companyName}`,
-        meta: { domain: companyDomain, emails: emails.length, phones: phones.length, action: writeAction, reasoning: args?.reasoning },
-      }),
+    // `step` name maps to the frontend's tone classifier so the event
+    // renders with the right color (positive for new/upgrade, muted for
+    // merge/skip). Using the canonical jobActivity helper persists the
+    // entry to Mongo `activityLog` for bootstrap-on-reconnect too.
+    const stepName =
+      writeAction === 'new' ? 'lead_written'
+      : writeAction === 'upgrade' ? 'lead_upserted'
+      : writeAction === 'merge' ? 'lead_merged'
+      : 'duplicate_skipped';
+    const verb =
+      writeAction === 'new' ? 'Emitted'
+      : writeAction === 'upgrade' ? 'Upgraded'
+      : writeAction === 'merge' ? 'Merged'
+      : 'Skipped (dup)';
+    await jobActivity(
+      ctx.jobId,
+      ctx.publisher,
+      stepName,
+      `${verb}: ${companyName}`,
+      {
+        domain: companyDomain,
+        emails: emails.length,
+        phones: phones.length,
+        action: writeAction,
+        reasoning: args?.reasoning,
+      },
     );
 
     logger.info('[writeLead] lead %s', writeAction, {

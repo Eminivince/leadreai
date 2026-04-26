@@ -17,6 +17,9 @@ export interface ISequenceStep {
     fromName?: string;
     replyTo?: string;
   };
+  useAI?: boolean;
+  tone?: string;
+  goal?: string;
 }
 
 export interface ISequenceStopRule {

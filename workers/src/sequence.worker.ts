@@ -9,6 +9,9 @@ import { logger } from './utils/logger.js';
 import { env } from './config/env.js';
 import { renderTemplate } from './services/templateRenderer.js';
 import { isWithinSendWindow, nextSendTime, type SendWindow } from './services/sendWindowChecker.js';
+import { reserveSend } from './services/sendQuota.js';
+import { generateOutreachDraft } from './services/outreachGenerator.js';
+import { runWithCostContext } from './services/costTracker.js';
 
 export interface SequenceStepPayload {
   enrollmentId: string;
@@ -120,6 +123,43 @@ const suppressionSchema = new Schema({ workspaceId: Schema.Types.ObjectId, email
 const SuppressionModel = mongoose.models['SUPPRESSION_SEQ'] as mongoose.Model<any> ??
   mongoose.model('SUPPRESSION_SEQ', suppressionSchema, 'suppressionentries');
 
+// Campaign — we read `schedule.dailySendCap` + `schedule.timezone` per-send
+// to enforce the per-workspace daily cap. Matched to a sequence via
+// `sequenceId`. Campaigns created before M1 won't have `schedule`; the
+// send path falls back to no-cap in that case.
+const campaignSchema = new Schema({
+  workspaceId: Schema.Types.ObjectId,
+  sequenceId: Schema.Types.ObjectId,
+  name: String,
+  outreachConfig: { channel: String, tone: String, language: String },
+  schedule: { timezone: String, startHour: Number, endHour: Number, allowedDays: [Number], dailySendCap: Number },
+}, { strict: false });
+const CampaignModel = mongoose.models['CAMPAIGN_SEQ'] as mongoose.Model<any> ??
+  mongoose.model('CAMPAIGN_SEQ', campaignSchema, 'campaigns');
+
+// OutreachDraft — persisted for every AI-personalized send so the audit
+// trail contains the exact subject/body the model produced. Drafts from
+// template-rendered sends are NOT persisted here (they're reproducible
+// from the step template + merge tokens).
+const outreachDraftSchema = new Schema({
+  workspaceId: Schema.Types.ObjectId,
+  campaignId: Schema.Types.ObjectId,
+  leadId: Schema.Types.ObjectId,
+  createdBy: Schema.Types.ObjectId,
+  channel: { type: String, default: 'email' },
+  firstLine: String,
+  subject: String,
+  body: String,
+  tone: String,
+  language: String,
+  reasoning: String,
+  status: { type: String, default: 'sent' },
+  sentAt: Date,
+  deliveryMetadata: { provider: String, messageId: String },
+}, { strict: false, timestamps: true });
+const OutreachDraftModel = mongoose.models['DRAFT_SEQ'] as mongoose.Model<any> ??
+  mongoose.model('DRAFT_SEQ', outreachDraftSchema, 'outreachdrafts');
+
 // ─── Email send helper ────────────────────────────────────────────────────────
 async function sendEmail(
   emailConfig: Record<string, any>,
@@ -166,7 +206,7 @@ async function sendEmail(
 }
 
 // ─── Main job processor ───────────────────────────────────────────────────────
-async function processSequenceStep(job: Job<SequenceStepPayload>): Promise<void> {
+async function processSequenceStep(job: Job<SequenceStepPayload>, redis: Redis): Promise<void> {
   const { enrollmentId, stepNumber } = job.data;
   const tag = `[sequence.worker:${enrollmentId}:step${stepNumber}]`;
 
@@ -226,10 +266,108 @@ async function processSequenceStep(job: Job<SequenceStepPayload>): Promise<void>
     return;
   }
 
-  // Render template
+  // Daily send cap — look up the Campaign associated with this sequence.
+  // Campaigns created before M1 won't have a schedule; skip the check in
+  // that case. When the cap is hit, defer nextStepAt to the start of the
+  // next send window (tomorrow) and don't advance the step.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const campaign = await (CampaignModel.findOne({ sequenceId: enrollment.sequenceId, workspaceId: enrollment.workspaceId })
+    .select('schedule')
+    .lean() as Promise<any>);
+  const cap = campaign?.schedule?.dailySendCap as number | undefined;
+  const tz = (campaign?.schedule?.timezone as string | undefined) ?? (step.sendWindow?.timezone as string | undefined);
+  if (cap && tz) {
+    const quota = await reserveSend({
+      redis,
+      workspaceId: enrollment.workspaceId.toString(),
+      timezone: tz,
+      cap,
+    });
+    if (!quota.allowed) {
+      // Defer to the next valid send window — sequenceScheduler will
+      // re-dispatch when nextStepAt passes. We add 24h and let
+      // nextSendTime jump forward to the workspace-local startHour.
+      const deferBase = new Date(Date.now() + 24 * 3_600_000);
+      const cs = campaign?.schedule;
+      const sw: SendWindow | null = step.sendWindow
+        ? (step.sendWindow as SendWindow)
+        : cs
+          ? { startHour: cs.startHour, endHour: cs.endHour, timezone: tz, allowedDays: cs.allowedDays ?? [] }
+          : null;
+      const nextTime = sw ? nextSendTime(sw, deferBase) : deferBase;
+      logger.info(`${tag} daily cap hit (${quota.used}/${quota.cap}), deferring to ${nextTime.toISOString()}`);
+      await EnrollmentModel.updateOne(
+        { _id: enrollmentId },
+        {
+          $set: { nextStepAt: nextTime },
+          $push: { stepHistory: { stepNumber, status: 'skipped', toEmail, errorMessage: `daily cap ${cap} reached` } },
+        },
+      );
+      return;
+    }
+  }
+
+  // Render template (fallback + non-AI path)
   const contact = enrollment.contactId ? await ContactModel.findById(enrollment.contactId) : null;
-  const subject = renderTemplate(step.emailTemplate.subject as string, lead, contact ?? undefined);
-  const body = renderTemplate(step.emailTemplate.body as string, lead, contact ?? undefined);
+  const templateSubject = renderTemplate(step.emailTemplate.subject as string, lead, contact ?? undefined);
+  const templateBody = renderTemplate(step.emailTemplate.body as string, lead, contact ?? undefined);
+
+  // AI-personalized branch — when the step has useAI=true, call the Claude
+  // outreach generator at send time so every recipient gets a bespoke draft
+  // grounded in the workspace knowledge base. Template text is still used
+  // as the "authored base" the generator reads as guidance. On failure,
+  // fall back to the rendered template so a flaky LLM doesn't stall the
+  // sequence.
+  let subject = templateSubject;
+  let body = templateBody;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let aiResult: any = null;
+
+  if (step.useAI) {
+    try {
+      aiResult = await generateOutreachDraft(
+        {
+          companyName: lead.companyName as string | undefined,
+          companyDomain: lead.companyDomain as string | undefined,
+          website: lead.website as string | undefined,
+          industry: lead.industry as string | undefined,
+          address: lead.address as { city?: string; country?: string; state?: string } | undefined,
+          socialProfiles: lead.socialProfiles as { linkedinUrl?: string } | undefined,
+        },
+        {
+          name: (campaign?.name as string | undefined) ?? 'Workspace',
+          settings: { cheapMode: true }, // sequence sends default to cheap mode — no per-send SERP research
+          knowledgeBase: ((workspace.knowledgeBase ?? []) as Array<{ title: string; content: string; type?: string }>).map((kb) => ({
+            title: kb.title,
+            content: kb.content,
+            type: kb.type,
+          })),
+        },
+        {
+          name: (campaign?.name as string | undefined) ?? 'Campaign',
+          outreachConfig: {
+            channel: (step.channel as string | undefined) ?? 'email',
+            tone: (step.tone as string | undefined) ?? (campaign?.outreachConfig?.tone as string | undefined) ?? 'direct',
+            language: (campaign?.outreachConfig?.language as string | undefined) ?? 'English',
+          },
+        },
+        [],
+      );
+      if (aiResult?.subject && aiResult?.body) {
+        subject = aiResult.subject;
+        body = aiResult.body;
+        logger.info(`${tag} AI draft generated`, { subjectPreview: subject.slice(0, 80) });
+      } else {
+        logger.warn(`${tag} AI draft returned empty fields, falling back to template`);
+        aiResult = null;
+      }
+    } catch (err) {
+      logger.warn(`${tag} AI draft failed, falling back to template`, {
+        err: err instanceof Error ? err.message : String(err),
+      });
+      aiResult = null;
+    }
+  }
 
   // Build unsubscribe URL
   const unsubscribeUrl = buildUnsubscribeUrl(enrollment.workspaceId.toString(), toEmail);
@@ -258,9 +396,42 @@ async function processSequenceStep(job: Job<SequenceStepPayload>): Promise<void>
 
   await EnrollmentModel.updateOne({ _id: enrollmentId }, { $push: { stepHistory: histEntry } });
 
+  // Persist an OutreachDraft row for AI-personalized sends so the audit
+  // trail contains the exact model output. Template-rendered sends are
+  // reproducible from the step definition and don't need this.
+  if (messageId && aiResult && campaign?._id) {
+    await OutreachDraftModel.create({
+      workspaceId: enrollment.workspaceId,
+      campaignId: campaign._id,
+      leadId: enrollment.leadId,
+      channel: (step.channel as string | undefined) ?? 'email',
+      firstLine: aiResult.firstLine,
+      subject,
+      body,
+      tone: (step.tone as string | undefined) ?? 'direct',
+      language: (campaign.outreachConfig?.language as string | undefined) ?? 'English',
+      reasoning: aiResult.reasoning,
+      status: 'sent',
+      sentAt: new Date(),
+      deliveryMetadata: { provider: (workspace.emailConfig as { provider?: string }).provider, messageId },
+    }).catch((err) => {
+      logger.warn(`${tag} failed to persist OutreachDraft for AI send`, {
+        err: err instanceof Error ? err.message : String(err),
+      });
+    });
+  }
+
   // Update lead outreachStatus to 'sent' on first successful send
   if (messageId && stepNumber === 1) {
     await LeadModel.updateOne({ _id: enrollment.leadId }, { $set: { outreachStatus: 'sent' } });
+  }
+
+  // Bump campaign stats — feeds the detail page without per-request aggregation.
+  if (messageId && campaign?._id) {
+    await CampaignModel.updateOne(
+      { _id: campaign._id },
+      { $inc: { 'stats.sent': 1 } },
+    ).catch((err) => logger.warn(`${tag} failed to $inc campaign stats.sent`, { err: err instanceof Error ? err.message : String(err) }));
   }
 
   if (messageId) {
@@ -296,7 +467,12 @@ async function advanceOrComplete(
 }
 
 // ─── Worker factory ───────────────────────────────────────────────────────────
-export function createSequenceWorker(connection: Redis): Worker {
+/**
+ * `connection` is reserved for BullMQ (blocking-pop mode). `redis` is a
+ * separate client used for side-channel operations — currently the daily
+ * send-quota counter. They must be distinct ioredis instances.
+ */
+export function createSequenceWorker(connection: Redis, redis: Redis): Worker {
   if (mongoose.connection.readyState === 0) {
     mongoose.connect(env.MONGODB_URI, { dbName: env.MONGODB_DB_NAME }).catch(err =>
       logger.error('Sequence worker Mongo connect error', { err }),
@@ -305,7 +481,27 @@ export function createSequenceWorker(connection: Redis): Worker {
 
   const worker = new Worker<SequenceStepPayload>(
     'sequence-step',
-    async (job) => { await processSequenceStep(job); },
+    async (job) => {
+      // Load just enough to establish the cost scope before the heavy path.
+      // A missing enrollment is non-fatal — processSequenceStep re-checks and
+      // returns early; we just fall through without a scope in that case.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const enrollment: any = await EnrollmentModel.findById(job.data.enrollmentId).select('workspaceId').lean();
+      if (!enrollment?.workspaceId) {
+        await processSequenceStep(job, redis);
+        return;
+      }
+      // Campaign lookup for campaignId on the cost scope — strictly optional;
+      // processSequenceStep does its own lookup later.
+      const campaign = await CampaignModel.findOne({ sequenceId: enrollment.sequenceId ?? undefined })
+        .select('_id').lean() as { _id?: unknown } | null;
+      const campaignId = campaign?._id ? String(campaign._id) : undefined;
+
+      await runWithCostContext(
+        { workspaceId: String(enrollment.workspaceId), campaignId },
+        () => processSequenceStep(job, redis),
+      );
+    },
     {
       connection,
       concurrency: env.WORKER_CONCURRENCY,

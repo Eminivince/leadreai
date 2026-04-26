@@ -2,8 +2,10 @@ import mongoose from 'mongoose';
 import EmailEvent from '../models/EmailEvent.js';
 import SequenceEnrollment, { type ISequenceEnrollmentDoc } from '../models/SequenceEnrollment.js';
 import Sequence from '../models/Sequence.js';
+import Campaign from '../models/Campaign.js';
 import Lead from '../models/Lead.js';
 import { SuppressionEntry } from '../models/SuppressionList.js';
+import { emitNotification } from './notifications.js';
 import { logger } from '../utils/logger.js';
 
 interface NormalizedEvent {
@@ -143,22 +145,35 @@ export async function processEmailEvent(
   }
 
   const stepIndex = enrollment.stepHistory.findIndex(s => s.messageId === normalized.messageId);
+  const step = stepIndex >= 0 ? enrollment.stepHistory[stepIndex] : undefined;
   const historyUpdate: Record<string, unknown> = {};
+
+  // Campaign.stats is the cache the dashboard reads. We only $inc on the
+  // FIRST transition per enrollment so duplicate provider deliveries don't
+  // double-count. Discriminator = did the enrollment already record this
+  // state? (checked via the stepHistory timestamp field per event type).
+  const campaign = await Campaign.findOne({ sequenceId: enrollment.sequenceId, workspaceId: enrollment.workspaceId }).select('_id name stats.replied stats.bounced stats.opened');
 
   switch (normalized.event) {
     case 'delivered':
       historyUpdate[`stepHistory.${stepIndex}.deliveredAt`] = normalized.occurredAt;
       historyUpdate[`stepHistory.${stepIndex}.status`] = 'delivered';
       break;
-    case 'opened':
+    case 'opened': {
+      const isFirst = stepIndex >= 0 && !step?.openedAt;
       historyUpdate[`stepHistory.${stepIndex}.openedAt`] = normalized.occurredAt;
       historyUpdate[`stepHistory.${stepIndex}.status`] = 'opened';
+      if (isFirst && campaign) {
+        await Campaign.updateOne({ _id: campaign._id }, { $inc: { 'stats.opened': 1 } });
+      }
       break;
+    }
     case 'clicked':
       historyUpdate[`stepHistory.${stepIndex}.clickedAt`] = normalized.occurredAt;
       historyUpdate[`stepHistory.${stepIndex}.status`] = 'clicked';
       break;
-    case 'replied':
+    case 'replied': {
+      const isFirst = enrollment.status !== 'replied';
       historyUpdate[`stepHistory.${stepIndex}.repliedAt`] = normalized.occurredAt;
       historyUpdate[`stepHistory.${stepIndex}.status`] = 'replied';
       await SequenceEnrollment.updateOne({ _id: enrollment._id }, { $set: { status: 'replied' } });
@@ -166,9 +181,23 @@ export async function processEmailEvent(
         { _id: enrollment.sequenceId },
         { $inc: { 'stats.replied': 1 } },
       );
+      if (isFirst && campaign) {
+        await Campaign.updateOne({ _id: campaign._id }, { $inc: { 'stats.replied': 1 } });
+        const lead = await Lead.findById(enrollment.leadId).select('companyName emails');
+        await emitNotification({
+          workspaceId: enrollment.workspaceId,
+          type: 'campaign.reply',
+          title: `Reply from ${lead?.companyName ?? normalized.recipientEmail ?? 'a lead'}`,
+          message: `${campaign.name ?? 'Campaign'} — sequence paused for this lead.`,
+          href: `/dashboard/campaigns/${String(campaign._id)}`,
+          metadata: { enrollmentId: String(enrollment._id), leadId: String(enrollment.leadId), campaignId: String(campaign._id) },
+        });
+      }
       await applyStopRules(enrollment, 'replied');
       break;
+    }
     case 'bounced': {
+      const wasNotBounced = enrollment.status !== 'bounced';
       historyUpdate[`stepHistory.${stepIndex}.bouncedAt`] = normalized.occurredAt;
       historyUpdate[`stepHistory.${stepIndex}.status`] = 'bounced';
       historyUpdate[`stepHistory.${stepIndex}.bounceType`] = normalized.bounceType;
@@ -195,6 +224,17 @@ export async function processEmailEvent(
           { _id: enrollment.sequenceId, 'stats.active': { $gt: 0 } },
           { $inc: { 'stats.bounced': 1, 'stats.active': -1 } },
         );
+        if (wasNotBounced && campaign) {
+          await Campaign.updateOne({ _id: campaign._id }, { $inc: { 'stats.bounced': 1 } });
+          await emitNotification({
+            workspaceId: enrollment.workspaceId,
+            type: 'campaign.bounce',
+            title: `Hard bounce on ${campaign.name ?? 'campaign'}`,
+            message: `${normalized.recipientEmail ?? 'A recipient'} was added to your suppression list.`,
+            href: `/dashboard/campaigns/${String(campaign._id)}`,
+            metadata: { enrollmentId: String(enrollment._id), leadId: String(enrollment.leadId), campaignId: String(campaign._id), email: normalized.recipientEmail },
+          });
+        }
       }
       break;
     }

@@ -64,6 +64,12 @@ export interface ILead extends mongoose.Document {
   qualificationStatus: QualificationStatus;
   qualificationScore?: number;
   qualificationReason?: string;
+  /** The agent's own justification for emitting this lead. Captured at
+   *  `write_lead` time as the `reasoning` argument the agent passes
+   *  alongside the lead payload. Complements `qualificationReason`
+   *  which is the post-hoc grader's verdict — `agentReasoning` is the
+   *  pre-commit "why I'm writing this" from the research agent itself. */
+  agentReasoning?: string;
   tags: string[];
   notes?: string;
   suppressedAt?: Date;
@@ -168,6 +174,7 @@ const leadSchema = new Schema<ILead>(
     qualificationStatus: { type: String, enum: QUALIFICATION_STATUSES, default: 'pending' },
     qualificationScore: { type: Number, min: 0, max: 1 },
     qualificationReason: { type: String },
+    agentReasoning: { type: String, maxlength: 2000 },
     tags: { type: [String], default: [] },
     notes: { type: String, maxlength: 5000 },
     suppressedAt: { type: Date },

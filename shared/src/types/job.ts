@@ -18,6 +18,14 @@ export interface JobGeography {
 // ../schemas/zod/job.schemas.ts (as Zod-inferred types, the source of truth
 // for runtime validation). Re-export here for convenience; don't re-declare.
 export type { FactType, OutputSchemaColumn, FactValue } from '../schemas/zod/job.schemas.js';
+export type {
+  ClarificationQuestion,
+  ClarificationQuestionType,
+  ClarificationAnswer,
+  ClarifyRequest,
+  ClarifyResponse,
+  PolicyDecision,
+} from '../schemas/zod/job.schemas.js';
 
 export interface ParsedIntent {
   /** Null when the query names a specific company without industry context; enrichment fills it in later. */
@@ -72,6 +80,7 @@ export interface ProspectingJob {
   workspaceId: string;
   createdBy: string;
   rawQuery: string;
+  clarifications?: import('../schemas/zod/job.schemas.js').ClarificationAnswer[];
   parsedIntent?: ParsedIntent;
   status: JobStatus;
   progress: JobProgress;

@@ -119,6 +119,14 @@ export interface Lead {
       seniority: 'c_level' | 'vp' | 'director' | 'manager' | 'ic' | 'unknown';
     };
   };
+  /**
+   * Query-specific fact values keyed by the job's outputSchema column key
+   * (e.g. `amount_raised`, `funding_round`). See shared FactValue type.
+   * Absent for leads whose parent query didn't declare an outputSchema.
+   */
+  facts?: Record<string, import('../schemas/zod/job.schemas.js').FactValue>;
+  /** Fraction 0-1 of REQUIRED schema columns that have a value. */
+  schemaFulfillmentPct?: number;
   createdAt: string;
   updatedAt: string;
 }

@@ -24,6 +24,13 @@ export interface ISequenceDoc extends mongoose.Document {
       fromName?: string;
       replyTo?: string;
     };
+    // Per-step personalization hints. When useAI=true, the sequence worker
+    // (M2) calls the Claude outreach draft service at send time with these
+    // hints + the lead's evidence rather than rendering emailTemplate
+    // literally. The template is still stored as a fallback / authored base.
+    useAI?: boolean;
+    tone?: string;
+    goal?: string;
   }>;
   stopRules: Array<{
     trigger: 'any_reply' | 'positive_reply' | 'unsubscribe' | 'bounce';
@@ -60,6 +67,9 @@ const stepSchema = new Schema({
     fromName: String,
     replyTo: String,
   },
+  useAI: { type: Boolean, default: false },
+  tone: { type: String, maxlength: 50 },
+  goal: { type: String, maxlength: 200 },
 }, { _id: false });
 
 const sequenceSchema = new Schema<ISequenceDoc>(

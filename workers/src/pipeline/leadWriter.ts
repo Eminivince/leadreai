@@ -5,6 +5,9 @@ import { logger } from '../utils/logger.js';
 import { fireWebhook } from '../services/webhook.js';
 import { env } from '../config/env.js';
 import type { LeadRecord } from './deduplicator.js';
+import { autoCreateFileFromJob } from './fileAutoCreator.js';
+import { emitNotification } from '../services/notificationEmitter.js';
+import { isSocialPlatformHost } from './tools/writeLead.js';
 
 // ---------------------------------------------------------------------------
 // Lazy contact-enrichment queue + queue events (for waitUntilFinished)
@@ -94,7 +97,16 @@ export async function writeLeads(
     // (and the UI on job-complete) would see leads with no named contacts
     // even when extraction would have found them. Awaiting costs 10-60s
     // extra per job but makes relevance scores honest.
-    const domainsToEnrich = nonDupes.filter(l => l.companyDomain).map(l => l.companyDomain);
+    // Skip contact enrichment for social-platform leads (instagram.com/foo,
+    // tiktok.com/bar, etc.) — there's no company site to scrape, and
+    // pointing Playwright at a profile URL just burns time for no data.
+    const domainsToEnrich = nonDupes
+      .filter((l) => l.companyDomain)
+      .map((l) => l.companyDomain!)
+      .filter((d) => {
+        const host = d.split('/')[0] ?? d;
+        return !isSocialPlatformHost(host);
+      });
     if (domainsToEnrich.length > 0) {
       const writtenLeads = await Lead.find(
         {
@@ -155,6 +167,29 @@ export async function writeLeads(
     'progress.currentStage': 'complete',
     'result.totalLeadsFound': totalLeadsFound,
     'result.totalAfterDedup': totalAfterDedup,
+  });
+
+  // Auto-curate a File from this dispatch so the user lands with their new
+  // leads already grouped. Failures are logged and non-fatal.
+  await autoCreateFileFromJob(jobId, workspaceId);
+
+  // Announce the completion in the workspace's notification feed.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const jobMeta = (await ProspectingJob.findById(jobId, { rawQuery: 1 }).lean()) as
+    | { rawQuery?: string }
+    | null;
+  const rawQ = jobMeta?.rawQuery?.trim();
+  const preview = rawQ && rawQ.length > 60 ? `${rawQ.slice(0, 57)}…` : rawQ;
+  await emitNotification({
+    workspaceId,
+    type: 'job.complete',
+    title:
+      totalAfterDedup === 0
+        ? 'Dispatch filed — no qualified leads.'
+        : `Dispatch filed — ${totalAfterDedup} lead${totalAfterDedup === 1 ? '' : 's'}.`,
+    message: preview,
+    href: `/dashboard/leads?jobId=${jobId}`,
+    metadata: { jobId, totalAfterDedup, totalLeadsFound },
   });
 
   // Publish completion event

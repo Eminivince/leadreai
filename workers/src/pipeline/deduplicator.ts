@@ -53,6 +53,10 @@ export interface LeadRecord {
   }>;
   /** Fraction 0-1 of REQUIRED schema columns that have a value. */
   schemaFulfillmentPct?: number;
+  /** The agent's one-line justification for emitting this lead. Passed
+   *  from `write_lead` tool call → persisted on the Lead so the detail
+   *  drawer can show "why this lead" alongside the grader's reason. */
+  agentReasoning?: string;
 }
 
 export function deduplicateLeads(leads: LeadRecord[], threshold = 0.25): LeadRecord[] {

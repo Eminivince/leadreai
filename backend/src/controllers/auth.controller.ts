@@ -173,7 +173,29 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
 
 export async function getCredits(req: Request, res: Response): Promise<void> {
   if (!req.user) throw ApiError.unauthorized();
-  const user = await User.findById(req.user._id).select('creditsBalance plan');
+
+  // Lazy renewal: if the monthly bucket is due for a refill, bump it
+  // before we return the balance so the user sees the true post-renewal
+  // state rather than "last month's leftovers."
+  const { renewSubscriptionIfDue } = await import('../services/credits.js');
+  await renewSubscriptionIfDue(req.user._id).catch(() => {
+    /* non-fatal — balance read below just sees pre-renewal state */
+  });
+
+  const user = await User.findById(req.user._id).select(
+    'creditsBalance monthlyCreditsBalance subscriptionRenewsAt plan planExpiresAt',
+  );
   if (!user) throw ApiError.notFound('User not found');
-  res.json({ success: true, data: { creditsBalance: user.creditsBalance, plan: user.plan } });
+
+  res.json({
+    success: true,
+    data: {
+      plan: user.plan,
+      planExpiresAt: user.planExpiresAt,
+      subscriptionRenewsAt: user.subscriptionRenewsAt,
+      monthlyCreditsBalance: user.monthlyCreditsBalance,
+      creditsBalance: user.creditsBalance,
+      totalCreditsBalance: user.monthlyCreditsBalance + user.creditsBalance,
+    },
+  });
 }

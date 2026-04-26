@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { Redis } from 'ioredis';
 import Campaign from '../models/Campaign.js';
+import File from '../models/File.js';
 import Lead from '../models/Lead.js';
 import Workspace from '../models/Workspace.js';
 import OutreachDraft from '../models/OutreachDraft.js';
@@ -117,8 +118,9 @@ export async function generateCampaignDrafts(req: Request, res: Response): Promi
   const campaign = await Campaign.findOne({ _id: campaignId, workspaceId });
   if (!campaign) throw ApiError.notFound('Campaign not found');
 
-  if (!campaign.leadIds || campaign.leadIds.length === 0) {
-    throw ApiError.badRequest('Campaign has no leads');
+  const file = await File.findOne({ _id: campaign.fileId, workspaceId }).select('leadIds');
+  if (!file || file.leadIds.length === 0) {
+    throw ApiError.badRequest('Campaign\'s file has no leads');
   }
 
   // Optionally update outreachConfig tone/language if provided
@@ -139,7 +141,7 @@ export async function generateCampaignDrafts(req: Request, res: Response): Promi
     {
       campaignId: campaign._id.toString(),
       workspaceId: workspaceId!,
-      leadIds: campaign.leadIds.map((id) => id.toString()),
+      leadIds: file.leadIds.map((id) => id.toString()),
     },
     {
       // jobId = campaignId deduplicates: re-calling this endpoint while a job is queued/active
@@ -154,7 +156,7 @@ export async function generateCampaignDrafts(req: Request, res: Response): Promi
     action: 'outreach_draft.generate_bulk',
     resourceType: 'campaign',
     resourceId: campaign._id,
-    metadata: { leadCount: campaign.leadIds.length, bullmqJobId: job.id },
+    metadata: { leadCount: file.leadIds.length, bullmqJobId: job.id },
   });
 
   res.status(202).json({ success: true, data: { bullmqJobId: job.id } });
@@ -190,7 +192,8 @@ export async function streamCampaignGeneration(req: Request, res: Response): Pro
     res.write(`data: ${JSON.stringify(data)}\n\n`);
   };
 
-  const totalLeads = campaign.leadIds?.length ?? 0;
+  const fileForCount = await File.findOne({ _id: campaign.fileId, workspaceId }).select('leadIds').lean();
+  const totalLeads = fileForCount?.leadIds?.length ?? 0;
 
   // Dedicated Redis connection for pub/sub — subscribe BEFORE bootstrap so worker
   // messages are not dropped while we await DB counts / initial sends.

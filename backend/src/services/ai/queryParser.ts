@@ -1,4 +1,4 @@
-import { ParsedIntentSchema, type ParsedIntent } from '@leadreai/shared';
+import { ParsedIntentSchema, type ParsedIntent, type ClarificationAnswer } from '@leadreai/shared';
 import { generateText, type AiMessage } from './aiProvider.js';
 import { ApiError } from '../../utils/ApiError.js';
 
@@ -92,16 +92,40 @@ function extractFirstJsonObject(text: string): string | null {
 }
 
 /**
+ * Formats clarification Q&A pairs into a plain-text block appended to the
+ * user message, so the parser treats them as additional context without
+ * us needing to structurally map each answer to a specific ParsedIntent
+ * field. Answers also flow down to the agent so it can honor constraints
+ * the parser didn't capture.
+ */
+function formatClarifications(clarifications: ClarificationAnswer[] | undefined): string {
+  if (!clarifications || clarifications.length === 0) return '';
+  const lines = clarifications.map((c) => {
+    const answer = Array.isArray(c.answer) ? c.answer.join(', ') : c.answer;
+    return `- ${c.question}\n  Answer: ${answer}`;
+  });
+  return `\n\nCLARIFICATIONS (answered by user — honor these as hard constraints):\n${lines.join('\n')}`;
+}
+
+/**
  * Parses a raw natural-language prospecting query into a structured ParsedIntent
  * using the configured AI provider. On schema failure, retries ONCE with a
  * correction prompt that includes the previous bad output and Zod's complaints.
+ *
+ * `clarifications` are the user's answers to the clarifier checklist. They're
+ * formatted as a plain-text appendix to the user message — the parser treats
+ * them as additional query context.
  */
-export async function parseQuery(rawQuery: string): Promise<ParsedIntent> {
+export async function parseQuery(
+  rawQuery: string,
+  clarifications?: ClarificationAnswer[],
+): Promise<ParsedIntent> {
   if (!rawQuery.trim()) {
     throw ApiError.badRequest('rawQuery must not be empty');
   }
 
-  const conversation: AiMessage[] = [{ role: 'user', content: rawQuery }];
+  const userContent = `${rawQuery}${formatClarifications(clarifications)}`;
+  const conversation: AiMessage[] = [{ role: 'user', content: userContent }];
   const MAX_ATTEMPTS = 2;
   let lastRawResponse = '';
   let lastZodIssues: unknown = null;

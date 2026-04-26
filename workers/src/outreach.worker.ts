@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { logger } from './utils/logger.js';
 import { env } from './config/env.js';
 import { researchCompany, generateOutreachDraft } from './services/outreachGenerator.js';
+import { runWithCostContext } from './services/costTracker.js';
 
 // ---------------------------------------------------------------------------
 // Inline Mongoose models (workers pattern — strict:false)
@@ -277,7 +278,11 @@ export async function createOutreachWorker(connection: Redis, publisher: Redis):
     'outreach',
     async (job: Job) => {
       try {
-        await processOutreachJob(job, publisher);
+        const data = job.data as OutreachJobData;
+        await runWithCostContext(
+          { workspaceId: data.workspaceId, campaignId: data.campaignId },
+          () => processOutreachJob(job, publisher),
+        );
       } catch (err) {
         const data = job.data as OutreachJobData;
         const total = data.leadIds?.length ?? 0;

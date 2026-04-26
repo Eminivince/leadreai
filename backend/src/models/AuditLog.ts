@@ -4,7 +4,16 @@ export interface IAuditLog extends mongoose.Document {
   workspaceId: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
   action: string;
-  resourceType: 'job' | 'lead' | 'campaign' | 'outreach_draft';
+  resourceType:
+    | 'job'
+    | 'lead'
+    | 'campaign'
+    | 'outreach_draft'
+    | 'contact'
+    | 'workspace'
+    | 'sequence'
+    | 'file'
+    | 'document';
   resourceId: mongoose.Types.ObjectId;
   metadata?: unknown;
   ipAddress?: string;
@@ -20,7 +29,17 @@ const auditLogSchema = new Schema<IAuditLog>(
     action: { type: String, required: true, index: true },
     resourceType: {
       type: String,
-      enum: ['job', 'lead', 'campaign', 'outreach_draft'],
+      enum: [
+        'job',
+        'lead',
+        'campaign',
+        'outreach_draft',
+        'contact',
+        'workspace',
+        'sequence',
+        'file',
+        'document',
+      ],
       required: true,
     },
     resourceId: { type: Schema.Types.ObjectId, required: true },

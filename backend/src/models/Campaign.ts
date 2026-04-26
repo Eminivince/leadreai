@@ -3,13 +3,40 @@ import { OUTREACH_CHANNELS } from '@leadreai/shared';
 
 const CAMPAIGN_STATUSES = ['draft', 'active', 'paused', 'completed', 'archived'] as const;
 
+export interface ICampaignAudienceFilters {
+  hotOnly: boolean;
+  verifiedOnly: boolean;
+}
+
+export interface ICampaignReplyRules {
+  pauseOnReply: boolean;
+  classify: boolean;
+  notifyChannel: 'slack' | 'email' | 'none';
+}
+
+export interface ICampaignSchedule {
+  timezone: string;
+  startHour: number;
+  endHour: number;
+  allowedDays: number[];
+  dailySendCap: number;
+}
+
 export interface ICampaign extends mongoose.Document {
   workspaceId: mongoose.Types.ObjectId;
   createdBy: mongoose.Types.ObjectId;
   name: string;
   description?: string;
   status: 'draft' | 'active' | 'paused' | 'completed' | 'archived';
-  leadIds: mongoose.Types.ObjectId[];
+  fileId: mongoose.Types.ObjectId;
+
+  // Multi-step sequence created alongside the campaign on wizard launch.
+  sequenceId?: mongoose.Types.ObjectId;
+
+  audienceFilters?: ICampaignAudienceFilters;
+  replyRules?: ICampaignReplyRules;
+  schedule?: ICampaignSchedule;
+
   outreachConfig: {
     channel: (typeof OUTREACH_CHANNELS)[number];
     tone: string;
@@ -29,6 +56,25 @@ export interface ICampaign extends mongoose.Document {
   updatedAt: Date;
 }
 
+const audienceFiltersSchema = new Schema<ICampaignAudienceFilters>({
+  hotOnly: { type: Boolean, default: false },
+  verifiedOnly: { type: Boolean, default: false },
+}, { _id: false });
+
+const replyRulesSchema = new Schema<ICampaignReplyRules>({
+  pauseOnReply: { type: Boolean, default: true },
+  classify: { type: Boolean, default: false },
+  notifyChannel: { type: String, enum: ['slack', 'email', 'none'], default: 'none' },
+}, { _id: false });
+
+const scheduleSchema = new Schema<ICampaignSchedule>({
+  timezone: { type: String, required: true },
+  startHour: { type: Number, required: true, min: 0, max: 23 },
+  endHour: { type: Number, required: true, min: 1, max: 24 },
+  allowedDays: { type: [Number], default: [1, 2, 3, 4, 5] },
+  dailySendCap: { type: Number, default: 100, min: 1, max: 5000 },
+}, { _id: false });
+
 const campaignSchema = new Schema<ICampaign>(
   {
     workspaceId: { type: Schema.Types.ObjectId, ref: 'Workspace', required: true, index: true },
@@ -40,7 +86,14 @@ const campaignSchema = new Schema<ICampaign>(
       enum: CAMPAIGN_STATUSES,
       default: 'draft',
     },
-    leadIds: [{ type: Schema.Types.ObjectId, ref: 'Lead', default: [] }],
+    fileId: { type: Schema.Types.ObjectId, ref: 'File', required: true, index: true },
+
+    sequenceId: { type: Schema.Types.ObjectId, ref: 'Sequence', index: true },
+
+    audienceFilters: { type: audienceFiltersSchema },
+    replyRules: { type: replyRulesSchema },
+    schedule: { type: scheduleSchema },
+
     outreachConfig: {
       type: new Schema({
         channel: { type: String, enum: OUTREACH_CHANNELS },

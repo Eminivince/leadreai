@@ -112,17 +112,25 @@ export async function runIntentParser(
   const parsedIntent = jobDoc.parsedIntent as ParsedIntent;
   if (!parsedIntent) throw new Error(`Job ${jobId} has no parsedIntent`);
   const rawQuery = typeof jobDoc.rawQuery === 'string' ? jobDoc.rawQuery : undefined;
+  // Clarifications are already rolled into parsedIntent via the backend
+  // parser, but we also surface them verbatim to the agent so it honors
+  // constraints the parser may not have mapped to structured fields
+  // (e.g. free-text excludes, custom personas).
+  const clarifications = Array.isArray(jobDoc.clarifications)
+    ? jobDoc.clarifications as Array<{ id: string; question: string; answer: unknown }>
+    : undefined;
 
   logger.info('[Pipeline] parsedIntent loaded', {
     jobId, queryType: parsedIntent.queryType,
     industry: parsedIntent.industry, targetCount: parsedIntent.targetCount,
+    clarificationCount: clarifications?.length ?? 0,
   });
 
   await pushProgress(jobId, publisher, 'collecting', 10, 'jobAgentStart');
 
   // ── AGENT OWNS THE PIPELINE ───────────────────────────────────────────
   const agentResult = await runJobAgent({
-    jobId, workspaceId, parsedIntent, rawQuery, publisher,
+    jobId, workspaceId, parsedIntent, rawQuery, clarifications, publisher,
   });
 
   logger.info('[Pipeline] JobAgent finished', {

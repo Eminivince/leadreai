@@ -3,7 +3,16 @@ import mongoose from 'mongoose';
 import AuditLog from '../models/AuditLog.js';
 import { logger } from '../utils/logger.js';
 
-type ResourceType = 'job' | 'lead' | 'campaign' | 'outreach_draft' | 'contact' | 'workspace' | 'sequence';
+type ResourceType =
+  | 'job'
+  | 'lead'
+  | 'campaign'
+  | 'outreach_draft'
+  | 'contact'
+  | 'workspace'
+  | 'sequence'
+  | 'file'
+  | 'document';
 
 interface AuditOptions {
   req: Request;
