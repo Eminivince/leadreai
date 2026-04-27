@@ -145,7 +145,7 @@ export function getSubagentProspectingQueue(): Queue {
     _subagentProspectingQueue = new Queue('prospecting-subagent', {
       connection: getRedis(),
       prefix: QUEUE_PREFIX,
-      defaultJobOptions: { removeOnComplete: 200, removeOnFail: 50 },
+      defaultJobOptions: { removeOnComplete: { count: 200 }, removeOnFail: { count: 50 } },
     });
   }
   return _subagentProspectingQueue;
