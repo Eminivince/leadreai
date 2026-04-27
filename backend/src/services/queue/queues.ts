@@ -20,6 +20,7 @@ let _hubspotSyncQueue: Queue | null = null;
 let _sequenceStepQueue: Queue | null = null;
 let _documentQueue: Queue | null = null;
 let _tableEnrichmentQueue: Queue | null = null;
+let _subagentProspectingQueue: Queue | null = null;
 
 export function getProspectingQueue(): Queue {
   if (!_prospectingQueue) {
@@ -137,4 +138,15 @@ export function getTableEnrichmentQueue(): Queue {
     });
   }
   return _tableEnrichmentQueue;
+}
+
+export function getSubagentProspectingQueue(): Queue {
+  if (!_subagentProspectingQueue) {
+    _subagentProspectingQueue = new Queue('prospecting-subagent', {
+      connection: getRedis(),
+      prefix: QUEUE_PREFIX,
+      defaultJobOptions: { removeOnComplete: 200, removeOnFail: 50 },
+    });
+  }
+  return _subagentProspectingQueue;
 }

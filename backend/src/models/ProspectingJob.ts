@@ -45,6 +45,12 @@ export interface IProspectingJob extends mongoose.Document {
    *  re-aggregating CostEvent rows. Authoritative source is still
    *  CostEvent; this is a cache. */
   costSummary?: JobCostSummary;
+  subagentStats?: {
+    dispatched: number;
+    completed: number;
+    failed: number;
+    timedOut: number;
+  };
   startedAt?: Date;
   completedAt?: Date;
   createdAt: Date;
@@ -92,6 +98,12 @@ const prospectingJobSchema = new Schema<IProspectingJob>(
     sourceWorkflowId: { type: Schema.Types.ObjectId, ref: 'Workflow' },
     creditsCharged: { type: Number, default: 0 },
     costSummary: { type: Schema.Types.Mixed },
+    subagentStats: {
+      dispatched: { type: Number, default: 0 },
+      completed: { type: Number, default: 0 },
+      failed: { type: Number, default: 0 },
+      timedOut: { type: Number, default: 0 },
+    },
     startedAt: { type: Date },
     completedAt: { type: Date },
   },

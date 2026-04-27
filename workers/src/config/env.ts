@@ -75,6 +75,9 @@ const envSchema = z.object({
   // the job you thought you killed. MUST stay false in prod — turning it
   // on there would wipe live jobs on every deploy.
   CLEAR_QUEUES_ON_BOOT: booleanFlag.default(false),
+  AGENT_FAN_OUT_ENABLED: booleanFlag.default(true),
+  SUBAGENT_CONCURRENCY: z.coerce.number().int().min(1).max(20).default(5),
+  FAN_OUT_MIN_TARGET: z.coerce.number().int().min(1).max(50).default(5),
 });
 
 const parsed = envSchema.safeParse(process.env);
