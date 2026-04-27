@@ -982,10 +982,17 @@ function EditableCell({
   const isEnrichedColumn = column.definition?.type === 'enriched';
   const [reEnriching, setReEnriching] = useState(false);
   const [showSources, setShowSources] = useState(false);
+  const [popoverPos, setPopoverPos] = useState<{ top: number; right: number } | null>(null);
   const sourcePopoverRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!showSources) return;
+    // Calculate fixed position from button's bounding rect
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setPopoverPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+    }
     function handleOutsideClick(e: MouseEvent) {
       if (sourcePopoverRef.current && !sourcePopoverRef.current.contains(e.target as Node)) {
         setShowSources(false);
@@ -1112,11 +1119,13 @@ function EditableCell({
         {hasSource && (
           <div ref={sourcePopoverRef} className="relative shrink-0">
             <button
+              ref={buttonRef}
               onClick={(e) => {
                 e.stopPropagation(); // don't enter edit mode
                 setShowSources((v) => !v);
               }}
               title="View source"
+              aria-label="View cell sources"
               className={`font-[family-name:var(--font-jetbrains-mono)] text-[8.5px] text-[color:var(--forest)] transition ${
                 showSources ? 'opacity-100' : 'opacity-0 group-hover/cell:opacity-100'
               }`}
@@ -1124,7 +1133,10 @@ function EditableCell({
               ◆
             </button>
             {showSources && (
-              <div className="absolute right-0 top-full mt-1 z-50 w-72 bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-sm shadow-lg p-3 flex flex-col gap-2">
+              <div
+                style={popoverPos ? { top: popoverPos.top, right: popoverPos.right } : undefined}
+                className="fixed z-50 w-72 bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-sm shadow-lg p-3 flex flex-col gap-2"
+              >
                 <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
                   Sources
                 </span>
