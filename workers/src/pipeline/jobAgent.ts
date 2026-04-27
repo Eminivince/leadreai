@@ -40,6 +40,8 @@ export interface JobAgentResult {
   /** True when fan-out path handled its own writeLeads + lifecycle.
    *  intentParser.ts skips its write step when this is set. */
   fanOutComplete?: boolean;
+  /** Actual leads found — set by fan-out path. Serial path uses ranked.length. */
+  leadsFound?: number;
 }
 
 // Step budget scales linearly with target count (min 100, max 300) — large
@@ -59,6 +61,10 @@ const CRITIC_INTERVAL = 5;
 type HistoryMsg = { role: 'system' | 'user' | 'assistant'; content: string };
 
 const SUBAGENT_QUEUE_PREFIX = `{bull}:leadreai:${env.NODE_ENV}`;
+
+/** Poll timeout for the fan-out gather phase. Subagents run in parallel so
+ *  this is a ceiling, not per-lead. 90 s per subagent + 60 s dispatcher slack. */
+const FAN_OUT_GATHER_TIMEOUT_MS = 150_000;
 
 // Lazy subagent queue — created once per process.
 let _subagentQueue: Queue | null = null;
@@ -351,8 +357,7 @@ async function runFanOutJobAgent(input: JobAgentInput): Promise<JobAgentResult> 
   );
 
   // Phase 3: poll Mongo every 3s until target reached or wall-clock fires
-  const { budgetMs } = estimateWallClockMs(parsedIntent);
-  const gatherDeadline = Date.now() + budgetMs;
+  const gatherDeadline = Date.now() + FAN_OUT_GATHER_TIMEOUT_MS;
   let timedOut = false;
 
   while (Date.now() < gatherDeadline) {
@@ -378,6 +383,7 @@ async function runFanOutJobAgent(input: JobAgentInput): Promise<JobAgentResult> 
     stopReason: timedOut ? 'wall_clock' : 'target_reached',
     transcript: [],
     fanOutComplete: true,
+    leadsFound: finalLeads.length,
   };
 }
 

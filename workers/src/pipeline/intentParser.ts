@@ -158,11 +158,11 @@ export async function runIntentParser(
 
   // Persist a compact agent transcript for post-hoc debugging
   await ProspectingJob.findByIdAndUpdate(jobId, {
-    'progress.leadsFoundSoFar': ranked.length,
+    'progress.leadsFoundSoFar': agentResult.leadsFound ?? ranked.length,
     agentTranscript: agentResult.transcript.slice(-40),
     agentStopReason: agentResult.stopReason,
     agentStepsUsed: agentResult.stepsUsed,
   });
 
-  logger.info('[Pipeline] Job complete', { jobId, totalLeads: ranked.length });
+  logger.info('[Pipeline] Job complete', { jobId, totalLeads: agentResult.leadsFound ?? ranked.length });
 }
