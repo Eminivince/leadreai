@@ -1,7 +1,6 @@
 import { Redis } from 'ioredis';
 import type { ParsedIntent } from '@leadreai/shared';
 import type { LeadRecord } from '../deduplicator.js';
-import { queueCompanyTool } from './queueCompany.js';
 
 export interface Candidate {
   companyName: string;
@@ -114,6 +113,12 @@ const SUBAGENT_TOOL_NAMES = new Set([
   'write_lead',
 ]);
 
+// Import the dispatcher-only queue_company tool (not in TOOL_REGISTRY).
+// queueCompany.ts imports *only* `import type { ToolDef }` from this file
+// (erased at runtime), so the cycle is safe. Do NOT add value imports from
+// index.ts into queueCompany.ts without reviewing initialization order.
+import { queueCompanyTool } from './queueCompany.js';
+
 /**
  * Discovery-only tools for the dispatcher agent.
  * Includes queue_company (not in TOOL_REGISTRY) as the output action.
@@ -130,3 +135,13 @@ export const DISPATCHER_TOOLS: ToolDef[] = [
 export const SUBAGENT_TOOLS: ToolDef[] = TOOL_REGISTRY.filter(t =>
   SUBAGENT_TOOL_NAMES.has(t.name),
 );
+
+// Fail loudly at startup if a tool name in the filter sets doesn't exist in TOOL_REGISTRY.
+const _allRegistryNames = new Set(TOOL_REGISTRY.map(t => t.name));
+const _missingDispatcher = [...DISPATCHER_TOOL_NAMES].filter(n => !_allRegistryNames.has(n));
+const _missingSubagent = [...SUBAGENT_TOOL_NAMES].filter(n => !_allRegistryNames.has(n));
+if (_missingDispatcher.length > 0 || _missingSubagent.length > 0) {
+  throw new Error(
+    `[tools/index] tool name mismatch — DISPATCHER missing: [${_missingDispatcher.join(', ')}], SUBAGENT missing: [${_missingSubagent.join(', ')}]`,
+  );
+}

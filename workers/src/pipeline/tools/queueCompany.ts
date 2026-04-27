@@ -20,15 +20,17 @@ export const queueCompanyTool: ToolDef = {
     const domain = args?.companyDomain ? String(args.companyDomain).trim().toLowerCase() : undefined;
     if (!name) return { ok: false, output: 'companyName is required.' };
 
-    const alreadyQueued = ctx.candidatesSoFar.some(
-      c => domain && c.companyDomain && c.companyDomain === domain,
-    );
+    const normalizedName = name.toLowerCase();
+    const alreadyQueued = ctx.candidatesSoFar.some(c => {
+      if (domain && c.companyDomain) return c.companyDomain === domain;
+      return c.companyName.toLowerCase() === normalizedName;
+    });
     if (alreadyQueued) {
-      return { ok: true, output: `${name} (${domain}) already queued. Total: ${ctx.candidatesSoFar.length}` };
+      return { ok: true, output: `${name}${domain ? ` (${domain})` : ''} already queued. Total: ${ctx.candidatesSoFar.length}` };
     }
 
     const hints: string[] = Array.isArray(args?.hints)
-      ? (args.hints as unknown[]).map(String).slice(0, 5)
+      ? (args.hints as unknown[]).map(String).slice(0, 5) // cap to keep subagent prompt context small
       : [];
 
     ctx.candidatesSoFar.push({ companyName: name, companyDomain: domain, hints });
