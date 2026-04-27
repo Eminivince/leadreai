@@ -87,7 +87,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
             </h1>
             <p className="mt-4 font-[family-name:var(--font-barlow)] text-[15px] md:text-[17px] leading-[1.5] text-[color:var(--ink-2)]">
               {isIndex
-                ? 'Eight sections. Bookmark any of them — settings are routed, not tabbed.'
+                ? 'Nine sections. Bookmark any of them — settings are routed, not tabbed.'
                 : active?.lede ?? 'Manage your workspace.'}
             </p>
           </div>
