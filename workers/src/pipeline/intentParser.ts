@@ -141,14 +141,18 @@ export async function runIntentParser(
   });
 
   // ── Dedup + Rank + Persist ───────────────────────────────────────────
-  await pushProgress(jobId, publisher, 'deduplicating', 85, 'deduplication');
-  const deduped = deduplicateLeads(agentResult.leads);
+  // Fan-out path handles its own writeLeads call (including lifecycle).
+  let ranked: ReturnType<typeof rankLeads> = [];
+  if (!agentResult.fanOutComplete) {
+    await pushProgress(jobId, publisher, 'deduplicating', 85, 'deduplication');
+    const deduped = deduplicateLeads(agentResult.leads);
 
-  await pushProgress(jobId, publisher, 'deduplicating', 92, 'ranking');
-  const ranked = rankLeads(deduped, parsedIntent.desiredFields);
+    await pushProgress(jobId, publisher, 'deduplicating', 92, 'ranking');
+    ranked = rankLeads(deduped, parsedIntent.desiredFields);
 
-  await pushProgress(jobId, publisher, 'deduplicating', 97, 'leadWrite');
-  await writeLeads(ranked, jobId, workspaceId, publisher);
+    await pushProgress(jobId, publisher, 'deduplicating', 97, 'leadWrite');
+    await writeLeads(ranked, jobId, workspaceId, publisher);
+  }
 
   await pushProgress(jobId, publisher, 'complete', 100, 'done');
 

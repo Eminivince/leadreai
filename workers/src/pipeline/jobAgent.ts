@@ -1,4 +1,6 @@
 import { Redis } from 'ioredis';
+import mongoose from 'mongoose';
+import { Queue } from 'bullmq';
 import { logger } from '../utils/logger.js';
 import type { ParsedIntent } from '@leadreai/shared';
 import type { LeadRecord } from './deduplicator.js';
@@ -9,6 +11,11 @@ import {
 import { callLlm, isLlmConfigured } from '../utils/llmClient.js';
 import { estimateWallClockMs } from './wallClockBudget.js';
 import { jobActivity } from './intentParser.js';
+import { runDispatcherAgent } from './jobDispatcher.js';
+import type { ProspectingSubagentJobData } from './jobSubagent.js';
+import { env } from '../config/env.js';
+import { writeLeads } from './leadWriter.js';
+import { rankLeads } from './ranker.js';
 
 export interface JobAgentInput {
   jobId: string;
@@ -30,6 +37,9 @@ export interface JobAgentResult {
   stepsUsed: number;
   stopReason: 'target_reached' | 'max_steps' | 'wall_clock' | 'agent_done' | 'error';
   transcript: string[];
+  /** True when fan-out path handled its own writeLeads + lifecycle.
+   *  intentParser.ts skips its write step when this is set. */
+  fanOutComplete?: boolean;
 }
 
 // Step budget scales linearly with target count (min 100, max 300) — large
@@ -47,6 +57,63 @@ const LLM_TIMEOUT_MS = 45_000;
 const CRITIC_INTERVAL = 5;
 
 type HistoryMsg = { role: 'system' | 'user' | 'assistant'; content: string };
+
+const SUBAGENT_QUEUE_PREFIX = `{bull}:leadreai:${env.NODE_ENV}`;
+
+// Lazy subagent queue — created once per process.
+let _subagentQueue: Queue | null = null;
+function getSubagentQueue(): Queue {
+  if (!_subagentQueue) {
+    _subagentQueue = new Queue('prospecting-subagent', {
+      connection: new Redis(env.REDIS_URL, { maxRetriesPerRequest: null }),
+      prefix: SUBAGENT_QUEUE_PREFIX,
+      defaultJobOptions: { removeOnComplete: { count: 200 }, removeOnFail: { count: 50 } },
+    });
+  }
+  return _subagentQueue;
+}
+
+// Minimal inline Lead model for polling. strict:false — only reads count.
+const _pollLeadSchema = new mongoose.Schema({}, { strict: false });
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const PollLeadModel: mongoose.Model<any> =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (mongoose.models['Lead'] as mongoose.Model<any> | undefined) ??
+  mongoose.model('Lead', _pollLeadSchema, 'leads');
+
+async function countLeadsForJob(jobId: string): Promise<number> {
+  return PollLeadModel.countDocuments({
+    jobId: new mongoose.Types.ObjectId(jobId),
+    isDuplicate: { $ne: true },
+  });
+}
+
+async function queryLeadsForJob(jobId: string): Promise<LeadRecord[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const docs = await PollLeadModel.find({
+    jobId: new mongoose.Types.ObjectId(jobId),
+    isDuplicate: { $ne: true },
+  }).lean() as any[];
+  return docs as unknown as LeadRecord[];
+}
+
+// Inline ProspectingJob model for updating subagentStats.dispatched.
+const _pjSchema = new mongoose.Schema({}, { strict: false });
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const PJModel: mongoose.Model<any> =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (mongoose.models['ProspectingJob'] as mongoose.Model<any> | undefined) ??
+  mongoose.model('ProspectingJob', _pjSchema, 'prospectingjobs');
+
+async function updateDispatchedCount(jobId: string, count: number): Promise<void> {
+  await PJModel.findByIdAndUpdate(jobId, {
+    $set: { 'subagentStats.dispatched': count },
+  }).catch(() => {});
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 function buildSystemPrompt(maxSteps: number, budgetMs: number): string {
   return `You are an autonomous lead-research agent. Given a user query, you drive a tool-using research process that ends with one or more qualified leads written via the write_lead tool.
@@ -231,6 +298,90 @@ Decide:
 }
 
 export async function runJobAgent(input: JobAgentInput): Promise<JobAgentResult> {
+  const targetCount = input.parsedIntent.targetCount ?? 10;
+  if (env.AGENT_FAN_OUT_ENABLED && targetCount >= env.FAN_OUT_MIN_TARGET) {
+    return runFanOutJobAgent(input);
+  }
+  return runSerialJobAgent(input);
+}
+
+async function runFanOutJobAgent(input: JobAgentInput): Promise<JobAgentResult> {
+  const { jobId, workspaceId, parsedIntent, publisher } = input;
+  const targetCount = parsedIntent.targetCount ?? 10;
+
+  if (!isLlmConfigured()) {
+    logger.error('[jobAgent/fanout] LLM not configured', { jobId });
+    return { leads: [], stepsUsed: 0, stopReason: 'error', transcript: ['LLM not configured'] };
+  }
+
+  // Phase 1: discovery — dispatcher agent builds a candidate list
+  const { candidates, stepsUsed: discoverySteps } = await runDispatcherAgent(input);
+  logger.info('[jobAgent/fanout] dispatcher finished', { jobId, candidates: candidates.length });
+
+  if (candidates.length === 0) {
+    logger.info('[jobAgent/fanout] no candidates found, falling back to serial', { jobId });
+    return runSerialJobAgent(input);
+  }
+
+  // Phase 2: fan-out — one BullMQ subagent job per candidate
+  await updateDispatchedCount(jobId, candidates.length);
+
+  const subagentBudget = { maxSteps: 20, wallClockMs: 90_000 };
+  await getSubagentQueue().addBulk(
+    candidates.map(c => ({
+      name: c.companyName,
+      data: {
+        parentJobId: jobId,
+        workspaceId,
+        candidate: c,
+        parsedIntent,
+        rawQuery: input.rawQuery,
+        clarifications: input.clarifications,
+        budget: subagentBudget,
+      } as ProspectingSubagentJobData,
+    })),
+  );
+
+  await jobActivity(
+    jobId,
+    publisher,
+    'tool_call',
+    `Dispatched ${candidates.length} enrichment subagents`,
+    { candidates: candidates.length, targetCount },
+  );
+
+  // Phase 3: poll Mongo every 3s until target reached or wall-clock fires
+  const { budgetMs } = estimateWallClockMs(parsedIntent);
+  const gatherDeadline = Date.now() + budgetMs;
+  let timedOut = false;
+
+  while (Date.now() < gatherDeadline) {
+    const count = await countLeadsForJob(jobId);
+    logger.info('[jobAgent/fanout] polling', { jobId, count, targetCount });
+    if (count >= targetCount) break;
+    await sleep(3_000);
+  }
+  if (Date.now() >= gatherDeadline) {
+    timedOut = true;
+    logger.info('[jobAgent/fanout] wall-clock exhausted', { jobId });
+  }
+
+  // Phase 4: collect + rank + persist via writeLeads (handles lifecycle once)
+  const finalLeads = await queryLeadsForJob(jobId);
+  const ranked = rankLeads(finalLeads, parsedIntent.desiredFields);
+  await writeLeads(ranked, jobId, workspaceId, publisher);
+
+  logger.info('[jobAgent/fanout] complete', { jobId, leads: finalLeads.length });
+  return {
+    leads: [],
+    stepsUsed: discoverySteps,
+    stopReason: timedOut ? 'wall_clock' : 'target_reached',
+    transcript: [],
+    fanOutComplete: true,
+  };
+}
+
+async function runSerialJobAgent(input: JobAgentInput): Promise<JobAgentResult> {
   const { jobId, workspaceId, parsedIntent, rawQuery, clarifications, publisher } = input;
 
   if (!isLlmConfigured()) {
