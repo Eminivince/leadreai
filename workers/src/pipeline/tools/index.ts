@@ -1,6 +1,13 @@
 import { Redis } from 'ioredis';
 import type { ParsedIntent } from '@leadreai/shared';
 import type { LeadRecord } from '../deduplicator.js';
+import { queueCompanyTool } from './queueCompany.js';
+
+export interface Candidate {
+  companyName: string;
+  companyDomain?: string;
+  hints: string[];
+}
 
 export interface ToolContext {
   jobId: string;
@@ -9,6 +16,8 @@ export interface ToolContext {
   parsedIntent: ParsedIntent;
   leadsSoFar: LeadRecord[];       // mutable — write_lead pushes here
   pagesScrapedThisJob: Set<string>; // dedupe scrapes across the job
+  /** Populated only in dispatcher mode — `queue_company` tool pushes here. */
+  candidatesSoFar?: Candidate[];
 }
 
 export interface ToolResult {
@@ -59,8 +68,8 @@ export const TOOL_REGISTRY: ToolDef[] = [
   scoreLeadTool, writeLeadTool,
 ];
 
-export function renderToolMenu(): string {
-  return TOOL_REGISTRY.map(t =>
+export function renderToolMenu(tools: ToolDef[] = TOOL_REGISTRY): string {
+  return tools.map(t =>
     `- ${t.name}(${t.parametersSchema}) — ${t.description}`
   ).join('\n');
 }
@@ -70,12 +79,54 @@ export async function executeTool(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   args: any,
   ctx: ToolContext,
+  registry: ToolDef[] = TOOL_REGISTRY,
 ): Promise<ToolResult> {
-  const def = TOOL_REGISTRY.find(t => t.name === name);
-  if (!def) return { ok: false, output: `unknown tool: ${name}. Valid tools: ${TOOL_REGISTRY.map(t => t.name).join(', ')}` };
+  const def = registry.find(t => t.name === name);
+  if (!def) return { ok: false, output: `unknown tool: ${name}. Valid tools: ${registry.map(t => t.name).join(', ')}` };
   try {
     return await def.handler(args ?? {}, ctx);
   } catch (err) {
     return { ok: false, output: `tool threw: ${err instanceof Error ? err.message : String(err)}` };
   }
 }
+
+// ── Role-scoped tool subsets for Phase 14 fan-out ──────────────────────────
+
+const DISPATCHER_TOOL_NAMES = new Set([
+  'read_document',
+  'search_workspace_leads',
+  'list_companies',
+  'lookup_registry',
+  'search_web',
+  'fetch_url',
+]);
+
+const SUBAGENT_TOOL_NAMES = new Set([
+  'fetch_url',
+  'fetch_file',
+  'get_file_chunk',
+  'transcribe_url',
+  'scrape_page',
+  'extract_names_from_urls',
+  'permute_email',
+  'verify_email',
+  'score_lead',
+  'write_lead',
+]);
+
+/**
+ * Discovery-only tools for the dispatcher agent.
+ * Includes queue_company (not in TOOL_REGISTRY) as the output action.
+ */
+export const DISPATCHER_TOOLS: ToolDef[] = [
+  ...TOOL_REGISTRY.filter(t => DISPATCHER_TOOL_NAMES.has(t.name)),
+  queueCompanyTool,
+];
+
+/**
+ * Enrichment-only tools for per-company subagents.
+ * No discovery tools to prevent SERP explosions.
+ */
+export const SUBAGENT_TOOLS: ToolDef[] = TOOL_REGISTRY.filter(t =>
+  SUBAGENT_TOOL_NAMES.has(t.name),
+);
