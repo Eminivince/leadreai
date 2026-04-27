@@ -126,7 +126,7 @@ export async function runDispatcherAgent(input: JobAgentInput): Promise<Dispatch
       continue;
     }
 
-    await jobActivity(jobId, publisher, 'tool_call', `[dispatch] ${toolName}`, { tool: toolName, step }).catch(() => {});
+    jobActivity(jobId, publisher, 'tool_call', `[dispatch] ${toolName}`, { tool: toolName, step }).catch(() => {});
     const result = await executeTool(toolName, parsed.args ?? {}, ctx, DISPATCHER_TOOLS);
     history.push({ role: 'user', content: `Tool ${toolName} result (ok=${result.ok}):\n${result.output}` });
   }
