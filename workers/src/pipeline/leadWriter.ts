@@ -206,3 +206,41 @@ export async function writeLeads(
 
   logger.info('Job complete', { jobId, totalLeadsFound });
 }
+
+/**
+ * Subagent-only lead write: bulk-upserts leads to Mongo without triggering
+ * job completion lifecycle (status update, notifications, webhook, contact
+ * enrichment). Called by subagent workers in the fan-out architecture.
+ * The parent job's writeLeads call handles the full completion lifecycle.
+ */
+export async function writeSubagentLeads(
+  leads: LeadRecord[],
+  jobId: string,
+  workspaceId: string,
+): Promise<void> {
+  const nonDupes = leads.filter(l => !l.isDuplicate);
+  if (nonDupes.length === 0) return;
+
+  const ops = nonDupes.map(lead => ({
+    updateOne: {
+      filter: lead.companyDomain
+        ? { workspaceId: new mongoose.Types.ObjectId(workspaceId), companyDomain: lead.companyDomain }
+        : { workspaceId: new mongoose.Types.ObjectId(workspaceId), companyName: lead.companyName },
+      update: {
+        $set: {
+          ...lead,
+          workspaceId: new mongoose.Types.ObjectId(workspaceId),
+          jobId: new mongoose.Types.ObjectId(jobId),
+        },
+      },
+      upsert: true,
+    },
+  }));
+
+  const result = await Lead.bulkWrite(ops, { ordered: false });
+  logger.info('[subagent] leads upserted', {
+    jobId,
+    upserted: result.upsertedCount,
+    modified: result.modifiedCount,
+  });
+}

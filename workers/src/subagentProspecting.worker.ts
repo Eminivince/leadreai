@@ -5,7 +5,7 @@ import { logger } from './utils/logger.js';
 import { env } from './config/env.js';
 import { runSubagent, type ProspectingSubagentJobData } from './pipeline/jobSubagent.js';
 import { runWithCostContext } from './services/costTracker.js';
-import { writeLeads } from './pipeline/leadWriter.js';
+import { writeSubagentLeads } from './pipeline/leadWriter.js';
 
 // Inline minimal ProspectingJob model to update subagentStats.
 // Uses the mongoose.models cache to avoid re-registering if the model
@@ -43,13 +43,11 @@ export function createSubagentProspectingWorker(
           runSubagent(data, publisher),
         );
 
-        await writeLeads(result.leads, parentJobId, workspaceId, publisher);
+        await writeSubagentLeads(result.leads, parentJobId, workspaceId);
 
+        const incField = result.leads.length > 0 ? 'subagentStats.completed' : 'subagentStats.failed';
         await ProspectingJobModel.findByIdAndUpdate(parentJobId, {
-          $inc: {
-            'subagentStats.completed': result.leads.length > 0 ? 1 : 0,
-            'subagentStats.failed': result.leads.length === 0 ? 1 : 0,
-          },
+          $inc: { [incField]: 1 },
         }).catch(() => {});
 
         logger.info('[subagentWorker] done', {
