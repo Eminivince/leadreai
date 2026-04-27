@@ -1,6 +1,6 @@
 import { logger } from '../utils/logger.js';
 import { DISPATCHER_TOOLS, executeTool, renderToolMenu, type ToolContext, type Candidate } from './tools/index.js';
-import { callLlm } from '../utils/llmClient.js';
+import { callLlm, isLlmConfigured } from '../utils/llmClient.js';
 import { jobActivity } from './intentParser.js';
 import type { JobAgentInput } from './jobAgent.js';
 
@@ -76,6 +76,12 @@ async function callLLM(history: HistoryMsg[]): Promise<string> {
 
 export async function runDispatcherAgent(input: JobAgentInput): Promise<DispatcherResult> {
   const { jobId, workspaceId, parsedIntent, publisher } = input;
+
+  if (!isLlmConfigured()) {
+    logger.error('[dispatcher] LLM not configured', { jobId });
+    return { candidates: [], stepsUsed: 0 };
+  }
+
   const targetCandidates = Math.ceil((parsedIntent.targetCount ?? 10) * 1.5);
 
   const ctx: ToolContext = {
@@ -94,8 +100,10 @@ export async function runDispatcherAgent(input: JobAgentInput): Promise<Dispatch
   ];
 
   const startedAt = Date.now();
+  let stepsUsed = 0;
 
   for (let step = 0; step < DISPATCHER_MAX_STEPS; step++) {
+    stepsUsed = step + 1;
     if ((ctx.candidatesSoFar?.length ?? 0) >= targetCandidates) {
       logger.info('[dispatcher] candidate target reached', { jobId, step, count: ctx.candidatesSoFar?.length });
       break;
@@ -126,12 +134,13 @@ export async function runDispatcherAgent(input: JobAgentInput): Promise<Dispatch
       continue;
     }
 
+    // fire-and-forget: discovery phase optimises for throughput over per-step audit completeness
     jobActivity(jobId, publisher, 'tool_call', `[dispatch] ${toolName}`, { tool: toolName, step }).catch(() => {});
     const result = await executeTool(toolName, parsed.args ?? {}, ctx, DISPATCHER_TOOLS);
     history.push({ role: 'user', content: `Tool ${toolName} result (ok=${result.ok}):\n${result.output}` });
   }
 
   const candidates = ctx.candidatesSoFar ?? [];
-  logger.info('[dispatcher] finished', { jobId, candidates: candidates.length });
-  return { candidates, stepsUsed: 0 };
+  logger.info('[dispatcher] finished', { jobId, candidates: candidates.length, stepsUsed });
+  return { candidates, stepsUsed };
 }
