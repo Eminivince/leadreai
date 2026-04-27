@@ -48,15 +48,15 @@ export const runCodeTool: ToolDef = {
     const code = String(args?.code ?? '').trim();
     if (!code) return { ok: false, output: 'code is required' };
 
-    // Normalise input — agent may pass a plain string or a JSON object.
-    const inputStr: string =
-      args?.input == null
-        ? 'null'
-        : typeof args.input === 'string'
-          ? args.input
-          : JSON.stringify(args.input);
+    // Always JSON-encode so the value is a safe, single-line string with no
+    // newlines or null bytes that could corrupt Docker's -e argument parsing.
+    const inputStr: string = JSON.stringify(
+      args?.input == null ? null : args.input,
+    );
 
-    const tmpDir = join(tmpdir(), `sandbox-${randomUUID()}`);
+    const runId = randomUUID();
+    const containerName = `leadreai-sandbox-${runId}`;
+    const tmpDir = join(tmpdir(), `sandbox-${runId}`);
     const scriptPath = join(tmpDir, 'script.py');
 
     try {
@@ -65,6 +65,7 @@ export const runCodeTool: ToolDef = {
 
       const dockerArgs = [
         'run', '--rm',
+        '--name', containerName,
         '--network', 'none',
         '--memory', `${env.SANDBOX_MEMORY_MB}m`,
         '--memory-swap', `${env.SANDBOX_MEMORY_MB}m`, // disable swap
@@ -121,6 +122,8 @@ export const runCodeTool: ToolDef = {
         output: `Sandbox error: ${e.message ?? String(err)}`,
       };
     } finally {
+      // Force-remove the container in case execFile timeout left it running.
+      await execFileAsync('docker', ['rm', '-f', containerName]).catch(() => {});
       await rm(tmpDir, { recursive: true, force: true }).catch(() => {});
     }
   },
