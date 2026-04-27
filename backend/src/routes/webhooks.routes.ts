@@ -9,4 +9,9 @@ const router: RouterType = Router();
 router.post('/resend', webhookHmac('resend'), asyncHandler(webhooksController.handleResendWebhook));
 router.post('/sendgrid', webhookHmac('sendgrid'), asyncHandler(webhooksController.handleSendGridWebhook));
 
+// Inbound email routing — no HMAC (Resend inbound uses a different auth model).
+// Restrict to known ESP IPs at the load-balancer/reverse-proxy level in production.
+router.post('/inbound/resend', asyncHandler(webhooksController.handleResendInbound));
+router.post('/inbound/sendgrid', asyncHandler(webhooksController.handleSendGridInbound));
+
 export default router;

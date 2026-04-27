@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import { processEmailEvent } from '../services/emailEvent.service.js';
+import { processEmailEvent, processInboundEmail } from '../services/emailEvent.service.js';
 import { verifyUnsubscribeToken } from '../services/unsubscribe.js';
 import { SuppressionEntry } from '../models/SuppressionList.js';
 import Lead from '../models/Lead.js';
@@ -28,6 +28,39 @@ export async function handleSendGridWebhook(req: Request, res: Response): Promis
     } catch (err) {
       logger.error('[webhooks] SendGrid processing error', { err });
     }
+  }
+  res.status(200).json({ received: true });
+}
+
+export async function handleResendInbound(req: Request, res: Response): Promise<void> {
+  try {
+    const payload = req.body as Record<string, unknown>;
+    if (payload['type'] !== 'email.received') {
+      res.status(200).json({ received: true });
+      return;
+    }
+    await processInboundEmail('resend', payload);
+  } catch (err) {
+    logger.error('[webhooks] Resend inbound processing error', { err });
+  }
+  res.status(200).json({ received: true });
+}
+
+export async function handleSendGridInbound(req: Request, res: Response): Promise<void> {
+  // SendGrid Inbound Parse sends multipart/form-data. Express must be configured
+  // with a multipart body parser (multer or express-formidable) for this route to
+  // receive a populated req.body. Without it, req.body.headers will be undefined
+  // and the call is a no-op.
+  try {
+    const payload = req.body as Record<string, unknown>;
+    if (!payload['headers']) {
+      logger.warn('[webhooks] SendGrid inbound: missing headers field — ensure multipart body parser is configured');
+      res.status(200).json({ received: true });
+      return;
+    }
+    await processInboundEmail('sendgrid', payload);
+  } catch (err) {
+    logger.error('[webhooks] SendGrid inbound processing error', { err });
   }
   res.status(200).json({ received: true });
 }
