@@ -25,6 +25,7 @@ const SECTIONS: Array<{ href: string; label: string; lede: string; live: boolean
   { href: '/dashboard/settings/suppression',     label: 'Suppression list', lede: 'Emails and domains the engine must never contact.',            live: true  },
   { href: '/dashboard/settings/api-keys',        label: 'API keys',         lede: 'Press credentials for programmatic access.',                   live: true  },
   { href: '/dashboard/settings/billing',         label: 'Billing & usage',  lede: 'Plan, credits, and the ledger.',                               live: true  },
+  { href: '/dashboard/settings/email',           label: 'Email & replies',  lede: 'Inbound reply routing — connect your sending domain so replies land in-app.', live: true },
 ];
 
 function ArrowEast({ className = 'w-3 h-3' }: { className?: string }) {
@@ -86,7 +87,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
             </h1>
             <p className="mt-4 font-[family-name:var(--font-barlow)] text-[15px] md:text-[17px] leading-[1.5] text-[color:var(--ink-2)]">
               {isIndex
-                ? 'Seven sections. Bookmark any of them — settings are routed, not tabbed.'
+                ? 'Eight sections. Bookmark any of them — settings are routed, not tabbed.'
                 : active?.lede ?? 'Manage your workspace.'}
             </p>
           </div>

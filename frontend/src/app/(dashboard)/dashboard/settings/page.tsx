@@ -68,6 +68,12 @@ const ENTRIES: Array<{ href: string; number: string; label: string; description:
     label: 'Billing & usage',
     description: 'Plan, credits balance, and the ledger. Manage subscription and seat count.',
   },
+  {
+    href: '/dashboard/settings/email',
+    number: '08',
+    label: 'Email & replies',
+    description: 'Inbound reply routing. Connect your sending domain so prospect replies land in the campaign dashboard automatically.',
+  },
 ];
 
 export default function SettingsIndexPage() {
