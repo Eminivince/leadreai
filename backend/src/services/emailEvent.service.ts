@@ -4,6 +4,7 @@ import SequenceEnrollment, { type ISequenceEnrollmentDoc } from '../models/Seque
 import Sequence from '../models/Sequence.js';
 import Campaign from '../models/Campaign.js';
 import Lead from '../models/Lead.js';
+import OutreachDraft from '../models/OutreachDraft.js';
 import { SuppressionEntry } from '../models/SuppressionList.js';
 import { emitNotification } from './notifications.js';
 import { logger } from '../utils/logger.js';
@@ -109,6 +110,76 @@ async function applyStopRules(
   return false;
 }
 
+async function handleReplyForEnrollment(
+  enrollment: ISequenceEnrollmentDoc,
+  messageId: string,
+  occurredAt: Date,
+  stepIndex: number,
+): Promise<void> {
+  const isFirst = enrollment.status !== 'replied';
+  const historyUpdate: Record<string, unknown> = {};
+
+  if (stepIndex >= 0) {
+    historyUpdate[`stepHistory.${stepIndex}.repliedAt`] = occurredAt;
+    historyUpdate[`stepHistory.${stepIndex}.status`] = 'replied';
+    await SequenceEnrollment.updateOne({ _id: enrollment._id }, { $set: historyUpdate });
+  }
+
+  await SequenceEnrollment.updateOne({ _id: enrollment._id }, { $set: { status: 'replied' } });
+  await Sequence.updateOne(
+    { _id: enrollment.sequenceId },
+    { $inc: { 'stats.replied': 1 } },
+  );
+
+  const campaign = await Campaign.findOne({
+    sequenceId: enrollment.sequenceId,
+    workspaceId: enrollment.workspaceId,
+  }).select('_id name');
+
+  if (isFirst && campaign) {
+    await Campaign.updateOne({ _id: campaign._id }, { $inc: { 'stats.replied': 1 } });
+    const lead = await Lead.findById(enrollment.leadId).select('companyName emails');
+    await emitNotification({
+      workspaceId: enrollment.workspaceId,
+      type: 'campaign.reply',
+      title: `Reply from ${lead?.companyName ?? 'a lead'}`,
+      message: `${campaign.name ?? 'Campaign'} — sequence paused for this lead.`,
+      href: `/dashboard/campaigns/${String(campaign._id)}`,
+      metadata: {
+        enrollmentId: String(enrollment._id),
+        leadId: String(enrollment.leadId),
+        campaignId: String(campaign._id),
+      },
+    });
+  }
+
+  await applyStopRules(enrollment, 'replied');
+}
+
+function normalizeMessageIdRef(raw: string): string {
+  // Strip angle brackets: "<re_abc@resend.dev>" → "re_abc@resend.dev"
+  // Then strip domain part, then strip any ".filter..." suffix
+  const stripped = raw.trim().replace(/^<|>$/g, '');
+  const atIdx = stripped.indexOf('@');
+  const local = atIdx >= 0 ? stripped.slice(0, atIdx) : stripped;
+  return local.split('.')[0] ?? local;
+}
+
+function extractInReplyTo(provider: 'resend' | 'sendgrid', payload: Record<string, unknown>): string | null {
+  if (provider === 'resend') {
+    const data = payload['data'] as Record<string, unknown> | undefined;
+    const headers = (data?.['headers'] as Array<{ name: string; value: string }> | undefined) ?? [];
+    const h = headers.find(hdr => hdr.name.toLowerCase() === 'in-reply-to');
+    if (!h?.value) return null;
+    const m = h.value.match(/<([^>]+)>/);
+    return m ? `<${m[1]}>` : h.value.trim();
+  }
+  // SendGrid Inbound Parse: 'headers' is a CRLF-delimited text string
+  const headersText = (payload['headers'] as string | undefined) ?? '';
+  const m = headersText.match(/^In-Reply-To:\s*(<[^>]+>)/im);
+  return m?.[1] ?? null;
+}
+
 export async function processEmailEvent(
   provider: 'resend' | 'sendgrid',
   rawPayload: Record<string, unknown>,
@@ -173,27 +244,8 @@ export async function processEmailEvent(
       historyUpdate[`stepHistory.${stepIndex}.status`] = 'clicked';
       break;
     case 'replied': {
-      const isFirst = enrollment.status !== 'replied';
-      historyUpdate[`stepHistory.${stepIndex}.repliedAt`] = normalized.occurredAt;
-      historyUpdate[`stepHistory.${stepIndex}.status`] = 'replied';
-      await SequenceEnrollment.updateOne({ _id: enrollment._id }, { $set: { status: 'replied' } });
-      await Sequence.updateOne(
-        { _id: enrollment.sequenceId },
-        { $inc: { 'stats.replied': 1 } },
-      );
-      if (isFirst && campaign) {
-        await Campaign.updateOne({ _id: campaign._id }, { $inc: { 'stats.replied': 1 } });
-        const lead = await Lead.findById(enrollment.leadId).select('companyName emails');
-        await emitNotification({
-          workspaceId: enrollment.workspaceId,
-          type: 'campaign.reply',
-          title: `Reply from ${lead?.companyName ?? normalized.recipientEmail ?? 'a lead'}`,
-          message: `${campaign.name ?? 'Campaign'} — sequence paused for this lead.`,
-          href: `/dashboard/campaigns/${String(campaign._id)}`,
-          metadata: { enrollmentId: String(enrollment._id), leadId: String(enrollment.leadId), campaignId: String(campaign._id) },
-        });
-      }
-      await applyStopRules(enrollment, 'replied');
+      const stepIdx = enrollment.stepHistory.findIndex(s => s.messageId === normalized.messageId);
+      await handleReplyForEnrollment(enrollment, normalized.messageId, normalized.occurredAt, stepIdx);
       break;
     }
     case 'bounced': {
@@ -272,5 +324,86 @@ export async function processEmailEvent(
 
   if (Object.keys(historyUpdate).length > 0 && stepIndex >= 0) {
     await SequenceEnrollment.updateOne({ _id: enrollment._id }, { $set: historyUpdate });
+  }
+}
+
+export async function processInboundEmail(
+  provider: 'resend' | 'sendgrid',
+  payload: Record<string, unknown>,
+): Promise<void> {
+  const rawRef = extractInReplyTo(provider, payload);
+  if (!rawRef) {
+    logger.info('[emailEvent/inbound] no In-Reply-To header', { provider });
+    return;
+  }
+
+  const messageId = normalizeMessageIdRef(rawRef);
+  if (!messageId) {
+    logger.warn('[emailEvent/inbound] could not normalize In-Reply-To', { rawRef });
+    return;
+  }
+
+  const occurredAt = new Date();
+
+  // Primary: sequence enrollment path
+  const enrollment = await SequenceEnrollment.findOne({
+    'stepHistory.messageId': messageId,
+  });
+
+  if (enrollment) {
+    await EmailEvent.create({
+      workspaceId: enrollment.workspaceId,
+      enrollmentId: enrollment._id,
+      messageId,
+      event: 'replied',
+      provider,
+      raw: payload,
+      occurredAt,
+    });
+    const stepIndex = enrollment.stepHistory.findIndex(s => s.messageId === messageId);
+    await handleReplyForEnrollment(enrollment, messageId, occurredAt, stepIndex);
+    return;
+  }
+
+  // Fallback: direct OutreachDraft send (no SequenceEnrollment)
+  const draft = await OutreachDraft.findOne({
+    'deliveryMetadata.messageId': messageId,
+  }).select('_id campaignId leadId workspaceId');
+
+  if (!draft) {
+    logger.info('[emailEvent/inbound] no enrollment or draft for messageId', { messageId });
+    await EmailEvent.create({ messageId, event: 'replied', provider, raw: payload, occurredAt });
+    return;
+  }
+
+  await EmailEvent.create({
+    workspaceId: draft.workspaceId,
+    messageId,
+    event: 'replied',
+    provider,
+    raw: payload,
+    occurredAt,
+  });
+
+  const campaign = await Campaign.findOne({
+    _id: draft.campaignId,
+    workspaceId: draft.workspaceId,
+  }).select('_id name');
+
+  if (campaign) {
+    await Campaign.updateOne({ _id: campaign._id }, { $inc: { 'stats.replied': 1 } });
+    const lead = await Lead.findById(draft.leadId).select('companyName');
+    await emitNotification({
+      workspaceId: draft.workspaceId,
+      type: 'campaign.reply',
+      title: `Reply from ${lead?.companyName ?? 'a lead'}`,
+      message: `${campaign.name ?? 'Campaign'} — reply received.`,
+      href: `/dashboard/campaigns/${String(campaign._id)}`,
+      metadata: {
+        draftId: String(draft._id),
+        leadId: String(draft.leadId),
+        campaignId: String(campaign._id),
+      },
+    });
   }
 }
