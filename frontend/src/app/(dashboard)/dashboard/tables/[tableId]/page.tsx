@@ -981,6 +981,19 @@ function EditableCell({
 
   const isEnrichedColumn = column.definition?.type === 'enriched';
   const [reEnriching, setReEnriching] = useState(false);
+  const [showSources, setShowSources] = useState(false);
+  const sourcePopoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showSources) return;
+    function handleOutsideClick(e: MouseEvent) {
+      if (sourcePopoverRef.current && !sourcePopoverRef.current.contains(e.target as Node)) {
+        setShowSources(false);
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [showSources]);
 
   async function handleReEnrich(e: React.MouseEvent) {
     e.stopPropagation(); // prevent entering edit mode
@@ -1013,6 +1026,10 @@ function EditableCell({
     Array.isArray((cell as { sources?: unknown[] }).sources) &&
     ((cell as { sources: unknown[] }).sources.length > 0),
   );
+
+  const cellSources = hasSource
+    ? (cell as { sources: Array<{ dataSourceId?: string; invocationId?: string; sourceUrl?: string; confidence?: number; scrapedAt?: string }> }).sources
+    : [];
 
   async function handleSave() {
     if (!editing) return;
@@ -1093,12 +1110,63 @@ function EditableCell({
           </span>
         )}
         {hasSource && (
-          <span
-            title="Cell has a source URL"
-            className="shrink-0 font-[family-name:var(--font-jetbrains-mono)] text-[8.5px] text-[color:var(--forest)] opacity-0 group-hover/cell:opacity-100 transition"
-          >
-            ◆
-          </span>
+          <div ref={sourcePopoverRef} className="relative shrink-0">
+            <button
+              onClick={(e) => {
+                e.stopPropagation(); // don't enter edit mode
+                setShowSources((v) => !v);
+              }}
+              title="View source"
+              className={`font-[family-name:var(--font-jetbrains-mono)] text-[8.5px] text-[color:var(--forest)] transition ${
+                showSources ? 'opacity-100' : 'opacity-0 group-hover/cell:opacity-100'
+              }`}
+            >
+              ◆
+            </button>
+            {showSources && (
+              <div className="absolute right-0 top-full mt-1 z-50 w-72 bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-sm shadow-lg p-3 flex flex-col gap-2">
+                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
+                  Sources
+                </span>
+                {cellSources.map((src, i) => (
+                  <div key={i} className="flex flex-col gap-0.5 border-b border-[color:var(--rule)] last:border-b-0 pb-2 last:pb-0">
+                    {src.sourceUrl ? (
+                      <a
+                        href={src.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="font-[family-name:var(--font-barlow)] text-[12px] text-[color:var(--forest)] hover:underline truncate"
+                      >
+                        {src.sourceUrl}
+                      </a>
+                    ) : (
+                      <span className="font-[family-name:var(--font-barlow)] text-[12px] text-[color:var(--ink-3)] italic">
+                        No URL
+                      </span>
+                    )}
+                    <div className="flex gap-3 flex-wrap">
+                      {src.dataSourceId && (
+                        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] text-[color:var(--ink-3)]">
+                          {src.dataSourceId}
+                        </span>
+                      )}
+                      {typeof src.confidence === 'number' && (
+                        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] text-[color:var(--ink-3)]">
+                          {Math.round(src.confidence * 100)}% confidence
+                        </span>
+                      )}
+                      {src.scrapedAt && (
+                        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] text-[color:var(--ink-3)]">
+                          {new Date(src.scrapedAt).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
         {isEnrichedColumn && (
           <button
