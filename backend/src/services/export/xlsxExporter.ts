@@ -20,6 +20,10 @@ export async function leadsToXlsx(leads: ILead[]): Promise<Buffer> {
     { header: 'LinkedIn', key: 'linkedin', width: 35 },
     { header: 'Rank Score', key: 'rankScore', width: 12 },
     { header: 'Tags', key: 'tags', width: 20 },
+    { header: 'Description', key: 'description', width: 40 },
+    { header: 'Agent Reasoning', key: 'agentReasoning', width: 40 },
+    { header: 'Source URLs', key: 'sourceUrls', width: 60 },
+    { header: 'Evidence count', key: 'evidenceCount', width: 15 },
   ];
 
   // Style header row
@@ -43,6 +47,10 @@ export async function leadsToXlsx(leads: ILead[]): Promise<Buffer> {
       linkedin: lead.socialProfiles?.linkedinUrl ?? '',
       rankScore: lead.rankScore,
       tags: lead.tags.join(', '),
+      description: lead.description ?? '',
+      agentReasoning: lead.agentReasoning ?? '',
+      sourceUrls: lead.sources.slice(0, 3).map(s => s.url).join(' | '),
+      evidenceCount: lead.sources.length,
     });
   }
 
