@@ -50,6 +50,7 @@ import { permuteEmailTool } from './permuteEmail.js';
 import { verifyEmailTool } from './verifyEmail.js';
 import { scoreLeadTool } from './scoreLead.js';
 import { writeLeadTool } from './writeLead.js';
+import { runCodeTool } from './runCode.js';
 
 export const TOOL_REGISTRY: ToolDef[] = [
   // Library tier — cheapest, try first. User's own uploaded docs +
@@ -63,6 +64,8 @@ export const TOOL_REGISTRY: ToolDef[] = [
   searchWebTool, fetchUrlTool, fetchFileTool, getFileChunkTool, transcribeUrlTool, scrapePageTool,
   // Enrichment — person/contact extraction on discovered domains.
   extractNamesFromUrlsTool, permuteEmailTool, verifyEmailTool,
+  // Data processing — sandboxed Python executor for parsing / cleaning.
+  runCodeTool,
   // Scoring / finalize.
   scoreLeadTool, writeLeadTool,
 ];
