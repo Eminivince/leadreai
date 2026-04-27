@@ -21,8 +21,8 @@ export function leadsToCsv(leads: ILead[]): Promise<string> {
       'Tags': lead.tags.join(', '),
       'Description': lead.description ?? '',
       'Agent Reasoning': lead.agentReasoning ?? '',
-      'Source URLs': lead.sources.slice(0, 3).map(s => s.url).join(' | '),
-      'Evidence count': lead.sources.length,
+      'Source URLs': (lead.sources ?? []).slice(0, 3).map(s => s.url).join(' | '),
+      'Evidence count': (lead.sources ?? []).length,
     }));
 
     stringify(rows, { header: true }, (err, output) => {

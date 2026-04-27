@@ -49,8 +49,8 @@ export async function leadsToXlsx(leads: ILead[]): Promise<Buffer> {
       tags: lead.tags.join(', '),
       description: lead.description ?? '',
       agentReasoning: lead.agentReasoning ?? '',
-      sourceUrls: lead.sources.slice(0, 3).map(s => s.url).join(' | '),
-      evidenceCount: lead.sources.length,
+      sourceUrls: (lead.sources ?? []).slice(0, 3).map(s => s.url).join(' | '),
+      evidenceCount: (lead.sources ?? []).length,
     });
   }
 
