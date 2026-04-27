@@ -115,6 +115,7 @@ async function handleReplyForEnrollment(
   messageId: string,
   occurredAt: Date,
   stepIndex: number,
+  recipientEmail?: string,
 ): Promise<void> {
   const isFirst = enrollment.status !== 'replied';
   const historyUpdate: Record<string, unknown> = {};
@@ -122,14 +123,16 @@ async function handleReplyForEnrollment(
   if (stepIndex >= 0) {
     historyUpdate[`stepHistory.${stepIndex}.repliedAt`] = occurredAt;
     historyUpdate[`stepHistory.${stepIndex}.status`] = 'replied';
-    await SequenceEnrollment.updateOne({ _id: enrollment._id }, { $set: historyUpdate });
   }
 
-  await SequenceEnrollment.updateOne({ _id: enrollment._id }, { $set: { status: 'replied' } });
-  await Sequence.updateOne(
-    { _id: enrollment.sequenceId },
-    { $inc: { 'stats.replied': 1 } },
+  await SequenceEnrollment.updateOne(
+    { _id: enrollment._id },
+    { $set: { ...historyUpdate, status: 'replied' } },
   );
+
+  if (isFirst) {
+    await Sequence.updateOne({ _id: enrollment.sequenceId }, { $inc: { 'stats.replied': 1 } });
+  }
 
   const campaign = await Campaign.findOne({
     sequenceId: enrollment.sequenceId,
@@ -142,7 +145,7 @@ async function handleReplyForEnrollment(
     await emitNotification({
       workspaceId: enrollment.workspaceId,
       type: 'campaign.reply',
-      title: `Reply from ${lead?.companyName ?? 'a lead'}`,
+      title: `Reply from ${lead?.companyName ?? recipientEmail ?? 'a lead'}`,
       message: `${campaign.name ?? 'Campaign'} — sequence paused for this lead.`,
       href: `/dashboard/campaigns/${String(campaign._id)}`,
       metadata: {
@@ -156,13 +159,15 @@ async function handleReplyForEnrollment(
   await applyStopRules(enrollment, 'replied');
 }
 
-function normalizeMessageIdRef(raw: string): string {
+function normalizeMessageIdRef(raw: string, provider: 'resend' | 'sendgrid'): string {
   // Strip angle brackets: "<re_abc@resend.dev>" → "re_abc@resend.dev"
-  // Then strip domain part, then strip any ".filter..." suffix
+  // Then strip domain part.
+  // SendGrid SMTP IDs have a ".filterXXX" suffix; strip it to match stored values.
+  // Resend IDs are opaque tokens — do not truncate.
   const stripped = raw.trim().replace(/^<|>$/g, '');
   const atIdx = stripped.indexOf('@');
   const local = atIdx >= 0 ? stripped.slice(0, atIdx) : stripped;
-  return local.split('.')[0] ?? local;
+  return provider === 'sendgrid' ? (local.split('.')[0] ?? local) : local;
 }
 
 function extractInReplyTo(provider: 'resend' | 'sendgrid', payload: Record<string, unknown>): string | null {
@@ -177,7 +182,10 @@ function extractInReplyTo(provider: 'resend' | 'sendgrid', payload: Record<strin
   // SendGrid Inbound Parse: 'headers' is a CRLF-delimited text string
   const headersText = (payload['headers'] as string | undefined) ?? '';
   const m = headersText.match(/^In-Reply-To:\s*(<[^>]+>)/im);
-  return m?.[1] ?? null;
+  if (m?.[1]) return m[1];
+  // Fallback: bare token without angle brackets
+  const bare = headersText.match(/^In-Reply-To:\s*(\S+)/im);
+  return bare?.[1]?.trim() ?? null;
 }
 
 export async function processEmailEvent(
@@ -198,10 +206,15 @@ export async function processEmailEvent(
     'stepHistory.messageId': normalized.messageId,
   });
 
-  // Save event record
+  if (!enrollment) {
+    logger.info('[emailEvent] No enrollment found for messageId', { messageId: normalized.messageId });
+    return;
+  }
+
+  // Save event record (workspaceId is required — only create after enrollment confirmed)
   await EmailEvent.create({
-    workspaceId: enrollment?.workspaceId,
-    enrollmentId: enrollment?._id,
+    workspaceId: enrollment.workspaceId,
+    enrollmentId: enrollment._id,
     messageId: normalized.messageId,
     event: normalized.event,
     provider: normalized.provider,
@@ -209,11 +222,6 @@ export async function processEmailEvent(
     raw: normalized.raw,
     occurredAt: normalized.occurredAt,
   });
-
-  if (!enrollment) {
-    logger.info('[emailEvent] No enrollment found for messageId', { messageId: normalized.messageId });
-    return;
-  }
 
   const stepIndex = enrollment.stepHistory.findIndex(s => s.messageId === normalized.messageId);
   const step = stepIndex >= 0 ? enrollment.stepHistory[stepIndex] : undefined;
@@ -244,8 +252,7 @@ export async function processEmailEvent(
       historyUpdate[`stepHistory.${stepIndex}.status`] = 'clicked';
       break;
     case 'replied': {
-      const stepIdx = enrollment.stepHistory.findIndex(s => s.messageId === normalized.messageId);
-      await handleReplyForEnrollment(enrollment, normalized.messageId, normalized.occurredAt, stepIdx);
+      await handleReplyForEnrollment(enrollment, normalized.messageId, normalized.occurredAt, stepIndex, normalized.recipientEmail);
       break;
     }
     case 'bounced': {
@@ -337,7 +344,7 @@ export async function processInboundEmail(
     return;
   }
 
-  const messageId = normalizeMessageIdRef(rawRef);
+  const messageId = normalizeMessageIdRef(rawRef, provider);
   if (!messageId) {
     logger.warn('[emailEvent/inbound] could not normalize In-Reply-To', { rawRef });
     return;
@@ -371,8 +378,8 @@ export async function processInboundEmail(
   }).select('_id campaignId leadId workspaceId');
 
   if (!draft) {
+    // workspaceId is required on EmailEvent — skip creating an orphan record
     logger.info('[emailEvent/inbound] no enrollment or draft for messageId', { messageId });
-    await EmailEvent.create({ messageId, event: 'replied', provider, raw: payload, occurredAt });
     return;
   }
 
