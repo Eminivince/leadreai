@@ -9,6 +9,7 @@ import { createContactWorker } from './contact.worker.js';
 import { createHubspotWorker } from './hubspot.worker.js';
 import { createSequenceWorker } from './sequence.worker.js';
 import { createDocumentWorker } from './document.worker.js';
+import { createSubagentProspectingWorker } from './subagentProspecting.worker.js';
 import { startSequenceScheduler } from './sequenceScheduler.js';
 
 /**
@@ -19,6 +20,7 @@ import { startSequenceScheduler } from './sequenceScheduler.js';
  */
 const ALL_QUEUE_NAMES = [
   'prospecting',
+  'prospecting-subagent',
   'outreach',
   'contact-enrichment',
   'hubspot-sync',
@@ -168,6 +170,12 @@ async function bootstrap() {
   const documentWorker = createDocumentWorker(documentConn);
   logger.info('Document worker ready', { concurrency: 2 });
 
+  const subagentConn = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
+  subagentConn.on('error', (err) => logger.error('Subagent Redis error', { err }));
+
+  const subagentWorker = createSubagentProspectingWorker(subagentConn, publisher);
+  logger.info('Subagent prospecting worker started', { concurrency: env.SUBAGENT_CONCURRENCY });
+
   const scheduler = startSequenceScheduler(schedulerConn);
   logger.info('Sequence scheduler started');
 
@@ -178,9 +186,9 @@ async function bootstrap() {
     logger.info(`Received ${signal}, shutting down workers`);
     clearInterval(scheduler.timer);
     await scheduler.close();
-    await Promise.all([prospectingWorker.close(), outreachWorker.close(), contactWorker.close(), hubspotWorker.close(), sequenceWorker.close(), documentWorker.close()]);
+    await Promise.all([prospectingWorker.close(), outreachWorker.close(), contactWorker.close(), hubspotWorker.close(), sequenceWorker.close(), documentWorker.close(), subagentWorker.close()]);
     await publisher.quit();
-    await Promise.all([prospectingConn.quit(), outreachConn.quit(), contactConn.quit(), hubspotConn.quit(), sequenceConn.quit(), documentConn.quit(), schedulerConn.quit()]);
+    await Promise.all([prospectingConn.quit(), outreachConn.quit(), contactConn.quit(), hubspotConn.quit(), sequenceConn.quit(), documentConn.quit(), schedulerConn.quit(), subagentConn.quit()]);
     logger.info('Worker shutdown complete');
     process.exit(0);
   }
