@@ -78,6 +78,13 @@ const envSchema = z.object({
   AGENT_FAN_OUT_ENABLED: booleanFlag.default(true),
   SUBAGENT_CONCURRENCY: z.coerce.number().int().min(1).max(20).default(5),
   FAN_OUT_MIN_TARGET: z.coerce.number().int().min(1).max(50).default(5),
+  // Code sandbox — Python executor for agent data-processing tasks.
+  // Requires Docker installed and the sandbox image built:
+  //   docker build -t leadreai-sandbox:latest workers/sandbox/
+  SANDBOX_ENABLED: booleanFlag.default(false),
+  SANDBOX_IMAGE: z.string().default('leadreai-sandbox:latest'),
+  SANDBOX_TIMEOUT_MS: z.coerce.number().int().min(5000).default(30_000),
+  SANDBOX_MEMORY_MB: z.coerce.number().int().min(64).default(256),
 });
 
 const parsed = envSchema.safeParse(process.env);
