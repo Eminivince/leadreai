@@ -35,11 +35,9 @@ export async function handleSendGridWebhook(req: Request, res: Response): Promis
 export async function handleResendInbound(req: Request, res: Response): Promise<void> {
   try {
     const payload = req.body as Record<string, unknown>;
-    if (payload['type'] !== 'email.received') {
-      res.status(200).json({ received: true });
-      return;
+    if (payload['type'] === 'email.received') {
+      await processInboundEmail('resend', payload);
     }
-    await processInboundEmail('resend', payload);
   } catch (err) {
     logger.error('[webhooks] Resend inbound processing error', { err });
   }
@@ -55,10 +53,9 @@ export async function handleSendGridInbound(req: Request, res: Response): Promis
     const payload = req.body as Record<string, unknown>;
     if (!payload['headers']) {
       logger.warn('[webhooks] SendGrid inbound: missing headers field — ensure multipart body parser is configured');
-      res.status(200).json({ received: true });
-      return;
+    } else {
+      await processInboundEmail('sendgrid', payload);
     }
-    await processInboundEmail('sendgrid', payload);
   } catch (err) {
     logger.error('[webhooks] SendGrid inbound processing error', { err });
   }
