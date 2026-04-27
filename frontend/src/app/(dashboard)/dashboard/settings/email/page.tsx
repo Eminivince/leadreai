@@ -16,14 +16,19 @@ function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API unavailable or denied — silently ignore
+    }
   }
 
   return (
     <button
       onClick={handleCopy}
+      aria-label={copied ? 'Copied to clipboard' : 'Copy to clipboard'}
       className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase px-3 py-1 border border-[color:var(--rule)] rounded-full text-[color:var(--ink-2)] hover:text-[color:var(--ink)] hover:border-[color:var(--ink)] transition-colors"
     >
       {copied ? 'Copied' : 'Copy'}
