@@ -2,7 +2,6 @@ import { logger } from '../utils/logger.js';
 import { SUBAGENT_TOOLS, executeTool, renderToolMenu, type ToolContext } from './tools/index.js';
 import type { Candidate } from './tools/index.js';
 import { callLlm, isLlmConfigured } from '../utils/llmClient.js';
-import { jobActivity } from './intentParser.js';
 import type { LeadRecord } from './deduplicator.js';
 import type { ParsedIntent } from '@leadreai/shared';
 import { Redis } from 'ioredis';
@@ -117,7 +116,6 @@ export async function runSubagent(
   let stepsUsed = 0;
 
   for (let step = 0; step < maxSteps; step++) {
-    stepsUsed = step + 1;
     // Exit early once we've written at least one lead and had a few steps to upgrade it.
     if (ctx.leadsSoFar.length > 0 && step > 5) break;
     if (Date.now() - startedAt > wallClockMs) break;
@@ -125,6 +123,7 @@ export async function runSubagent(
     let raw: string;
     try {
       raw = await callLLM(history);
+      stepsUsed = step + 1;  // only count iterations where an LLM call was made
     } catch (err) {
       logger.warn('[subagent] LLM call failed', {
         parentJobId,
