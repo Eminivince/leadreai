@@ -264,12 +264,14 @@ function InlineCode({ children }: { children: React.ReactNode }) {
 /* ── FAQ item ────────────────────────────────────────────────── */
 function FAQItem({ q, a }: { q: string; a: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const panelId = `faq-${q.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 40)}`;
   return (
     <div className="border-b border-[color:var(--rule)] py-4">
       <button
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-start justify-between gap-4 text-left group"
         aria-expanded={open}
+        aria-controls={panelId}
       >
         <span className="font-[family-name:var(--font-instrument-serif)] text-[18px] leading-[1.25] text-[color:var(--ink)] group-hover:text-[color:var(--forest)] transition-colors">
           {q}
@@ -282,11 +284,13 @@ function FAQItem({ q, a }: { q: string; a: React.ReactNode }) {
           +
         </span>
       </button>
-      {open && (
-        <div className="mt-3 font-[family-name:var(--font-barlow)] text-[14.5px] leading-[1.65] text-[color:var(--ink-2)] pr-8">
-          {a}
-        </div>
-      )}
+      <div
+        id={panelId}
+        hidden={!open}
+        className="mt-3 font-[family-name:var(--font-barlow)] text-[14.5px] leading-[1.65] text-[color:var(--ink-2)] pr-8"
+      >
+        {a}
+      </div>
     </div>
   );
 }
@@ -387,18 +391,39 @@ function DocBody() {
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
+    const sections = document.querySelectorAll<HTMLElement>('section[id]');
+
+    // Initialise from current scroll position (handles deep-link entry)
+    const pickInitial = () => {
+      const viewMid = window.innerHeight * 0.4;
+      let best: HTMLElement | null = null;
+      sections.forEach((s) => {
+        const rect = s.getBoundingClientRect();
+        if (rect.top <= viewMid && (best === null || rect.top > best.getBoundingClientRect().top)) {
+          best = s;
+        }
+      });
+      if (best) setActiveSection((best as HTMLElement).id);
+    };
+    pickInitial();
+
     observerRef.current = new IntersectionObserver(
       (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
-        }
+        // Collect all currently-intersecting section ids
+        const intersecting = entries
+          .filter((e) => e.isIntersecting)
+          .map((e) => e.target.id);
+
+        if (intersecting.length === 0) return;
+
+        // Pick the one that appears earliest in the document order
+        const sectionIds = SECTIONS.map((s) => s.id);
+        const first = sectionIds.find((id) => intersecting.includes(id));
+        if (first) setActiveSection(first);
       },
-      { rootMargin: '-20% 0px -70% 0px', threshold: 0 }
+      { rootMargin: '-20% 0px -70% 0px', threshold: 0 },
     );
 
-    const sections = document.querySelectorAll<HTMLElement>('section[id]');
     sections.forEach((s) => observerRef.current?.observe(s));
 
     return () => observerRef.current?.disconnect();
@@ -409,6 +434,24 @@ function DocBody() {
       <Sidebar activeSection={activeSection} />
 
       <div className="flex-1 min-w-0">
+
+        {/* Mobile table of contents — hidden on lg+ where sidebar is visible */}
+        <details className="lg:hidden mb-8 border border-[color:var(--rule)]/60 rounded-sm">
+          <summary className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] px-4 py-3 cursor-pointer select-none">
+            In this guide
+          </summary>
+          <nav className="px-4 pb-4 flex flex-col gap-2">
+            {SECTIONS.map((s) => (
+              <a
+                key={s.id}
+                href={`#${s.id}`}
+                className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
+              >
+                {s.label}
+              </a>
+            ))}
+          </nav>
+        </details>
 
         {/* ── Section 1: Overview ─────────────────────────── */}
         <DocSection id="overview" kicker="01 · Overview" heading="What Is Leadre AI?">
