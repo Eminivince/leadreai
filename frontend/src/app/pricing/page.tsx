@@ -71,6 +71,7 @@ function Masthead() {
               { label: 'Capabilities', href: '/#capabilities' },
               { label: 'Accounts',     href: '/#accounts' },
               { label: 'Pricing',      href: '/pricing' },
+              { label: 'Docs',         href: '/docs' },
             ].map((l) => (
               <Link
                 key={l.href}

@@ -91,6 +91,12 @@ function Masthead() {
                 {l.label}
               </a>
             ))}
+            <Link
+              href="/docs"
+              className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
+            >
+              Docs
+            </Link>
           </div>
           <Link
             href="/login"
