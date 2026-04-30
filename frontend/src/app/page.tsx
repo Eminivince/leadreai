@@ -1,954 +1,625 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { useState } from 'react'
+import { AnimatePresence } from 'framer-motion'
+import type { CSSProperties } from 'react'
+import AltNav from '@/components/marketing/AltNav'
+import AltFooter from '@/components/marketing/AltFooter'
+import EmailGate from '@/components/marketing/EmailGate'
+import { altTokens } from '@/components/marketing/alt-tokens'
 
-/* ─────────────────────────────────────────────────────────────────
- * LeadreAI — Landing
- * ─────────────────────────────────────────────────────────────────
- * Editorial broadsheet aesthetic.
- *
- * Palette lives in CSS variables on the outer <main>:
- *   --paper       F2EADD    main ivory background
- *   --paper-2     E9DFCB    dossier card, slightly deeper
- *   --paper-3     F7F1E5    subtle tint cards
- *   --ink         15130F    near-black, warm
- *   --ink-2       5A5346    mid-gray with brown warmth
- *   --ink-3       8A8170    softer gray
- *   --rule        B5AB95    hairline / divider
- *   --forest      2D4634    deep forest green (primary accent)
- *   --forest-2    4C6A54    lighter forest
- *   --rust        B84F2B    terracotta (very sparing accent)
- *
- * Fonts — imported in app/layout.tsx via next/font:
- *   --font-instrument-serif   Instrument Serif   display/italic accents
- *   --font-barlow             Barlow             body sans
- *   --font-jetbrains-mono     JetBrains Mono     technical / data labels
- *
- * The page is self-contained; subsections are local components. Animation
- * is used only once — the hero entrance — to stay out of the way of
- * typography doing the heavy lifting.
- * ───────────────────────────────────────────────────────────────── */
+const GATE_THRESHOLD = 3
 
-/* ── Glyphs ─────────────────────────────────────────────────── */
-function ArrowEast({ className = 'w-3.5 h-3.5' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" className={className}>
-      <path d="M2 8h12M10 4l4 4-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
+const CHIPS = [
+  'Fintech CEOs · Lagos',
+  'Law firms · Nairobi',
+  'Series B startups · Accra',
+  'FMCG distributors · Kano',
+  'Insurtech CTOs · Nigeria',
+]
 
-function Asterism({ className = '' }: { className?: string }) {
-  return (
-    <span className={`inline-flex items-center gap-1.5 ${className}`} aria-hidden>
-      <span className="block w-1 h-1 rounded-full bg-[color:var(--ink-3)]" />
-      <span className="block w-1 h-1 rounded-full bg-[color:var(--ink-3)]" />
-      <span className="block w-1 h-1 rounded-full bg-[color:var(--ink-3)]" />
-    </span>
-  );
-}
+const HOW_STEPS = [
+  {
+    num: '01',
+    title: 'Describe',
+    body: 'Type a plain-English sentence — no dropdowns, no filters. "Series B fintechs in Lagos with a CTO who went to UniLag" works.',
+  },
+  {
+    num: '02',
+    title: 'Discover & Enrich',
+    body: 'Our agent reads registries, company websites, and the open web. Emails are MX + SMTP verified. Every field has a source URL.',
+  },
+  {
+    num: '03',
+    title: 'Export & Act',
+    body: 'Download CSV, push directly to HubSpot or Salesforce, or copy individual contacts. Your CRM, your workflow.',
+  },
+]
 
-/* ── Masthead ───────────────────────────────────────────────── */
-function Masthead() {
-  return (
-    <header className="relative z-40 border-b border-[color:var(--rule)]/70">
-      <div className="max-w-[1320px] mx-auto px-6 md:px-10 lg:px-14 pt-5 pb-4 flex items-end justify-between gap-6">
-        {/* Left: issue + dateline */}
-        <div className="hidden md:flex flex-col gap-0.5 min-w-[200px]">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)]">
-            Vol I · Issue 07
-          </span>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
-            Lagos · Nairobi · Accra
-          </span>
-        </div>
+const TESTIMONIALS = [
+  {
+    quote: "We closed three enterprise deals in our first month. The email accuracy alone saves us hours every week.",
+    name: 'Adaeze Okonkwo',
+    role: 'Head of Sales',
+    city: 'Lagos',
+    initial: 'A',
+  },
+  {
+    quote: "Finally a tool that understands African markets. The data quality on Nairobi contacts is unlike anything we've seen.",
+    name: 'Mwangi Njoroge',
+    role: 'Founder',
+    city: 'Nairobi',
+    initial: 'M',
+  },
+  {
+    quote: "We replaced three manual research tools with Leadre. Our SDRs now spend time selling, not searching.",
+    name: 'Kofi Mensah',
+    role: 'VP Growth',
+    city: 'Accra',
+    initial: 'K',
+  },
+]
 
-        {/* Center: wordmark */}
-        <Link href="/" className="flex items-baseline gap-2 shrink-0 group">
-          <span className="font-[family-name:var(--font-instrument-serif)] italic text-2xl md:text-[28px] leading-none text-[color:var(--ink)] tracking-tight">
-            Leadre
-          </span>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] translate-y-[-1px]">
-            AI
-          </span>
-        </Link>
+const PRICING_TIERS = [
+  {
+    name: 'Reader',
+    price: '$29',
+    period: '/month',
+    tagline: 'For solo prospectors getting started.',
+    features: ['50 verified contacts/month', 'Email + phone enrichment', 'CSV export', 'Email support'],
+    cta: 'Get started free',
+    ctaHref: '/auth/register',
+    highlighted: false,
+  },
+  {
+    name: 'Correspondent',
+    price: '$99',
+    period: '/month',
+    tagline: 'For growing sales teams.',
+    features: ['500 verified contacts/month', 'CRM sync (HubSpot, Salesforce)', 'Priority enrichment queue', 'Slack alerts', 'Live chat support'],
+    cta: 'Start free trial',
+    ctaHref: '/auth/register',
+    highlighted: true,
+  },
+  {
+    name: 'Bureau',
+    price: '$299',
+    period: '/month',
+    tagline: 'For agencies and enterprise teams.',
+    features: ['Unlimited contacts', 'Custom pipeline integrations', 'Dedicated account manager', 'SLA guarantee', 'Custom data sources'],
+    cta: 'Contact sales',
+    // TODO: replace with dedicated sales/demo booking page when available
+    ctaHref: '/contact',
+    highlighted: false,
+  },
+]
 
-        {/* Right: nav */}
-        <nav className="flex items-center gap-6">
-          <div className="hidden lg:flex items-center gap-5">
-            {[
-              { label: 'Method', href: '#method' },
-              { label: 'Capabilities', href: '#capabilities' },
-              { label: 'Accounts', href: '#accounts' },
-              { label: 'Pricing', href: '#pricing' },
-            ].map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
-              >
-                {l.label}
-              </a>
-            ))}
-            <Link
-              href="/docs"
-              className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
-            >
-              Docs
-            </Link>
-          </div>
-          <Link
-            href="/login"
-            className="hidden md:inline font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/register"
-            className="font-[family-name:var(--font-barlow)] text-[13px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] px-3.5 py-2 rounded-full inline-flex items-center gap-1.5 hover:bg-[color:var(--forest)] transition-colors"
-          >
-            Start for free <ArrowEast className="w-3 h-3" />
-          </Link>
-        </nav>
-      </div>
-    </header>
-  );
-}
+const DEMO_ROWS = [
+  { company: 'Paystack', contact: 'Shola Akinlade', email: 'shola@paystack.com', raised: '$8M', status: 'Verified' },
+  { company: 'Moniepoint', contact: 'Felix Ike', email: 'felix@moniepoint.com', raised: '$15M', status: 'Verified' },
+  { company: 'Flutterwave', contact: 'Olugbenga Agboola', email: 'gbenga@flutterwave.com', raised: '$170M', status: 'Verified' },
+]
 
-/* ── Dossier Card (hero visual) ────────────────────────────── */
-function DossierCard() {
-  const rows: Array<[string, string, string, string, string, string]> = [
-    ['01', 'Paystack',     'Shola Akinlade',    'shola@paystack.com',     '$8M',    '¹'],
-    ['02', 'Moniepoint',   'Tosin Eniolorunda', 'tosin@moniepoint.com',   '$110M',  '¹'],
-    ['03', 'Flutterwave',  'Olugbenga Agboola', 'gb@flutterwave.com',     '$250M',  '²'],
-    ['04', 'FairMoney',    'Laurin Hainy',      'lh@fairmoney.io',        '$55M',   '¹'],
-    ['05', 'Interswitch',  'Mitchell Elegbe',   'm.elegbe@interswitch…',  '$200M',  '¹'],
-    ['06', 'Kuda Bank',    'Babs Ogundeyi',     'babs@kuda.com',          '$91M',   '²'],
-    ['07', 'Carbon',       'Chijioke Dozie',    'c.dozie@getcarbon.co',   '$15M',   '¹'],
-    ['08', 'Cowrywise',    'Razaq Ahmed',       '—',                      '$3M',    '³'],
-  ];
+export default function LandingPage() {
+  const [query, setQuery] = useState('')
+  const showGate = query.length > GATE_THRESHOLD
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.9, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className="relative"
-    >
-      {/* paper shadow — two layers, subtle */}
-      <div
-        className="absolute inset-0 translate-x-1 translate-y-1 bg-[color:var(--rule)]/25 rounded-sm"
-        aria-hidden
-      />
-      <div
-        className="absolute inset-0 translate-x-2 translate-y-2 bg-[color:var(--rule)]/15 rounded-sm"
-        aria-hidden
-      />
-
-      {/* card body */}
-      <div className="relative bg-[color:var(--paper-2)] border border-[color:var(--rule)] p-6 md:p-8 rounded-sm">
-        {/* header row */}
-        <div className="flex items-center justify-between pb-3 border-b border-dashed border-[color:var(--rule)]">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-2)]">
-            Dossier №.&nbsp;2406 · Compiled Lagos
-          </span>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
-            2026.04.19 · 14:22 GMT
-          </span>
-        </div>
-
-        {/* subject */}
-        <div className="pt-4 pb-5">
-          <div className="flex gap-4 md:gap-5">
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-2)] pt-[5px] shrink-0 w-14">
-              Subject
-            </span>
-            <p className="font-[family-name:var(--font-instrument-serif)] italic text-[18px] md:text-[21px] leading-[1.28] text-[color:var(--ink)]">
-              &ldquo;Top 12 Nigerian fintechs with Series-B or later funding in the
-              last 24 months. Give me the CEO&rsquo;s name and a phone number I can
-              call.&rdquo;
-            </p>
-          </div>
-          <div className="flex gap-4 md:gap-5 mt-4">
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-2)] shrink-0 w-14">
-              Status
-            </span>
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[11px] text-[color:var(--forest)]">
-              Complete · 12 of 12 resolved · 3 sources · 4m 11s
-            </span>
-          </div>
-        </div>
-
-        {/* divider ornament */}
-        <div className="flex items-center gap-3 my-3">
-          <div className="h-px flex-1 bg-[color:var(--rule)]" />
-          <Asterism />
-          <div className="h-px flex-1 bg-[color:var(--rule)]" />
-        </div>
-
-        {/* table */}
-        <div className="pt-3">
-          {/* header */}
-          <div className="grid grid-cols-[24px_1.2fr_1.2fr_1.6fr_0.6fr] gap-3 pb-2 border-b border-[color:var(--rule)]">
-            {['', 'Company', 'Contact', 'Email', 'Raised'].map((h, i) => (
-              <span
-                key={i}
-                className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]"
-              >
-                {h}
-              </span>
-            ))}
-          </div>
-          {/* rows */}
-          <div className="divide-y divide-[color:var(--rule)]/60">
-            {rows.map((r, i) => (
-              <div
-                key={i}
-                className="grid grid-cols-[24px_1.2fr_1.2fr_1.6fr_0.6fr] gap-3 py-[9px] items-baseline"
-              >
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tabular-nums text-[color:var(--ink-3)]">
-                  {r[0]}
-                </span>
-                <span className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] font-medium">
-                  {r[1]}
-                </span>
-                <span className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)]">
-                  {r[2]}
-                </span>
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[11px] text-[color:var(--ink-2)] truncate flex items-baseline gap-0.5">
-                  <span className="truncate">{r[3]}</span>
-                  <sup className="text-[8px] text-[color:var(--forest)] leading-none">{r[5]}</sup>
-                </span>
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[12px] tabular-nums text-[color:var(--ink)] font-medium">
-                  {r[4]}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* footnotes */}
-        <div className="mt-5 pt-4 border-t border-dashed border-[color:var(--rule)]">
-          <div className="space-y-1.5">
-            <p className="font-[family-name:var(--font-barlow)] text-[11px] leading-[1.55] text-[color:var(--ink-2)]">
-              <sup className="text-[color:var(--forest)] mr-1">¹</sup>
-              Verified via MX + SMTP probe on 2026.04.19.
-            </p>
-            <p className="font-[family-name:var(--font-barlow)] text-[11px] leading-[1.55] text-[color:var(--ink-2)]">
-              <sup className="text-[color:var(--forest)] mr-1">²</sup>
-              Extracted from /team page; verified via direct-reply test.
-            </p>
-            <p className="font-[family-name:var(--font-barlow)] text-[11px] leading-[1.55] text-[color:var(--ink-2)]">
-              <sup className="text-[color:var(--forest)] mr-1">³</sup>
-              Cowrywise contact withheld by request. Marked &ldquo;not available&rdquo;
-              <span className="italic"> per the honesty principle.</span>
-            </p>
-          </div>
-          <p className="mt-4 font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)] text-right">
-            Compiled by LeadreAI
-          </p>
-        </div>
-      </div>
-    </motion.div>
-  );
+    <main style={altTokens as CSSProperties}>
+      <AltNav />
+      <HeroSection query={query} setQuery={setQuery} showGate={showGate} />
+      <HowItWorksSection />
+      <ResultsDemoSection query={query} />
+      <TestimonialsSection />
+      <PricingSection />
+      <FinalCTASection query={query} setQuery={setQuery} showGate={showGate} />
+      <AltFooter />
+    </main>
+  )
 }
 
-/* ── Hero ───────────────────────────────────────────────────── */
-function Hero() {
-  const headlineV = {
-    hidden: {},
-    show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
-  };
-  const wordV = {
-    hidden: { y: 12, opacity: 0 },
-    show: { y: 0, opacity: 1, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
-  };
-
-  return (
-    <section className="relative">
-      {/* faint grid of broadsheet rules on the far right */}
-      <div
-        className="pointer-events-none absolute top-0 right-0 bottom-0 w-[18%] hidden xl:block opacity-[0.35]"
-        style={{
-          backgroundImage:
-            'repeating-linear-gradient(to bottom, transparent 0 31px, var(--rule) 31px 31.5px)',
-        }}
-        aria-hidden
-      />
-
-      <div className="max-w-[1320px] mx-auto px-6 md:px-10 lg:px-14 pt-14 md:pt-20 pb-16 md:pb-24 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12">
-        {/* Left column — the lede */}
-        <div className="lg:col-span-7 flex flex-col">
-          {/* Section kicker */}
-          <div className="flex items-center gap-3 mb-8">
-            <span className="block w-8 h-px bg-[color:var(--ink)]" />
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
-              A research desk for emerging markets
-            </span>
-          </div>
-
-          {/* Headline */}
-          <motion.h1
-            variants={headlineV}
-            initial="hidden"
-            animate="show"
-            className="font-[family-name:var(--font-instrument-serif)] text-[52px] md:text-[78px] lg:text-[96px] leading-[0.92] tracking-[-0.02em] text-[color:var(--ink)]"
-          >
-            <motion.span variants={wordV} className="inline-block">Lead</motion.span>{' '}
-            <motion.span variants={wordV} className="inline-block">research</motion.span>{' '}
-            <motion.span variants={wordV} className="inline-block">for</motion.span>{' '}
-            <motion.span variants={wordV} className="inline-block">the</motion.span>{' '}
-            <motion.span variants={wordV} className="inline-block">markets</motion.span>{' '}
-            <motion.span variants={wordV} className="inline-block">the</motion.span>{' '}
-            <motion.span variants={wordV} className="inline-block italic text-[color:var(--forest)]">
-              databases
-            </motion.span>{' '}
-            <motion.span variants={wordV} className="inline-block">forgot.</motion.span>
-          </motion.h1>
-
-          {/* Standfirst */}
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.0 }}
-            className="mt-8 max-w-[580px] font-[family-name:var(--font-barlow)] text-[17px] md:text-[19px] leading-[1.5] text-[color:var(--ink-2)]"
-          >
-            Type an ideal-customer sentence. Our agent reads registries,
-            directories, and the open web &mdash; then delivers a qualified list
-            with <span className="italic text-[color:var(--ink)]">a source footnote on every field</span>.
-          </motion.p>
-
-          {/* CTAs */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.2 }}
-            className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4"
-          >
-            <Link
-              href="/register"
-              className="group inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] font-[family-name:var(--font-barlow)] text-[14px] font-medium px-5 py-3 rounded-full hover:bg-[color:var(--forest)] transition-colors"
-            >
-              Start for free
-              <ArrowEast className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-            <a
-              href="#sample-dossier"
-              className="group inline-flex items-center gap-2.5 font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink)] underline-offset-[6px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)] underline decoration-1"
-            >
-              Read a sample dossier
-              <ArrowEast className="w-3 h-3 text-[color:var(--ink-2)] group-hover:translate-x-0.5 transition-transform" />
-            </a>
-          </motion.div>
-
-          {/* Footer line: credits */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 1.4 }}
-            className="mt-14 pt-5 border-t border-[color:var(--rule)] max-w-[580px] flex flex-wrap items-center gap-x-6 gap-y-2 text-[color:var(--ink-3)]"
-          >
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase">
-              No credit card
-            </span>
-            <span className="w-1 h-1 rounded-full bg-[color:var(--ink-3)]" />
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase">
-              No sales call
-            </span>
-            <span className="w-1 h-1 rounded-full bg-[color:var(--ink-3)]" />
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase">
-              Export any time
-            </span>
-          </motion.div>
-        </div>
-
-        {/* Right column — Dossier */}
-        <div id="sample-dossier" className="lg:col-span-5 lg:pt-2">
-          <DossierCard />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ── Section Header (reusable kicker) ──────────────────────── */
-function SectionHead({
-  eyebrow,
-  title,
-  lead,
-  accent = false,
+function HeroSection({
+  query,
+  setQuery,
+  showGate,
 }: {
-  eyebrow: string;
-  title: React.ReactNode;
-  lead?: React.ReactNode;
-  accent?: boolean;
+  query: string
+  setQuery: (v: string) => void
+  showGate: boolean
 }) {
   return (
-    <div className="flex flex-col gap-4 md:gap-5 max-w-[840px]">
-      <div className="flex items-center gap-3">
-        <span
-          className={`block w-8 h-px ${accent ? 'bg-[color:var(--forest)]' : 'bg-[color:var(--ink)]'}`}
-        />
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
-          {eyebrow}
+    <section
+      style={{
+        background: 'linear-gradient(to bottom, #fffbeb 0%, #ffffff 55%)',
+        padding: '80px 24px 64px',
+        textAlign: 'center',
+      }}
+    >
+      {/* Badge */}
+      <div style={{
+        display: 'inline-flex', alignItems: 'center', gap: 8,
+        background: 'var(--alt-amber-light)', border: '1px solid var(--alt-amber-border)',
+        borderRadius: 999, padding: '4px 14px', marginBottom: 24,
+      }}>
+        <span style={{ color: 'var(--alt-amber-dark)', fontSize: 13, fontWeight: 600 }}>
+          Built for Nigerian &amp; African markets
         </span>
       </div>
-      <h2 className="font-[family-name:var(--font-instrument-serif)] text-[36px] md:text-[54px] lg:text-[64px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
-        {title}
-      </h2>
-      {lead && (
-        <p className="mt-1 font-[family-name:var(--font-barlow)] text-[16px] md:text-[18px] leading-[1.55] text-[color:var(--ink-2)] max-w-[620px]">
-          {lead}
-        </p>
-      )}
-    </div>
-  );
-}
 
-/* ── Method (How it works) ──────────────────────────────────── */
-function Method() {
-  const steps = [
-    {
-      no: '01',
-      title: 'Describe',
-      detail:
-        'Type a sentence. "Top 50 fintechs in Nigeria with recent funding." "Managing partners at mid-tier Kenyan law firms." No filters to click.',
-      span: 'md:col-span-4',
-    },
-    {
-      no: '02',
-      title: 'Discover',
-      detail:
-        'The agent starts with curated registries and Wikipedia categories, then extends via Brave, Serper, and the open web. Discovery is cheap; spraying SERPs is not.',
-      span: 'md:col-span-8',
-    },
-    {
-      no: '03',
-      title: 'Enrich',
-      detail:
-        'Homepages and /team pages are read for named people. Patterns permute. Emails are MX-checked and SMTP-probed. Phones normalize through libphonenumber with a country hint.',
-      span: 'md:col-span-8',
-    },
-    {
-      no: '04',
-      title: 'Deliver',
-      detail:
-        'Every field carries a source URL and a confidence score. Every column the query asked for appears as a typed column. Missing data shows as em-dash, not as lies.',
-      span: 'md:col-span-4',
-    },
-  ];
+      {/* Headline */}
+      <h1 style={{
+        fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 800,
+        letterSpacing: '-0.04em', color: 'var(--alt-ink)',
+        lineHeight: 1.1, maxWidth: 700, margin: '0 auto 16px',
+      }}>
+        Find your next customer.{' '}
+        <span style={{ color: 'var(--alt-amber)' }}>Before your competitors do.</span>
+      </h1>
 
-  return (
-    <section id="method" className="border-t border-[color:var(--rule)] bg-[color:var(--paper)]">
-      <div className="max-w-[1320px] mx-auto px-6 md:px-10 lg:px-14 py-20 md:py-28">
-        <SectionHead
-          eyebrow="The Method"
-          title={
-            <>
-              From a sentence <br className="hidden md:inline" />
-              to a list, <em className="italic text-[color:var(--forest)]">with footnotes</em>.
-            </>
-          }
-          lead="Four movements. No modals to click through, no taxonomies to learn. The agent does what a good junior analyst would do — at the speed of a spreadsheet."
-        />
+      {/* Subline */}
+      <p style={{
+        fontSize: 16, color: 'var(--alt-ink-3)', maxWidth: 440,
+        margin: '0 auto 32px', lineHeight: 1.6,
+      }}>
+        Describe the companies or people you want to reach. Our agent finds, enriches, and verifies them — so you can sell instead of search.
+      </p>
 
-        <div className="mt-14 md:mt-20 grid grid-cols-1 md:grid-cols-12 gap-x-8 gap-y-14">
-          {steps.map((s) => (
-            <div key={s.no} className={`${s.span} flex flex-col gap-4`}>
-              <div className="flex items-baseline gap-5">
-                <span className="font-[family-name:var(--font-instrument-serif)] text-[56px] md:text-[72px] leading-none text-[color:var(--forest)]">
-                  {s.no}
-                </span>
-                <div className="flex-1 border-t border-[color:var(--rule)] pb-2" />
-                <span className="font-[family-name:var(--font-instrument-serif)] italic text-[22px] md:text-[28px] text-[color:var(--ink)] self-end pb-1">
-                  {s.title}
-                </span>
-              </div>
-              <p className="font-[family-name:var(--font-barlow)] text-[14.5px] leading-[1.6] text-[color:var(--ink-2)] max-w-[420px]">
-                {s.detail}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ── Capabilities ───────────────────────────────────────────── */
-function Capabilities() {
-  const caps = [
-    {
-      tag: 'Natural-language queries',
-      body: 'The parser recognizes personas, geography, industry, exclusion constraints, and user-specified output columns. It does not force you into a taxonomy that was designed for Silicon Valley.',
-    },
-    {
-      tag: 'Dynamic output columns',
-      body: 'Ask for amount raised, funding round, tech stack, hiring signal, or license filing. Every requested field appears as a typed column on the result — currency formats, date localization, hoverable provenance.',
-    },
-    {
-      tag: 'Named-contact discovery',
-      body: 'Team pages, leadership sections, attorneys-at-firms, officer registries, and LinkedIn public profiles. Names are paired with titles, not guessed. Chrome text ("Our History," "Related Pages") is filtered out.',
-    },
-    {
-      tag: 'Provenance on every field',
-      body: 'Each value carries a source URL, an extraction method, a confidence score, and a verification timestamp. You can always trace why the engine believes what it believes.',
-    },
-    {
-      tag: 'Multi-source search',
-      body: 'Brave, Serper, and SerpAPI behind a router with a 24-hour query cache. When one provider rate-limits, the next takes over. You are never a single-provider failure away from a blank page.',
-    },
-    {
-      tag: 'Emerging-markets coverage',
-      body: 'Curated seed lists for Nigerian, Kenyan, Ghanaian, and South African verticals — fintech, law, manufacturing, logistics. Wikipedia categories as a deterministic baseline. The long tail, by design.',
-    },
-  ];
-
-  return (
-    <section id="capabilities" className="border-t border-[color:var(--rule)] bg-[color:var(--paper-3)]">
-      <div className="max-w-[1320px] mx-auto px-6 md:px-10 lg:px-14 py-20 md:py-28">
-        <SectionHead
-          eyebrow="Capabilities"
-          title={
-            <>
-              What the desk <em className="italic text-[color:var(--forest)]">knows</em> how to do.
-            </>
-          }
-        />
-
-        <div className="mt-14 md:mt-16 grid grid-cols-1 md:grid-cols-2 gap-x-14 gap-y-10 md:gap-y-14">
-          {caps.map((c, i) => (
-            <div
-              key={c.tag}
-              className="flex flex-col gap-3 pt-6 border-t border-[color:var(--rule)]"
-            >
-              <div className="flex items-baseline justify-between gap-4">
-                <h3 className="font-[family-name:var(--font-instrument-serif)] text-[22px] md:text-[26px] leading-[1.15] text-[color:var(--ink)] tracking-[-0.01em]">
-                  {c.tag}
-                </h3>
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] shrink-0">
-                  {String(i + 1).padStart(2, '0')} / {String(caps.length).padStart(2, '0')}
-                </span>
-              </div>
-              <p className="font-[family-name:var(--font-barlow)] text-[14.5px] leading-[1.6] text-[color:var(--ink-2)]">
-                {c.body}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ── Honesty principle ─────────────────────────────────────── */
-function HonestyPrinciple() {
-  return (
-    <section className="relative border-t border-[color:var(--rule)] bg-[color:var(--forest)] text-[color:var(--paper)] overflow-hidden">
-      {/* faint hairline grid for texture */}
-      <div
-        className="absolute inset-0 opacity-[0.06] pointer-events-none"
-        style={{
-          backgroundImage:
-            'repeating-linear-gradient(to bottom, transparent 0 31px, white 31px 31.5px)',
-        }}
-        aria-hidden
-      />
-      <div className="relative max-w-[1320px] mx-auto px-6 md:px-10 lg:px-14 py-24 md:py-32">
-        <div className="flex items-center gap-3 mb-8 md:mb-10">
-          <span className="block w-8 h-px bg-[color:var(--paper)]" />
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--paper)]/70">
-            The Principle
-          </span>
-        </div>
-
-        <figure className="max-w-[1020px]">
-          <span
-            className="font-[family-name:var(--font-instrument-serif)] italic text-[140px] md:text-[220px] leading-none block text-[color:var(--paper)]/20 select-none"
-            aria-hidden
+      {/* Search box */}
+      <div style={{ maxWidth: 580, margin: '0 auto', position: 'relative' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          background: '#fff', border: '2px solid var(--alt-rule)',
+          borderRadius: 10, padding: '10px 10px 10px 16px',
+          boxShadow: query.length > 0 ? '0 0 0 4px #f59e0b18' : 'none',
+          transition: 'box-shadow 0.2s',
+        }}>
+          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--alt-ink-4)', flexShrink: 0 }}>
+            <circle cx={11} cy={11} r={8} /><path d="m21 21-4.35-4.35" />
+          </svg>
+          <input
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Series B fintechs in Lagos with a CTO…"
+            style={{
+              flex: 1, border: 'none', outline: 'none', fontSize: 15,
+              color: 'var(--alt-ink)', background: 'transparent',
+            }}
+          />
+          <button
+            disabled={query.length === 0}
+            style={{
+              background: query.length > 0 ? 'var(--alt-amber)' : 'var(--alt-rule)',
+              color: query.length > 0 ? '#fff' : 'var(--alt-ink-4)',
+              border: 'none', borderRadius: 7, padding: '8px 20px',
+              fontSize: 14, fontWeight: 700,
+              cursor: query.length > 0 ? 'pointer' : 'not-allowed',
+              flexShrink: 0, transition: 'background 0.15s, color 0.15s',
+            }}
+            onClick={() => { if (!showGate) setQuery(query + ' ') }}
           >
-            &ldquo;
-          </span>
-          <blockquote className="-mt-16 md:-mt-32 font-[family-name:var(--font-instrument-serif)] text-[36px] md:text-[56px] lg:text-[68px] leading-[1.05] tracking-[-0.015em]">
-            The engine is allowed to say{' '}
-            <span className="italic">I don&rsquo;t know.</span>{' '}
-            It is <em className="italic">not</em> allowed to say{' '}
-            <span className="italic">maybe</span>.
-          </blockquote>
-          <figcaption className="mt-10 flex items-center gap-4">
-            <span className="block w-12 h-px bg-[color:var(--paper)]/50" />
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[11px] tracking-[0.18em] uppercase text-[color:var(--paper)]/70">
-              From the LeadreAI design notes
-            </span>
-          </figcaption>
+            Search
+          </button>
+        </div>
 
-          <p className="mt-10 md:mt-14 max-w-[620px] font-[family-name:var(--font-barlow)] text-[15.5px] md:text-[17px] leading-[1.6] text-[color:var(--paper)]/85">
-            ZoomInfo has guessed your prospect&rsquo;s email. Apollo has
-            inferred their title. We&rsquo;d rather return an em-dash and a
-            note than a fabricated record you can&rsquo;t trust.{' '}
-            <span className="italic">Every field either has a source or is marked missing.</span>
-          </p>
-        </figure>
+        {/* Email gate — inline below search */}
+        <AnimatePresence>
+          {showGate && <EmailGate key="email-gate" query={query} />}
+        </AnimatePresence>
+      </div>
+
+      {/* Suggestion chips */}
+      <div style={{
+        display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center',
+        marginTop: 20,
+      }}>
+        {CHIPS.map(chip => (
+          <button
+            key={chip}
+            onClick={() => setQuery(chip)}
+            style={{
+              background: 'var(--alt-paper-2)', border: '1px solid var(--alt-rule)',
+              borderRadius: 999, padding: '6px 14px', fontSize: 13,
+              color: 'var(--alt-ink-2)', cursor: 'pointer',
+            }}
+          >
+            {chip}
+          </button>
+        ))}
+      </div>
+
+      {/* Trust strip */}
+      <div style={{ marginTop: 32, color: 'var(--alt-ink-4)', fontSize: 13 }}>
+        Trusted by teams at{' '}
+        {['Arlo Logistics', 'Ardent Insurance', 'Meridian Compliance', 'Volta Capital'].map((name, i, arr) => (
+          <span key={name}>
+            <span style={{
+              background: 'var(--alt-paper-2)', border: '1px solid var(--alt-rule)',
+              borderRadius: 6, padding: '2px 8px', fontSize: 12,
+              color: 'var(--alt-ink-3)', fontWeight: 500,
+            }}>{name}</span>
+            {i < arr.length - 1 && ' '}
+          </span>
+        ))}
       </div>
     </section>
-  );
+  )
 }
 
-/* ── Correspondents (testimonials) ─────────────────────────── */
-function Correspondents() {
-  const quotes = [
-    {
-      quote:
-        'I used to spend a full day assembling a list of fifty companies in Lagos. The desk returned them in eight minutes, with named founders and emails that actually bounced back.',
-      name: 'Adaeze Okonkwo',
-      role: 'Head of Growth, Arlo Logistics',
-      city: 'Lagos',
-    },
-    {
-      quote:
-        'The footnote-per-field thing sounds quaint until you\u2019ve had a deal die because your data vendor lied about a title. We stopped arguing with sales about list quality.',
-      name: 'Mwangi Njoroge',
-      role: 'VP Revenue, Ardent Insurance',
-      city: 'Nairobi',
-    },
-    {
-      quote:
-        'We sell compliance software to mid-tier manufacturers. No one covers those accounts. LeadreAI\u2019s seed lists plus the live scraping found us buyers no one else could name.',
-      name: 'Kofi Mensah',
-      role: 'Founder, Meridian Compliance',
-      city: 'Accra',
-    },
-  ];
-
+function HowItWorksSection() {
   return (
-    <section id="accounts" className="border-t border-[color:var(--rule)] bg-[color:var(--paper)]">
-      <div className="max-w-[1320px] mx-auto px-6 md:px-10 lg:px-14 py-20 md:py-28">
-        <SectionHead
-          eyebrow="Correspondents"
-          title={
-            <>
-              Three accounts <br className="hidden md:inline" />
-              from operators already on <em className="italic text-[color:var(--forest)]">the desk</em>.
-            </>
-          }
-        />
-
-        <div className="mt-14 md:mt-20 grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
-          {quotes.map((q) => (
-            <figure
-              key={q.name}
-              className="flex flex-col gap-6 pt-8 border-t border-[color:var(--ink)]"
-            >
-              <blockquote className="font-[family-name:var(--font-instrument-serif)] text-[22px] md:text-[25px] leading-[1.3] text-[color:var(--ink)]">
-                <span
-                  className="font-[family-name:var(--font-instrument-serif)] text-[40px] leading-none align-[-0.1em] mr-1 text-[color:var(--forest)]"
-                  aria-hidden
-                >
-                  &ldquo;
-                </span>
-                {q.quote}
-              </blockquote>
-
-              <figcaption className="mt-auto flex flex-col gap-0.5">
-                <span className="font-[family-name:var(--font-barlow)] font-medium text-[14px] text-[color:var(--ink)]">
-                  {q.name}
-                </span>
-                <span className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)]">
-                  {q.role}
-                </span>
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)] mt-1">
-                  {q.city}
-                </span>
-              </figcaption>
-            </figure>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ── Pricing ────────────────────────────────────────────────── */
-function Pricing() {
-  const tiers = [
-    {
-      name: 'Reader',
-      price: 'Free',
-      priceSub: 'Forever, with limits',
-      pitch: 'For operators running a list a week.',
-      features: [
-        '3 dossiers / month',
-        'Up to 25 leads per query',
-        'Email + phone verification',
-        'CSV export',
-      ],
-      cta: 'Start for free',
-      href: '/auth/register',
-      highlight: false,
-    },
-    {
-      name: 'Correspondent',
-      price: '$49',
-      priceSub: 'per seat · monthly',
-      pitch: 'For teams prospecting every day.',
-      features: [
-        '60 dossiers / month',
-        'Up to 200 leads per query',
-        'Dynamic output columns',
-        'Provenance exports',
-        'CRM sync (HubSpot, Salesforce)',
-      ],
-      cta: 'Start a trial',
-      href: '/auth/register',
-      highlight: true,
-    },
-    {
-      name: 'Bureau',
-      price: 'Contact',
-      priceSub: 'Annual · custom',
-      pitch: 'For teams with a research budget.',
-      features: [
-        'Unlimited dossiers',
-        '1,000+ leads per query',
-        'Private seed lists',
-        'Managed data sources',
-        'Named account support',
-      ],
-      cta: 'Request a conversation',
-      href: '/auth/register',
-      highlight: false,
-    },
-  ];
-
-  return (
-    <section id="pricing" className="border-t border-[color:var(--rule)] bg-[color:var(--paper-3)]">
-      <div className="max-w-[1320px] mx-auto px-6 md:px-10 lg:px-14 py-20 md:py-28">
-        <SectionHead
-          eyebrow="Subscriptions"
-          title={
-            <>
-              Three ways to <em className="italic text-[color:var(--forest)]">subscribe</em>.
-            </>
-          }
-          lead="Monthly, no annual commitment. Upgrade or cancel from the dashboard. Every tier includes provenance on every field."
-        />
-
-        <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-          {tiers.map((t) => (
-            <div
-              key={t.name}
-              className={`flex flex-col ${
-                t.highlight
-                  ? 'bg-[color:var(--ink)] text-[color:var(--paper)] border-[color:var(--ink)]'
-                  : 'bg-[color:var(--paper)] text-[color:var(--ink)] border-[color:var(--rule)]'
-              } border rounded-sm p-8`}
-            >
-              <div className="flex items-baseline justify-between mb-6">
-                <span
-                  className={`font-[family-name:var(--font-jetbrains-mono)] text-[11px] tracking-[0.2em] uppercase ${
-                    t.highlight ? 'text-[color:var(--paper)]/70' : 'text-[color:var(--ink-2)]'
-                  }`}
-                >
-                  {t.name}
-                </span>
-                {t.highlight && (
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.2em] uppercase bg-[color:var(--rust)] text-[color:var(--paper)] px-2 py-0.5 rounded-full">
-                    Most popular
-                  </span>
-                )}
-              </div>
-
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="font-[family-name:var(--font-instrument-serif)] text-[52px] leading-none tracking-[-0.015em]">
-                  {t.price}
-                </span>
-              </div>
-              <span
-                className={`font-[family-name:var(--font-barlow)] text-[12px] ${
-                  t.highlight ? 'text-[color:var(--paper)]/65' : 'text-[color:var(--ink-3)]'
-                }`}
-              >
-                {t.priceSub}
-              </span>
-
-              <p
-                className={`mt-6 pb-6 border-b ${
-                  t.highlight ? 'border-[color:var(--paper)]/15' : 'border-[color:var(--rule)]'
-                } font-[family-name:var(--font-instrument-serif)] italic text-[18px] leading-[1.3]`}
-              >
-                {t.pitch}
-              </p>
-
-              <ul className="mt-6 space-y-3 flex-1">
-                {t.features.map((f) => (
-                  <li
-                    key={f}
-                    className="flex items-start gap-3 font-[family-name:var(--font-barlow)] text-[13.5px] leading-[1.5]"
-                  >
-                    <span
-                      className={`mt-[7px] block w-3 h-px shrink-0 ${
-                        t.highlight ? 'bg-[color:var(--paper)]' : 'bg-[color:var(--ink)]'
-                      }`}
-                    />
-                    <span className={t.highlight ? 'text-[color:var(--paper)]/90' : 'text-[color:var(--ink-2)]'}>
-                      {f}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              <Link
-                href={t.href}
-                className={`mt-8 inline-flex items-center justify-between gap-2 px-5 py-3 rounded-full font-[family-name:var(--font-barlow)] text-[13.5px] font-medium transition-colors ${
-                  t.highlight
-                    ? 'bg-[color:var(--paper)] text-[color:var(--ink)] hover:bg-[color:var(--paper-2)]'
-                    : 'bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)]'
-                }`}
-              >
-                {t.cta} <ArrowEast className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ── Final CTA ──────────────────────────────────────────────── */
-function FinalCTA() {
-  return (
-    <section className="border-t border-[color:var(--rule)] bg-[color:var(--paper)]">
-      <div className="max-w-[1320px] mx-auto px-6 md:px-10 lg:px-14 py-28 md:py-40">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
-          <div className="lg:col-span-8">
-            <div className="flex items-center gap-3 mb-8">
-              <span className="block w-8 h-px bg-[color:var(--ink)]" />
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
-                The invitation
-              </span>
-            </div>
-            <h2 className="font-[family-name:var(--font-instrument-serif)] text-[56px] md:text-[96px] lg:text-[128px] leading-[0.9] tracking-[-0.02em] text-[color:var(--ink)]">
-              Describe who <br />
-              you need. <em className="italic text-[color:var(--forest)]">We&rsquo;ll read</em> <br />
-              the rest.
-            </h2>
-          </div>
-
-          <div className="lg:col-span-4 flex flex-col gap-6 lg:pl-8 lg:border-l lg:border-[color:var(--rule)]">
-            <p className="font-[family-name:var(--font-barlow)] text-[15.5px] leading-[1.6] text-[color:var(--ink-2)]">
-              Three dossiers are free, forever. No card. No pitch call. If the
-              desk saves you an afternoon, you&rsquo;ll know.
-            </p>
-            <Link
-              href="/register"
-              className="group inline-flex items-center justify-between gap-4 w-full bg-[color:var(--ink)] text-[color:var(--paper)] px-6 py-4 rounded-full hover:bg-[color:var(--forest)] transition-colors"
-            >
-              <span className="font-[family-name:var(--font-barlow)] text-[15px] font-medium">
-                Start for free
-              </span>
-              <ArrowEast className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
-                Ready in 30 seconds
-              </span>
-              <span className="w-1 h-1 rounded-full bg-[color:var(--ink-3)]" />
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
-                Ship today
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ── Colophon (footer) ──────────────────────────────────────── */
-function Colophon() {
-  return (
-    <footer className="border-t border-[color:var(--rule)] bg-[color:var(--paper-2)]">
-      <div className="max-w-[1320px] mx-auto px-6 md:px-10 lg:px-14 py-14 md:py-20">
-        {/* Big wordmark */}
-        <div className="flex items-baseline justify-between gap-8 pb-10 border-b border-[color:var(--rule)]">
-          <span className="font-[family-name:var(--font-instrument-serif)] italic text-[72px] md:text-[128px] lg:text-[164px] leading-[0.82] tracking-[-0.02em] text-[color:var(--ink)]">
-            LeadreAI
-          </span>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] md:text-[11px] tracking-[0.2em] uppercase text-[color:var(--ink-2)] text-right">
-            A research desk <br />
-            est. MMXXVI
-          </span>
-        </div>
-
-        {/* Footer columns */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-8 mt-10">
-          <div className="col-span-2 md:col-span-1">
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
-              Colophon
-            </span>
-            <p className="mt-3 font-[family-name:var(--font-barlow)] text-[13px] leading-[1.6] text-[color:var(--ink-2)] max-w-[280px]">
-              Set in <span className="font-[family-name:var(--font-instrument-serif)] italic">Instrument Serif</span>, <span className="font-[family-name:var(--font-barlow)]">Barlow</span>, and{' '}
-              <span className="font-[family-name:var(--font-jetbrains-mono)]">JetBrains Mono</span>.
-              Printed on ivory <span className="font-[family-name:var(--font-jetbrains-mono)] text-[11px]">#F2EADD</span>.
-            </p>
-          </div>
-
-          {[
-            { title: 'Product', links: ['Method', 'Capabilities', 'Pricing', 'Changelog'] },
-            { title: 'Resources', links: ['Documentation', 'API', 'Status', 'Sample dossiers'] },
-            { title: 'Company', links: ['About', 'Contact', 'Privacy', 'Terms'] },
-          ].map((col) => (
-            <div key={col.title}>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
-                {col.title}
-              </span>
-              <ul className="mt-3 space-y-2">
-                {col.links.map((l) => (
-                  <li key={l}>
-                    <a
-                      href="#"
-                      className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] hover:underline underline-offset-[4px] decoration-[color:var(--rule)]"
-                    >
-                      {l}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        {/* Bottom rule */}
-        <div className="mt-14 pt-6 border-t border-[color:var(--rule)] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
-            © MMXXVI LeadreAI · All dispatches reserved
-          </span>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
-            Compiled in Lagos · Served from the edge
-          </span>
-        </div>
-      </div>
-    </footer>
-  );
-}
-
-/* ── Page ───────────────────────────────────────────────────── */
-export default function LandingPage() {
-  return (
-    <main
-      className="bg-[color:var(--paper)] text-[color:var(--ink)] min-h-screen selection:bg-[color:var(--forest)] selection:text-[color:var(--paper)]"
+    <section
+      id="how"
+      style={{
+        background: 'var(--alt-paper-2)',
+        padding: '72px 24px',
+        textAlign: 'center',
+      }}
     >
-      <Masthead />
-      <Hero />
-      <Method />
-      <Capabilities />
-      <HonestyPrinciple />
-      <Correspondents />
-      <Pricing />
-      <FinalCTA />
-      <Colophon />
-    </main>
-  );
+      <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--alt-amber)', textTransform: 'uppercase', marginBottom: 12 }}>
+        How it works
+      </p>
+      <h2 style={{ fontSize: 'clamp(28px, 3vw, 40px)', fontWeight: 800, color: 'var(--alt-ink)', letterSpacing: '-0.03em', marginBottom: 48 }}>
+        Three steps from idea to pipeline
+      </h2>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: 32, maxWidth: 900, margin: '0 auto', textAlign: 'left',
+      }}>
+        {HOW_STEPS.map(step => (
+          <div key={step.num}>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 40, height: 40, borderRadius: 999,
+              background: 'var(--alt-amber-light)', border: '1px solid var(--alt-amber-border)',
+              color: 'var(--alt-amber-dark)', fontWeight: 800, fontSize: 14, marginBottom: 16,
+            }}>
+              {step.num}
+            </div>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--alt-ink)', marginBottom: 8 }}>
+              {step.title}
+            </h3>
+            <p style={{ fontSize: 14, color: 'var(--alt-ink-3)', lineHeight: 1.6 }}>
+              {step.body}
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function ResultsDemoSection({ query }: { query: string }) {
+  const displayQuery = query.trim() || 'Fintech CEOs · Lagos'
+  return (
+    <section style={{ padding: '72px 24px', background: '#fff' }}>
+      <div style={{ maxWidth: 880, margin: '0 auto' }}>
+        {/* Header bar */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 12,
+          marginBottom: 16, flexWrap: 'wrap',
+        }}>
+          <span style={{ fontWeight: 700, color: 'var(--alt-ink)', fontSize: 15 }}>Results</span>
+          <span style={{
+            background: 'var(--alt-paper-2)', border: '1px solid var(--alt-rule)',
+            borderRadius: 6, padding: '2px 10px', fontSize: 13,
+            color: 'var(--alt-ink-3)', fontStyle: 'italic',
+          }}>{displayQuery}</span>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+            <button style={{
+              background: '#fff', border: '1px solid var(--alt-rule)',
+              borderRadius: 7, padding: '6px 14px', fontSize: 13,
+              color: 'var(--alt-ink-2)', cursor: 'pointer', fontWeight: 500,
+            }}>Export CSV</button>
+            <button style={{
+              background: '#fff', border: '1px solid var(--alt-rule)',
+              borderRadius: 7, padding: '6px 14px', fontSize: 13,
+              color: 'var(--alt-ink-2)', cursor: 'pointer', fontWeight: 500,
+            }}>CRM sync</button>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div style={{
+          border: '1px solid var(--alt-rule)', borderRadius: 10,
+          overflow: 'hidden', fontSize: 14,
+        }}>
+          {/* Table header */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1.5fr 1.5fr 2fr 1fr 1fr',
+            background: 'var(--alt-paper-2)', padding: '10px 16px',
+            borderBottom: '1px solid var(--alt-rule)',
+            color: 'var(--alt-ink-3)', fontWeight: 600, fontSize: 12,
+            textTransform: 'uppercase', letterSpacing: '0.06em',
+          }}>
+            <span>Company</span><span>Contact</span><span>Email</span>
+            <span>Raised</span><span>Status</span>
+          </div>
+
+          {/* Visible rows */}
+          {DEMO_ROWS.map((row, i) => (
+            <div
+              key={row.company}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1.5fr 1.5fr 2fr 1fr 1fr',
+                padding: '12px 16px',
+                borderBottom: '1px solid var(--alt-rule)',
+                background: i % 2 === 0 ? '#fff' : 'var(--alt-paper-2)',
+                color: 'var(--alt-ink-2)',
+              }}
+            >
+              <span style={{ fontWeight: 600, color: 'var(--alt-ink)' }}>{row.company}</span>
+              <span>{row.contact}</span>
+              <span style={{ fontFamily: 'monospace', fontSize: 13 }}>{row.email}</span>
+              <span>{row.raised}</span>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                background: 'var(--alt-green-bg)', color: 'var(--alt-green-text)',
+                borderRadius: 999, padding: '2px 8px', fontSize: 12, fontWeight: 600,
+              }}>{row.status}</span>
+            </div>
+          ))}
+
+          {/* Blurred rows */}
+          {[0, 1].map(i => (
+            <div
+              key={`blur-${i}`}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1.5fr 1.5fr 2fr 1fr 1fr',
+                padding: '12px 16px',
+                borderBottom: '1px solid var(--alt-rule)',
+                background: i % 2 === 0 ? '#fff' : 'var(--alt-paper-2)',
+                filter: 'blur(4px)',
+                userSelect: 'none',
+                pointerEvents: 'none',
+                color: 'var(--alt-ink-2)',
+              }}
+            >
+              <span style={{ fontWeight: 600, color: 'var(--alt-ink)' }}>Company Name</span>
+              <span>Contact Person</span>
+              <span style={{ fontFamily: 'monospace', fontSize: 13 }}>email@company.com</span>
+              <span>$00M</span>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center',
+                background: 'var(--alt-green-bg)', color: 'var(--alt-green-text)',
+                borderRadius: 999, padding: '2px 8px', fontSize: 12, fontWeight: 600,
+              }}>Verified</span>
+            </div>
+          ))}
+
+          {/* Gate row */}
+          <div style={{
+            padding: '20px 24px', background: 'var(--alt-paper-2)',
+            borderTop: '1px solid var(--alt-rule)', textAlign: 'center',
+          }}>
+            <p style={{ marginBottom: 12, color: 'var(--alt-ink-2)', fontSize: 14 }}>
+              9 more results available. Enter your email to unlock the full list.
+            </p>
+            <EmailGate query={displayQuery} />
+          </div>
+        </div>
+
+        {/* Stats strip */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: 16, marginTop: 24, textAlign: 'center',
+        }}>
+          {[
+            { num: '50k+', label: 'leads delivered' },
+            { num: '94%', label: 'email accuracy' },
+            { num: '8 min', label: 'avg delivery' },
+            { num: '3×', label: 'sources cross-checked' },
+          ].map(stat => (
+            <div key={stat.label}>
+              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--alt-ink)' }}>{stat.num}</div>
+              <div style={{ fontSize: 13, color: 'var(--alt-ink-3)' }}>{stat.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function TestimonialsSection() {
+  return (
+    <section style={{ background: 'var(--alt-paper-2)', padding: '72px 24px', textAlign: 'center' }}>
+      <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--alt-amber)', textTransform: 'uppercase', marginBottom: 12 }}>
+        What our users say
+      </p>
+      <h2 style={{ fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 800, color: 'var(--alt-ink)', letterSpacing: '-0.03em', marginBottom: 40 }}>
+        Teams across Africa trust Leadre
+      </h2>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+        gap: 24, maxWidth: 900, margin: '0 auto', textAlign: 'left',
+      }}>
+        {TESTIMONIALS.map(t => (
+          <div key={t.name} style={{
+            background: '#fff', border: '1px solid var(--alt-rule)',
+            borderRadius: 12, padding: '24px', display: 'flex',
+            flexDirection: 'column', gap: 16,
+          }}>
+            {/* Stars */}
+            <div style={{ display: 'flex', gap: 2 }}>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <span key={i} style={{ color: 'var(--alt-amber)', fontSize: 16 }} aria-hidden={true}>★</span>
+              ))}
+            </div>
+            <p style={{ fontSize: 14, color: 'var(--alt-ink-2)', lineHeight: 1.65, flex: 1 }}>
+              &ldquo;{t.quote}&rdquo;
+            </p>
+            <hr style={{ border: 'none', borderTop: '1px solid var(--alt-rule)', margin: 0 }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: '50%',
+                background: 'var(--alt-amber-light)', border: '1px solid var(--alt-amber-border)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 700, fontSize: 14, color: 'var(--alt-amber-dark)',
+                flexShrink: 0,
+              }}>
+                {t.initial}
+              </div>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--alt-ink)' }}>{t.name}</div>
+                <div style={{ fontSize: 12, color: 'var(--alt-ink-3)' }}>{t.role} · {t.city}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function FinalCTASection({
+  query,
+  setQuery,
+  showGate,
+}: {
+  query: string
+  setQuery: (v: string) => void
+  showGate: boolean
+}) {
+  return (
+    <section
+      style={{
+        background: 'var(--alt-amber-light)',
+        borderTop: '1px solid var(--alt-amber-border)',
+        padding: '80px 24px',
+        textAlign: 'center',
+      }}
+    >
+      <h2 style={{
+        fontSize: 'clamp(28px, 3.5vw, 44px)', fontWeight: 800,
+        letterSpacing: '-0.04em', color: 'var(--alt-ink)',
+        lineHeight: 1.15, maxWidth: 600, margin: '0 auto 12px',
+      }}>
+        Start finding your next customer today.
+      </h2>
+      <p style={{
+        fontSize: 16, color: 'var(--alt-amber-dark)', maxWidth: 380,
+        margin: '0 auto 32px', lineHeight: 1.5,
+      }}>
+        Free to start. No credit card. No sales call.
+      </p>
+
+      {/* Search bar — same treatment as hero */}
+      <div style={{ maxWidth: 580, margin: '0 auto' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          background: '#fff', border: '2px solid var(--alt-amber-border)',
+          borderRadius: 10, padding: '10px 10px 10px 16px',
+          boxShadow: query.length > 0 ? '0 0 0 4px #f59e0b18' : 'none',
+          transition: 'box-shadow 0.2s',
+        }}>
+          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--alt-ink-4)', flexShrink: 0 }}>
+            <circle cx={11} cy={11} r={8} /><path d="m21 21-4.35-4.35" />
+          </svg>
+          <input
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Describe who you're looking for…"
+            style={{
+              flex: 1, border: 'none', outline: 'none',
+              fontSize: 15, color: 'var(--alt-ink)', background: 'transparent',
+            }}
+          />
+          <button
+            disabled={query.length === 0}
+            style={{
+              background: query.length > 0 ? 'var(--alt-amber)' : 'var(--alt-rule)',
+              color: query.length > 0 ? '#fff' : 'var(--alt-ink-4)',
+              border: 'none', borderRadius: 7, padding: '8px 20px',
+              fontSize: 14, fontWeight: 700,
+              cursor: query.length > 0 ? 'pointer' : 'not-allowed',
+              flexShrink: 0, transition: 'background 0.15s, color 0.15s',
+            }}
+            onClick={() => { if (!showGate) setQuery(query + ' ') }}
+          >
+            Search
+          </button>
+        </div>
+        <AnimatePresence>
+          {showGate && <EmailGate key="final-email-gate" query={query} />}
+        </AnimatePresence>
+      </div>
+    </section>
+  )
+}
+
+function PricingSection() {
+  return (
+    <section id="pricing" style={{ background: '#fff', padding: '72px 24px', textAlign: 'center' }}>
+      <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--alt-amber)', textTransform: 'uppercase', marginBottom: 12 }}>
+        Pricing
+      </p>
+      <h2 style={{ fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 800, color: 'var(--alt-ink)', letterSpacing: '-0.03em', marginBottom: 40 }}>
+        Simple, honest pricing
+      </h2>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+        gap: 24, maxWidth: 900, margin: '0 auto', textAlign: 'left',
+        alignItems: 'stretch',
+      }}>
+        {PRICING_TIERS.map(tier => (
+          <div key={tier.name} style={{
+            background: tier.highlighted ? 'var(--alt-ink)' : '#fff',
+            border: tier.highlighted ? 'none' : '1px solid var(--alt-rule)',
+            borderRadius: 14, padding: '28px',
+            display: 'flex', flexDirection: 'column', gap: 0,
+            position: 'relative',
+          }}>
+            {tier.highlighted && (
+              <div style={{
+                position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
+                background: 'var(--alt-amber)', color: '#fff',
+                borderRadius: 999, padding: '4px 14px', fontSize: 12, fontWeight: 700,
+                whiteSpace: 'nowrap',
+              }}>
+                Most popular
+              </div>
+            )}
+            <div style={{ marginBottom: 4, fontSize: 13, fontWeight: 700, color: 'var(--alt-amber)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              {tier.name}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 6 }}>
+              <span style={{ fontSize: 36, fontWeight: 800, color: tier.highlighted ? '#fff' : 'var(--alt-ink)' }}>{tier.price}</span>
+              <span style={{ fontSize: 14, color: tier.highlighted ? '#9ca3af' : 'var(--alt-ink-3)' }}>{tier.period}</span>
+            </div>
+            <p style={{ fontSize: 13, color: tier.highlighted ? '#9ca3af' : 'var(--alt-ink-3)', marginBottom: 20 }}>{tier.tagline}</p>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {tier.features.map(f => (
+                <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 14, color: tier.highlighted ? '#e5e7eb' : 'var(--alt-ink-2)' }}>
+                  <span style={{ color: 'var(--alt-amber)', fontWeight: 700, flexShrink: 0 }}>✓</span>
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <a
+              href={tier.ctaHref}
+              aria-label={`${tier.cta} — ${tier.name} plan`}
+              style={{
+                display: 'block', textAlign: 'center',
+                background: tier.highlighted ? 'var(--alt-amber)' : 'var(--alt-ink)',
+                color: '#fff',
+                borderRadius: 8, padding: '10px 20px',
+                fontSize: 14, fontWeight: 700,
+                textDecoration: 'none', marginTop: 'auto',
+              }}
+            >
+              {tier.cta}
+            </a>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
 }
