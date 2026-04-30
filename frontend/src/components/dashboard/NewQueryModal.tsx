@@ -360,6 +360,7 @@ export function NewQueryModal({ workspaceId, onSubmit }: NewQueryModalProps) {
   const [tone, setTone] = useState('direct');
   const [goal, setGoal] = useState('demo');
   const [schedule, setSchedule] = useState('once');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_blocklist] = useState('existing-crm');
   const taRef = useRef<HTMLTextAreaElement>(null);
   const [jobId, setJobId] = useState<string | null>(null);
