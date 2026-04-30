@@ -6,21 +6,25 @@ import { useTheme } from '@/hooks/useTheme';
 import { NotificationDropdown } from './NotificationDropdown';
 
 /* ─────────────────────────────────────────────────────────────────
- * Topbar — editorial dateline
+ * Topbar
  * ─────────────────────────────────────────────────────────────────
  * A single slim strip: route breadcrumb on the left, greeting and
  * date on the right. No primary CTAs here — the dashboard page's
  * hero input owns "new query". Search / notifications are small
- * mono glyphs that don't compete with the page title below.
+ * glyphs that don't compete with the page title below.
  * ───────────────────────────────────────────────────────────────── */
 
-function routeBreadcrumb(pathname: string): { section: string; page: string } {
-  if (pathname === '/dashboard') return { section: 'The Desk', page: 'Today\u2019s dispatches' };
-  if (pathname.startsWith('/dashboard/leads')) return { section: 'The Desk', page: 'Leads' };
-  if (pathname.startsWith('/dashboard/campaigns')) return { section: 'The Desk', page: 'Campaigns' };
-  if (pathname.startsWith('/dashboard/integrations')) return { section: 'The Desk', page: 'The Wire' };
-  if (pathname.startsWith('/dashboard/settings')) return { section: 'The Desk', page: 'Settings' };
-  return { section: 'The Desk', page: '' };
+function routeBreadcrumb(pathname: string): { page: string } {
+  if (pathname === '/dashboard') return { page: 'Dashboard' };
+  if (pathname.startsWith('/dashboard/leads')) return { page: 'Leads' };
+  if (pathname.startsWith('/dashboard/campaigns')) return { page: 'Campaigns' };
+  if (pathname.startsWith('/dashboard/tables')) return { page: 'Tables' };
+  if (pathname.startsWith('/dashboard/workflows')) return { page: 'Workflows' };
+  if (pathname.startsWith('/dashboard/files')) return { page: 'Files' };
+  if (pathname.startsWith('/dashboard/library')) return { page: 'Library' };
+  if (pathname.startsWith('/dashboard/integrations')) return { page: 'Integrations' };
+  if (pathname.startsWith('/dashboard/settings')) return { page: 'Settings' };
+  return { page: '' };
 }
 
 function formatDateline(d: Date = new Date()): string {
@@ -80,7 +84,7 @@ export function Topbar() {
   const pathname = usePathname();
   const { user, openSearch } = useAppStore();
   const { preference, toggle } = useTheme();
-  const { section, page } = routeBreadcrumb(pathname);
+  const { page } = routeBreadcrumb(pathname);
   const firstName = user?.firstName ?? '';
 
   const themeLabel =
@@ -93,19 +97,15 @@ export function Topbar() {
   return (
     <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-3 flex items-center gap-6">
       {/* Left: breadcrumb */}
-      <div className="flex items-baseline gap-3 min-w-0">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
-          {section}
-        </span>
-        <span className="w-1 h-1 rounded-full bg-[color:var(--ink-3)]" />
-        <span className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] truncate">
+      <div className="flex items-baseline gap-2 min-w-0">
+        <span className="text-[14px] font-semibold text-[color:var(--ink)] truncate">
           {page}
         </span>
       </div>
 
       {/* Middle: dateline */}
       <div className="ml-auto hidden md:flex items-center gap-3">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
+        <span className="text-[13px] text-[color:var(--ink-3)]">
           {formatDateline()}
         </span>
       </div>
@@ -136,7 +136,7 @@ export function Topbar() {
         </button>
         <NotificationDropdown />
         {firstName && (
-          <span className="hidden lg:inline ml-3 font-[family-name:var(--font-instrument-serif)] italic text-[14px] text-[color:var(--ink-2)]">
+          <span className="hidden lg:inline ml-3 text-[14px] text-[color:var(--ink-2)]">
             {greeting()}, {firstName}.
           </span>
         )}
