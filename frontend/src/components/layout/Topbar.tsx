@@ -90,6 +90,7 @@ export function Topbar() {
   const firstName = user?.firstName ?? '';
 
   const [dateline, setDateline] = React.useState(() => formatDateline());
+  const [greetingText, setGreetingText] = React.useState(() => greeting());
 
   React.useEffect(() => {
     const msToMidnight = () => {
@@ -98,7 +99,10 @@ export function Topbar() {
       midnight.setHours(24, 0, 0, 0);
       return midnight.getTime() - now.getTime();
     };
-    const id = setTimeout(() => setDateline(formatDateline()), msToMidnight());
+    const id = setTimeout(() => {
+      setDateline(formatDateline());
+      setGreetingText(greeting());
+    }, msToMidnight());
     return () => clearTimeout(id);
   }, [dateline]);
 
@@ -152,7 +156,7 @@ export function Topbar() {
         <NotificationDropdown />
         {firstName && (
           <span className="hidden lg:inline ml-3 text-[14px] text-[color:var(--ink-2)]">
-            {greeting()}, {firstName}.
+            {greetingText}, {firstName}.
           </span>
         )}
       </div>
