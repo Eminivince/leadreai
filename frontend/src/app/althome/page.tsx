@@ -36,6 +36,63 @@ const HOW_STEPS = [
   },
 ]
 
+const TESTIMONIALS = [
+  {
+    quote: "We closed three enterprise deals in our first month. The email accuracy alone saves us hours every week.",
+    name: 'Adaeze Okonkwo',
+    role: 'Head of Sales',
+    city: 'Lagos',
+    initial: 'A',
+  },
+  {
+    quote: "Finally a tool that understands African markets. The data quality on Nairobi contacts is unlike anything we've seen.",
+    name: 'Mwangi Njoroge',
+    role: 'Founder',
+    city: 'Nairobi',
+    initial: 'M',
+  },
+  {
+    quote: "We replaced three manual research tools with Leadre. Our SDRs now spend time selling, not searching.",
+    name: 'Kofi Mensah',
+    role: 'VP Growth',
+    city: 'Accra',
+    initial: 'K',
+  },
+]
+
+const PRICING_TIERS = [
+  {
+    name: 'Reader',
+    price: '$29',
+    period: '/month',
+    tagline: 'For solo prospectors getting started.',
+    features: ['50 verified contacts/month', 'Email + phone enrichment', 'CSV export', 'Email support'],
+    cta: 'Get started free',
+    ctaHref: '/auth/register',
+    highlighted: false,
+  },
+  {
+    name: 'Correspondent',
+    price: '$99',
+    period: '/month',
+    tagline: 'For growing sales teams.',
+    features: ['500 verified contacts/month', 'CRM sync (HubSpot, Salesforce)', 'Priority enrichment queue', 'Slack alerts', 'Live chat support'],
+    cta: 'Start free trial',
+    ctaHref: '/auth/register',
+    highlighted: true,
+  },
+  {
+    name: 'Bureau',
+    price: '$299',
+    period: '/month',
+    tagline: 'For agencies and enterprise teams.',
+    features: ['Unlimited contacts', 'Custom pipeline integrations', 'Dedicated account manager', 'SLA guarantee', 'Custom data sources'],
+    cta: 'Contact sales',
+    ctaHref: '/auth/register',
+    highlighted: false,
+  },
+]
+
 const DEMO_ROWS = [
   { company: 'Paystack', contact: 'Shola Akinlade', email: 'shola@paystack.com', raised: '$8M', status: 'Verified' },
   { company: 'Moniepoint', contact: 'Felix Ike', email: 'felix@moniepoint.com', raised: '$15M', status: 'Verified' },
@@ -52,6 +109,8 @@ export default function AlthomePage() {
       <HeroSection query={query} setQuery={setQuery} showGate={showGate} />
       <HowItWorksSection />
       <ResultsDemoSection query={query} />
+      <TestimonialsSection />
+      <PricingSection />
       <AltFooter />
     </main>
   )
@@ -359,6 +418,127 @@ function ResultsDemoSection({ query }: { query: string }) {
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  )
+}
+
+function TestimonialsSection() {
+  return (
+    <section style={{ background: 'var(--alt-paper-2)', padding: '72px 24px', textAlign: 'center' }}>
+      <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--alt-amber)', textTransform: 'uppercase', marginBottom: 12 }}>
+        What our users say
+      </p>
+      <h2 style={{ fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 800, color: 'var(--alt-ink)', letterSpacing: '-0.03em', marginBottom: 40 }}>
+        Teams across Africa trust Leadre
+      </h2>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+        gap: 24, maxWidth: 900, margin: '0 auto', textAlign: 'left',
+      }}>
+        {TESTIMONIALS.map(t => (
+          <div key={t.name} style={{
+            background: '#fff', border: '1px solid var(--alt-rule)',
+            borderRadius: 12, padding: '24px', display: 'flex',
+            flexDirection: 'column', gap: 16,
+          }}>
+            {/* Stars */}
+            <div style={{ display: 'flex', gap: 2 }}>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <span key={i} style={{ color: 'var(--alt-amber)', fontSize: 16 }} aria-hidden={true}>★</span>
+              ))}
+            </div>
+            <p style={{ fontSize: 14, color: 'var(--alt-ink-2)', lineHeight: 1.65, flex: 1 }}>
+              &ldquo;{t.quote}&rdquo;
+            </p>
+            <hr style={{ border: 'none', borderTop: '1px solid var(--alt-rule)', margin: 0 }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: '50%',
+                background: 'var(--alt-amber-light)', border: '1px solid var(--alt-amber-border)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 700, fontSize: 14, color: 'var(--alt-amber-dark)',
+                flexShrink: 0,
+              }}>
+                {t.initial}
+              </div>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--alt-ink)' }}>{t.name}</div>
+                <div style={{ fontSize: 12, color: 'var(--alt-ink-3)' }}>{t.role} · {t.city}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function PricingSection() {
+  return (
+    <section id="pricing" style={{ background: '#fff', padding: '72px 24px', textAlign: 'center' }}>
+      <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--alt-amber)', textTransform: 'uppercase', marginBottom: 12 }}>
+        Pricing
+      </p>
+      <h2 style={{ fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 800, color: 'var(--alt-ink)', letterSpacing: '-0.03em', marginBottom: 40 }}>
+        Simple, honest pricing
+      </h2>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+        gap: 24, maxWidth: 900, margin: '0 auto', textAlign: 'left',
+        alignItems: 'stretch',
+      }}>
+        {PRICING_TIERS.map(tier => (
+          <div key={tier.name} style={{
+            background: tier.highlighted ? 'var(--alt-ink)' : '#fff',
+            border: tier.highlighted ? 'none' : '1px solid var(--alt-rule)',
+            borderRadius: 14, padding: '28px',
+            display: 'flex', flexDirection: 'column', gap: 0,
+            position: 'relative',
+          }}>
+            {tier.highlighted && (
+              <div style={{
+                position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
+                background: 'var(--alt-amber)', color: '#fff',
+                borderRadius: 999, padding: '4px 14px', fontSize: 12, fontWeight: 700,
+                whiteSpace: 'nowrap',
+              }}>
+                Most popular
+              </div>
+            )}
+            <div style={{ marginBottom: 4, fontSize: 13, fontWeight: 700, color: 'var(--alt-amber)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              {tier.name}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 6 }}>
+              <span style={{ fontSize: 36, fontWeight: 800, color: tier.highlighted ? '#fff' : 'var(--alt-ink)' }}>{tier.price}</span>
+              <span style={{ fontSize: 14, color: tier.highlighted ? '#9ca3af' : 'var(--alt-ink-3)' }}>{tier.period}</span>
+            </div>
+            <p style={{ fontSize: 13, color: tier.highlighted ? '#9ca3af' : 'var(--alt-ink-3)', marginBottom: 20 }}>{tier.tagline}</p>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {tier.features.map(f => (
+                <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 14, color: tier.highlighted ? '#e5e7eb' : 'var(--alt-ink-2)' }}>
+                  <span style={{ color: 'var(--alt-amber)', fontWeight: 700, flexShrink: 0 }}>✓</span>
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <a
+              href={tier.ctaHref}
+              style={{
+                display: 'block', textAlign: 'center',
+                background: tier.highlighted ? 'var(--alt-amber)' : 'var(--alt-ink)',
+                color: '#fff',
+                borderRadius: 8, padding: '10px 20px',
+                fontSize: 14, fontWeight: 700,
+                textDecoration: 'none', marginTop: 'auto',
+              }}
+            >
+              {tier.cta}
+            </a>
+          </div>
+        ))}
       </div>
     </section>
   )
