@@ -2,32 +2,20 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import AltNav from '@/components/marketing/AltNav';
+import AltFooter from '@/components/marketing/AltFooter';
+import { altTokens } from '@/components/marketing/alt-tokens';
 
 /* ─────────────────────────────────────────────────────────────────
  * /docs — The Field Manual
  *
- * Editorial broadsheet documentation for LeadreAI.
+ * Modern SaaS amber design for LeadreAI.
  * Written for Nigerian business owners and marketing managers —
  * plain language, local context, no assumed technical knowledge.
  *
  * Structure:
- *   Masthead → Hero → [Sticky Sidebar | 9 Content Sections] → Footer
+ *   AltNav → Hero → [Sticky Sidebar | 9 Content Sections] → AltFooter
  * ───────────────────────────────────────────────────────────────── */
-
-/* ── Glyphs ─────────────────────────────────────────────────── */
-function ArrowEast({ className = 'w-3.5 h-3.5' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" className={className}>
-      <path
-        d="M2 8h12M10 4l4 4-4 4"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 /* ── Section data ────────────────────────────────────────────── */
 const SECTIONS = [
@@ -42,84 +30,17 @@ const SECTIONS = [
   { id: 'faq',             label: '09 · Common Questions' },
 ];
 
-/* ── Masthead ───────────────────────────────────────────────── */
-function Masthead() {
-  return (
-    <header className="relative z-40 border-b border-[color:var(--rule)]/70">
-      <div className="max-w-[1320px] mx-auto px-6 md:px-10 lg:px-14 pt-5 pb-4 flex items-end justify-between gap-6">
-        <div className="hidden md:flex flex-col gap-0.5 min-w-[200px]">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)]">
-            Vol I · Issue 07
-          </span>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
-            The Field Manual
-          </span>
-        </div>
-
-        <Link href="/" className="flex items-baseline gap-2 shrink-0">
-          <span className="font-[family-name:var(--font-instrument-serif)] italic text-2xl md:text-[28px] leading-none text-[color:var(--ink)] tracking-tight">
-            Leadre
-          </span>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] translate-y-[-1px]">
-            AI
-          </span>
-        </Link>
-
-        <nav className="flex items-center gap-6">
-          <div className="hidden lg:flex items-center gap-5">
-            {[
-              { label: 'Method',       href: '/#method' },
-              { label: 'Capabilities', href: '/#capabilities' },
-              { label: 'Accounts',     href: '/#accounts' },
-              { label: 'Pricing',      href: '/pricing' },
-              { label: 'Docs',         href: '/docs' },
-            ].map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className={`font-[family-name:var(--font-barlow)] text-[13px] transition ${
-                  l.href === '/docs'
-                    ? 'text-[color:var(--ink)]'
-                    : 'text-[color:var(--ink-2)] hover:text-[color:var(--ink)]'
-                }`}
-              >
-                {l.label}
-              </Link>
-            ))}
-          </div>
-          <Link
-            href="/login"
-            className="hidden md:inline font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/register"
-            className="font-[family-name:var(--font-barlow)] text-[13px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] px-3.5 py-2 rounded-full inline-flex items-center gap-1.5 hover:bg-[color:var(--forest)] transition-colors"
-          >
-            Start for free <ArrowEast className="w-3 h-3" />
-          </Link>
-        </nav>
-      </div>
-    </header>
-  );
-}
-
 /* ── Hero ───────────────────────────────────────────────────── */
 function Hero() {
   return (
-    <section className="border-b border-[color:var(--rule)]">
-      <div className="max-w-[1320px] mx-auto px-6 md:px-10 lg:px-14 pt-14 md:pt-20 pb-12 md:pb-16">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-6">
+    <section className="border-b border-[color:var(--alt-rule)]">
+      <div className="max-w-[1200px] mx-auto px-6 md:px-10 pt-14 md:pt-20 pb-12 md:pb-16">
+        <span className="inline-block text-[11px] font-semibold tracking-[0.14em] uppercase text-[color:var(--alt-amber-dark)] bg-[color:var(--alt-amber-light)] border border-[color:var(--alt-amber-border)] px-3 py-1 rounded-full mb-6">
           The Field Manual
         </span>
-        <h1 className="font-[family-name:var(--font-instrument-serif)] italic text-[48px] md:text-[72px] lg:text-[88px] leading-[0.92] tracking-[-0.02em] text-[color:var(--ink)] max-w-[880px]">
+        <h1 className="text-[40px] md:text-[60px] lg:text-[72px] font-extrabold leading-[1.05] tracking-tight text-[color:var(--alt-ink)] max-w-[820px]">
           Everything you need to know
         </h1>
-        <p className="mt-6 max-w-[560px] font-[family-name:var(--font-barlow)] text-[17px] md:text-[19px] leading-[1.5] text-[color:var(--ink-2)]">
-          A plain-language guide to getting the most from Leadre AI — written for
-          Nigerian business owners, not software engineers.
-        </p>
       </div>
     </section>
   );
@@ -129,8 +50,8 @@ function Hero() {
 function Sidebar({ activeSection }: { activeSection: string }) {
   return (
     <aside className="hidden lg:block w-[220px] shrink-0">
-      <nav className="sticky top-8">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-4">
+      <nav className="sticky top-24">
+        <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-[color:var(--alt-ink-4)] block mb-4">
           In this guide
         </span>
         <ul className="space-y-1">
@@ -138,10 +59,10 @@ function Sidebar({ activeSection }: { activeSection: string }) {
             <li key={s.id}>
               <a
                 href={`#${s.id}`}
-                className={`font-[family-name:var(--font-barlow)] text-[13px] leading-[1.5] block py-1 transition-colors ${
+                className={`text-[13px] leading-[1.5] block py-1 transition-colors ${
                   activeSection === s.id
-                    ? 'text-[color:var(--ink)] font-medium'
-                    : 'text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)]'
+                    ? 'text-[color:var(--alt-amber-dark)] font-semibold'
+                    : 'text-[color:var(--alt-ink-3)] hover:text-[color:var(--alt-ink-2)]'
                 }`}
               >
                 {s.label}
@@ -149,12 +70,12 @@ function Sidebar({ activeSection }: { activeSection: string }) {
             </li>
           ))}
         </ul>
-        <div className="mt-8 pt-6 border-t border-[color:var(--rule)]">
-          <p className="font-[family-name:var(--font-barlow)] text-[12.5px] leading-[1.6] text-[color:var(--ink-3)]">
+        <div className="mt-8 pt-6 border-t border-[color:var(--alt-rule)]">
+          <p className="text-[12.5px] leading-[1.6] text-[color:var(--alt-ink-3)]">
             Questions? Email us at{' '}
             <a
               href="mailto:hello@leadreai.com"
-              className="text-[color:var(--ink-2)] underline underline-offset-[3px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink-2)]"
+              className="text-[color:var(--alt-ink-2)] underline underline-offset-[3px] decoration-[color:var(--alt-rule)] hover:decoration-[color:var(--alt-ink-2)]"
             >
               hello@leadreai.com
             </a>
@@ -168,8 +89,8 @@ function Sidebar({ activeSection }: { activeSection: string }) {
 /* ── Callout ────────────────────────────────────────────────── */
 function Callout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="border-l-2 border-[color:var(--forest)] bg-[color:var(--paper-3)] pl-4 py-3 my-6 rounded-r-sm">
-      <p className="font-[family-name:var(--font-barlow)] text-[14px] leading-[1.6] text-[color:var(--ink-2)]">
+    <div className="border-l-2 border-[color:var(--alt-amber)] bg-[color:var(--alt-amber-light)] pl-4 py-3 my-6 rounded-r-sm">
+      <p className="text-[14px] leading-[1.6] text-[color:var(--alt-ink-2)]">
         {children}
       </p>
     </div>
@@ -193,15 +114,15 @@ function DocSection({
   return (
     <section
       id={id}
-      className={`py-12 md:py-16 border-b border-[color:var(--rule)] ${alt ? 'bg-[color:var(--paper-3)]' : ''}`}
+      className={`py-12 md:py-16 border-b border-[color:var(--alt-rule)] ${alt ? 'bg-[color:var(--alt-paper-3)] -mx-6 md:-mx-10 px-6 md:px-10' : ''}`}
     >
-      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] block mb-3">
+      <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-[color:var(--alt-ink-4)] block mb-3">
         {kicker}
       </span>
-      <h2 className="font-[family-name:var(--font-instrument-serif)] italic text-[32px] md:text-[40px] leading-[1.05] tracking-[-0.015em] text-[color:var(--ink)] mb-6">
+      <h2 className="text-[28px] md:text-[36px] font-extrabold leading-[1.1] tracking-tight text-[color:var(--alt-ink)] mb-6">
         {heading}
       </h2>
-      <div className="font-[family-name:var(--font-barlow)] text-[15px] leading-relaxed text-[color:var(--ink-2)] space-y-4">
+      <div className="text-[15px] leading-relaxed text-[color:var(--alt-ink-2)] space-y-4">
         {children}
       </div>
     </section>
@@ -211,7 +132,7 @@ function DocSection({
 /* ── Section content components ─────────────────────────────── */
 function BodyP({ children }: { children: React.ReactNode }) {
   return (
-    <p className="font-[family-name:var(--font-barlow)] text-[15px] leading-[1.7] text-[color:var(--ink-2)]">
+    <p className="text-[15px] leading-[1.7] text-[color:var(--alt-ink-2)]">
       {children}
     </p>
   );
@@ -221,8 +142,8 @@ function BulletList({ items }: { items: React.ReactNode[] }) {
   return (
     <ul className="space-y-2 mt-2">
       {items.map((item, i) => (
-        <li key={i} className="flex items-start gap-3 font-[family-name:var(--font-barlow)] text-[15px] leading-[1.6] text-[color:var(--ink-2)]">
-          <span className="mt-[10px] block w-3 h-px shrink-0 bg-[color:var(--forest)]" />
+        <li key={i} className="flex items-start gap-3 text-[15px] leading-[1.6] text-[color:var(--alt-ink-2)]">
+          <span className="mt-[10px] block w-3 h-px shrink-0 bg-[color:var(--alt-amber)]" />
           <span>{item}</span>
         </li>
       ))}
@@ -234,8 +155,8 @@ function NumberedList({ items }: { items: React.ReactNode[] }) {
   return (
     <ol className="space-y-3 mt-2">
       {items.map((item, i) => (
-        <li key={i} className="flex items-start gap-3 font-[family-name:var(--font-barlow)] text-[15px] leading-[1.6] text-[color:var(--ink-2)]">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[11px] text-[color:var(--forest)] shrink-0 w-5 mt-[3px]">
+        <li key={i} className="flex items-start gap-3 text-[15px] leading-[1.6] text-[color:var(--alt-ink-2)]">
+          <span className="font-mono text-[11px] font-bold text-[color:var(--alt-amber-dark)] shrink-0 w-5 mt-[3px]">
             {String(i + 1).padStart(2, '0')}
           </span>
           <span>{item}</span>
@@ -247,7 +168,7 @@ function NumberedList({ items }: { items: React.ReactNode[] }) {
 
 function SubHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="font-[family-name:var(--font-instrument-serif)] text-[20px] leading-[1.2] text-[color:var(--ink)] mt-6 mb-3">
+    <h3 className="text-[18px] font-bold leading-[1.25] text-[color:var(--alt-ink)] mt-6 mb-3">
       {children}
     </h3>
   );
@@ -255,7 +176,7 @@ function SubHeading({ children }: { children: React.ReactNode }) {
 
 function InlineCode({ children }: { children: React.ReactNode }) {
   return (
-    <code className="font-[family-name:var(--font-jetbrains-mono)] text-[13px] bg-[color:var(--paper-2)] text-[color:var(--forest)] px-1.5 py-0.5 rounded">
+    <code className="font-mono text-[13px] bg-[color:var(--alt-paper-2)] text-[color:var(--alt-amber-dark)] px-1.5 py-0.5 rounded border border-[color:var(--alt-rule)]">
       {children}
     </code>
   );
@@ -266,18 +187,18 @@ function FAQItem({ q, a }: { q: string; a: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const panelId = `faq-${q.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 40)}`;
   return (
-    <div className="border-b border-[color:var(--rule)] py-4">
+    <div className="border-b border-[color:var(--alt-rule)] py-4">
       <button
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-start justify-between gap-4 text-left group"
         aria-expanded={open}
         aria-controls={panelId}
       >
-        <span className="font-[family-name:var(--font-instrument-serif)] text-[18px] leading-[1.25] text-[color:var(--ink)] group-hover:text-[color:var(--forest)] transition-colors">
+        <span className="text-[17px] font-semibold leading-[1.3] text-[color:var(--alt-ink)] group-hover:text-[color:var(--alt-amber-dark)] transition-colors">
           {q}
         </span>
         <span
-          className={`font-[family-name:var(--font-jetbrains-mono)] text-[16px] text-[color:var(--ink-3)] shrink-0 mt-0.5 transition-transform ${
+          className={`text-[18px] font-bold text-[color:var(--alt-ink-3)] shrink-0 mt-0.5 transition-transform ${
             open ? 'rotate-45' : ''
           }`}
         >
@@ -287,7 +208,7 @@ function FAQItem({ q, a }: { q: string; a: React.ReactNode }) {
       <div
         id={panelId}
         hidden={!open}
-        className="mt-3 font-[family-name:var(--font-barlow)] text-[14.5px] leading-[1.65] text-[color:var(--ink-2)] pr-8"
+        className="mt-3 text-[14.5px] leading-[1.65] text-[color:var(--alt-ink-2)] pr-8"
       >
         {a}
       </div>
@@ -303,12 +224,12 @@ function CreditsTable() {
     { plan: 'Bureau', credits: '2,000', price: 'Custom' },
   ];
   return (
-    <div className="border border-[color:var(--rule)] rounded-sm overflow-hidden my-6">
-      <div className="grid grid-cols-3 bg-[color:var(--paper-2)] border-b border-[color:var(--rule)]">
+    <div className="border border-[color:var(--alt-rule)] rounded-lg overflow-hidden my-6">
+      <div className="grid grid-cols-3 bg-[color:var(--alt-paper-2)] border-b border-[color:var(--alt-rule)]">
         {['Plan', 'Monthly Credits', 'Price'].map((h) => (
           <div
             key={h}
-            className="px-4 py-2.5 font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]"
+            className="px-4 py-2.5 text-[10px] font-semibold tracking-[0.14em] uppercase text-[color:var(--alt-ink-3)]"
           >
             {h}
           </div>
@@ -317,15 +238,15 @@ function CreditsTable() {
       {rows.map((r) => (
         <div
           key={r.plan}
-          className="grid grid-cols-3 border-b border-[color:var(--rule)]/70 last:border-b-0"
+          className="grid grid-cols-3 border-b border-[color:var(--alt-rule)]/70 last:border-b-0"
         >
-          <div className="px-4 py-3 font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink)]">
+          <div className="px-4 py-3 text-[14px] font-medium text-[color:var(--alt-ink)]">
             {r.plan}
           </div>
-          <div className="px-4 py-3 font-[family-name:var(--font-jetbrains-mono)] text-[13px] tabular-nums text-[color:var(--ink-2)]">
+          <div className="px-4 py-3 font-mono text-[13px] tabular-nums text-[color:var(--alt-ink-2)]">
             {r.credits}
           </div>
-          <div className="px-4 py-3 font-[family-name:var(--font-jetbrains-mono)] text-[13px] text-[color:var(--ink-2)]">
+          <div className="px-4 py-3 font-mono text-[13px] text-[color:var(--alt-ink-2)]">
             {r.price}
           </div>
         </div>
@@ -359,24 +280,24 @@ function ResultsColumnTable() {
     },
   ];
   return (
-    <div className="border border-[color:var(--rule)] rounded-sm overflow-hidden my-6">
-      <div className="grid grid-cols-[140px_1fr] bg-[color:var(--paper-2)] border-b border-[color:var(--rule)]">
-        <div className="px-4 py-2.5 font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+    <div className="border border-[color:var(--alt-rule)] rounded-lg overflow-hidden my-6">
+      <div className="grid grid-cols-[140px_1fr] bg-[color:var(--alt-paper-2)] border-b border-[color:var(--alt-rule)]">
+        <div className="px-4 py-2.5 text-[10px] font-semibold tracking-[0.14em] uppercase text-[color:var(--alt-ink-3)]">
           Column
         </div>
-        <div className="px-4 py-2.5 font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+        <div className="px-4 py-2.5 text-[10px] font-semibold tracking-[0.14em] uppercase text-[color:var(--alt-ink-3)]">
           What it means
         </div>
       </div>
       {cols.map((c) => (
         <div
           key={c.col}
-          className="grid grid-cols-[140px_1fr] border-b border-[color:var(--rule)]/70 last:border-b-0 items-start"
+          className="grid grid-cols-[140px_1fr] border-b border-[color:var(--alt-rule)]/70 last:border-b-0 items-start"
         >
-          <div className="px-4 py-3 font-[family-name:var(--font-jetbrains-mono)] text-[12.5px] text-[color:var(--forest)]">
+          <div className="px-4 py-3 font-mono text-[12.5px] font-semibold text-[color:var(--alt-amber-dark)]">
             {c.col}
           </div>
-          <div className="px-4 py-3 font-[family-name:var(--font-barlow)] text-[13.5px] leading-[1.55] text-[color:var(--ink-2)]">
+          <div className="px-4 py-3 text-[13.5px] leading-[1.55] text-[color:var(--alt-ink-2)]">
             {c.desc}
           </div>
         </div>
@@ -430,14 +351,14 @@ function DocBody() {
   }, []);
 
   return (
-    <div className="max-w-[1320px] mx-auto px-6 md:px-10 lg:px-14 py-12 md:py-16 flex gap-16">
+    <div className="max-w-[1200px] mx-auto px-6 md:px-10 py-12 md:py-16 flex gap-16">
       <Sidebar activeSection={activeSection} />
 
       <div className="flex-1 min-w-0">
 
         {/* Mobile table of contents — hidden on lg+ where sidebar is visible */}
-        <details className="lg:hidden mb-8 border border-[color:var(--rule)]/60 rounded-sm">
-          <summary className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] px-4 py-3 cursor-pointer select-none">
+        <details className="lg:hidden mb-8 border border-[color:var(--alt-rule)] rounded-lg">
+          <summary className="text-[10px] font-semibold tracking-[0.16em] uppercase text-[color:var(--alt-ink-2)] px-4 py-3 cursor-pointer select-none">
             In this guide
           </summary>
           <nav className="px-4 pb-4 flex flex-col gap-2">
@@ -445,7 +366,7 @@ function DocBody() {
               <a
                 key={s.id}
                 href={`#${s.id}`}
-                className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
+                className="text-[13px] text-[color:var(--alt-ink-2)] hover:text-[color:var(--alt-ink)] transition"
               >
                 {s.label}
               </a>
@@ -475,7 +396,7 @@ function DocBody() {
             and tell you why.
           </BodyP>
           <Callout>
-            <strong className="text-[color:var(--ink)]">Who is this for?</strong> Nigerian business owners,
+            <strong className="text-[color:var(--alt-ink)]">Who is this for?</strong> Nigerian business owners,
             sales managers, marketing teams, and agencies who need to reach other
             businesses. If you sell to companies — manufacturers, distributors, service
             firms, professional practices — Leadre AI is built for you.
@@ -495,19 +416,19 @@ function DocBody() {
           <NumberedList
             items={[
               <>
-                <strong className="text-[color:var(--ink)]">Create your free account</strong> at leadreai.com — no
+                <strong className="text-[color:var(--alt-ink)]">Create your free account</strong> at leadreai.com — no
                 credit card needed. You can be up and running in under a minute.
               </>,
               <>
-                <strong className="text-[color:var(--ink)]">You start with 5 free credits.</strong> Each credit is
+                <strong className="text-[color:var(--alt-ink)]">You start with 5 free credits.</strong> Each credit is
                 roughly one research job. Use them to explore before you commit to a plan.
               </>,
               <>
-                <strong className="text-[color:var(--ink)]">Click &ldquo;New Job&rdquo;</strong> on your dashboard.
+                <strong className="text-[color:var(--alt-ink)]">Click &ldquo;New Job&rdquo;</strong> on your dashboard.
                 You will see a single text box — that is all you need.
               </>,
               <>
-                <strong className="text-[color:var(--ink)]">Type what you are looking for in plain English.</strong>{' '}
+                <strong className="text-[color:var(--alt-ink)]">Type what you are looking for in plain English.</strong>{' '}
                 For example:
                 <ul className="mt-2 space-y-1.5 ml-1">
                   {[
@@ -517,8 +438,8 @@ function DocBody() {
                     '"Building materials suppliers in Port Harcourt, managing director or owner"',
                   ].map((ex) => (
                     <li key={ex} className="flex items-start gap-2">
-                      <span className="text-[color:var(--forest)] shrink-0 mt-0.5">›</span>
-                      <span className="font-[family-name:var(--font-instrument-serif)] italic text-[14.5px] text-[color:var(--ink)]">
+                      <span className="text-[color:var(--alt-amber)] shrink-0 mt-0.5">›</span>
+                      <span className="italic text-[14.5px] text-[color:var(--alt-ink)]">
                         {ex}
                       </span>
                     </li>
@@ -526,12 +447,12 @@ function DocBody() {
                 </ul>
               </>,
               <>
-                <strong className="text-[color:var(--ink)]">Leadre AI may ask one or two quick follow-up
+                <strong className="text-[color:var(--alt-ink)]">Leadre AI may ask one or two quick follow-up
                 questions</strong> to make sure it finds the right people. Answer naturally — no
                 special format required.
               </>,
               <>
-                <strong className="text-[color:var(--ink)]">Click &ldquo;Run&rdquo;</strong> — the research starts.
+                <strong className="text-[color:var(--alt-ink)]">Click &ldquo;Run&rdquo;</strong> — the research starts.
                 Most jobs finish in 5–15 minutes. You can close the browser and come back;
                 results will be waiting for you.
               </>,
@@ -539,9 +460,9 @@ function DocBody() {
           />
           <Callout>
             Your first job is the most important. Be specific about the{' '}
-            <strong className="text-[color:var(--ink)]">industry</strong>, the{' '}
-            <strong className="text-[color:var(--ink)]">city</strong>, and the{' '}
-            <strong className="text-[color:var(--ink)]">type of person</strong> you want to reach (owner,
+            <strong className="text-[color:var(--alt-ink)]">industry</strong>, the{' '}
+            <strong className="text-[color:var(--alt-ink)]">city</strong>, and the{' '}
+            <strong className="text-[color:var(--alt-ink)]">type of person</strong> you want to reach (owner,
             purchasing manager, CEO). The more detail you give, the better your results.
           </Callout>
         </DocSection>
@@ -558,26 +479,26 @@ function DocBody() {
           <BulletList
             items={[
               <>
-                <strong className="text-[color:var(--ink)]">Name the industry</strong> — be specific.
+                <strong className="text-[color:var(--alt-ink)]">Name the industry</strong> — be specific.
                 &ldquo;Building materials&rdquo; is better than &ldquo;construction&rdquo;.
                 &ldquo;Agro-processing&rdquo; is better than &ldquo;agriculture&rdquo;.
                 &ldquo;Insurance brokerage&rdquo; is better than &ldquo;financial
                 services&rdquo;.
               </>,
               <>
-                <strong className="text-[color:var(--ink)]">Name the city or region</strong> — &ldquo;Lagos
+                <strong className="text-[color:var(--alt-ink)]">Name the city or region</strong> — &ldquo;Lagos
                 Mainland&rdquo;, &ldquo;Port Harcourt&rdquo;, &ldquo;Northern Nigeria&rdquo;,
                 &ldquo;South-West states&rdquo;. The more precise, the more relevant your
                 results.
               </>,
               <>
-                <strong className="text-[color:var(--ink)]">Name the role you need</strong> — &ldquo;the
+                <strong className="text-[color:var(--alt-ink)]">Name the role you need</strong> — &ldquo;the
                 owner&rdquo;, &ldquo;the head of procurement&rdquo;, &ldquo;the marketing
                 manager&rdquo;, &ldquo;managing director&rdquo;. Leadre AI will look for
                 that person specifically.
               </>,
               <>
-                <strong className="text-[color:var(--ink)]">Optional: add size hints</strong> — &ldquo;companies
+                <strong className="text-[color:var(--alt-ink)]">Optional: add size hints</strong> — &ldquo;companies
                 with more than 50 staff&rdquo;, &ldquo;businesses that have a website&rdquo;,
                 &ldquo;companies that have been around for at least 5 years&rdquo;. These help
                 filter out micro-enterprises if that is not your market.
@@ -586,8 +507,8 @@ function DocBody() {
           />
 
           <SubHeading>A real example</SubHeading>
-          <div className="border-l-2 border-[color:var(--rule)] pl-4 py-2 my-4">
-            <p className="font-[family-name:var(--font-instrument-serif)] italic text-[17px] leading-[1.5] text-[color:var(--ink)]">
+          <div className="border-l-2 border-[color:var(--alt-amber-border)] bg-[color:var(--alt-amber-light)] pl-4 py-3 my-4 rounded-r-sm">
+            <p className="italic text-[17px] leading-[1.5] text-[color:var(--alt-ink)]">
               &ldquo;Find building materials suppliers in Abuja — I need the owner or
               managing director. Companies that have been around for at least 5 years.&rdquo;
             </p>
@@ -673,13 +594,13 @@ function DocBody() {
           <BulletList
             items={[
               <>
-                <strong className="text-[color:var(--ink)]">CSV</strong> — the most useful
+                <strong className="text-[color:var(--alt-ink)]">CSV</strong> — the most useful
                 format for most people. Opens in Microsoft Excel, Google Sheets, or any
                 spreadsheet. One click from the job results page. Every column, every source
                 URL, and every confidence score is included.
               </>,
               <>
-                <strong className="text-[color:var(--ink)]">JSON</strong> — for developers
+                <strong className="text-[color:var(--alt-ink)]">JSON</strong> — for developers
                 and technical teams who want to pipe data directly into another system (a
                 CRM, a marketing automation tool, a custom database). If you do not know
                 what JSON is, you do not need it — CSV will serve you well.
@@ -688,7 +609,7 @@ function DocBody() {
           />
 
           <Callout>
-            <strong className="text-[color:var(--ink)]">Export before the job expires.</strong> Jobs and their results
+            <strong className="text-[color:var(--alt-ink)]">Export before the job expires.</strong> Jobs and their results
             are stored on your account for 30 days. After that, you would need to re-run
             the job to get fresh data. Always export when the results look good.
           </Callout>
@@ -711,17 +632,17 @@ function DocBody() {
           <NumberedList
             items={[
               <>
-                <strong className="text-[color:var(--ink)]">Export to CSV</strong> from the
+                <strong className="text-[color:var(--alt-ink)]">Export to CSV</strong> from the
                 results page. This is your master list.
               </>,
               <>
-                <strong className="text-[color:var(--ink)]">Import into your email tool.</strong>{' '}
+                <strong className="text-[color:var(--alt-ink)]">Import into your email tool.</strong>{' '}
                 Gmail mail merge, Mailchimp, Zoho CRM, Brevo (formerly Sendinblue), or even
                 a simple mail merge in Google Sheets using a free add-on. All of these
                 accept CSV files.
               </>,
               <>
-                <strong className="text-[color:var(--ink)]">Personalise your message
+                <strong className="text-[color:var(--alt-ink)]">Personalise your message
                 before sending.</strong> Mention the company by name. Reference what they
                 do. A message that looks like it was written for that person specifically
                 gets far more replies than a mass blast. The Contact Name and Company
@@ -733,7 +654,7 @@ function DocBody() {
           <SubHeading>A note on responsible outreach</SubHeading>
           <BodyP>
             Only contact businesses that may genuinely benefit from your offer. Nigeria&rsquo;s
-            data protection framework — the <strong className="text-[color:var(--ink)]">NDPR
+            data protection framework — the <strong className="text-[color:var(--alt-ink)]">NDPR
             (Nigeria Data Protection Regulation)</strong> — requires you to have a lawful basis for
             contacting people. For most B2B outreach, a legitimate business interest is
             sufficient, but you must be transparent about who you are and give recipients
@@ -756,7 +677,7 @@ function DocBody() {
           <SubHeading>How to save a workflow</SubHeading>
           <BodyP>
             After a job finishes and you are happy with the results, click{' '}
-            <strong className="text-[color:var(--ink)]">&ldquo;Save as Workflow&rdquo;</strong> at the top
+            <strong className="text-[color:var(--alt-ink)]">&ldquo;Save as Workflow&rdquo;</strong> at the top
             of the results page. Give it a clear name, something you will recognise
             next month — for example:{' '}
             <InlineCode>Monthly Kano FMCG sweep</InlineCode> or{' '}
@@ -764,7 +685,7 @@ function DocBody() {
           </BodyP>
           <BodyP>
             Next time, open the Workflows tab on your dashboard, find the saved workflow,
-            and click <strong className="text-[color:var(--ink)]">Run</strong>. Leadre AI
+            and click <strong className="text-[color:var(--alt-ink)]">Run</strong>. Leadre AI
             repeats the same search with fresh data from the web.
           </BodyP>
 
@@ -794,17 +715,17 @@ function DocBody() {
           <BulletList
             items={[
               <>
-                <strong className="text-[color:var(--ink)]">1 credit</strong> = roughly one
+                <strong className="text-[color:var(--alt-ink)]">1 credit</strong> = roughly one
                 research job that finds up to 20 contacts.
               </>,
               <>
                 Credits that come with your monthly plan{' '}
-                <strong className="text-[color:var(--ink)]">reset at the start of each
+                <strong className="text-[color:var(--alt-ink)]">reset at the start of each
                 billing month</strong>. If you are on Reader or Correspondent, unused
                 monthly credits expire at the end of each period — use them or lose them.
               </>,
               <>
-                <strong className="text-[color:var(--ink)]">Top-up credits</strong> (extra
+                <strong className="text-[color:var(--alt-ink)]">Top-up credits</strong> (extra
                 credits you purchase separately) do not expire. They roll over month to
                 month until you use them.
               </>,
@@ -821,17 +742,17 @@ function DocBody() {
           </BodyP>
           <BulletList
             items={[
-              <><strong className="text-[color:var(--ink)]">Trial Pack</strong> — 20 credits — ~₦31,000</>,
-              <><strong className="text-[color:var(--ink)]">Desk Pack</strong> — 50 credits — ~₦74,000</>,
-              <><strong className="text-[color:var(--ink)]">Bureau Pack</strong> — 200 credits — ~₦270,000</>,
-              <><strong className="text-[color:var(--ink)]">Annual Bundle</strong> — 1,000 credits — ~₦1,230,000</>,
+              <><strong className="text-[color:var(--alt-ink)]">Trial Pack</strong> — 20 credits — ~₦31,000</>,
+              <><strong className="text-[color:var(--alt-ink)]">Desk Pack</strong> — 50 credits — ~₦74,000</>,
+              <><strong className="text-[color:var(--alt-ink)]">Bureau Pack</strong> — 200 credits — ~₦270,000</>,
+              <><strong className="text-[color:var(--alt-ink)]">Annual Bundle</strong> — 1,000 credits — ~₦1,230,000</>,
             ]}
           />
 
           <Callout>
             Prices shown in Naira are approximate and based on the current $/₦ exchange
             rate at the time of billing. All payments are processed via{' '}
-            <strong className="text-[color:var(--ink)]">Flutterwave</strong> in local
+            <strong className="text-[color:var(--alt-ink)]">Flutterwave</strong> in local
             currency — no dollar card required.
           </Callout>
         </DocSection>
@@ -843,7 +764,7 @@ function DocBody() {
             using Leadre AI for the first time.
           </BodyP>
 
-          <div className="mt-6 border-t border-[color:var(--rule)]">
+          <div className="mt-6 border-t border-[color:var(--alt-rule)]">
             <FAQItem
               q="Does Leadre AI work for Nigerian businesses specifically?"
               a={
@@ -936,7 +857,7 @@ function DocBody() {
                   us at{' '}
                   <a
                     href="mailto:hello@leadreai.com"
-                    className="text-[color:var(--ink)] underline underline-offset-[3px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]"
+                    className="text-[color:var(--alt-ink)] underline underline-offset-[3px] decoration-[color:var(--alt-rule)] hover:decoration-[color:var(--alt-ink)]"
                   >
                     hello@leadreai.com
                   </a>{' '}
@@ -946,12 +867,12 @@ function DocBody() {
             />
           </div>
 
-          <div className="mt-10 p-6 bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-sm">
-            <p className="font-[family-name:var(--font-barlow)] text-[15px] leading-[1.6] text-[color:var(--ink-2)]">
+          <div className="mt-10 p-6 bg-[color:var(--alt-paper-2)] border border-[color:var(--alt-rule)] rounded-lg">
+            <p className="text-[15px] leading-[1.6] text-[color:var(--alt-ink-2)]">
               Did not find what you were looking for?{' '}
               <a
                 href="mailto:hello@leadreai.com"
-                className="text-[color:var(--ink)] underline underline-offset-[3px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]"
+                className="text-[color:var(--alt-ink)] underline underline-offset-[3px] decoration-[color:var(--alt-rule)] hover:decoration-[color:var(--alt-ink)]"
               >
                 Email us
               </a>{' '}
@@ -965,44 +886,17 @@ function DocBody() {
   );
 }
 
-/* ── Footer ─────────────────────────────────────────────────── */
-function DocFooter() {
-  return (
-    <footer className="border-t border-[color:var(--rule)]/50 bg-[color:var(--paper-2)]">
-      <div className="max-w-[1320px] mx-auto px-6 md:px-10 lg:px-14 py-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
-          © 2026 Leadre AI · All rights reserved
-        </span>
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
-          Built for Nigerian markets.
-        </span>
-      </div>
-    </footer>
-  );
-}
-
 /* ── Page ───────────────────────────────────────────────────── */
 export default function DocsPage() {
   return (
     <main
-      className="bg-[color:var(--paper)] text-[color:var(--ink)] min-h-screen selection:bg-[color:var(--forest)] selection:text-[color:var(--paper)]"
-      style={{
-        '--paper':    '#F2EADD',
-        '--paper-2':  '#E9DFCB',
-        '--paper-3':  '#F7F1E5',
-        '--ink':      '#15130F',
-        '--ink-2':    '#5A5346',
-        '--ink-3':    '#8A8170',
-        '--rule':     '#B5AB95',
-        '--forest':   '#2D4634',
-        '--forest-2': '#4C6A54',
-        '--rust':     '#B84F2B',
-      } as React.CSSProperties}
+      className="bg-white text-[color:var(--alt-ink)] min-h-screen selection:bg-[color:var(--alt-amber-light)] selection:text-[color:var(--alt-amber-dark)]"
+      style={altTokens}
     >
-      <Masthead />
+      <AltNav />
       <Hero />
       <DocBody />
-      <DocFooter />
+      <AltFooter />
     </main>
   );
 }
