@@ -510,7 +510,7 @@ function FinalCTASection({
       </p>
 
       {/* Search bar — same treatment as hero */}
-      <div style={{ maxWidth: 540, margin: '0 auto' }}>
+      <div style={{ maxWidth: 580, margin: '0 auto' }}>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
           background: '#fff', border: '2px solid var(--alt-amber-border)',
@@ -541,6 +541,7 @@ function FinalCTASection({
               cursor: query.length > 0 ? 'pointer' : 'not-allowed',
               flexShrink: 0, transition: 'background 0.15s, color 0.15s',
             }}
+            onClick={() => { if (!showGate) setQuery(query + ' ') }}
           >
             Search
           </button>
