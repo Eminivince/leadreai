@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
 import AltNav from '@/components/marketing/AltNav';
 import AltFooter from '@/components/marketing/AltFooter';
 import { altTokens } from '@/components/marketing/alt-tokens';
