@@ -88,7 +88,8 @@ const PRICING_TIERS = [
     tagline: 'For agencies and enterprise teams.',
     features: ['Unlimited contacts', 'Custom pipeline integrations', 'Dedicated account manager', 'SLA guarantee', 'Custom data sources'],
     cta: 'Contact sales',
-    ctaHref: '/auth/register',
+    // TODO: replace with dedicated sales/demo booking page when available
+    ctaHref: '/contact',
     highlighted: false,
   },
 ]
@@ -526,6 +527,7 @@ function PricingSection() {
             </ul>
             <a
               href={tier.ctaHref}
+              aria-label={`${tier.cta} — ${tier.name} plan`}
               style={{
                 display: 'block', textAlign: 'center',
                 background: tier.highlighted ? 'var(--alt-amber)' : 'var(--alt-ink)',
