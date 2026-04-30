@@ -676,7 +676,7 @@ export function AuthShell({
               <button
                 type="submit"
                 disabled={isSubmitting || (isSignup && !accept)}
-                className="group inline-flex items-center justify-between gap-3 w-full bg-[color:var(--ink)] text-[color:var(--paper)] px-6 py-3.5 rounded-full hover:bg-[color:var(--forest)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="group inline-flex items-center justify-between gap-3 w-full bg-[color:var(--forest)] text-white px-6 py-3.5 rounded-full hover:bg-[color:var(--ink)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <span className="font-sans text-[14px] font-medium">
                   {isSubmitting ? (
