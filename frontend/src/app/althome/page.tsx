@@ -18,6 +18,30 @@ const CHIPS = [
   'Insurtech CTOs · Nigeria',
 ]
 
+const HOW_STEPS = [
+  {
+    num: '01',
+    title: 'Describe',
+    body: 'Type a plain-English sentence — no dropdowns, no filters. "Series B fintechs in Lagos with a CTO who went to UniLag" works.',
+  },
+  {
+    num: '02',
+    title: 'Discover & Enrich',
+    body: 'Our agent reads registries, company websites, and the open web. Emails are MX + SMTP verified. Every field has a source URL.',
+  },
+  {
+    num: '03',
+    title: 'Export & Act',
+    body: 'Download CSV, push directly to HubSpot or Salesforce, or copy individual contacts. Your CRM, your workflow.',
+  },
+]
+
+const DEMO_ROWS = [
+  { company: 'Paystack', contact: 'Shola Akinlade', email: 'shola@paystack.com', raised: '$8M', status: 'Verified' },
+  { company: 'Moniepoint', contact: 'Felix Ike', email: 'felix@moniepoint.com', raised: '$15M', status: 'Verified' },
+  { company: 'Flutterwave', contact: 'Olugbenga Agboola', email: 'gbenga@flutterwave.com', raised: '$170M', status: 'Verified' },
+]
+
 export default function AlthomePage() {
   const [query, setQuery] = useState('')
   const showGate = query.length > GATE_THRESHOLD
@@ -26,7 +50,8 @@ export default function AlthomePage() {
     <main style={altTokens as CSSProperties}>
       <AltNav />
       <HeroSection query={query} setQuery={setQuery} showGate={showGate} />
-      {/* later sections */}
+      <HowItWorksSection />
+      <ResultsDemoSection query={query} />
       <AltFooter />
     </main>
   )
@@ -155,6 +180,185 @@ function HeroSection({
             {i < arr.length - 1 && ' '}
           </span>
         ))}
+      </div>
+    </section>
+  )
+}
+
+function HowItWorksSection() {
+  return (
+    <section
+      id="how"
+      style={{
+        background: 'var(--alt-paper-2)',
+        padding: '72px 24px',
+        textAlign: 'center',
+      }}
+    >
+      <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--alt-amber)', textTransform: 'uppercase', marginBottom: 12 }}>
+        How it works
+      </p>
+      <h2 style={{ fontSize: 'clamp(28px, 3vw, 40px)', fontWeight: 800, color: 'var(--alt-ink)', letterSpacing: '-0.03em', marginBottom: 48 }}>
+        Three steps from idea to pipeline
+      </h2>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: 32, maxWidth: 900, margin: '0 auto', textAlign: 'left',
+      }}>
+        {HOW_STEPS.map(step => (
+          <div key={step.num}>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 40, height: 40, borderRadius: 999,
+              background: 'var(--alt-amber-light)', border: '1px solid var(--alt-amber-border)',
+              color: 'var(--alt-amber-dark)', fontWeight: 800, fontSize: 14, marginBottom: 16,
+            }}>
+              {step.num}
+            </div>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--alt-ink)', marginBottom: 8 }}>
+              {step.title}
+            </h3>
+            <p style={{ fontSize: 14, color: 'var(--alt-ink-3)', lineHeight: 1.6 }}>
+              {step.body}
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function ResultsDemoSection({ query }: { query: string }) {
+  const displayQuery = query.trim() || 'Fintech CEOs · Lagos'
+  return (
+    <section style={{ padding: '72px 24px', background: '#fff' }}>
+      <div style={{ maxWidth: 880, margin: '0 auto' }}>
+        {/* Header bar */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 12,
+          marginBottom: 16, flexWrap: 'wrap',
+        }}>
+          <span style={{ fontWeight: 700, color: 'var(--alt-ink)', fontSize: 15 }}>Results</span>
+          <span style={{
+            background: 'var(--alt-paper-2)', border: '1px solid var(--alt-rule)',
+            borderRadius: 6, padding: '2px 10px', fontSize: 13,
+            color: 'var(--alt-ink-3)', fontStyle: 'italic',
+          }}>{displayQuery}</span>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+            <button style={{
+              background: '#fff', border: '1px solid var(--alt-rule)',
+              borderRadius: 7, padding: '6px 14px', fontSize: 13,
+              color: 'var(--alt-ink-2)', cursor: 'pointer', fontWeight: 500,
+            }}>Export CSV</button>
+            <button style={{
+              background: '#fff', border: '1px solid var(--alt-rule)',
+              borderRadius: 7, padding: '6px 14px', fontSize: 13,
+              color: 'var(--alt-ink-2)', cursor: 'pointer', fontWeight: 500,
+            }}>CRM sync</button>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div style={{
+          border: '1px solid var(--alt-rule)', borderRadius: 10,
+          overflow: 'hidden', fontSize: 14,
+        }}>
+          {/* Table header */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1.5fr 1.5fr 2fr 1fr 1fr',
+            background: 'var(--alt-paper-2)', padding: '10px 16px',
+            borderBottom: '1px solid var(--alt-rule)',
+            color: 'var(--alt-ink-3)', fontWeight: 600, fontSize: 12,
+            textTransform: 'uppercase', letterSpacing: '0.06em',
+          }}>
+            <span>Company</span><span>Contact</span><span>Email</span>
+            <span>Raised</span><span>Status</span>
+          </div>
+
+          {/* Visible rows */}
+          {DEMO_ROWS.map((row, i) => (
+            <div
+              key={row.company}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1.5fr 1.5fr 2fr 1fr 1fr',
+                padding: '12px 16px',
+                borderBottom: '1px solid var(--alt-rule)',
+                background: i % 2 === 0 ? '#fff' : 'var(--alt-paper-2)',
+                color: 'var(--alt-ink-2)',
+              }}
+            >
+              <span style={{ fontWeight: 600, color: 'var(--alt-ink)' }}>{row.company}</span>
+              <span>{row.contact}</span>
+              <span style={{ fontFamily: 'monospace', fontSize: 13 }}>{row.email}</span>
+              <span>{row.raised}</span>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                background: 'var(--alt-green-bg)', color: 'var(--alt-green-text)',
+                borderRadius: 999, padding: '2px 8px', fontSize: 12, fontWeight: 600,
+              }}>{row.status}</span>
+            </div>
+          ))}
+
+          {/* Blurred rows */}
+          {[0, 1].map(i => (
+            <div
+              key={`blur-${i}`}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1.5fr 1.5fr 2fr 1fr 1fr',
+                padding: '12px 16px',
+                borderBottom: '1px solid var(--alt-rule)',
+                background: i % 2 === 0 ? '#fff' : 'var(--alt-paper-2)',
+                filter: 'blur(4px)',
+                userSelect: 'none',
+                pointerEvents: 'none',
+                color: 'var(--alt-ink-2)',
+              }}
+            >
+              <span style={{ fontWeight: 600, color: 'var(--alt-ink)' }}>Company Name</span>
+              <span>Contact Person</span>
+              <span style={{ fontFamily: 'monospace', fontSize: 13 }}>email@company.com</span>
+              <span>$00M</span>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center',
+                background: 'var(--alt-green-bg)', color: 'var(--alt-green-text)',
+                borderRadius: 999, padding: '2px 8px', fontSize: 12, fontWeight: 600,
+              }}>Verified</span>
+            </div>
+          ))}
+
+          {/* Gate row */}
+          <div style={{
+            padding: '20px 24px', background: 'var(--alt-paper-2)',
+            borderTop: '1px solid var(--alt-rule)', textAlign: 'center',
+          }}>
+            <p style={{ marginBottom: 12, color: 'var(--alt-ink-2)', fontSize: 14 }}>
+              9 more results available. Enter your email to unlock the full list.
+            </p>
+            <EmailGate query={displayQuery} />
+          </div>
+        </div>
+
+        {/* Stats strip */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: 16, marginTop: 24, textAlign: 'center',
+        }}>
+          {[
+            { num: '50k+', label: 'leads delivered' },
+            { num: '94%', label: 'email accuracy' },
+            { num: '8 min', label: 'avg delivery' },
+            { num: '3×', label: 'sources cross-checked' },
+          ].map(stat => (
+            <div key={stat.label}>
+              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--alt-ink)' }}>{stat.num}</div>
+              <div style={{ fontSize: 13, color: 'var(--alt-ink-3)' }}>{stat.label}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )
