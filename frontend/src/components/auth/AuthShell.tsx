@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 /* ─────────────────────────────────────────────────────────────────
@@ -136,10 +136,12 @@ function MagicLinkAction({ prefillEmail }: { prefillEmail: string }) {
 
   // Keep the inline input in sync with the main form's email — if the
   // user already typed their address above, don't make them retype it.
-  if (stage === 'link' && prefillEmail && prefillEmail !== email) {
-    // deferred set — avoids render-time writes
-    setTimeout(() => setEmail(prefillEmail), 0);
-  }
+  useEffect(() => {
+    if (stage === 'link' && prefillEmail && prefillEmail !== email) {
+      setEmail(prefillEmail);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillEmail, stage]);
 
   async function send() {
     if (!email.trim() || sending) return;
@@ -488,7 +490,7 @@ export function AuthShell({
 }: AuthShellProps) {
   const isSignup = mode === 'signup';
   const [showPw, setShowPw] = useState(false);
-  const [accept, setAccept] = useState(true);
+  const [accept, setAccept] = useState(false);
 
   return (
     <main
@@ -540,7 +542,7 @@ export function AuthShell({
 
           {/* Error banner */}
           {submitError && (
-            <div className="mb-6 border-l-2 border-[color:var(--warn)] bg-[color:var(--paper-3)] px-4 py-3 text-[13px] text-[color:var(--ink)]">
+            <div role="alert" aria-live="assertive" className="mb-6 border-l-2 border-[color:var(--warn)] bg-[color:var(--paper-3)] px-4 py-3 text-[13px] text-[color:var(--ink)]">
               {submitError}
             </div>
           )}
@@ -607,6 +609,7 @@ export function AuthShell({
                     onClick={() => setShowPw((v) => !v)}
                     className="p-1.5 text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
                     title={showPw ? 'Hide password' : 'Show password'}
+                    aria-label={showPw ? 'Hide password' : 'Show password'}
                   >
                     {showPw ? (
                       <EyeOffIcon className="w-4 h-4" />
