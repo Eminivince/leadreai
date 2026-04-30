@@ -1,5 +1,3 @@
-'use client'
-
 import type { CSSProperties } from 'react'
 import AltNav from '@/components/marketing/AltNav'
 import AltFooter from '@/components/marketing/AltFooter'
