@@ -93,18 +93,12 @@ export function Topbar() {
   const [greetingText, setGreetingText] = React.useState(() => greeting());
 
   React.useEffect(() => {
-    const msToMidnight = () => {
-      const now = new Date();
-      const midnight = new Date(now);
-      midnight.setHours(24, 0, 0, 0);
-      return midnight.getTime() - now.getTime();
-    };
-    const id = setTimeout(() => {
+    const id = setInterval(() => {
       setDateline(formatDateline());
       setGreetingText(greeting());
-    }, msToMidnight());
-    return () => clearTimeout(id);
-  }, [dateline]);
+    }, 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const themeLabel =
     preference === 'light'
