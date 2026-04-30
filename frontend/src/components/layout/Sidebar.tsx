@@ -11,13 +11,13 @@ import { apiFetch } from '@/lib/api';
 import { planConfig } from '@leadreai/shared';
 
 /* ─────────────────────────────────────────────────────────────────
- * Sidebar — editorial broadsheet
+ * Sidebar — main navigation
  * ─────────────────────────────────────────────────────────────────
  * Narrow, typography-first. No icons inside glass pills. Active state
- * is a 2px forest-green rule on the left + ink-black label. Everything
- * else in ink-2 gray. Sections ("The Desk" / "More") are labeled with
- * monospace kickers. Bottom row holds credits + account with a hairline
- * divider to the work area.
+ * is a 2px forest rule on the left + ink-black label. Everything
+ * else in ink-2 gray. Sections ("Workspace" / "Settings & More") are
+ * labeled with monospace kickers. Bottom row holds credits + account
+ * with a hairline divider to the work area.
  *
  * Parents with `children` get a chevron — clicking the chevron (or
  * the label if the parent has no href) toggles the branch. Navigation
@@ -36,7 +36,7 @@ interface NavItem {
 }
 
 const PRIMARY: NavItem[] = [
-  { key: 'home',      label: 'Dispatches', href: '/dashboard' },
+  { key: 'home',      label: 'Dashboard',  href: '/dashboard' },
   { key: 'leads',     label: 'Leads',      href: '/dashboard/leads' },
   { key: 'tables',    label: 'Tables',     href: '/dashboard/tables' },
   { key: 'workflows', label: 'Workflows',  href: '/dashboard/workflows' },
@@ -178,7 +178,7 @@ function NavIcon({ keyName, className = 'w-4 h-4' }: { keyName: string; classNam
     strokeLinejoin: 'round' as const,
   };
   switch (keyName) {
-    case 'home': // dispatches — paper plane
+    case 'home': // dashboard — paper plane
       return (
         <svg {...common}>
           <path d="M21 3 10.5 14M21 3l-7 18-4-8-8-4 19-6Z" {...strokeProps} />
@@ -320,7 +320,7 @@ function NavRow({
   const parentShouldHighlight = hasChildren && !isSelfActive && childActive;
 
   const rowClasses = cn(
-    'group relative h-9 flex items-center gap-2.5 px-3 font-[family-name:var(--font-barlow)] text-[13.5px] transition-colors',
+    'group relative h-9 flex items-center gap-2.5 px-3 text-[13.5px] transition-colors',
     isSelfActive
       ? 'text-[color:var(--ink)]'
       : isDisabled
@@ -341,12 +341,12 @@ function NavRow({
   const trailing = (
     <>
       {item.soon && (
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+        <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
           soon
         </span>
       )}
       {item.badge && (
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tabular-nums text-[color:var(--ink-2)] bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-full px-1.5 py-0.5">
+        <span className="font-mono text-[10px] tabular-nums text-[color:var(--ink-2)] bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-full px-1.5 py-0.5">
           {item.badge}
         </span>
       )}
@@ -393,7 +393,7 @@ function NavRow({
               child.href !== '#' && (pathname === child.href || pathname.startsWith(child.href + '/'));
             const childDisabled = child.href === '#';
             const childClasses = cn(
-              'group relative h-8 flex items-center gap-2 pl-4 pr-3 font-[family-name:var(--font-barlow)] text-[12.5px] transition-colors',
+              'group relative h-8 flex items-center gap-2 pl-4 pr-3 text-[12.5px] transition-colors',
               childIsActive
                 ? 'text-[color:var(--ink)]'
                 : childDisabled
@@ -438,7 +438,7 @@ function NavGroup({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] px-3 mb-1">
+      <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] px-3 mb-1">
         {kicker}
       </span>
       {items.map((item) => {
@@ -563,9 +563,7 @@ export function Sidebar() {
           className="h-12 flex items-center justify-center border-b border-[color:var(--rule)]/60"
           title="Home"
         >
-          <span className="font-[family-name:var(--font-instrument-serif)] italic text-[22px] leading-none text-[color:var(--forest)]">
-            L
-          </span>
+          <span className="font-extrabold text-[18px] leading-none text-[color:var(--forest)]">L</span>
         </Link>
 
         {/* Nav icons — PRIMARY, then a hairline, then SECONDARY */}
@@ -612,7 +610,7 @@ export function Sidebar() {
             className="w-7 h-7 rounded-full bg-[color:var(--ink)] flex items-center justify-center"
             title={`${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || user?.email || 'Account'}
           >
-            <span className="font-[family-name:var(--font-barlow)] text-[9.5px] font-medium text-[color:var(--paper)]">
+            <span className="text-[9.5px] font-medium text-[color:var(--paper)]">
               {initials}
             </span>
           </div>
@@ -643,25 +641,22 @@ export function Sidebar() {
             <path d="m10 4-4 4 4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-        <Link href="/" className="flex items-baseline gap-1.5">
-          <span className="font-[family-name:var(--font-instrument-serif)] italic text-[22px] leading-none text-[color:var(--ink)] tracking-tight">
-            Leadre
-          </span>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] translate-y-[-1px]">
-            AI
-          </span>
+        <Link href="/" className="flex items-baseline gap-px">
+          <span className="font-extrabold text-[16px] tracking-tight text-[color:var(--ink)]">Leadre</span>
+          <span className="font-extrabold text-[16px] text-[color:var(--forest)]">.</span>
+          <span className="font-extrabold text-[16px] tracking-tight text-[color:var(--ink)]">AI</span>
         </Link>
         <div className="mt-3 flex items-center gap-2 min-w-0">
           <div className="w-6 h-6 rounded-sm bg-[color:var(--forest)] flex items-center justify-center shrink-0">
-            <span className="font-[family-name:var(--font-instrument-serif)] italic text-[11px] text-[color:var(--paper)]">
+            <span className="font-extrabold text-[11px] text-[color:var(--paper)]">
               {workspace?.name?.[0]?.toUpperCase() ?? 'W'}
             </span>
           </div>
           <div className="min-w-0 flex-1 leading-tight">
-            <div className="font-[family-name:var(--font-barlow)] text-[12px] text-[color:var(--ink)] truncate">
+            <div className="text-[12px] text-[color:var(--ink)] truncate">
               {workspace?.name ?? 'Workspace'}
             </div>
-            <div className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+            <div className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
               Correspondent
             </div>
           </div>
@@ -671,14 +666,14 @@ export function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-5 flex flex-col gap-6">
         <NavGroup
-          kicker="The desk"
+          kicker="Workspace"
           items={PRIMARY}
           pathname={pathname}
           expandedMap={expanded}
           onToggle={toggleExpanded}
         />
         <NavGroup
-          kicker="More"
+          kicker="Settings & More"
           items={SECONDARY}
           pathname={pathname}
           expandedMap={expanded}
@@ -691,10 +686,10 @@ export function Sidebar() {
         {/* Credits */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+            <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
               Credits
             </span>
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[11px] tabular-nums text-[color:var(--ink)]">
+            <span className="font-mono text-[11px] tabular-nums text-[color:var(--ink)]">
               {totalBalance.toLocaleString()}
             </span>
           </div>
@@ -712,7 +707,7 @@ export function Sidebar() {
           </div>
           <div className="mt-1.5 flex items-center justify-between gap-2">
             <span
-              className="font-[family-name:var(--font-barlow)] text-[10.5px] text-[color:var(--ink-3)] truncate"
+              className="text-[10.5px] text-[color:var(--ink-3)] truncate"
               title="Monthly plan allowance + top-up balance"
             >
               {monthlyBalance.toLocaleString()}
@@ -726,7 +721,7 @@ export function Sidebar() {
             </span>
             <button
               onClick={openTopUp}
-              className="font-[family-name:var(--font-barlow)] text-[11px] text-[color:var(--ink)] hover:text-[color:var(--forest)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--forest)] transition shrink-0"
+              className="text-[11px] text-[color:var(--ink)] hover:text-[color:var(--forest)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--forest)] transition shrink-0"
             >
               Top up
             </button>
@@ -736,15 +731,15 @@ export function Sidebar() {
         {/* User row */}
         <div className="flex items-center gap-2.5 pt-3 border-t border-[color:var(--rule)]">
           <div className="w-7 h-7 rounded-full bg-[color:var(--ink)] flex items-center justify-center shrink-0">
-            <span className="font-[family-name:var(--font-barlow)] text-[10px] font-medium text-[color:var(--paper)]">
+            <span className="text-[10px] font-medium text-[color:var(--paper)]">
               {getInitials(user?.firstName, user?.lastName)}
             </span>
           </div>
           <div className="min-w-0 flex-1 leading-tight">
-            <div className="font-[family-name:var(--font-barlow)] text-[12px] font-medium text-[color:var(--ink)] truncate">
+            <div className="text-[12px] font-medium text-[color:var(--ink)] truncate">
               {user?.firstName} {user?.lastName}
             </div>
-            <div className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.16em] text-[color:var(--ink-3)] truncate">
+            <div className="font-mono text-[9px] tracking-[0.16em] text-[color:var(--ink-3)] truncate">
               {user?.email}
             </div>
           </div>
@@ -758,15 +753,12 @@ export function Sidebar() {
         </div>
 
         {/* Footer kicker */}
-        <div className="flex items-center justify-between pt-2 border-t border-[color:var(--rule)]/50">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
-            Vol I · Issue 07
-          </span>
+        <div className="flex items-center justify-end pt-2 border-t border-[color:var(--rule)]/50">
           <Link
             href="/"
-            className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] inline-flex items-center gap-1"
+            className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] inline-flex items-center gap-1"
           >
-            Front page
+            Home
             <ArrowEast className="w-2.5 h-2.5" />
           </Link>
         </div>
