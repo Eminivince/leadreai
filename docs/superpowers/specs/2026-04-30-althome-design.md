@@ -21,6 +21,7 @@ The core experiment: does a search-console framing with an inline email gate con
 **Fonts:** Same as global layout — Instrument Serif (display), Barlow (body), JetBrains Mono (data/mono). Headings lean heavier (font-weight 800, tight letter-spacing) vs. the serif-italic style of the main page.
 
 **Palette (page-scoped CSS variables):**
+
 - `--amber: #f59e0b` — primary accent
 - `--amber-light: #fef3c7` — badge/chip backgrounds, final CTA bg
 - `--amber-border: #fde68a` — borders on amber surfaces
@@ -60,6 +61,7 @@ Minimal sticky header. No broadsheet dateline, no "Vol I · Issue 07".
 **Layout:** Centered, single column. Amber gradient fades from `#fffbeb` at top to white at 55%.
 
 **Stack (top to bottom):**
+
 1. **Badge** — amber pill: "Built for Nigerian & African markets"
 2. **Headline** — `Find your next customer. Before your competitors do.` (52px, 800 weight, −0.04em tracking). "Before your competitors do." in amber.
 3. **Subline** — 16px, gray, max-width 440px
