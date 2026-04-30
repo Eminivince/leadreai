@@ -6,13 +6,12 @@ import Link from 'next/link';
 /* ─────────────────────────────────────────────────────────────────
  * AuthShell — sign in / sign up
  * ─────────────────────────────────────────────────────────────────
- * Editorial broadsheet aesthetic that matches the landing page:
- * warm ivory paper, deep forest-green accents, Instrument Serif
- * for display italic, Barlow for body, JetBrains Mono for labels.
+ * Modern SaaS amber design: clean split-panel layout, amber accent
+ * via var(--forest), standard font-sans / font-mono, no editorial
+ * broadsheet copy or custom font variables.
  *
- * Layout on desktop: 5/7 split — left "credentials desk" panel in
- * a slightly darker ivory tone, right form on the lighter paper.
- * Mobile stacks: masthead → form, desk panel hidden.
+ * Layout on desktop: 5/7 split — left brand panel (light amber bg),
+ * right form on the paper bg. Mobile stacks: amber logo → form.
  *
  * The auth routes live under a Next.js route group `(auth)`, so the
  * URLs are /login and /register (not /auth/*).
@@ -69,6 +68,21 @@ function ArrowEast({ className = 'w-3.5 h-3.5' }: { className?: string }) {
     </svg>
   );
 }
+
+function ArrowWest({ className = 'w-3 h-3' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={className}>
+      <path
+        d="M14 8H2M6 4 2 8l4 4"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
 function GoogleButton({ isSignup }: { isSignup: boolean }) {
@@ -78,7 +92,7 @@ function GoogleButton({ isSignup }: { isSignup: boolean }) {
   return (
     <a
       href={href}
-      className="group w-full inline-flex items-center justify-center gap-3 h-[46px] border border-[color:var(--rule)] bg-[color:var(--paper-3)] hover:border-[color:var(--ink)] hover:bg-[color:var(--paper-2)] transition-colors rounded-full font-[family-name:var(--font-barlow)] text-[13.5px] font-medium text-[color:var(--ink)]"
+      className="group w-full inline-flex items-center justify-center gap-3 h-[46px] border border-[color:var(--rule)] bg-[color:var(--paper-3)] hover:border-[color:var(--ink)] hover:bg-[color:var(--paper-2)] transition-colors rounded-full font-sans text-[13.5px] font-medium text-[color:var(--ink)]"
     >
       <svg viewBox="0 0 24 24" className="w-4 h-4" aria-hidden>
         <path
@@ -160,16 +174,16 @@ function MagicLinkAction({ prefillEmail }: { prefillEmail: string }) {
   if (stage === 'sent') {
     return (
       <div className="flex-1 min-w-[240px]">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--forest)]">
+        <span className="text-[12px] font-semibold text-[color:var(--forest)]">
           Check your inbox
         </span>
-        <p className="mt-1 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)] leading-[1.5]">
+        <p className="mt-1 text-[12.5px] text-[color:var(--ink-2)] leading-[1.5]">
           A one-time sign-in link is on its way to <b>{email}</b>. Valid for 15 minutes.
         </p>
         {devUrl && (
           <a
             href={devUrl}
-            className="mt-2 inline-flex items-center gap-1 font-[family-name:var(--font-jetbrains-mono)] text-[10.5px] tracking-[0.14em] uppercase text-[color:var(--rust)] hover:text-[color:var(--ink)]"
+            className="mt-2 inline-flex items-center gap-1 font-mono text-[10.5px] text-[color:var(--rust)] hover:text-[color:var(--ink)]"
           >
             Dev — open link now →
           </a>
@@ -180,7 +194,7 @@ function MagicLinkAction({ prefillEmail }: { prefillEmail: string }) {
             setStage('link');
             setDevUrl(null);
           }}
-          className="mt-2 block font-[family-name:var(--font-barlow)] italic text-[12px] text-[color:var(--ink-3)] hover:text-[color:var(--ink)] underline underline-offset-[4px] decoration-[color:var(--rule)]"
+          className="mt-2 block text-[12px] text-[color:var(--ink-3)] hover:text-[color:var(--ink)] underline underline-offset-[4px] decoration-[color:var(--rule)]"
         >
           Use a different email
         </button>
@@ -191,16 +205,16 @@ function MagicLinkAction({ prefillEmail }: { prefillEmail: string }) {
   if (stage === 'error') {
     return (
       <div className="flex-1 min-w-[240px]">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--warn)]">
+        <span className="text-[12px] font-semibold text-[color:var(--warn)]">
           Couldn&rsquo;t send
         </span>
-        <p className="mt-1 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)] leading-[1.5]">
+        <p className="mt-1 text-[12.5px] text-[color:var(--ink-2)] leading-[1.5]">
           {message ?? 'Please try again.'}
         </p>
         <button
           type="button"
           onClick={() => setStage('form')}
-          className="mt-2 font-[family-name:var(--font-barlow)] italic text-[12px] text-[color:var(--ink)] underline underline-offset-[4px] decoration-[color:var(--rule)]"
+          className="mt-2 text-[12px] text-[color:var(--ink)] underline underline-offset-[4px] decoration-[color:var(--rule)]"
         >
           Try again
         </button>
@@ -226,20 +240,20 @@ function MagicLinkAction({ prefillEmail }: { prefillEmail: string }) {
           }}
           placeholder="you@work.com"
           autoFocus
-          className="flex-1 bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] outline-none py-1.5 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
+          className="flex-1 bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] outline-none py-1.5 text-[13px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
         />
         <button
           type="button"
           onClick={() => void send()}
           disabled={sending || !email.trim()}
-          className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--forest)] hover:text-[color:var(--ink)] disabled:opacity-60 shrink-0"
+          className="text-[12px] font-semibold text-[color:var(--forest)] hover:text-[color:var(--ink)] disabled:opacity-60 shrink-0"
         >
           {sending ? 'Sending…' : 'Send link'}
         </button>
         <button
           type="button"
           onClick={() => setStage('link')}
-          className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] shrink-0"
+          className="text-[12px] text-[color:var(--ink-3)] hover:text-[color:var(--ink)] shrink-0"
           aria-label="Cancel"
         >
           ✕
@@ -252,24 +266,10 @@ function MagicLinkAction({ prefillEmail }: { prefillEmail: string }) {
     <button
       type="button"
       onClick={() => setStage('form')}
-      className="font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]"
+      className="text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]"
     >
       Email me a magic link
     </button>
-  );
-}
-
-function ArrowWest({ className = 'w-3 h-3' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" className={className}>
-      <path
-        d="M14 8H2M6 4 2 8l4 4"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }
 
@@ -299,14 +299,14 @@ function Strength({ pw }: { pw: string }) {
           />
         ))}
       </div>
-      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] min-w-[42px] text-right">
+      <span className="font-mono text-[10px] text-[color:var(--ink-3)] min-w-[42px] text-right">
         {labels[s] || '—'}
       </span>
     </div>
   );
 }
 
-/* ── Editorial input field ──────────────────────────────────── */
+/* ── Input field ────────────────────────────────────────────── */
 function Field({
   id,
   label,
@@ -333,7 +333,7 @@ function Field({
   return (
     <div>
       <label htmlFor={id} className="flex items-baseline justify-between mb-2">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+        <span className="text-[12px] font-semibold text-[color:var(--ink-2)]">
           {label}
         </span>
         {hint}
@@ -352,14 +352,14 @@ function Field({
           onChange={onChange}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          className="block w-full bg-transparent py-2.5 pr-8 font-[family-name:var(--font-barlow)] text-[15px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] focus:outline-none"
+          className="block w-full bg-transparent py-2.5 pr-8 font-sans text-[15px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] focus:outline-none"
         />
         {trailing && (
           <div className="absolute right-0 top-1/2 -translate-y-1/2">{trailing}</div>
         )}
       </div>
       {error && (
-        <div className="font-[family-name:var(--font-barlow)] italic text-[12px] text-[color:var(--warn)] mt-1.5">
+        <div className="text-[12px] text-[color:var(--warn)] mt-1.5">
           {error}
         </div>
       )}
@@ -367,107 +367,59 @@ function Field({
   );
 }
 
-/* ── Left: credentials desk ─────────────────────────────────── */
+/* ── Left: brand panel ──────────────────────────────────────── */
 function DeskPanel({ mode }: { mode: 'signin' | 'signup' }) {
   const isSignup = mode === 'signup';
-
   return (
-    <aside className="hidden lg:flex flex-col justify-between bg-[color:var(--paper-2)] border-r border-[color:var(--rule)] p-12 xl:p-16 relative">
-      {/* faint hairline grid texture */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.25]"
-        style={{
-          backgroundImage:
-            'repeating-linear-gradient(to bottom, transparent 0 31px, var(--rule) 31px 31.5px)',
-        }}
-        aria-hidden
-      />
+    <aside className="hidden lg:flex flex-col justify-between bg-[color:var(--paper-2)] border-r border-[color:var(--rule)] p-12 xl:p-16">
+      {/* Logo */}
+      <Link href="/" className="flex items-baseline gap-px">
+        <span className="font-extrabold text-[18px] tracking-tight text-[color:var(--ink)]">Leadre</span>
+        <span className="font-extrabold text-[18px] text-[color:var(--forest)]">.</span>
+        <span className="font-extrabold text-[18px] tracking-tight text-[color:var(--ink)]">AI</span>
+      </Link>
 
-      {/* Top: wordmark */}
-      <div className="relative z-10 flex items-baseline justify-between">
-        <Link href="/" className="flex items-baseline gap-2">
-          <span className="font-[family-name:var(--font-instrument-serif)] italic text-[28px] leading-none text-[color:var(--ink)] tracking-tight">
-            Leadre
-          </span>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] translate-y-[-1px]">
-            AI
-          </span>
-        </Link>
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
-          Vol I · Issue 07
-        </span>
-      </div>
-
-      {/* Middle: editorial hook */}
-      <div className="relative z-10 flex flex-col gap-7 max-w-[460px]">
-        <div className="flex items-center gap-3">
-          <span className="block w-8 h-px bg-[color:var(--ink)]" />
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
-            {isSignup ? 'Credentials desk' : 'Return to the desk'}
-          </span>
+      {/* Brand message */}
+      <div className="flex flex-col gap-6">
+        <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-full px-3.5 py-1.5 text-[11px] font-medium text-amber-800 w-fit">
+          <span className="w-1.5 h-1.5 rounded-full bg-[color:var(--forest)] shrink-0" aria-hidden />
+          Built for Nigerian &amp; African markets
         </div>
-
-        <h1 className="font-[family-name:var(--font-instrument-serif)] text-[52px] xl:text-[62px] leading-[0.94] tracking-[-0.015em] text-[color:var(--ink)]">
+        <h1 className="font-extrabold text-[42px] xl:text-[52px] tracking-[-0.04em] leading-[1.05] text-[color:var(--ink)]">
           {isSignup ? (
-            <>
-              Apply for a <em className="italic text-[color:var(--forest)]">byline</em>.
-            </>
+            <>Find leads.<br /><span className="text-[color:var(--forest)]">Close deals.</span></>
           ) : (
-            <>
-              Welcome back <br />
-              to the <em className="italic text-[color:var(--forest)]">desk</em>.
-            </>
+            <>Welcome<br /><span className="text-[color:var(--forest)]">back.</span></>
           )}
         </h1>
-
-        <p className="font-[family-name:var(--font-barlow)] text-[15.5px] leading-[1.55] text-[color:var(--ink-2)]">
-          {isSignup ? (
-            <>
-              Three dossiers on the house. Your first query can be typed within
-              the hour — no card, no sales call, no taxonomy to memorize.
-            </>
-          ) : (
-            <>
-              Your saved queries, dossiers, and exports are where you left them.
-              Sign in to pick up the thread.
-            </>
-          )}
+        <p className="text-[15px] text-[color:var(--ink-2)] leading-relaxed max-w-[360px]">
+          {isSignup
+            ? 'Describe who you want to reach. Get a verified lead list — with emails, phones, and sources — in minutes.'
+            : 'Your searches, lead lists, and exports are waiting for you.'}
         </p>
 
-        {/* mini dispatch / excerpt */}
-        <div className="mt-4 border-t border-[color:var(--rule)] pt-5">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
-            Recent dispatch
-          </span>
-          <blockquote className="mt-3 font-[family-name:var(--font-instrument-serif)] italic text-[19px] leading-[1.35] text-[color:var(--ink)]">
-            &ldquo;I used to spend a full day assembling a list of fifty
-            companies in Lagos. The desk returned them in eight minutes.&rdquo;
-          </blockquote>
-          <div className="mt-3 flex items-center gap-3">
-            <span className="font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink)]">
-              Adaeze Okonkwo
-            </span>
-            <span className="w-1 h-1 rounded-full bg-[color:var(--ink-3)]" />
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)]">
-              Arlo Logistics · Lagos
-            </span>
+        {/* Testimonial */}
+        <div className="mt-2 border-l-2 border-[color:var(--forest)] pl-4">
+          <p className="text-[14px] italic text-[color:var(--ink-2)] leading-relaxed">
+            &ldquo;I used to spend a full day assembling a list of fifty companies in Lagos. LeadreAI returned them in eight minutes.&rdquo;
+          </p>
+          <div className="mt-3 flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-full bg-[color:var(--forest)] flex items-center justify-center text-white text-[11px] font-bold shrink-0">A</div>
+            <div>
+              <div className="text-[12px] font-semibold text-[color:var(--ink)]">Adaeze Okonkwo</div>
+              <div className="text-[11px] text-[color:var(--ink-3)]">Head of Growth · Arlo Logistics, Lagos</div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom: trust / colophon */}
-      <div className="relative z-10 flex flex-wrap items-center gap-x-5 gap-y-2 pt-4 border-t border-[color:var(--rule)]">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
-          Rate-limited
-        </span>
-        <span className="w-1 h-1 rounded-full bg-[color:var(--ink-3)]" />
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
-          Bcrypt · 12 rounds
-        </span>
-        <span className="w-1 h-1 rounded-full bg-[color:var(--ink-3)]" />
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
-          Tokens rotated
-        </span>
+      {/* Footer */}
+      <div className="flex items-center gap-4 text-[11px] text-[color:var(--ink-3)]">
+        <span>© 2026 LeadreAI</span>
+        <span aria-hidden>·</span>
+        <a href="#" className="hover:text-[color:var(--ink)]">Privacy</a>
+        <span aria-hidden>·</span>
+        <a href="#" className="hover:text-[color:var(--ink)]">Terms</a>
       </div>
     </aside>
   );
@@ -480,7 +432,7 @@ function TabToggle({ mode }: { mode: 'signin' | 'signup' }) {
     <div className="inline-flex items-center rounded-full border border-[color:var(--rule)] bg-[color:var(--paper)] p-1">
       <Link
         href="/login"
-        className={`px-4 py-1.5 rounded-full font-[family-name:var(--font-barlow)] text-[12.5px] transition-colors ${
+        className={`px-4 py-1.5 rounded-full text-[13px] transition-colors ${
           !isSignup
             ? 'bg-[color:var(--ink)] text-[color:var(--paper)]'
             : 'text-[color:var(--ink-2)] hover:text-[color:var(--ink)]'
@@ -490,7 +442,7 @@ function TabToggle({ mode }: { mode: 'signin' | 'signup' }) {
       </Link>
       <Link
         href="/register"
-        className={`px-4 py-1.5 rounded-full font-[family-name:var(--font-barlow)] text-[12.5px] transition-colors ${
+        className={`px-4 py-1.5 rounded-full text-[13px] transition-colors ${
           isSignup
             ? 'bg-[color:var(--ink)] text-[color:var(--paper)]'
             : 'text-[color:var(--ink-2)] hover:text-[color:var(--ink)]'
@@ -549,26 +501,20 @@ export function AuthShell({
         {/* Back-to-site link, top-right */}
         <Link
           href="/"
-          className="absolute top-6 right-6 md:top-8 md:right-10 inline-flex items-center gap-2 font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
+          className="absolute top-6 right-6 md:top-8 md:right-10 inline-flex items-center gap-2 text-[12.5px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
         >
           <ArrowWest className="w-3 h-3" />
-          Back to the front page
+          Back to site
         </Link>
 
         <div className="w-full max-w-[460px]">
-          {/* Mobile masthead */}
+          {/* Mobile logo */}
           <div className="lg:hidden flex items-baseline justify-between mb-10">
-            <Link href="/" className="flex items-baseline gap-2">
-              <span className="font-[family-name:var(--font-instrument-serif)] italic text-[24px] leading-none text-[color:var(--ink)]">
-                Leadre
-              </span>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
-                AI
-              </span>
+            <Link href="/" className="flex items-baseline gap-px">
+              <span className="font-extrabold text-[18px] tracking-tight text-[color:var(--ink)]">Leadre</span>
+              <span className="font-extrabold text-[18px] text-[color:var(--forest)]">.</span>
+              <span className="font-extrabold text-[18px] tracking-tight text-[color:var(--ink)]">AI</span>
             </Link>
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
-              Vol I · Issue 07
-            </span>
           </div>
 
           {/* Tab toggle */}
@@ -578,55 +524,23 @@ export function AuthShell({
 
           {/* Heading block */}
           <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="block w-6 h-px bg-[color:var(--ink)]" />
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
-                {isSignup ? 'Create a workspace' : 'Sign in'}
-              </span>
-            </div>
-            <h2 className="font-[family-name:var(--font-instrument-serif)] text-[44px] md:text-[52px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
-              {isSignup ? (
-                <>
-                  Start <em className="italic text-[color:var(--forest)]">prospecting</em> <br />
-                  in minutes.
-                </>
-              ) : (
-                <>
-                  Good to <em className="italic text-[color:var(--forest)]">see you</em> again.
-                </>
-              )}
+            <h2 className="font-extrabold text-[36px] md:text-[42px] leading-[1.05] tracking-[-0.03em] text-[color:var(--ink)]">
+              {isSignup ? 'Create your account' : 'Sign in to LeadreAI'}
             </h2>
-            <p className="mt-4 font-[family-name:var(--font-barlow)] text-[14.5px] leading-[1.55] text-[color:var(--ink-2)]">
+            <p className="mt-3 text-[14px] text-[color:var(--ink-3)]">
               {isSignup ? (
-                <>
-                  No credit card. Three free dossiers to start.{' '}
-                  <Link
-                    href="/login"
-                    className="underline underline-offset-[5px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)] text-[color:var(--ink)]"
-                  >
-                    Sign in instead →
-                  </Link>
-                </>
+                <>No credit card. Three free searches to start.{' '}
+                <Link href="/login" className="text-[color:var(--ink)] underline underline-offset-4">Sign in instead →</Link></>
               ) : (
-                <>
-                  New to the desk?{' '}
-                  <Link
-                    href="/register"
-                    className="underline underline-offset-[5px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)] text-[color:var(--ink)]"
-                  >
-                    Create a workspace →
-                  </Link>
-                </>
+                <>New here?{' '}
+                <Link href="/register" className="text-[color:var(--ink)] underline underline-offset-4">Create an account →</Link></>
               )}
             </p>
           </div>
 
           {/* Error banner */}
           {submitError && (
-            <div className="mb-6 border-l-2 border-[color:var(--warn)] bg-[color:var(--paper-3)] px-4 py-3 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)]">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--warn)] block mb-1">
-                Rejected
-              </span>
+            <div className="mb-6 border-l-2 border-[color:var(--warn)] bg-[color:var(--paper-3)] px-4 py-3 text-[13px] text-[color:var(--ink)]">
               {submitError}
             </div>
           )}
@@ -681,7 +595,7 @@ export function AuthShell({
                   !isSignup ? (
                     <a
                       href="#"
-                      className="font-[family-name:var(--font-barlow)] italic text-[12px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
+                      className="text-[12px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
                     >
                       Forgot?
                     </a>
@@ -738,7 +652,7 @@ export function AuthShell({
                     </svg>
                   )}
                 </span>
-                <span className="font-[family-name:var(--font-barlow)] text-[12.5px] leading-[1.5] text-[color:var(--ink-2)]">
+                <span className="text-[12.5px] leading-[1.5] text-[color:var(--ink-2)]">
                   I agree to LeadreAI&rsquo;s{' '}
                   <a
                     href="#"
@@ -764,7 +678,7 @@ export function AuthShell({
                 disabled={isSubmitting || (isSignup && !accept)}
                 className="group inline-flex items-center justify-between gap-3 w-full bg-[color:var(--ink)] text-[color:var(--paper)] px-6 py-3.5 rounded-full hover:bg-[color:var(--forest)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <span className="font-[family-name:var(--font-barlow)] text-[14px] font-medium">
+                <span className="font-sans text-[14px] font-medium">
                   {isSubmitting ? (
                     <span className="inline-flex items-center gap-2">
                       <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
@@ -786,7 +700,7 @@ export function AuthShell({
                       Working&hellip;
                     </span>
                   ) : isSignup ? (
-                    'Create workspace'
+                    'Create account'
                   ) : (
                     'Sign in'
                   )}
@@ -800,9 +714,7 @@ export function AuthShell({
             {/* Divider */}
             <div className="relative flex items-center my-1">
               <span className="flex-1 h-px bg-[color:var(--rule)]" />
-              <span className="px-3 font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
-                or
-              </span>
+              <span className="px-3 text-[11px] text-[color:var(--ink-3)]">or</span>
               <span className="flex-1 h-px bg-[color:var(--rule)]" />
             </div>
 
@@ -814,7 +726,7 @@ export function AuthShell({
               <MagicLinkAction prefillEmail={email} />
               <a
                 href="#"
-                className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] inline-flex items-center gap-1.5"
+                className="text-[12px] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] inline-flex items-center gap-1.5"
               >
                 SSO / SAML <ArrowEast className="w-2.5 h-2.5" />
               </a>
@@ -822,21 +734,15 @@ export function AuthShell({
           </form>
         </div>
 
-        {/* Footer: colophon strip */}
-        <div className="absolute bottom-5 left-0 right-0 flex items-center justify-center gap-4 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
-          <span>© MMXXVI LeadreAI</span>
-          <span className="w-1 h-1 rounded-full bg-[color:var(--ink-3)]" />
-          <a href="#" className="hover:text-[color:var(--ink-2)]">
-            Privacy
-          </a>
-          <span className="w-1 h-1 rounded-full bg-[color:var(--ink-3)]" />
-          <a href="#" className="hover:text-[color:var(--ink-2)]">
-            Terms
-          </a>
-          <span className="w-1 h-1 rounded-full bg-[color:var(--ink-3)]" />
-          <a href="#" className="hover:text-[color:var(--ink-2)]">
-            Status
-          </a>
+        {/* Footer */}
+        <div className="absolute bottom-5 left-0 right-0 flex items-center justify-center gap-4 text-[11px] text-[color:var(--ink-3)]">
+          <span>© 2026 LeadreAI</span>
+          <span aria-hidden>·</span>
+          <a href="#" className="hover:text-[color:var(--ink)]">Privacy</a>
+          <span aria-hidden>·</span>
+          <a href="#" className="hover:text-[color:var(--ink)]">Terms</a>
+          <span aria-hidden>·</span>
+          <a href="#" className="hover:text-[color:var(--ink)]">Status</a>
         </div>
       </section>
     </main>
