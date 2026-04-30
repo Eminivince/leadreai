@@ -181,6 +181,7 @@ function HeroSection({
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Series B fintechs in Lagos with a CTO…"
+            aria-label="Search for leads"
             style={{
               flex: 1, border: 'none', outline: 'none', fontSize: 15,
               color: 'var(--alt-ink)', background: 'transparent',
@@ -526,6 +527,7 @@ function FinalCTASection({
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Describe who you're looking for…"
+            aria-label="Search for leads"
             style={{
               flex: 1, border: 'none', outline: 'none',
               fontSize: 15, color: 'var(--alt-ink)', background: 'transparent',
@@ -592,12 +594,12 @@ function PricingSection() {
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 6 }}>
               <span style={{ fontSize: 36, fontWeight: 800, color: tier.highlighted ? '#fff' : 'var(--alt-ink)' }}>{tier.price}</span>
-              <span style={{ fontSize: 14, color: tier.highlighted ? '#9ca3af' : 'var(--alt-ink-3)' }}>{tier.period}</span>
+              <span style={{ fontSize: 14, color: tier.highlighted ? 'var(--alt-ink-4)' : 'var(--alt-ink-3)' }}>{tier.period}</span>
             </div>
-            <p style={{ fontSize: 13, color: tier.highlighted ? '#9ca3af' : 'var(--alt-ink-3)', marginBottom: 20 }}>{tier.tagline}</p>
+            <p style={{ fontSize: 13, color: tier.highlighted ? 'var(--alt-ink-4)' : 'var(--alt-ink-3)', marginBottom: 20 }}>{tier.tagline}</p>
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
               {tier.features.map(f => (
-                <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 14, color: tier.highlighted ? '#e5e7eb' : 'var(--alt-ink-2)' }}>
+                <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 14, color: tier.highlighted ? 'var(--alt-rule)' : 'var(--alt-ink-2)' }}>
                   <span style={{ color: 'var(--alt-amber)', fontWeight: 700, flexShrink: 0 }}>✓</span>
                   {f}
                 </li>

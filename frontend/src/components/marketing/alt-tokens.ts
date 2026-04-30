@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 
 export const altTokens: CSSProperties & Record<string, string> = {
+  colorScheme: 'light',
   '--alt-amber':        '#f59e0b',
   '--alt-amber-light':  '#fef3c7',
   '--alt-amber-border': '#fde68a',

@@ -2,8 +2,6 @@ const FOOTER_LINKS: Array<{ label: string; href: string }> = [
   { label: 'How it works', href: '#how' },
   { label: 'Pricing',      href: '#pricing' },
   { label: 'Docs',         href: '/docs' },
-  { label: 'Privacy',      href: '#' },
-  { label: 'Terms',        href: '#' },
 ];
 
 export default function AltFooter() {

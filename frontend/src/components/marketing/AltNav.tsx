@@ -9,7 +9,7 @@ export default function AltNav() {
           <span className="font-extrabold text-[16px] text-[color:var(--alt-amber)]">.</span>
           <span className="font-extrabold text-[16px] tracking-tight text-[color:var(--alt-ink)]">AI</span>
         </Link>
-        <nav className="flex items-center gap-6">
+        <nav className="flex items-center gap-6" aria-label="Site navigation">
           <div className="hidden md:flex items-center gap-6">
             <a href="#how" className="text-[13px] text-[color:var(--alt-ink-3)] hover:text-[color:var(--alt-ink)] transition-colors">How it works</a>
             <a href="#pricing" className="text-[13px] text-[color:var(--alt-ink-3)] hover:text-[color:var(--alt-ink)] transition-colors">Pricing</a>

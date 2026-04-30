@@ -13,9 +13,13 @@ export default function EmailGate({ query }: { query: string }) {
     e.preventDefault();
     if (!email) return;
     setLoading(true);
-    router.push(
-      `/auth/register?q=${encodeURIComponent(query)}&email=${encodeURIComponent(email)}`
-    );
+    try {
+      router.push(
+        `/auth/register?q=${encodeURIComponent(query)}&email=${encodeURIComponent(email)}`
+      );
+    } catch {
+      setLoading(false);
+    }
   }
 
   return (
