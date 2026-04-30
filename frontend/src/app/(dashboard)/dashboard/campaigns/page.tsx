@@ -165,16 +165,16 @@ function Section({
   return (
     <section className="border-t border-[color:var(--rule)] pt-8 pb-2">
       <div className="flex items-baseline gap-5 mb-5">
-        <span className="font-[family-name:var(--font-instrument-serif)] text-[40px] leading-none text-[color:var(--forest)]">
+        <span className=" text-[40px] leading-none text-[color:var(--forest)]">
           {chapter}
         </span>
         <div className="flex-1 border-t border-[color:var(--rule)] pb-1" />
-        <span className="font-[family-name:var(--font-instrument-serif)] italic text-[20px] text-[color:var(--ink)] self-end pb-0.5">
+        <span className=" italic text-[20px] text-[color:var(--ink)] self-end pb-0.5">
           {title}
         </span>
       </div>
       {sub && (
-        <p className="font-[family-name:var(--font-barlow)] text-[14px] leading-[1.55] text-[color:var(--ink-2)] max-w-[560px] mb-5">
+        <p className=" text-[14px] leading-[1.55] text-[color:var(--ink-2)] max-w-[560px] mb-5">
           {sub}
         </p>
       )}
@@ -199,7 +199,7 @@ function Field({
 }) {
   return (
     <div>
-      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-2">
+      <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-2">
         {label}
       </span>
       <div className="border-b border-[color:var(--rule)] focus-within:border-[color:var(--ink)] transition-colors">
@@ -209,8 +209,8 @@ function Field({
           placeholder={placeholder}
           className={`w-full bg-transparent py-2 outline-none text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] ${
             mono
-              ? 'font-[family-name:var(--font-jetbrains-mono)] text-[13px]'
-              : 'font-[family-name:var(--font-barlow)] text-[15px]'
+              ? 'font-mono text-[13px]'
+              : ' text-[15px]'
           }`}
         />
       </div>
@@ -232,14 +232,14 @@ function SelectField({
 }) {
   return (
     <div>
-      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-2">
+      <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-2">
         {label}
       </span>
       <div className="border-b border-[color:var(--rule)]">
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full bg-transparent py-2 outline-none font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink)] appearance-none cursor-pointer"
+          className="w-full bg-transparent py-2 outline-none  text-[14px] text-[color:var(--ink)] appearance-none cursor-pointer"
         >
           {options.map((o) => <option key={o} value={o}>{o}</option>)}
         </select>
@@ -283,9 +283,9 @@ function CheckRow({
         )}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink)] leading-tight">{label}</div>
+        <div className=" text-[14px] text-[color:var(--ink)] leading-tight">{label}</div>
         {sub && (
-          <div className="font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)] leading-tight mt-1">
+          <div className=" italic text-[12.5px] text-[color:var(--ink-2)] leading-tight mt-1">
             {sub}
           </div>
         )}
@@ -378,7 +378,7 @@ function AudienceStep({
         />
 
         <div>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-3">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-3">
             Audience source
           </span>
 
@@ -397,7 +397,7 @@ function AudienceStep({
         </div>
 
         <div>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-3">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-3">
             Refinements
           </span>
           <div>
@@ -445,20 +445,20 @@ function SourceChip({ meta, onClear }: { meta: SourceMeta; onClear: () => void }
   return (
     <div className="border border-[color:var(--forest)] bg-[color:var(--forest)]/5 rounded-sm px-5 py-4 flex items-center justify-between gap-4">
       <div className="min-w-0">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--forest)] block">
+        <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--forest)] block">
           {kicker}
         </span>
-        <div className="mt-1 font-[family-name:var(--font-instrument-serif)] text-[20px] leading-tight text-[color:var(--ink)] truncate">
+        <div className="mt-1  text-[20px] leading-tight text-[color:var(--ink)] truncate">
           {primary}
         </div>
-        <div className="font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink-2)] truncate">
+        <div className=" text-[12.5px] text-[color:var(--ink-2)] truncate">
           {secondary}
         </div>
       </div>
       <button
         onClick={onClear}
         title="Discard this source and pick another"
-        className="shrink-0 inline-flex items-center gap-1.5 border border-[color:var(--rule)] hover:border-[color:var(--ink)] px-3 py-1.5 rounded-full font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
+        className="shrink-0 inline-flex items-center gap-1.5 border border-[color:var(--rule)] hover:border-[color:var(--ink)] px-3 py-1.5 rounded-full font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
       >
         × Change
       </button>
@@ -526,10 +526,10 @@ function ModeTabs({ mode, setMode }: { mode: SourceMode; setMode: (m: SourceMode
             {on && (
               <span className="absolute left-0 bottom-0 right-0 h-[2px] bg-[color:var(--forest)]" aria-hidden />
             )}
-            <div className={`font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase ${on ? 'text-[color:var(--ink)]' : 'text-[color:var(--ink-2)]'}`}>
+            <div className={`font-mono text-[10px] tracking-[0.22em] uppercase ${on ? 'text-[color:var(--ink)]' : 'text-[color:var(--ink-2)]'}`}>
               {t.label}
             </div>
-            <div className={`mt-0.5 font-[family-name:var(--font-barlow)] text-[12px] ${on ? 'text-[color:var(--ink-2)]' : 'text-[color:var(--ink-3)]'}`}>
+            <div className={`mt-0.5  text-[12px] ${on ? 'text-[color:var(--ink-2)]' : 'text-[color:var(--ink-3)]'}`}>
               {t.hint}
             </div>
           </button>
@@ -600,7 +600,7 @@ function TableSourcePicker({
   }
 
   if (isLoading) {
-    return <p className="font-[family-name:var(--font-barlow)] italic text-[13.5px] text-[color:var(--ink-3)]">Loading tables…</p>;
+    return <p className=" italic text-[13.5px] text-[color:var(--ink-3)]">Loading tables…</p>;
   }
 
   if (tables.length === 0) {
@@ -616,7 +616,7 @@ function TableSourcePicker({
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
+        <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
           Pick a table
         </span>
         <div className="border border-[color:var(--rule)] rounded-sm max-h-[260px] overflow-y-auto">
@@ -630,20 +630,20 @@ function TableSourcePicker({
                   on ? 'bg-[color:var(--forest)]/5 border-l-2 border-l-[color:var(--forest)]' : 'hover:bg-[color:var(--paper-3)]/50'
                 }`}
               >
-                <span className="font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink)] truncate">
+                <span className=" text-[13.5px] text-[color:var(--ink)] truncate">
                   {t.name}
                 </span>
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+                <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
                   {t.rowType}
                 </span>
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] min-w-[70px] text-right">
+                <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] min-w-[70px] text-right">
                   {t.rowCount.toLocaleString()} row{t.rowCount === 1 ? '' : 's'}
                 </span>
               </button>
             );
           })}
         </div>
-        <p className="mt-2 font-[family-name:var(--font-barlow)] italic text-[12px] text-[color:var(--ink-3)]">
+        <p className="mt-2  italic text-[12px] text-[color:var(--ink-3)]">
           Rows linked to leads (from a dispatch) will seed the file. Hand-entered rows without a lead link are skipped.
         </p>
       </div>
@@ -663,7 +663,7 @@ function TableSourcePicker({
         <button
           onClick={() => void handleUse()}
           disabled={!selected || !fileName.trim() || saving}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-5 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-5 py-2.5 rounded-full  text-[13px] font-medium transition-colors disabled:opacity-40"
         >
           {saving ? 'Preparing…' : 'Use this table →'}
         </button>
@@ -687,7 +687,7 @@ function FileSourcePicker({
   const selected = files.find((f) => f._id === selectedId);
 
   if (filesLoading) {
-    return <p className="font-[family-name:var(--font-barlow)] italic text-[13.5px] text-[color:var(--ink-3)]">Loading files…</p>;
+    return <p className=" italic text-[13.5px] text-[color:var(--ink-3)]">Loading files…</p>;
   }
 
   if (files.length === 0) {
@@ -703,7 +703,7 @@ function FileSourcePicker({
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
+        <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
           Pick a file
         </span>
         <div className="border border-[color:var(--rule)] rounded-sm max-h-[260px] overflow-y-auto">
@@ -717,10 +717,10 @@ function FileSourcePicker({
                   on ? 'bg-[color:var(--forest)]/5 border-l-2 border-l-[color:var(--forest)]' : 'hover:bg-[color:var(--paper-3)]/50'
                 }`}
               >
-                <span className="font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink)] truncate">
+                <span className=" text-[13.5px] text-[color:var(--ink)] truncate">
                   {f.name}
                 </span>
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] min-w-[80px] text-right">
+                <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] min-w-[80px] text-right">
                   {f.leadCount.toLocaleString()} lead{f.leadCount === 1 ? '' : 's'}
                 </span>
               </button>
@@ -740,7 +740,7 @@ function FileSourcePicker({
             });
           }}
           disabled={!selected}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-5 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-5 py-2.5 rounded-full  text-[13px] font-medium transition-colors disabled:opacity-40"
         >
           Use this file →
         </button>
@@ -854,7 +854,7 @@ function LeadsSourcePicker({
       />
 
       <div>
-        <div className="flex items-center justify-between mb-2 font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+        <div className="flex items-center justify-between mb-2 font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
           <span>Results</span>
           <span>
             {selectedCount > 0 && <span className="text-[color:var(--forest)]">{selectedCount} selected · </span>}
@@ -862,7 +862,7 @@ function LeadsSourcePicker({
           </span>
         </div>
         {isLoading && leads.length === 0 ? (
-          <p className="py-3 font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-3)]">Searching…</p>
+          <p className="py-3  italic text-[13px] text-[color:var(--ink-3)]">Searching…</p>
         ) : leads.length === 0 ? (
           <EmptyModeHint
             copy="No leads match that search. Try a broader term, or run a dispatch to add more."
@@ -887,15 +887,15 @@ function LeadsSourcePicker({
                     className="accent-[color:var(--forest)] shrink-0"
                   />
                   <div className="min-w-0 flex-1">
-                    <div className="font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink)] truncate">
+                    <div className=" text-[13.5px] text-[color:var(--ink)] truncate">
                       {l.companyName ?? l.companyDomain ?? 'Unnamed'}
                     </div>
-                    <div className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
+                    <div className="font-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
                       {[l.companyDomain, l.industry].filter(Boolean).join(' · ')}
                     </div>
                   </div>
                   {typeof l.rankScore === 'number' && (
-                    <span className="shrink-0 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tabular-nums text-[color:var(--ink-2)]">
+                    <span className="shrink-0 font-mono text-[10px] tabular-nums text-[color:var(--ink-2)]">
                       {l.rankScore}
                     </span>
                   )}
@@ -918,13 +918,13 @@ function LeadsSourcePicker({
       {error && <ErrorBar>{error}</ErrorBar>}
 
       <div className="flex items-center justify-between gap-3">
-        <span className="font-[family-name:var(--font-barlow)] italic text-[12px] text-[color:var(--ink-3)]">
+        <span className=" italic text-[12px] text-[color:var(--ink-3)]">
           {selectedCount === 0 ? 'Select at least one lead.' : `File will contain ${selectedCount} lead${selectedCount === 1 ? '' : 's'}.`}
         </span>
         <button
           onClick={() => void handleUse()}
           disabled={selectedCount === 0 || !fileName.trim() || saving}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-5 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-5 py-2.5 rounded-full  text-[13px] font-medium transition-colors disabled:opacity-40"
         >
           {saving ? 'Preparing…' : `Use ${selectedCount} lead${selectedCount === 1 ? '' : 's'} →`}
         </button>
@@ -946,12 +946,12 @@ function EmptyModeHint({
 }) {
   return (
     <div className="border border-dashed border-[color:var(--rule)] bg-[color:var(--paper-3)]/40 rounded-sm p-5 text-center">
-      <p className="font-[family-name:var(--font-barlow)] italic text-[13.5px] text-[color:var(--ink-2)] mb-3">
+      <p className=" italic text-[13.5px] text-[color:var(--ink-2)] mb-3">
         {copy}
       </p>
       <Link
         href={linkHref}
-        className="inline-flex items-center font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] underline decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]"
+        className="inline-flex items-center  text-[13px] text-[color:var(--ink)] underline decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]"
       >
         {linkLabel}
       </Link>
@@ -972,7 +972,7 @@ function InlineField({
 }) {
   return (
     <label className="block">
-      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1.5">
+      <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1.5">
         {label}
       </span>
       <input
@@ -980,7 +980,7 @@ function InlineField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-2 outline-none font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
+        className="w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-2 outline-none  text-[14px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
       />
     </label>
   );
@@ -988,7 +988,7 @@ function InlineField({
 
 function ErrorBar({ children }: { children: React.ReactNode }) {
   return (
-    <div className="border-l-2 border-[color:var(--warn)] px-3 py-2 font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink)]">
+    <div className="border-l-2 border-[color:var(--warn)] px-3 py-2  text-[12.5px] text-[color:var(--ink)]">
       {children}
     </div>
   );
@@ -1049,7 +1049,7 @@ function SequenceStep({
                   isActive ? 'bg-[color:var(--paper-3)]' : 'hover:bg-[color:var(--paper-3)]/50'
                 }`}
               >
-                <span className="font-[family-name:var(--font-instrument-serif)] italic text-[28px] leading-none text-[color:var(--ink-3)] tabular-nums">
+                <span className=" italic text-[28px] leading-none text-[color:var(--ink-3)] tabular-nums">
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <ChannelPicker
@@ -1061,15 +1061,15 @@ function SequenceStep({
                   }}
                 />
                 <div className="min-w-0">
-                  <div className="font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink)] truncate">
+                  <div className=" text-[14px] text-[color:var(--ink)] truncate">
                     {s.subject || <span className="italic text-[color:var(--ink-3)]">No subject</span>}
                   </div>
-                  <div className="font-[family-name:var(--font-jetbrains-mono)] text-[10.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] mt-1 truncate">
+                  <div className="font-mono text-[10.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] mt-1 truncate">
                     Day {s.delayDays} · {s.tone}{s.goal ? ` · goal: ${s.goal}` : ''}{s.useAI ? ' · AI' : ''}
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">Day</span>
+                  <span className="font-mono text-[10px] text-[color:var(--ink-3)]">Day</span>
                   <input
                     type="number"
                     min={0}
@@ -1081,10 +1081,10 @@ function SequenceStep({
                       n[i] = { ...s, delayDays: Math.max(0, Number(e.target.value) || 0) };
                       setSeq(n);
                     }}
-                    className="w-[56px] bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] outline-none text-center font-[family-name:var(--font-jetbrains-mono)] text-[12px] text-[color:var(--ink)] py-1"
+                    className="w-[56px] bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] outline-none text-center font-mono text-[12px] text-[color:var(--ink)] py-1"
                   />
                 </div>
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+                <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
                   {isActive ? 'close' : 'edit'}
                 </span>
                 <button
@@ -1092,7 +1092,7 @@ function SequenceStep({
                     e.stopPropagation();
                     removeStep(i);
                   }}
-                  className="w-7 h-7 text-[color:var(--ink-3)] hover:text-[color:var(--warn)] font-[family-name:var(--font-instrument-serif)] text-[20px] leading-none"
+                  className="w-7 h-7 text-[color:var(--ink-3)] hover:text-[color:var(--warn)]  text-[20px] leading-none"
                   title="Remove step"
                 >
                   ×
@@ -1116,12 +1116,12 @@ function SequenceStep({
 
         <button
           onClick={addStep}
-          className="mt-5 h-11 border border-dashed border-[color:var(--rule)] rounded-sm font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] hover:border-[color:var(--ink)] inline-flex items-center justify-center gap-2 transition-colors"
+          className="mt-5 h-11 border border-dashed border-[color:var(--rule)] rounded-sm  text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] hover:border-[color:var(--ink)] inline-flex items-center justify-center gap-2 transition-colors"
         >
           <PlusIcon className="w-3.5 h-3.5" /> Add a step
         </button>
 
-        <p className="mt-6 font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-2)] border-t border-[color:var(--rule)] pt-5">
+        <p className="mt-6  italic text-[13px] text-[color:var(--ink-2)] border-t border-[color:var(--rule)] pt-5">
           Default branching: a reply pauses the sequence for that lead. Tune reply rules in chapter 03.
         </p>
       </div>
@@ -1158,7 +1158,7 @@ function StepEditor({
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
                 {step.useAI ? 'Body · authored base (AI personalizes per lead)' : 'Body · merge tokens resolve at send'}
               </span>
             </div>
@@ -1167,12 +1167,12 @@ function StepEditor({
               value={step.body}
               onChange={(e) => onChange({ body: e.target.value })}
               placeholder={`Hi {{first_name}},\n\nNoticed {{company}} …`}
-              className="block w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] transition-colors outline-none py-2 font-[family-name:var(--font-barlow)] text-[14px] leading-[1.65] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] resize-none"
+              className="block w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] transition-colors outline-none py-2  text-[14px] leading-[1.65] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] resize-none"
             />
           </div>
 
           <div>
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-2">
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-2">
               Tone
             </span>
             <div className="grid grid-cols-4 gap-2">
@@ -1182,7 +1182,7 @@ function StepEditor({
                   <button
                     key={t}
                     onClick={() => onChange({ tone: t })}
-                    className={`h-9 rounded-full font-[family-name:var(--font-barlow)] text-[12.5px] capitalize transition-colors ${
+                    className={`h-9 rounded-full  text-[12.5px] capitalize transition-colors ${
                       on
                         ? 'bg-[color:var(--ink)] text-[color:var(--paper)]'
                         : 'border border-[color:var(--rule)] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]'
@@ -1218,10 +1218,10 @@ function StepEditor({
               )}
             </span>
             <div className="min-w-0 flex-1">
-              <div className="font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink)] leading-tight">
+              <div className=" text-[14px] text-[color:var(--ink)] leading-tight">
                 AI auto-personalize per lead
               </div>
-              <div className="font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)] leading-tight mt-1">
+              <div className=" italic text-[12.5px] text-[color:var(--ink-2)] leading-tight mt-1">
                 Uses the body above as guidance; generates a fresh draft per recipient from their evidence (company description, industry, recent signals). Costs more credits; materially higher reply rates.
               </div>
             </div>
@@ -1248,29 +1248,29 @@ function StepPreview({ step }: { step: SeqStep }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+      <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
         Preview · sample recipient{step.useAI ? ' (base before per-lead AI rewrite)' : ''}
       </span>
       <div className="relative">
         <div className="absolute inset-0 translate-x-1 translate-y-1 bg-[color:var(--rule)]/25 rounded-sm" aria-hidden />
         <div className="relative bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-sm p-6">
           <div className="flex items-center justify-between pb-3 border-b border-dashed border-[color:var(--rule)]">
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-2)]">
+            <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-2)]">
               To · shola@paystack.com
             </span>
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
+            <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
               Draft
             </span>
           </div>
-          <h4 className="mt-4 font-[family-name:var(--font-instrument-serif)] text-[22px] leading-tight text-[color:var(--ink)]">
+          <h4 className="mt-4  text-[22px] leading-tight text-[color:var(--ink)]">
             {previewSubject}
           </h4>
-          <p className="mt-4 font-[family-name:var(--font-barlow)] text-[13.5px] leading-[1.7] text-[color:var(--ink)] whitespace-pre-line">
+          <p className="mt-4  text-[13.5px] leading-[1.7] text-[color:var(--ink)] whitespace-pre-line">
             {previewBody}
           </p>
         </div>
       </div>
-      <p className="font-[family-name:var(--font-barlow)] italic text-[12px] text-[color:var(--ink-2)]">
+      <p className=" italic text-[12px] text-[color:var(--ink-2)]">
         Merge tokens resolve per-lead from provenance-backed fields. Missing data becomes em-dash, never a fabricated guess.
       </p>
     </div>
@@ -1324,7 +1324,7 @@ function ScheduleStep({
             ]))}
           />
           <div>
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-2">
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-2">
               Business hours
             </span>
             <div className="grid grid-cols-3 gap-2">
@@ -1334,7 +1334,7 @@ function ScheduleStep({
                   <button
                     key={p.label}
                     onClick={() => setHours(p)}
-                    className={`h-10 rounded-full font-[family-name:var(--font-barlow)] text-[12.5px] transition-colors ${
+                    className={`h-10 rounded-full  text-[12.5px] transition-colors ${
                       on
                         ? 'bg-[color:var(--ink)] text-[color:var(--paper)]'
                         : 'border border-[color:var(--rule)] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]'
@@ -1347,7 +1347,7 @@ function ScheduleStep({
             </div>
           </div>
           <div>
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-2">
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-2">
               Send days
             </span>
             <div className="grid grid-cols-2 gap-2">
@@ -1358,7 +1358,7 @@ function ScheduleStep({
                   <button
                     key={p.label}
                     onClick={() => setDays(p)}
-                    className={`h-10 rounded-full font-[family-name:var(--font-barlow)] text-[12.5px] transition-colors ${
+                    className={`h-10 rounded-full  text-[12.5px] transition-colors ${
                       on
                         ? 'bg-[color:var(--ink)] text-[color:var(--paper)]'
                         : 'border border-[color:var(--rule)] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]'
@@ -1372,12 +1372,12 @@ function ScheduleStep({
           </div>
           <div>
             <div className="flex items-baseline justify-between mb-2">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
                 Daily cap
               </span>
-              <span className="font-[family-name:var(--font-instrument-serif)] text-[22px] leading-none tabular-nums text-[color:var(--ink)]">
+              <span className=" text-[22px] leading-none tabular-nums text-[color:var(--ink)]">
                 {schedule.dailySendCap}
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] ml-1">
+                <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] ml-1">
                   sends
                 </span>
               </span>
@@ -1391,7 +1391,7 @@ function ScheduleStep({
               onChange={(e) => setSchedule({ ...schedule, dailySendCap: Number(e.target.value) })}
               className="w-full accent-[color:var(--forest)]"
             />
-            <div className="flex justify-between font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)] mt-1">
+            <div className="flex justify-between font-mono text-[10px] text-[color:var(--ink-3)] mt-1">
               <span>20</span>
               <span>500</span>
             </div>
@@ -1399,7 +1399,7 @@ function ScheduleStep({
         </div>
 
         <div>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-3">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-3">
             Reply handling
           </span>
           <div>
@@ -1417,17 +1417,17 @@ function ScheduleStep({
             />
             <div className="flex items-start gap-3 py-3 border-b border-[color:var(--rule)]/70">
               <div className="min-w-0 flex-1">
-                <div className="font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink)]">
+                <div className=" text-[14px] text-[color:var(--ink)]">
                   Notify on interested reply
                 </div>
-                <div className="font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)] mt-1">
+                <div className=" italic text-[12.5px] text-[color:var(--ink-2)] mt-1">
                   The first positive reply triggers this alert — everything else accumulates in the inbox.
                 </div>
               </div>
               <select
                 value={replyRules.notifyChannel}
                 onChange={(e) => setReplyRules({ ...replyRules, notifyChannel: e.target.value as ReplyRules['notifyChannel'] })}
-                className="bg-transparent border-b border-[color:var(--rule)] font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink)] py-1 outline-none cursor-pointer"
+                className="bg-transparent border-b border-[color:var(--rule)]  text-[12.5px] text-[color:var(--ink)] py-1 outline-none cursor-pointer"
               >
                 <option value="slack">Slack · #sales</option>
                 <option value="email">Email digest</option>
@@ -1460,17 +1460,17 @@ function ReviewStep({
           <div className="absolute inset-0 translate-x-1 translate-y-1 bg-[color:var(--rule)]/25 rounded-sm" aria-hidden />
           <div className="relative bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-sm p-6">
             <div className="flex items-baseline justify-between pb-3 border-b border-dashed border-[color:var(--rule)]">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--forest)]">
+              <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--forest)]">
                 Draft ready
               </span>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
+              <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
                 Saves as draft · activate later
               </span>
             </div>
-            <h3 className="mt-4 font-[family-name:var(--font-instrument-serif)] text-[36px] leading-[1.05] text-[color:var(--ink)]">
+            <h3 className="mt-4  text-[36px] leading-[1.05] text-[color:var(--ink)]">
               {name}
             </h3>
-            <p className="mt-3 font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink-2)]">
+            <p className="mt-3  text-[14px] text-[color:var(--ink-2)]">
               {seq.length} steps · {daysLabel(schedule)} · {hoursLabel(schedule)} {tzCity(schedule.timezone)} · capped at {schedule.dailySendCap}/day{aiSteps ? ` · ${aiSteps} AI-personalized` : ''}
             </p>
           </div>
@@ -1478,7 +1478,7 @@ function ReviewStep({
 
         {/* What happens next — only things that are actually implemented. */}
         <div>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-3">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-3">
             What happens next
           </span>
           <ol className="border-t border-[color:var(--rule)]">
@@ -1490,9 +1490,9 @@ function ReviewStep({
             ].map((t, i) => (
               <li
                 key={i}
-                className="flex items-baseline gap-4 py-3 border-b border-[color:var(--rule)] font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink-2)]"
+                className="flex items-baseline gap-4 py-3 border-b border-[color:var(--rule)]  text-[14px] text-[color:var(--ink-2)]"
               >
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)] shrink-0 w-6 tabular-nums">
+                <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)] shrink-0 w-6 tabular-nums">
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <span className="text-[color:var(--ink)]">{t}</span>
@@ -1518,35 +1518,35 @@ function Summary({
   return (
     <aside className="sticky top-24 bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-sm p-6 flex flex-col gap-5">
       <div>
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
           Campaign masthead
         </span>
-        <h3 className="mt-2 font-[family-name:var(--font-instrument-serif)] text-[26px] leading-[1.1] text-[color:var(--ink)]">
+        <h3 className="mt-2  text-[26px] leading-[1.1] text-[color:var(--ink)]">
           {name || <span className="italic text-[color:var(--ink-3)]">Untitled</span>}
         </h3>
       </div>
 
       <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[color:var(--rule)]">
         <div>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+          <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
             Steps
           </span>
-          <div className="mt-1 font-[family-name:var(--font-instrument-serif)] text-[24px] leading-none tabular-nums text-[color:var(--ink)]">
+          <div className="mt-1  text-[24px] leading-none tabular-nums text-[color:var(--ink)]">
             {seq.length}
           </div>
         </div>
         <div>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+          <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
             Cap · day
           </span>
-          <div className="mt-1 font-[family-name:var(--font-instrument-serif)] text-[24px] leading-none tabular-nums text-[color:var(--ink)]">
+          <div className="mt-1  text-[24px] leading-none tabular-nums text-[color:var(--ink)]">
             {schedule.dailySendCap}
           </div>
         </div>
       </div>
 
       <div className="pt-4 border-t border-[color:var(--rule)]">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-3">
+        <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-3">
           Cadence
         </span>
         <ol>
@@ -1558,14 +1558,14 @@ function Summary({
                 key={i}
                 className="grid grid-cols-[22px_16px_56px_1fr] gap-2 items-baseline py-2 border-b border-[color:var(--rule)]/70 last:border-b-0"
               >
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tabular-nums text-[color:var(--ink-3)]">
+                <span className="font-mono text-[10px] tabular-nums text-[color:var(--ink-3)]">
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <Ico className="w-3 h-3 text-[color:var(--ink-2)] self-center" />
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">
+                <span className="font-mono text-[10px] text-[color:var(--ink-3)]">
                   Day {s.delayDays}
                 </span>
-                <span className="font-[family-name:var(--font-barlow)] italic text-[12px] text-[color:var(--ink-2)] truncate">
+                <span className=" italic text-[12px] text-[color:var(--ink-2)] truncate">
                   {s.goal || s.subject || '—'}
                 </span>
               </li>
@@ -1574,7 +1574,7 @@ function Summary({
         </ol>
       </div>
 
-      <p className="pt-4 border-t border-[color:var(--rule)] font-[family-name:var(--font-barlow)] italic text-[12px] leading-[1.5] text-[color:var(--ink-2)]">
+      <p className="pt-4 border-t border-[color:var(--rule)]  italic text-[12px] leading-[1.5] text-[color:var(--ink-2)]">
         Sends run {daysLabel(schedule)} · {hoursLabel(schedule)} {tzCity(schedule.timezone)}, capped at {schedule.dailySendCap}/day.
       </p>
     </aside>
@@ -1667,11 +1667,11 @@ function LaunchedModal({
         <div className="p-8 md:p-10">
           <div className="flex items-center gap-3 mb-6">
             <span className="block w-8 h-px bg-[color:var(--forest)]" />
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
               {isActivated ? 'Campaign active' : 'Campaign filed'}
             </span>
           </div>
-          <h2 className="font-[family-name:var(--font-instrument-serif)] text-[48px] md:text-[60px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
+          <h2 className=" text-[48px] md:text-[60px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
             {isActivated ? (
               <>You&rsquo;re <em className="italic text-[color:var(--forest)]">live</em>.</>
             ) : (
@@ -1680,38 +1680,38 @@ function LaunchedModal({
           </h2>
 
           {isActivated ? (
-            <p className="mt-5 font-[family-name:var(--font-barlow)] text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
+            <p className="mt-5  text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
               <span className="text-[color:var(--ink)] font-medium">{activated!.enrolled}</span> leads enrolled.
               First send on {firstDay}{tzLabel ? ` · ${tzLabel}` : ''}. You can pause or edit from the campaign list.
             </p>
           ) : (
             <>
-              <p className="mt-5 font-[family-name:var(--font-barlow)] text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
+              <p className="mt-5  text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
                 Saved. Review the preflight below and activate when you&rsquo;re ready — nothing sends until you do.
               </p>
 
               <div className="mt-7 border-t border-[color:var(--rule)] pt-5">
                 {preflightError ? (
-                  <div className="font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--warn)]">
+                  <div className=" text-[13.5px] text-[color:var(--warn)]">
                     Couldn&rsquo;t load preflight: {preflightError}
                   </div>
                 ) : !preflight ? (
-                  <div className="font-[family-name:var(--font-barlow)] italic text-[13.5px] text-[color:var(--ink-3)]">
+                  <div className=" italic text-[13.5px] text-[color:var(--ink-3)]">
                     Checking your leads…
                   </div>
                 ) : (
                   <div className="flex flex-col gap-3">
                     <div className="flex items-baseline gap-3">
-                      <span className="font-[family-name:var(--font-instrument-serif)] text-[44px] leading-none tabular-nums text-[color:var(--forest)]">
+                      <span className=" text-[44px] leading-none tabular-nums text-[color:var(--forest)]">
                         {preflight.eligibleLeadsCount}
                       </span>
-                      <span className="font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink-2)]">
+                      <span className=" text-[14px] text-[color:var(--ink-2)]">
                         of {preflight.totalInFile} leads will be enrolled
                       </span>
                     </div>
                     <SkipBreakdown skipped={preflight.skipped} />
                     {!preflight.hasEmailConfig && (
-                      <div role="alert" className="mt-1 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--warn)]">
+                      <div role="alert" className="mt-1  text-[13px] text-[color:var(--warn)]">
                         Workspace email is not configured. Visit Settings → Email before activating.
                       </div>
                     )}
@@ -1720,7 +1720,7 @@ function LaunchedModal({
               </div>
 
               {activateError && (
-                <div role="alert" className="mt-4 border border-[color:var(--warn)]/60 bg-[color:var(--warn)]/10 rounded-sm p-3 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)]">
+                <div role="alert" className="mt-4 border border-[color:var(--warn)]/60 bg-[color:var(--warn)]/10 rounded-sm p-3  text-[13px] text-[color:var(--ink)]">
                   {activateError}
                 </div>
               )}
@@ -1731,12 +1731,12 @@ function LaunchedModal({
         <div className="flex items-center justify-between gap-3 border-t border-[color:var(--rule)] bg-[color:var(--paper-3)] px-8 py-4">
           {isActivated ? (
             <>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
                 {activated!.enrolled} enrolled · {activated!.skipped} skipped
               </span>
               <button
                 onClick={onViewDetail}
-                className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors"
+                className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors"
               >
                 View campaign
                 <ArrowEast className="w-3 h-3" />
@@ -1746,7 +1746,7 @@ function LaunchedModal({
             <>
               <button
                 onClick={onBack}
-                className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] inline-flex items-center gap-2"
+                className=" text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] inline-flex items-center gap-2"
               >
                 <ArrowWest className="w-3 h-3" />
                 Keep as draft
@@ -1760,7 +1760,7 @@ function LaunchedModal({
                   preflight.eligibleLeadsCount === 0 ? 'No eligible leads to enroll' :
                   undefined
                 }
-                className="group inline-flex items-center gap-2 bg-[color:var(--forest)] text-[color:var(--paper)] px-5 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium hover:bg-[color:var(--forest-2)] transition-colors disabled:opacity-50"
+                className="group inline-flex items-center gap-2 bg-[color:var(--forest)] text-[color:var(--paper)] px-5 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest-2)] transition-colors disabled:opacity-50"
               >
                 {activating ? 'Activating…' : 'Activate now'}
                 <ArrowEast className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
@@ -1782,7 +1782,7 @@ function SkipBreakdown({ skipped }: { skipped: PreflightResponse['skipped'] }) {
   ].filter((x): x is { label: string; n: number } => x !== null);
   if (items.length === 0) return null;
   return (
-    <div className="font-[family-name:var(--font-jetbrains-mono)] text-[10.5px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+    <div className="font-mono text-[10.5px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
       Skipped: {items.map((it, i) => (
         <span key={it.label}>
           {i > 0 && ' · '}
@@ -1924,37 +1924,37 @@ export default function CampaignBuilderPage() {
           <div className="flex items-center gap-3 mb-4">
             <Link
               href="/dashboard"
-              className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
+              className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
             >
               Dispatches
             </Link>
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">/</span>
+            <span className="font-mono text-[10px] text-[color:var(--ink-3)]">/</span>
             <Link
               href="/dashboard/leads"
-              className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
+              className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
             >
               Leads
             </Link>
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">/</span>
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+            <span className="font-mono text-[10px] text-[color:var(--ink-3)]">/</span>
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
               New campaign
             </span>
           </div>
-          <h1 className="font-[family-name:var(--font-instrument-serif)] text-[44px] md:text-[60px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
+          <h1 className=" text-[44px] md:text-[60px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
             Compose a <em className="italic text-[color:var(--forest)]">campaign</em>.
           </h1>
-          <p className="mt-4 font-[family-name:var(--font-barlow)] text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
+          <p className="mt-4  text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
             Four chapters. Audience, sequence, schedule, review. Saves as a draft — activate when you&rsquo;re ready.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="inline-flex items-center gap-1.5 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] border border-[color:var(--rule)] bg-[color:var(--paper-3)] hover:border-[color:var(--ink)] px-4 py-2.5 rounded-full transition">
+          <button className="inline-flex items-center gap-1.5  text-[13px] text-[color:var(--ink)] border border-[color:var(--rule)] bg-[color:var(--paper-3)] hover:border-[color:var(--ink)] px-4 py-2.5 rounded-full transition">
             Save draft
           </button>REMOVE_ME_PLACEHOLDER<button
             onClick={handleLaunch}
             disabled={isLaunching || !fileId}
             title={!fileId ? 'Pick a file in the Audience chapter first.' : undefined}
-            className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-60"
+            className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-60"
           >
             {isLaunching ? 'Saving\u2026' : 'Save campaign'}
             <ArrowEast className="w-3 h-3" />
@@ -1981,13 +1981,13 @@ export default function CampaignBuilderPage() {
                   }`}
                 >
                   <span
-                    className={`font-[family-name:var(--font-instrument-serif)] italic text-[22px] leading-none tabular-nums ${
+                    className={` italic text-[22px] leading-none tabular-nums ${
                       current ? 'text-[color:var(--forest)]' : done ? 'text-[color:var(--ink-2)]' : 'text-[color:var(--ink-3)]'
                     }`}
                   >
                     {s.n}
                   </span>
-                  <span className="font-[family-name:var(--font-barlow)] text-[13.5px] whitespace-nowrap">
+                  <span className=" text-[13.5px] whitespace-nowrap">
                     {s.label}
                   </span>
                   {done && <CheckIcon className="w-3 h-3 text-[color:var(--forest)]" />}
@@ -2033,10 +2033,10 @@ export default function CampaignBuilderPage() {
           {step === 'review'   && <ReviewStep   name={name} seq={seq} schedule={schedule} />}
           {launchError && (
             <div role="alert" className="mt-8 border border-[color:var(--warn)]/60 bg-[color:var(--warn)]/10 rounded-sm p-4">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--warn)] block mb-1">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--warn)] block mb-1">
                 Save failed
               </span>
-              <p className="font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink)]">
+              <p className=" text-[13.5px] text-[color:var(--ink)]">
                 {launchError}
               </p>
             </div>
@@ -2055,12 +2055,12 @@ export default function CampaignBuilderPage() {
             }
           }}
           disabled={!canPrev}
-          className="inline-flex items-center gap-2 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] disabled:opacity-30 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-2  text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] disabled:opacity-30 disabled:cursor-not-allowed"
         >
           <ArrowWest className="w-3 h-3" />
           Back
         </button>
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
+        <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
           Chapter {String(stepIdx + 1).padStart(2, '0')} · {STEPS[stepIdx]?.label}
         </span>
         <button
@@ -2075,7 +2075,7 @@ export default function CampaignBuilderPage() {
           }}
           disabled={Boolean(advanceBlock)}
           title={advanceBlock ?? undefined}
-          className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium transition-colors disabled:opacity-60 ${
+          className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full  text-[13px] font-medium transition-colors disabled:opacity-60 ${
             canNext
               ? 'bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)]'
               : 'bg-[color:var(--forest)] text-[color:var(--paper)] hover:bg-[color:var(--forest-2)]'

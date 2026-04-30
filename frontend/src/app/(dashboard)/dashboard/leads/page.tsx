@@ -148,7 +148,7 @@ function StatusChip({ status }: { status: string }) {
   };
   const chip = map[status] ?? map.pending!;
   return (
-    <span className={`inline-flex items-center font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase px-2 py-0.5 border bg-[color:var(--paper-3)] ${chip.tone}`}>
+    <span className={`inline-flex items-center font-mono text-[9.5px] tracking-[0.18em] uppercase px-2 py-0.5 border bg-[color:var(--paper-3)] ${chip.tone}`}>
       {chip.label}
     </span>
   );
@@ -156,7 +156,7 @@ function StatusChip({ status }: { status: string }) {
 
 function ScorePill({ v }: { v: number }) {
   return (
-    <span className="inline-flex items-center font-[family-name:var(--font-jetbrains-mono)] text-[11px] tabular-nums px-1.5 py-0.5 bg-[color:var(--ink)] text-[color:var(--paper)]">
+    <span className="inline-flex items-center font-mono text-[11px] tabular-nums px-1.5 py-0.5 bg-[color:var(--ink)] text-[color:var(--paper)]">
       {v.toFixed(2)}
     </span>
   );
@@ -170,12 +170,12 @@ function DossierHeader({ job }: { job: ProspectingJob }) {
       <div className="flex items-center gap-3 mb-5">
         <Link
           href="/dashboard"
-          className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
+          className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
         >
           Dispatches
         </Link>
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">/</span>
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+        <span className="font-mono text-[10px] text-[color:var(--ink-3)]">/</span>
+        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
           Dossier №.&nbsp;{job._id.slice(-4).toUpperCase()}
         </span>
       </div>
@@ -184,38 +184,38 @@ function DossierHeader({ job }: { job: ProspectingJob }) {
         <div className="absolute inset-0 translate-x-1 translate-y-1 bg-[color:var(--rule)]/20 rounded-sm" aria-hidden />
         <div className="relative bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-sm p-6 md:p-8">
           <div className="flex items-start gap-4 md:gap-6">
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-2)] pt-[7px] shrink-0 w-14">
+            <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-2)] pt-[7px] shrink-0 w-14">
               Subject
             </span>
-            <p className="font-[family-name:var(--font-instrument-serif)] italic text-[22px] md:text-[28px] leading-[1.2] text-[color:var(--ink)]">
+            <p className=" italic text-[22px] md:text-[28px] leading-[1.2] text-[color:var(--ink)]">
               &ldquo;{job.rawQuery}&rdquo;
             </p>
           </div>
           <div className="mt-5 pt-5 border-t border-dashed border-[color:var(--rule)] grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-4">
             <div>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">Filed</span>
-              <div className="mt-1 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)]">
+              <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">Filed</span>
+              <div className="mt-1  text-[13px] text-[color:var(--ink)]">
                 {relativeTime(job.createdAt)}
               </div>
             </div>
             <div>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">Leads</span>
-              <div className="mt-1 font-[family-name:var(--font-instrument-serif)] text-[20px] leading-none tabular-nums text-[color:var(--ink)]">
+              <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">Leads</span>
+              <div className="mt-1  text-[20px] leading-none tabular-nums text-[color:var(--ink)]">
                 {job.progress?.leadsFoundSoFar ?? 0}
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[11px] text-[color:var(--ink-3)] ml-1">
+                <span className="font-mono text-[11px] text-[color:var(--ink-3)] ml-1">
                   / {job.parsedIntent?.targetCount ?? '—'}
                 </span>
               </div>
             </div>
             <div>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">Status</span>
-              <div className="mt-1 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] capitalize">
+              <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">Status</span>
+              <div className="mt-1  text-[13px] text-[color:var(--ink)] capitalize">
                 {job.status}
               </div>
             </div>
             <div>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">Columns</span>
-              <div className="mt-1 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)]">
+              <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">Columns</span>
+              <div className="mt-1  text-[13px] text-[color:var(--ink)]">
                 {schema.length > 0 ? `${schema.length} extra` : 'Standard'}
               </div>
             </div>
@@ -225,14 +225,14 @@ function DossierHeader({ job }: { job: ProspectingJob }) {
               {schema.map((c) => (
                 <span
                   key={c.key}
-                  className="inline-flex items-center gap-1.5 font-[family-name:var(--font-barlow)] text-[11.5px] text-[color:var(--ink-2)] bg-[color:var(--paper)] border border-[color:var(--rule)] px-2 py-1"
+                  className="inline-flex items-center gap-1.5  text-[11.5px] text-[color:var(--ink-2)] bg-[color:var(--paper)] border border-[color:var(--rule)] px-2 py-1"
                 >
                   {c.label}
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
+                  <span className="font-mono text-[9px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
                     · {c.type}
                   </span>
                   {c.required && (
-                    <span className="font-[family-name:var(--font-jetbrains-mono)] text-[8.5px] text-[color:var(--rust)]">req</span>
+                    <span className="font-mono text-[8.5px] text-[color:var(--rust)]">req</span>
                   )}
                 </span>
               ))}
@@ -284,7 +284,7 @@ function LeadDrawer({
         <div className="p-7 md:p-8 flex flex-col gap-6">
           {/* top bar */}
           <div className="flex items-center justify-between gap-2">
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
+            <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
               Lead · {String(lead._id).slice(-6).toUpperCase()}
             </span>
             <button
@@ -298,7 +298,7 @@ function LeadDrawer({
 
           {/* identity */}
           <div>
-            <h2 className="font-[family-name:var(--font-instrument-serif)] text-[34px] leading-[1.05] tracking-[-0.01em] text-[color:var(--ink)]">
+            <h2 className=" text-[34px] leading-[1.05] tracking-[-0.01em] text-[color:var(--ink)]">
               {lead.companyName}
             </h2>
             {lead.companyDomain && (
@@ -306,13 +306,13 @@ function LeadDrawer({
                 href={`https://${lead.companyDomain}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-1 inline-flex items-center gap-1.5 font-[family-name:var(--font-jetbrains-mono)] text-[11px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
+                className="mt-1 inline-flex items-center gap-1.5 font-mono text-[11px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
               >
                 {lead.companyDomain} <ExternalIcon className="w-2.5 h-2.5" />
               </a>
             )}
             {(lead.industry || leadLocation(lead)) && (
-              <div className="mt-2 font-[family-name:var(--font-barlow)] text-[13px] italic text-[color:var(--ink-2)]">
+              <div className="mt-2  text-[13px] italic text-[color:var(--ink-2)]">
                 {[lead.industry, leadLocation(lead)].filter(Boolean).join(' · ')}
               </div>
             )}
@@ -321,24 +321,24 @@ function LeadDrawer({
           {/* Named contact */}
           {contact?.fullName && (
             <div className="pt-5 border-t border-[color:var(--rule)]">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+              <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
                 Named contact
               </span>
               <div className="mt-2 flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-[color:var(--ink)] text-[color:var(--paper)] flex items-center justify-center shrink-0 font-[family-name:var(--font-instrument-serif)] italic text-[14px]">
+                <div className="w-10 h-10 rounded-full bg-[color:var(--ink)] text-[color:var(--paper)] flex items-center justify-center shrink-0  italic text-[14px]">
                   {initials(contact.fullName)}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-[family-name:var(--font-barlow)] font-medium text-[15px] text-[color:var(--ink)] truncate">
+                  <div className=" font-medium text-[15px] text-[color:var(--ink)] truncate">
                     {contact.fullName}
                   </div>
                   {contact.title && (
-                    <div className="font-[family-name:var(--font-instrument-serif)] italic text-[14px] text-[color:var(--ink-2)] leading-tight mt-0.5">
+                    <div className=" italic text-[14px] text-[color:var(--ink-2)] leading-tight mt-0.5">
                       {contact.title}
                     </div>
                   )}
                   {contact.seniority && contact.seniority !== 'unknown' && (
-                    <div className="mt-1 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
+                    <div className="mt-1 font-mono text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
                       {contact.seniority.replace('_', '-')}
                     </div>
                   )}
@@ -349,7 +349,7 @@ function LeadDrawer({
 
           {/* Contact paths */}
           <div className="pt-5 border-t border-[color:var(--rule)] flex flex-col gap-3">
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+            <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
               Contact paths
             </span>
             {lead.emails?.length > 0 ? (
@@ -357,28 +357,28 @@ function LeadDrawer({
                 <div key={i} className="flex items-baseline justify-between gap-3">
                   <a
                     href={`mailto:${e.address}`}
-                    className="font-[family-name:var(--font-jetbrains-mono)] text-[12.5px] text-[color:var(--ink)] hover:text-[color:var(--forest)] truncate transition"
+                    className="font-mono text-[12.5px] text-[color:var(--ink)] hover:text-[color:var(--forest)] truncate transition"
                   >
                     {e.address}
                   </a>
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] shrink-0">
+                  <span className="font-mono text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] shrink-0">
                     {e.verified ? 'verified' : `${Math.round((e.confidence ?? 0.6) * 100)}%`}
                   </span>
                 </div>
               ))
             ) : (
-              <span className="font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-3)]">No email on file</span>
+              <span className=" italic text-[13px] text-[color:var(--ink-3)]">No email on file</span>
             )}
             {lead.phones?.length > 0 &&
               lead.phones.slice(0, 2).map((p, i) => (
                 <div key={i} className="flex items-baseline justify-between gap-3">
                   <a
                     href={`tel:${p.normalized ?? p.raw}`}
-                    className="font-[family-name:var(--font-jetbrains-mono)] text-[12.5px] text-[color:var(--ink)] hover:text-[color:var(--forest)] transition"
+                    className="font-mono text-[12.5px] text-[color:var(--ink)] hover:text-[color:var(--forest)] transition"
                   >
                     {p.normalized ?? p.raw}
                   </a>
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] shrink-0">
+                  <span className="font-mono text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] shrink-0">
                     {p.type ?? 'phone'}
                   </span>
                 </div>
@@ -388,7 +388,7 @@ function LeadDrawer({
           {/* Facts (schema-driven) */}
           {schema.length > 0 && lead.facts && (
             <div className="pt-5 border-t border-[color:var(--rule)]">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+              <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
                 Requested fields
               </span>
               <div className="mt-3 grid grid-cols-1 gap-3">
@@ -398,17 +398,17 @@ function LeadDrawer({
                   return (
                     <div key={c.key} className="flex items-baseline justify-between gap-3">
                       <div className="flex flex-col min-w-0">
-                        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
+                        <span className="font-mono text-[9.5px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
                           {c.label}
                         </span>
-                        <span className="font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink)] mt-0.5">
+                        <span className=" text-[14px] text-[color:var(--ink)] mt-0.5">
                           {formatted}
                           {f?.sourceUrl && (
                             <a
                               href={f.sourceUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="ml-2 inline-flex items-baseline font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] text-[color:var(--forest)] hover:underline"
+                              className="ml-2 inline-flex items-baseline font-mono text-[9.5px] text-[color:var(--forest)] hover:underline"
                             >
                               source <ExternalIcon className="w-2.5 h-2.5 ml-0.5 self-center" />
                             </a>
@@ -416,7 +416,7 @@ function LeadDrawer({
                         </span>
                       </div>
                       {f?.confidence !== undefined && (
-                        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tabular-nums text-[color:var(--ink-3)] shrink-0">
+                        <span className="font-mono text-[10px] tabular-nums text-[color:var(--ink-3)] shrink-0">
                           conf {f.confidence.toFixed(2)}
                         </span>
                       )}
@@ -430,13 +430,13 @@ function LeadDrawer({
           {/* Provenance (sources) */}
           {lead.sources?.length > 0 && (
             <div className="pt-5 border-t border-[color:var(--rule)]">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+              <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
                 Provenance
               </span>
               <ol className="mt-3 space-y-1.5">
                 {lead.sources.slice(0, 5).map((s, i) => (
-                  <li key={i} className="flex items-baseline gap-2 font-[family-name:var(--font-barlow)] text-[12px] text-[color:var(--ink-2)]">
-                    <sup className="text-[color:var(--forest)] font-[family-name:var(--font-jetbrains-mono)]">{i + 1}</sup>
+                  <li key={i} className="flex items-baseline gap-2  text-[12px] text-[color:var(--ink-2)]">
+                    <sup className="text-[color:var(--forest)] font-mono">{i + 1}</sup>
                     <a
                       href={s.url}
                       target="_blank"
@@ -454,19 +454,19 @@ function LeadDrawer({
           {/* Score + scoring signal */}
           <div className="pt-5 border-t border-[color:var(--rule)] flex items-center justify-between gap-3">
             <div className="flex flex-col">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+              <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
                 AI score
               </span>
-              <span className="mt-1 font-[family-name:var(--font-instrument-serif)] text-[32px] leading-none tabular-nums text-[color:var(--ink)]">
+              <span className="mt-1  text-[32px] leading-none tabular-nums text-[color:var(--ink)]">
                 {Math.round(score * 100)}
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[11px] text-[color:var(--ink-3)] ml-1">/100</span>
+                <span className="font-mono text-[11px] text-[color:var(--ink-3)] ml-1">/100</span>
               </span>
             </div>
             <StatusChip status={lead.qualificationStatus ?? 'pending'} />
           </div>
 
           {/* Esc hint */}
-          <div className="pt-2 font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.2em] uppercase text-[color:var(--ink-3)] text-center">
+          <div className="pt-2 font-mono text-[9.5px] tracking-[0.2em] uppercase text-[color:var(--ink-3)] text-center">
             Press Esc to close
           </div>
         </div>
@@ -513,14 +513,14 @@ function LeadRow({
       </td>
       <td className="py-3 px-3 align-middle">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-sm bg-[color:var(--paper-2)] border border-[color:var(--rule)] flex items-center justify-center shrink-0 font-[family-name:var(--font-instrument-serif)] italic text-[12px] text-[color:var(--ink)]">
+          <div className="w-8 h-8 rounded-sm bg-[color:var(--paper-2)] border border-[color:var(--rule)] flex items-center justify-center shrink-0  italic text-[12px] text-[color:var(--ink)]">
             {initials(lead.companyName)}
           </div>
           <div className="min-w-0">
-            <div className="font-[family-name:var(--font-barlow)] font-medium text-[13.5px] text-[color:var(--ink)] truncate">
+            <div className=" font-medium text-[13.5px] text-[color:var(--ink)] truncate">
               {lead.companyName}
             </div>
-            <div className="font-[family-name:var(--font-jetbrains-mono)] text-[10.5px] text-[color:var(--ink-3)] truncate">
+            <div className="font-mono text-[10.5px] text-[color:var(--ink-3)] truncate">
               {lead.companyDomain ?? '—'}
             </div>
           </div>
@@ -529,22 +529,22 @@ function LeadRow({
       <td className="py-3 px-3 align-middle">
         {contact?.fullName ? (
           <>
-            <div className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] truncate">
+            <div className=" text-[13px] text-[color:var(--ink)] truncate">
               {contact.fullName}
             </div>
-            <div className="font-[family-name:var(--font-instrument-serif)] italic text-[12px] text-[color:var(--ink-2)] truncate leading-tight">
+            <div className=" italic text-[12px] text-[color:var(--ink-2)] truncate leading-tight">
               {contact.title || '\u2014'}
             </div>
           </>
         ) : (
-          <span className="font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-3)]">
+          <span className=" italic text-[12.5px] text-[color:var(--ink-3)]">
             —
           </span>
         )}
       </td>
       <td className="py-3 px-3 align-middle max-w-[220px]">
         {primaryEmail(lead) ? (
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[11.5px] text-[color:var(--ink)] truncate block">
+          <span className="font-mono text-[11.5px] text-[color:var(--ink)] truncate block">
             {primaryEmail(lead)}
             {primaryEmailSource(lead) && (
               <sup className="ml-0.5 text-[9px] text-[color:var(--forest)]" title={`Source: ${primaryEmailSource(lead)}`}>
@@ -553,18 +553,18 @@ function LeadRow({
             )}
           </span>
         ) : (
-          <span className="font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-3)]">
+          <span className=" italic text-[12.5px] text-[color:var(--ink-3)]">
             —
           </span>
         )}
       </td>
       <td className="py-3 px-3 align-middle max-w-[150px]">
         {primaryPhone(lead) ? (
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[11.5px] text-[color:var(--ink-2)] truncate block">
+          <span className="font-mono text-[11.5px] text-[color:var(--ink-2)] truncate block">
             {primaryPhone(lead)}
           </span>
         ) : (
-          <span className="font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-3)]">
+          <span className=" italic text-[12.5px] text-[color:var(--ink-3)]">
             —
           </span>
         )}
@@ -579,12 +579,12 @@ function LeadRow({
           return (
             <td key={c.key} className="py-3 px-3 align-middle max-w-[160px]">
               {f && f.value !== null && f.value !== undefined ? (
-                <span className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] truncate block">
+                <span className=" text-[13px] text-[color:var(--ink)] truncate block">
                   {formatted}
                   {hasSource && <sup className="ml-0.5 text-[9px] text-[color:var(--forest)]">†</sup>}
                 </span>
               ) : (
-                <span className="font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-3)]">
+                <span className=" italic text-[12.5px] text-[color:var(--ink-3)]">
                   —
                 </span>
               )}
@@ -780,29 +780,29 @@ export default function LeadsPage() {
         <section className="mb-10">
           <div className="flex items-center gap-3 mb-5">
             <span className="block w-8 h-px bg-[color:var(--ink)]" />
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
               The archive
             </span>
           </div>
           <div className="flex items-end justify-between gap-6 flex-wrap">
             <div className="max-w-[720px]">
-              <h1 className="font-[family-name:var(--font-instrument-serif)] text-[44px] md:text-[60px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
+              <h1 className=" text-[44px] md:text-[60px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
                 Every lead the desk <em className="italic text-[color:var(--forest)]">has filed</em>.
               </h1>
-              <p className="mt-4 font-[family-name:var(--font-barlow)] text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
+              <p className="mt-4  text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
                 {isLoading ? 'Loading\u2026' : `${total} leads across all dispatches.`}
               </p>
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={handleExport}
-                className="inline-flex items-center gap-1.5 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] border border-[color:var(--rule)] bg-[color:var(--paper-3)] hover:border-[color:var(--ink)] px-4 py-2.5 rounded-full transition"
+                className="inline-flex items-center gap-1.5  text-[13px] text-[color:var(--ink)] border border-[color:var(--rule)] bg-[color:var(--paper-3)] hover:border-[color:var(--ink)] px-4 py-2.5 rounded-full transition"
               >
                 Export CSV
               </button>
               <button
                 onClick={() => router.push('/dashboard/campaigns')}
-                className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors"
+                className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors"
               >
                 Start a campaign <ArrowEast className="w-3 h-3" />
               </button>
@@ -821,14 +821,14 @@ export default function LeadsPage() {
               <button
                 key={f.k}
                 onClick={() => setFilter(f.k)}
-                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full font-[family-name:var(--font-barlow)] text-[12.5px] transition-colors ${
+                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full  text-[12.5px] transition-colors ${
                   on
                     ? 'bg-[color:var(--ink)] text-[color:var(--paper)]'
                     : 'text-[color:var(--ink-2)] hover:text-[color:var(--ink)]'
                 }`}
               >
                 <span>{f.label}</span>
-                <span className={`font-[family-name:var(--font-jetbrains-mono)] text-[10px] tabular-nums ${on ? 'text-[color:var(--paper)]/65' : 'text-[color:var(--ink-3)]'}`}>
+                <span className={`font-mono text-[10px] tabular-nums ${on ? 'text-[color:var(--paper)]/65' : 'text-[color:var(--ink-3)]'}`}>
                   {n}
                 </span>
               </button>
@@ -842,7 +842,7 @@ export default function LeadsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={SEARCH_PLACEHOLDER}
-            className="bg-transparent outline-none flex-1 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
+            className="bg-transparent outline-none flex-1  text-[13px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
           />
           {search && (
             <button
@@ -858,27 +858,27 @@ export default function LeadsPage() {
       {/* Bulk-action bar */}
       {selCount > 0 && (
         <div className="mb-4 flex items-center gap-4 flex-wrap bg-[color:var(--paper-2)] border border-[color:var(--rule)] px-4 py-3 rounded-sm">
-          <span className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)]">
+          <span className=" text-[13px] text-[color:var(--ink)]">
             <span className="font-medium tabular-nums">{selCount}</span> selected
           </span>
           <span className="h-3 w-px bg-[color:var(--rule)]" />
           <div ref={saveMenuRef} className="relative">
             <button
               onClick={() => setSaveMenuOpen((v) => !v)}
-              className="font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink)] hover:text-[color:var(--forest)] font-medium"
+              className=" text-[12.5px] text-[color:var(--ink)] hover:text-[color:var(--forest)] font-medium"
             >
               Save to file ▾
             </button>
             {saveMenuOpen && (
               <div className="absolute top-full left-0 mt-2 z-20 w-[320px] bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-sm shadow-xl">
                 <div className="px-3 py-2 border-b border-[color:var(--rule)]">
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+                  <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
                     Pick a file
                   </span>
                 </div>
                 <div className="max-h-[240px] overflow-y-auto">
                   {files.length === 0 ? (
-                    <div className="px-3 py-4 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)]">
+                    <div className="px-3 py-4  italic text-[12.5px] text-[color:var(--ink-2)]">
                       No files yet. Create one below.
                     </div>
                   ) : (
@@ -897,10 +897,10 @@ export default function LeadsPage() {
                           className="w-full flex items-center justify-between gap-3 px-3 py-2 text-left hover:bg-[color:var(--paper-3)]/60 transition disabled:opacity-60"
                         >
                           <span className="flex-1 min-w-0">
-                            <span className="block font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] truncate">
+                            <span className="block  text-[13px] text-[color:var(--ink)] truncate">
                               {f.name}
                             </span>
-                            <span className="block font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
+                            <span className="block font-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
                               {f.source === 'job' ? 'From dispatch' : 'Curated'} · {f.leadCount}
                             </span>
                           </span>
@@ -909,7 +909,7 @@ export default function LeadsPage() {
                   )}
                 </div>
                 <div className="px-3 py-3 border-t border-[color:var(--rule)] bg-[color:var(--paper-3)]/60">
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1.5">
+                  <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1.5">
                     Or cut a new file
                   </span>
                   <form
@@ -929,12 +929,12 @@ export default function LeadsPage() {
                       onChange={(e) => setNewFileName(e.target.value)}
                       placeholder="New file name"
                       maxLength={200}
-                      className="flex-1 bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] outline-none py-1 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
+                      className="flex-1 bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] outline-none py-1  text-[13px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
                     />
                     <button
                       type="submit"
                       disabled={!newFileName.trim() || createFileWithLeadsMutation.isPending}
-                      className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--forest)] hover:text-[color:var(--ink)] disabled:opacity-60"
+                      className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--forest)] hover:text-[color:var(--ink)] disabled:opacity-60"
                     >
                       {createFileWithLeadsMutation.isPending ? 'Opening…' : 'Open'}
                     </button>
@@ -945,13 +945,13 @@ export default function LeadsPage() {
           </div>
           <button
             onClick={handleExport}
-            className="font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
+            className=" text-[12.5px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
           >
             Export CSV
           </button>
           <button
             onClick={() => setSelected(new Set())}
-            className="ml-auto font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
+            className="ml-auto font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
           >
             Clear
           </button>
@@ -975,7 +975,7 @@ export default function LeadsPage() {
                 {['Company', 'Contact', 'Email', 'Phone', ...schema.map((c) => c.label), 'Score', 'Status', ''].map((h, i) => (
                   <th
                     key={`${h}-${i}`}
-                    className={`py-2.5 px-3 font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.2em] uppercase text-[color:var(--ink-2)] ${
+                    className={`py-2.5 px-3 font-mono text-[9.5px] tracking-[0.2em] uppercase text-[color:var(--ink-2)] ${
                       h === 'Score' ? 'text-right' : ''
                     }`}
                   >
@@ -988,7 +988,7 @@ export default function LeadsPage() {
               {isLoading && (
                 <tr>
                   <td colSpan={7 + schema.length} className="py-16 text-center">
-                    <span className="font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)]">
+                    <span className=" italic text-[14px] text-[color:var(--ink-2)]">
                       Loading the dossier\u2026
                     </span>
                   </td>
@@ -1011,10 +1011,10 @@ export default function LeadsPage() {
                 <tr>
                   <td colSpan={7 + schema.length} className="py-20 text-center">
                     <div className="max-w-[400px] mx-auto">
-                      <h3 className="font-[family-name:var(--font-instrument-serif)] text-[22px] text-[color:var(--ink)]">
+                      <h3 className=" text-[22px] text-[color:var(--ink)]">
                         Nothing matched those filters.
                       </h3>
-                      <p className="mt-2 font-[family-name:var(--font-barlow)] text-[13.5px] italic text-[color:var(--ink-2)]">
+                      <p className="mt-2  text-[13.5px] italic text-[color:var(--ink-2)]">
                         Clear the search or try a different filter.
                       </p>
                     </div>
@@ -1026,12 +1026,12 @@ export default function LeadsPage() {
         </div>
 
         <div className="px-4 py-3 border-t border-[color:var(--rule)] flex items-center justify-between bg-[color:var(--paper-2)]">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
             Showing <span className="tabular-nums text-[color:var(--ink-2)]">{filtered.length}</span> of{' '}
             <span className="tabular-nums text-[color:var(--ink-2)]">{total}</span>
           </span>
           {isJobScoped && schema.length > 0 && (
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+            <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
               <sup className="text-[color:var(--forest)] mr-1">†</sup>
               Hover for source
             </span>

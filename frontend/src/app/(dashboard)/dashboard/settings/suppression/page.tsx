@@ -109,7 +109,7 @@ export default function SuppressionSettingsPage() {
       <section className="border-t border-[color:var(--rule)] pt-8">
         <SectionHead n="01" title="Add to the blocklist" />
         <div className="md:pl-[54px]">
-          <p className="font-[family-name:var(--font-barlow)] text-[14px] leading-[1.55] text-[color:var(--ink-2)] max-w-[620px] mb-6">
+          <p className=" text-[14px] leading-[1.55] text-[color:var(--ink-2)] max-w-[620px] mb-6">
             Entries here are honored by every dispatch — the engine will skip any lead whose email
             matches, and any lead whose domain matches. Use it for competitors, test accounts, and
             anyone who has asked to be left alone.
@@ -168,7 +168,7 @@ export default function SuppressionSettingsPage() {
           title={
             <>
               Blocklist{' '}
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] not-italic ml-3">
+              <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] not-italic ml-3">
                 {entries.length}
               </span>
             </>
@@ -176,15 +176,15 @@ export default function SuppressionSettingsPage() {
         />
         <div className="md:pl-[54px]">
           {isLoading ? (
-            <div className="py-12 text-center font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)]">
+            <div className="py-12 text-center  italic text-[14px] text-[color:var(--ink-2)]">
               Loading blocklist…
             </div>
           ) : entries.length === 0 ? (
             <div className="border border-dashed border-[color:var(--rule)] bg-[color:var(--paper-3)]/60 rounded-sm py-12 text-center">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
                 Empty
               </span>
-              <h4 className="mt-2 font-[family-name:var(--font-instrument-serif)] text-[20px] text-[color:var(--ink)]">
+              <h4 className="mt-2  text-[20px] text-[color:var(--ink)]">
                 No suppressed entries yet.
               </h4>
             </div>
@@ -195,13 +195,13 @@ export default function SuppressionSettingsPage() {
                   key={entry._id}
                   className="grid grid-cols-[1fr_120px_100px_40px] gap-4 items-center py-3 border-b border-[color:var(--rule)]/70"
                 >
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[13px] text-[color:var(--ink)] truncate">
+                  <span className="font-mono text-[13px] text-[color:var(--ink)] truncate">
                     {entry.email ?? entry.domain ?? '—'}
                   </span>
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] border border-[color:var(--rule)] bg-[color:var(--paper-3)] px-2 py-0.5 justify-self-start">
+                  <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] border border-[color:var(--rule)] bg-[color:var(--paper-3)] px-2 py-0.5 justify-self-start">
                     {REASON_LABELS[entry.reason]}
                   </span>
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">
+                  <span className="font-mono text-[10px] text-[color:var(--ink-3)]">
                     {new Date(entry.addedAt).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',

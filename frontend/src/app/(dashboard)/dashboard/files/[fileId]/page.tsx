@@ -114,10 +114,10 @@ function RenameDrawer({
       <aside className="absolute right-0 top-0 h-full w-full max-w-[460px] bg-[color:var(--paper)] border-l border-[color:var(--rule)] shadow-2xl flex flex-col">
         <div className="flex items-center justify-between gap-3 px-6 py-5 border-b border-[color:var(--rule)]">
           <div>
-            <div className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+            <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
               Edit file
             </div>
-            <h2 className="font-[family-name:var(--font-instrument-serif)] text-[22px] leading-[1.1] text-[color:var(--ink)] mt-1">
+            <h2 className=" text-[22px] leading-[1.1] text-[color:var(--ink)] mt-1">
               Rename this file.
             </h2>
           </div>
@@ -236,7 +236,7 @@ export default function FileDetailPage() {
 
   if (fileLoading) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-16 font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)] text-center">
+      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-16  italic text-[14px] text-[color:var(--ink-2)] text-center">
         Loading file…
       </div>
     );
@@ -245,13 +245,13 @@ export default function FileDetailPage() {
   if (!file) {
     return (
       <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
           Missing
         </span>
-        <h1 className="mt-3 font-[family-name:var(--font-instrument-serif)] text-[32px] text-[color:var(--ink)]">
+        <h1 className="mt-3  text-[32px] text-[color:var(--ink)]">
           File not found.
         </h1>
-        <p className="mt-2 font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)]">
+        <p className="mt-2  italic text-[14px] text-[color:var(--ink-2)]">
           It may have been deleted.{' '}
           <Link
             href="/dashboard/files"
@@ -271,7 +271,7 @@ export default function FileDetailPage() {
   return (
     <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-10 md:py-12">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-3 mb-6 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase">
+      <div className="flex items-center gap-3 mb-6 font-mono text-[10px] tracking-[0.22em] uppercase">
         <Link href="/dashboard/files" className="text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition">
           Files
         </Link>
@@ -283,21 +283,21 @@ export default function FileDetailPage() {
       <section className="mb-10 pb-8 border-b border-[color:var(--rule)]">
         <div className="flex items-center gap-3 mb-5">
           <span className="block w-8 h-px bg-[color:var(--ink)]" />
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
             {isArchived ? 'Archived file' : 'Active file'}
           </span>
         </div>
         <div className="flex items-end justify-between gap-6 flex-wrap">
           <div className="max-w-[780px]">
-            <h1 className="font-[family-name:var(--font-instrument-serif)] text-[40px] md:text-[54px] leading-[0.98] tracking-[-0.015em] text-[color:var(--ink)]">
+            <h1 className=" text-[40px] md:text-[54px] leading-[0.98] tracking-[-0.015em] text-[color:var(--ink)]">
               {file.name}
             </h1>
             {file.description && (
-              <p className="mt-4 font-[family-name:var(--font-barlow)] italic text-[15px] leading-[1.55] text-[color:var(--ink-2)] max-w-[640px]">
+              <p className="mt-4  italic text-[15px] leading-[1.55] text-[color:var(--ink-2)] max-w-[640px]">
                 {file.description}
               </p>
             )}
-            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
               <span>{sourceLabel}</span>
               {file.source === 'job' && file.sourceJobId && (
                 <Link
@@ -326,7 +326,7 @@ export default function FileDetailPage() {
                     ? 'Restore the file before starting a campaign.'
                     : undefined
               }
-              className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Start a campaign <ArrowEast className="w-3 h-3" />
             </button>
@@ -336,24 +336,24 @@ export default function FileDetailPage() {
 
       {/* Leads table */}
       {leadsLoading ? (
-        <div className="py-16 text-center font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)]">
+        <div className="py-16 text-center  italic text-[14px] text-[color:var(--ink-2)]">
           Loading leads…
         </div>
       ) : leads.length === 0 ? (
         <div className="py-20 text-center">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
             Empty
           </span>
-          <h3 className="mt-3 font-[family-name:var(--font-instrument-serif)] text-[28px] text-[color:var(--ink)]">
+          <h3 className="mt-3  text-[28px] text-[color:var(--ink)]">
             No leads in this file yet.
           </h3>
-          <p className="mt-2 font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)]">
+          <p className="mt-2  italic text-[14px] text-[color:var(--ink-2)]">
             Open the leads archive and use &ldquo;Save to file&rdquo; to curate a set.
           </p>
           <div className="mt-5">
             <Link
               href="/dashboard/leads"
-              className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors"
+              className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors"
             >
               Open leads archive <ArrowEast className="w-3 h-3" />
             </Link>
@@ -364,19 +364,19 @@ export default function FileDetailPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b-2 border-[color:var(--ink)]">
-                <th className="text-left py-3 px-3 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+                <th className="text-left py-3 px-3 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
                   Company
                 </th>
-                <th className="text-left py-3 px-3 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+                <th className="text-left py-3 px-3 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
                   Contact
                 </th>
-                <th className="text-left py-3 px-3 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+                <th className="text-left py-3 px-3 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
                   Primary email
                 </th>
-                <th className="text-left py-3 px-3 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+                <th className="text-left py-3 px-3 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
                   Industry
                 </th>
-                <th className="text-right py-3 pr-3 pl-3 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] w-[48px]">
+                <th className="text-right py-3 pr-3 pl-3 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] w-[48px]">
                 </th>
               </tr>
             </thead>
@@ -394,14 +394,14 @@ export default function FileDetailPage() {
                         href={`/dashboard/leads/${lead._id}`}
                         className="flex items-center gap-3 min-w-0"
                       >
-                        <div className="w-8 h-8 rounded-sm bg-[color:var(--paper-2)] border border-[color:var(--rule)] flex items-center justify-center shrink-0 font-[family-name:var(--font-instrument-serif)] italic text-[12px] text-[color:var(--ink)]">
+                        <div className="w-8 h-8 rounded-sm bg-[color:var(--paper-2)] border border-[color:var(--rule)] flex items-center justify-center shrink-0  italic text-[12px] text-[color:var(--ink)]">
                           {initials(lead.companyName)}
                         </div>
                         <div className="min-w-0">
-                          <div className="font-[family-name:var(--font-barlow)] font-medium text-[13.5px] text-[color:var(--ink)] truncate">
+                          <div className=" font-medium text-[13.5px] text-[color:var(--ink)] truncate">
                             {lead.companyName}
                           </div>
-                          <div className="font-[family-name:var(--font-jetbrains-mono)] text-[10.5px] text-[color:var(--ink-3)] truncate">
+                          <div className="font-mono text-[10.5px] text-[color:var(--ink-3)] truncate">
                             {lead.companyDomain ?? '\u2014'}
                           </div>
                         </div>
@@ -410,32 +410,32 @@ export default function FileDetailPage() {
                     <td className="py-3 px-3">
                       {contact?.fullName ? (
                         <>
-                          <div className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] truncate">
+                          <div className=" text-[13px] text-[color:var(--ink)] truncate">
                             {contact.fullName}
                           </div>
-                          <div className="font-[family-name:var(--font-instrument-serif)] italic text-[12px] text-[color:var(--ink-2)] truncate leading-tight">
+                          <div className=" italic text-[12px] text-[color:var(--ink-2)] truncate leading-tight">
                             {contact.title || '\u2014'}
                           </div>
                         </>
                       ) : (
-                        <span className="font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-3)]">
+                        <span className=" italic text-[12.5px] text-[color:var(--ink-3)]">
                           —
                         </span>
                       )}
                     </td>
                     <td className="py-3 px-3 max-w-[240px]">
                       {email ? (
-                        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[11.5px] text-[color:var(--ink)] truncate block">
+                        <span className="font-mono text-[11.5px] text-[color:var(--ink)] truncate block">
                           {email}
                         </span>
                       ) : (
-                        <span className="font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-3)]">
+                        <span className=" italic text-[12.5px] text-[color:var(--ink-3)]">
                           —
                         </span>
                       )}
                     </td>
                     <td className="py-3 px-3">
-                      <span className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] truncate block">
+                      <span className=" text-[13px] text-[color:var(--ink-2)] truncate block">
                         {lead.industry ?? '\u2014'}
                       </span>
                     </td>

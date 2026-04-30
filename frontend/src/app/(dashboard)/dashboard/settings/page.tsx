@@ -86,14 +86,14 @@ export default function SettingsIndexPage() {
               href={e.href}
               className="group grid grid-cols-[48px_1fr_auto] gap-4 md:gap-6 items-baseline py-6 border-t border-[color:var(--rule)] last:border-b hover:bg-[color:var(--paper-3)]/60 transition-colors"
             >
-              <span className="font-[family-name:var(--font-instrument-serif)] italic text-[28px] leading-none text-[color:var(--forest)] tabular-nums">
+              <span className=" italic text-[28px] leading-none text-[color:var(--forest)] tabular-nums">
                 {e.number}
               </span>
               <div className="min-w-0">
-                <h3 className="font-[family-name:var(--font-instrument-serif)] text-[22px] md:text-[26px] leading-[1.15] text-[color:var(--ink)]">
+                <h3 className=" text-[22px] md:text-[26px] leading-[1.15] text-[color:var(--ink)]">
                   {e.label}
                 </h3>
-                <p className="mt-1.5 font-[family-name:var(--font-barlow)] text-[14px] leading-[1.55] text-[color:var(--ink-2)] max-w-[560px]">
+                <p className="mt-1.5  text-[14px] leading-[1.55] text-[color:var(--ink-2)] max-w-[560px]">
                   {e.description}
                 </p>
               </div>
@@ -103,7 +103,7 @@ export default function SettingsIndexPage() {
         ))}
       </ol>
 
-      <p className="mt-12 pt-6 border-t border-[color:var(--rule)] font-[family-name:var(--font-barlow)] italic text-[12.5px] leading-[1.55] text-[color:var(--ink-2)] max-w-[620px]">
+      <p className="mt-12 pt-6 border-t border-[color:var(--rule)]  italic text-[12.5px] leading-[1.55] text-[color:var(--ink-2)] max-w-[620px]">
         Looking for provider connections? HubSpot, email senders, and outbound webhooks live on{' '}
         <Link
           href="/dashboard/integrations"

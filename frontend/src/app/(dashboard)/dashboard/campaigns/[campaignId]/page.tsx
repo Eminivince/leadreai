@@ -51,7 +51,7 @@ const STATUS_STYLES: Record<string, string> = {
 function StatusPill({ status }: { status: string }) {
   const cls = STATUS_STYLES[status] ?? STATUS_STYLES.draft!;
   return (
-    <span className={`inline-flex items-center rounded-full border px-3 py-0.5 font-[family-name:var(--font-jetbrains-mono)] text-[10.5px] tracking-[0.18em] uppercase ${cls}`}>
+    <span className={`inline-flex items-center rounded-full border px-3 py-0.5 font-mono text-[10.5px] tracking-[0.18em] uppercase ${cls}`}>
       {status}
     </span>
   );
@@ -60,10 +60,10 @@ function StatusPill({ status }: { status: string }) {
 function Kpi({ label, value, accent = false }: { label: string; value: number | string; accent?: boolean }) {
   return (
     <div className="border border-[color:var(--rule)] bg-[color:var(--paper-3)]/60 rounded-sm p-5">
-      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block">
+      <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block">
         {label}
       </span>
-      <div className={`mt-2 font-[family-name:var(--font-instrument-serif)] text-[44px] leading-none tabular-nums ${accent ? 'text-[color:var(--forest)]' : 'text-[color:var(--ink)]'}`}>
+      <div className={`mt-2  text-[44px] leading-none tabular-nums ${accent ? 'text-[color:var(--forest)]' : 'text-[color:var(--ink)]'}`}>
         {value}
       </div>
     </div>
@@ -79,11 +79,11 @@ function Section({ chapter, title, children, action }: {
   return (
     <section className="border-t border-[color:var(--rule)] pt-8 pb-2">
       <div className="flex items-baseline gap-5 mb-5">
-        <span className="font-[family-name:var(--font-instrument-serif)] text-[36px] leading-none text-[color:var(--forest)]">
+        <span className=" text-[36px] leading-none text-[color:var(--forest)]">
           {chapter}
         </span>
         <div className="flex-1 border-t border-[color:var(--rule)] pb-1" />
-        <span className="font-[family-name:var(--font-instrument-serif)] italic text-[18px] text-[color:var(--ink)] self-end pb-0.5">
+        <span className=" italic text-[18px] text-[color:var(--ink)] self-end pb-0.5">
           {title}
         </span>
         {action && <div className="self-end pb-0.5">{action}</div>}
@@ -132,7 +132,7 @@ export default function CampaignDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-3)]">
+      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center  italic text-[14px] text-[color:var(--ink-3)]">
         Loading campaign…
       </div>
     );
@@ -141,12 +141,12 @@ export default function CampaignDetailPage() {
   if (error || !data?.data) {
     return (
       <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center">
-        <p className="font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--warn)]">
+        <p className=" text-[14px] text-[color:var(--warn)]">
           Couldn&rsquo;t load this campaign.
         </p>
         <button
           onClick={() => router.push('/dashboard')}
-          className="mt-4 font-[family-name:var(--font-jetbrains-mono)] text-[11px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
+          className="mt-4 font-mono text-[11px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
         >
           Back to dispatches
         </button>
@@ -164,25 +164,25 @@ export default function CampaignDetailPage() {
           <div className="flex items-center gap-3 mb-4">
             <Link
               href="/dashboard"
-              className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
+              className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
             >
               Dispatches
             </Link>
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">/</span>
+            <span className="font-mono text-[10px] text-[color:var(--ink-3)]">/</span>
             <Link
               href="/dashboard/campaigns"
-              className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
+              className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
             >
               Campaigns
             </Link>
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">/</span>
+            <span className="font-mono text-[10px] text-[color:var(--ink-3)]">/</span>
             <StatusPill status={campaign.status} />
           </div>
-          <h1 className="font-[family-name:var(--font-instrument-serif)] text-[44px] md:text-[56px] leading-[0.97] tracking-[-0.015em] text-[color:var(--ink)]">
+          <h1 className=" text-[44px] md:text-[56px] leading-[0.97] tracking-[-0.015em] text-[color:var(--ink)]">
             {campaign.name}
           </h1>
           {campaign.description && (
-            <p className="mt-3 font-[family-name:var(--font-barlow)] text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
+            <p className="mt-3  text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
               {campaign.description}
             </p>
           )}
@@ -192,7 +192,7 @@ export default function CampaignDetailPage() {
             <button
               onClick={() => void runAction('pause')}
               disabled={busy !== null}
-              className="inline-flex items-center gap-2 border border-[color:var(--rule)] bg-[color:var(--paper-3)] text-[color:var(--ink)] hover:border-[color:var(--ink)] px-4 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] disabled:opacity-50 transition"
+              className="inline-flex items-center gap-2 border border-[color:var(--rule)] bg-[color:var(--paper-3)] text-[color:var(--ink)] hover:border-[color:var(--ink)] px-4 py-2.5 rounded-full  text-[13px] disabled:opacity-50 transition"
             >
               {busy === 'pause' ? 'Pausing…' : 'Pause'}
             </button>
@@ -201,7 +201,7 @@ export default function CampaignDetailPage() {
             <button
               onClick={() => void runAction('resume')}
               disabled={busy !== null}
-              className="inline-flex items-center gap-2 bg-[color:var(--forest)] text-[color:var(--paper)] hover:bg-[color:var(--forest-2)] px-4 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium disabled:opacity-50 transition"
+              className="inline-flex items-center gap-2 bg-[color:var(--forest)] text-[color:var(--paper)] hover:bg-[color:var(--forest-2)] px-4 py-2.5 rounded-full  text-[13px] font-medium disabled:opacity-50 transition"
             >
               {busy === 'resume' ? 'Resuming…' : 'Resume'}
             </button>
@@ -210,7 +210,7 @@ export default function CampaignDetailPage() {
       </section>
 
       {actionError && (
-        <div role="alert" className="mb-6 border border-[color:var(--warn)]/60 bg-[color:var(--warn)]/10 rounded-sm p-4 font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink)]">
+        <div role="alert" className="mb-6 border border-[color:var(--warn)]/60 bg-[color:var(--warn)]/10 rounded-sm p-4  text-[13.5px] text-[color:var(--ink)]">
           {actionError}
         </div>
       )}
@@ -225,7 +225,7 @@ export default function CampaignDetailPage() {
           <Kpi label="Bounced" value={enrollments.bounced + campaignStats.bounced} />
           <Kpi label="Unsubscribed" value={enrollments.unsubscribed} />
         </div>
-        <p className="mt-4 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-3)]">
+        <p className="mt-4  italic text-[12.5px] text-[color:var(--ink-3)]">
           {enrollments.paused > 0 ? `${enrollments.paused} enrollments paused. ` : ''}
           {enrollments.completed > 0 ? `${enrollments.completed} completed. ` : ''}
           {enrollments.stopped > 0 ? `${enrollments.stopped} stopped. ` : ''}
@@ -244,17 +244,17 @@ export default function CampaignDetailPage() {
                   key={step.stepNumber}
                   className="grid grid-cols-[48px_auto_1fr_auto_auto_auto] gap-4 items-center py-4 border-b border-[color:var(--rule)]"
                 >
-                  <span className="font-[family-name:var(--font-instrument-serif)] italic text-[26px] leading-none text-[color:var(--ink-3)] tabular-nums">
+                  <span className=" italic text-[26px] leading-none text-[color:var(--ink-3)] tabular-nums">
                     {String(step.stepNumber).padStart(2, '0')}
                   </span>
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
+                  <span className="font-mono text-[10.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
                     {step.channel}{step.useAI ? ' · AI' : ''}
                   </span>
                   <div className="min-w-0">
-                    <div className="font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink)] truncate">
+                    <div className=" text-[14px] text-[color:var(--ink)] truncate">
                       {step.emailTemplate?.subject || <span className="italic text-[color:var(--ink-3)]">No subject</span>}
                     </div>
-                    <div className="font-[family-name:var(--font-jetbrains-mono)] text-[10.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] mt-1 truncate">
+                    <div className="font-mono text-[10.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] mt-1 truncate">
                       Day {step.delayDays}{step.tone ? ` · ${step.tone}` : ''}{step.goal ? ` · goal: ${step.goal}` : ''}
                     </div>
                   </div>
@@ -266,7 +266,7 @@ export default function CampaignDetailPage() {
             })}
           </div>
         ) : (
-          <p className="font-[family-name:var(--font-barlow)] italic text-[13.5px] text-[color:var(--ink-3)]">
+          <p className=" italic text-[13.5px] text-[color:var(--ink-3)]">
             This campaign has no linked sequence. (Legacy campaigns created before the builder update.)
           </p>
         )}
@@ -274,7 +274,7 @@ export default function CampaignDetailPage() {
 
       {/* ── Activity footer ────────────────────────────────── */}
       <Section chapter="03" title="Notes">
-        <ul className="font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink-2)] space-y-2">
+        <ul className=" text-[13.5px] text-[color:var(--ink-2)] space-y-2">
           <li>Stats refresh every 15 seconds. <span className="text-[color:var(--ink-3)]">Sent counter is maintained by the sequence worker per successful delivery.</span></li>
           <li>Reply + bounce ingestion comes online with the webhook milestone; those columns will stay at zero until then.</li>
           <li>Drafts generated via AI per-send are persisted under <Link href={`/dashboard/leads?campaignId=${campaign._id}`} className="underline decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]">leads</Link> for audit.</li>
@@ -290,10 +290,10 @@ function StepCount({ label, n, tone = 'muted' }: { label: string; n: number; ton
     : n > 0 ? 'text-[color:var(--ink)]' : 'text-[color:var(--ink-3)]';
   return (
     <div className="w-[76px] text-right">
-      <div className={`font-[family-name:var(--font-instrument-serif)] text-[22px] leading-none tabular-nums ${numCls}`}>
+      <div className={` text-[22px] leading-none tabular-nums ${numCls}`}>
         {n}
       </div>
-      <div className="mt-1 font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+      <div className="mt-1 font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
         {label}
       </div>
     </div>

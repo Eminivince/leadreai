@@ -156,7 +156,7 @@ export default function KnowledgeBaseSettingsPage() {
           title={
             <>
               House style{' '}
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] not-italic ml-3">
+              <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] not-italic ml-3">
                 {entries.length} / {MAX_ENTRIES}
               </span>
             </>
@@ -164,7 +164,7 @@ export default function KnowledgeBaseSettingsPage() {
         />
         <div className="md:pl-[54px]">
           <div className="flex items-center justify-between mb-5">
-            <p className="font-[family-name:var(--font-barlow)] text-[14px] leading-[1.5] text-[color:var(--ink-2)] max-w-[560px]">
+            <p className=" text-[14px] leading-[1.5] text-[color:var(--ink-2)] max-w-[560px]">
               Entries teach the agent what to say, how to say it, and who you sell to. The engine
               reads these when drafting outreach and ranking leads.
             </p>
@@ -174,15 +174,15 @@ export default function KnowledgeBaseSettingsPage() {
           </div>
 
           {isLoading ? (
-            <div className="py-12 text-center font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)]">
+            <div className="py-12 text-center  italic text-[14px] text-[color:var(--ink-2)]">
               Loading entries…
             </div>
           ) : entries.length === 0 ? (
             <div className="border border-dashed border-[color:var(--rule)] bg-[color:var(--paper-3)]/60 rounded-sm py-12 text-center">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
                 No entries
               </span>
-              <h4 className="mt-2 font-[family-name:var(--font-instrument-serif)] text-[20px] text-[color:var(--ink)]">
+              <h4 className="mt-2  text-[20px] text-[color:var(--ink)]">
                 Start with <em className="italic text-[color:var(--forest)]">About the company</em>.
               </h4>
             </div>
@@ -195,14 +195,14 @@ export default function KnowledgeBaseSettingsPage() {
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-3 flex-wrap mb-1">
-                      <h4 className="font-[family-name:var(--font-instrument-serif)] text-[18px] leading-tight text-[color:var(--ink)]">
+                      <h4 className=" text-[18px] leading-tight text-[color:var(--ink)]">
                         {entry.title}
                       </h4>
-                      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] border border-[color:var(--rule)] px-2 py-0.5 bg-[color:var(--paper-3)]">
+                      <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] border border-[color:var(--rule)] px-2 py-0.5 bg-[color:var(--paper-3)]">
                         {TYPE_LABELS[entry.type] ?? entry.type}
                       </span>
                     </div>
-                    <p className="font-[family-name:var(--font-barlow)] text-[13.5px] leading-[1.55] text-[color:var(--ink-2)]">
+                    <p className=" text-[13.5px] leading-[1.55] text-[color:var(--ink-2)]">
                       {entry.content}
                     </p>
                   </div>
@@ -257,7 +257,7 @@ export default function KnowledgeBaseSettingsPage() {
               style={{ animation: 'kbSlide .26s cubic-bezier(.2,.9,.25,1) both' }}
             >
               <div className="flex items-center justify-between px-7 pt-7 pb-4 border-b border-[color:var(--rule)]">
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
+                <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
                   {editing ? 'Edit entry' : 'New entry'}
                 </span>
                 <button
@@ -270,7 +270,7 @@ export default function KnowledgeBaseSettingsPage() {
               </div>
 
               <div className="px-7 pt-6 pb-5 border-b border-[color:var(--rule)]">
-                <h2 className="font-[family-name:var(--font-instrument-serif)] text-[32px] leading-[1.05] text-[color:var(--ink)]">
+                <h2 className=" text-[32px] leading-[1.05] text-[color:var(--ink)]">
                   {editing ? editing.title : 'Teach the agent something new.'}
                 </h2>
               </div>
@@ -302,7 +302,7 @@ export default function KnowledgeBaseSettingsPage() {
                 <div>
                   <div className="flex items-baseline justify-between mb-2">
                     <Label>Content</Label>
-                    <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">
+                    <span className="font-mono text-[10px] text-[color:var(--ink-3)]">
                       {form.content.length} / 2000
                     </span>
                   </div>

@@ -129,20 +129,20 @@ export default function DataSourcesPage() {
       <div className="flex items-center justify-between gap-4 pb-4 border-b border-[color:var(--rule)]">
         <div className="flex items-center gap-3">
           <span className="block w-8 h-px bg-[color:var(--ink)]" />
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
             Connected providers
           </span>
         </div>
         <Link
           href="/dashboard/settings/data-sources/invocations"
-          className="inline-flex items-center gap-1.5 font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--forest)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--forest)] transition"
+          className="inline-flex items-center gap-1.5  italic text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--forest)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--forest)] transition"
         >
           View invocation log →
         </Link>
       </div>
 
       {isLoading && (
-        <p className="font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-3)]">
+        <p className=" italic text-[14px] text-[color:var(--ink-3)]">
           Loading providers…
         </p>
       )}
@@ -150,10 +150,10 @@ export default function DataSourcesPage() {
       {grouped.map((g) => (
         <section key={g.label}>
           <div className="mb-4">
-            <h2 className="font-[family-name:var(--font-instrument-serif)] text-[24px] md:text-[28px] leading-[1.1] text-[color:var(--ink)]">
+            <h2 className=" text-[24px] md:text-[28px] leading-[1.1] text-[color:var(--ink)]">
               {g.label}
             </h2>
-            <p className="mt-1 font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-2)]">
+            <p className="mt-1  italic text-[13px] text-[color:var(--ink-2)]">
               {g.description}
             </p>
           </div>
@@ -176,17 +176,17 @@ export default function DataSourcesPage() {
                     aria-hidden
                   />
                   <div className="min-w-0">
-                    <div className="font-[family-name:var(--font-instrument-serif)] text-[18px] leading-tight text-[color:var(--ink)]">
+                    <div className=" text-[18px] leading-tight text-[color:var(--ink)]">
                       {s.name}
                     </div>
-                    <p className="mt-0.5 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] leading-[1.45] line-clamp-1">
+                    <p className="mt-0.5  text-[13px] text-[color:var(--ink-2)] leading-[1.45] line-clamp-1">
                       {s.description}
                     </p>
                   </div>
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] whitespace-nowrap">
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] whitespace-nowrap">
                     {authBadge(s)}
                   </span>
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] whitespace-nowrap min-w-[80px] text-right">
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] whitespace-nowrap min-w-[80px] text-right">
                     {needsAuth
                       ? credCount > 0
                         ? `${credCount} cred${credCount === 1 ? '' : 's'}`
@@ -310,34 +310,34 @@ function SourceDrawer({
           {/* Header */}
           <div className="flex items-start justify-between gap-4">
             <div>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1">
                 {authBadge(source)} · {source.category}
               </span>
-              <h2 className="font-[family-name:var(--font-instrument-serif)] text-[28px] leading-[1.05] text-[color:var(--ink)]">
+              <h2 className=" text-[28px] leading-[1.05] text-[color:var(--ink)]">
                 {source.name}
               </h2>
             </div>
             <button
               onClick={onClose}
-              className="font-[family-name:var(--font-instrument-serif)] text-[22px] leading-none text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
+              className=" text-[22px] leading-none text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
               aria-label="Close"
             >
               ×
             </button>
           </div>
 
-          <p className="font-[family-name:var(--font-barlow)] text-[14px] leading-[1.55] text-[color:var(--ink-2)]">
+          <p className=" text-[14px] leading-[1.55] text-[color:var(--ink-2)]">
             {source.description}
           </p>
 
           {source.pricing.notes && (
-            <p className="font-[family-name:var(--font-barlow)] italic text-[12.5px] leading-[1.55] text-[color:var(--ink-3)] border-l-2 border-[color:var(--rule)] pl-3">
+            <p className=" italic text-[12.5px] leading-[1.55] text-[color:var(--ink-3)] border-l-2 border-[color:var(--rule)] pl-3">
               {source.pricing.notes}
             </p>
           )}
 
           {!needsAuth ? (
-            <div className="border border-[color:var(--rule)] bg-[color:var(--paper-3)] rounded-sm p-4 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)]">
+            <div className="border border-[color:var(--rule)] bg-[color:var(--paper-3)] rounded-sm p-4  text-[13px] text-[color:var(--ink-2)]">
               This is a built-in source — no credential needed.
             </div>
           ) : (
@@ -345,7 +345,7 @@ function SourceDrawer({
               {/* Existing credentials */}
               {creds.length > 0 && (
                 <div>
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
+                  <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
                     Connected credentials
                   </span>
                   <div className="border-t border-[color:var(--rule)]">
@@ -356,16 +356,16 @@ function SourceDrawer({
                       >
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink)]">
+                            <span className=" text-[13.5px] text-[color:var(--ink)]">
                               {c.label || '—'}
                             </span>
                             {c.isDefault && (
-                              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.18em] uppercase text-[color:var(--forest)]">
+                              <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--forest)]">
                                 Default
                               </span>
                             )}
                           </div>
-                          <div className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)] mt-0.5">
+                          <div className="font-mono text-[10px] text-[color:var(--ink-3)] mt-0.5">
                             {c.verifiedAt
                               ? `Verified ${relative(c.verifiedAt)}`
                               : 'Not verified'}
@@ -374,7 +374,7 @@ function SourceDrawer({
                         </div>
                         <button
                           onClick={() => void handleDelete(c._id)}
-                          className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--warn)] transition"
+                          className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--warn)] transition"
                         >
                           Delete
                         </button>
@@ -386,7 +386,7 @@ function SourceDrawer({
 
               {/* Add credential form */}
               <div>
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-3">
+                <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-3">
                   {creds.length === 0 ? 'Add first credential' : 'Add another credential'}
                 </span>
                 <div className="flex flex-col gap-4">
@@ -411,13 +411,13 @@ function SourceDrawer({
 
                 {testResult && (
                   <div
-                    className={`mt-3 border-l-2 px-3 py-2 font-[family-name:var(--font-barlow)] text-[12.5px] ${
+                    className={`mt-3 border-l-2 px-3 py-2  text-[12.5px] ${
                       testResult.ok
                         ? 'border-[color:var(--forest)] text-[color:var(--ink)]'
                         : 'border-[color:var(--warn)] text-[color:var(--ink)]'
                     }`}
                   >
-                    <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase block mb-1 text-[color:var(--ink-3)]">
+                    <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase block mb-1 text-[color:var(--ink-3)]">
                       {testResult.ok ? 'Test passed' : 'Test failed'}
                     </span>
                     {testResult.message}
@@ -425,7 +425,7 @@ function SourceDrawer({
                 )}
 
                 {error && (
-                  <div className="mt-3 border-l-2 border-[color:var(--warn)] px-3 py-2 font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink)]">
+                  <div className="mt-3 border-l-2 border-[color:var(--warn)] px-3 py-2  text-[12.5px] text-[color:var(--ink)]">
                     {error}
                   </div>
                 )}
@@ -434,14 +434,14 @@ function SourceDrawer({
                   <button
                     onClick={() => void handleTest()}
                     disabled={!requiredFieldsFilled || testing}
-                    className="inline-flex items-center gap-2 border border-[color:var(--rule)] bg-[color:var(--paper-3)] text-[color:var(--ink)] hover:border-[color:var(--ink)] px-4 py-2 rounded-full font-[family-name:var(--font-barlow)] text-[13px] disabled:opacity-40"
+                    className="inline-flex items-center gap-2 border border-[color:var(--rule)] bg-[color:var(--paper-3)] text-[color:var(--ink)] hover:border-[color:var(--ink)] px-4 py-2 rounded-full  text-[13px] disabled:opacity-40"
                   >
                     {testing ? 'Testing…' : 'Test'}
                   </button>
                   <button
                     onClick={() => void handleSave()}
                     disabled={!requiredFieldsFilled || saving}
-                    className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-4 py-2 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium disabled:opacity-40"
+                    className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-4 py-2 rounded-full  text-[13px] font-medium disabled:opacity-40"
                   >
                     {saving ? 'Saving…' : 'Save credential'}
                   </button>
@@ -453,10 +453,10 @@ function SourceDrawer({
           {/* Input/output describe — helpful for users composing a table column */}
           {source.inputFields.length > 0 && (
             <div className="border-t border-[color:var(--rule)] pt-5">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
+              <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
                 Inputs
               </span>
-              <ul className="font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink-2)] space-y-1">
+              <ul className=" text-[12.5px] text-[color:var(--ink-2)] space-y-1">
                 {source.inputFields.map((f) => (
                   <li key={f.key}>
                     <span className="text-[color:var(--ink)]">{f.label}</span>
@@ -469,14 +469,14 @@ function SourceDrawer({
           )}
           {source.outputFields.length > 0 && (
             <div>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
+              <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
                 Outputs
               </span>
-              <ul className="font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink-2)] space-y-1">
+              <ul className=" text-[12.5px] text-[color:var(--ink-2)] space-y-1">
                 {source.outputFields.map((f) => (
                   <li key={f.key}>
                     <span className="text-[color:var(--ink)]">{f.label}</span>
-                    <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)] ml-1">
+                    <span className="font-mono text-[10px] text-[color:var(--ink-3)] ml-1">
                       {f.type}
                     </span>
                   </li>
@@ -509,7 +509,7 @@ function LabeledInput({
 }) {
   return (
     <label className="block">
-      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1.5">
+      <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1.5">
         {label}
       </span>
       <input
@@ -517,10 +517,10 @@ function LabeledInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-2 outline-none font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink)]"
+        className="w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-2 outline-none  text-[14px] text-[color:var(--ink)]"
       />
       {hint && (
-        <span className="mt-1 block font-[family-name:var(--font-barlow)] italic text-[11.5px] text-[color:var(--ink-3)]">
+        <span className="mt-1 block  italic text-[11.5px] text-[color:var(--ink-3)]">
           {hint}
         </span>
       )}

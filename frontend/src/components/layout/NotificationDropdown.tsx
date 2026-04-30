@@ -97,7 +97,7 @@ export function NotificationDropdown() {
       >
         <BellGlyph />
         {unread > 0 && (
-          <span className="absolute top-0.5 right-0.5 min-w-[14px] h-[14px] px-[3px] rounded-full bg-[color:var(--rust)] text-[color:var(--paper)] font-[family-name:var(--font-jetbrains-mono)] text-[9px] font-semibold flex items-center justify-center leading-none tabular-nums">
+          <span className="absolute top-0.5 right-0.5 min-w-[14px] h-[14px] px-[3px] rounded-full bg-[color:var(--rust)] text-[color:var(--paper)] font-mono text-[9px] font-semibold flex items-center justify-center leading-none tabular-nums">
             {unread > 99 ? '99+' : unread}
           </span>
         )}
@@ -107,17 +107,17 @@ export function NotificationDropdown() {
         <div className="absolute top-full right-0 mt-2 z-30 w-[380px] max-w-[calc(100vw-2rem)] bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-sm shadow-xl">
           <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[color:var(--rule)]">
             <div>
-              <div className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+              <div className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
                 The wire
               </div>
-              <div className="font-[family-name:var(--font-instrument-serif)] italic text-[18px] leading-tight text-[color:var(--ink)]">
+              <div className=" italic text-[18px] leading-tight text-[color:var(--ink)]">
                 Dispatches in.
               </div>
             </div>
             {unread > 0 && (
               <button
                 onClick={() => markAllRead()}
-                className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
+                className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
               >
                 Mark all read
               </button>
@@ -127,10 +127,10 @@ export function NotificationDropdown() {
           <div className="max-h-[420px] overflow-y-auto">
             {items.length === 0 ? (
               <div className="px-4 py-10 text-center">
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+                <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
                   Quiet
                 </span>
-                <p className="mt-2 font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-2)]">
+                <p className="mt-2  italic text-[13px] text-[color:var(--ink-2)]">
                   Nothing on the wire yet.
                 </p>
               </div>
@@ -147,7 +147,7 @@ export function NotificationDropdown() {
                       />
                       <div className="min-w-0 flex-1">
                         <div
-                          className={`font-[family-name:var(--font-barlow)] text-[13.5px] leading-snug ${
+                          className={` text-[13.5px] leading-snug ${
                             isUnread
                               ? 'text-[color:var(--ink)] font-medium'
                               : 'text-[color:var(--ink-2)]'
@@ -156,11 +156,11 @@ export function NotificationDropdown() {
                           {n.title}
                         </div>
                         {n.message && (
-                          <div className="mt-0.5 font-[family-name:var(--font-barlow)] italic text-[12px] text-[color:var(--ink-2)] line-clamp-2">
+                          <div className="mt-0.5  italic text-[12px] text-[color:var(--ink-2)] line-clamp-2">
                             {n.message}
                           </div>
                         )}
-                        <div className="mt-1 font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
+                        <div className="mt-1 font-mono text-[9.5px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
                           {relativeTime(n.createdAt)}
                         </div>
                       </div>
@@ -197,7 +197,7 @@ export function NotificationDropdown() {
             <Link
               href="/dashboard"
               onClick={() => setOpen(false)}
-              className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
+              className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
             >
               Back to the desk →
             </Link>

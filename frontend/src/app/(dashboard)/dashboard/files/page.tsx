@@ -63,11 +63,11 @@ function FileCard({ n, file }: { n: number; file: LeadFileSummary }) {
       }`}
     >
       <div className="flex items-start justify-between gap-3 mb-2.5">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] tabular-nums">
+        <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] tabular-nums">
           {String(n).padStart(2, '0')}
         </span>
         <span
-          className={`font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase px-2 py-0.5 border bg-[color:var(--paper-3)] ${
+          className={`font-mono text-[9.5px] tracking-[0.18em] uppercase px-2 py-0.5 border bg-[color:var(--paper-3)] ${
             isArchived
               ? 'text-[color:var(--ink-3)] border-[color:var(--rule)]'
               : file.source === 'job'
@@ -79,26 +79,26 @@ function FileCard({ n, file }: { n: number; file: LeadFileSummary }) {
         </span>
       </div>
 
-      <h3 className="font-[family-name:var(--font-instrument-serif)] text-[22px] md:text-[26px] leading-[1.1] text-[color:var(--ink)] mb-1.5 tracking-[-0.005em]">
+      <h3 className=" text-[22px] md:text-[26px] leading-[1.1] text-[color:var(--ink)] mb-1.5 tracking-[-0.005em]">
         {file.name}
       </h3>
 
       {file.description && (
-        <p className="font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-2)] leading-[1.45] mb-3 line-clamp-2">
+        <p className=" italic text-[13px] text-[color:var(--ink-2)] leading-[1.45] mb-3 line-clamp-2">
           {file.description}
         </p>
       )}
 
       <div className="mt-auto pt-3 flex items-baseline justify-between gap-3">
         <div>
-          <div className="font-[family-name:var(--font-instrument-serif)] text-[28px] leading-none text-[color:var(--ink)] tabular-nums">
+          <div className=" text-[28px] leading-none text-[color:var(--ink)] tabular-nums">
             {file.leadCount}
           </div>
-          <div className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] mt-0.5">
+          <div className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] mt-0.5">
             {file.leadCount === 1 ? 'Lead' : 'Leads'}
           </div>
         </div>
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)] tabular-nums">
+        <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)] tabular-nums">
           Updated {relativeTime(file.updatedAt)}
         </span>
       </div>
@@ -156,10 +156,10 @@ function NewFileDrawer({
       <aside className="absolute right-0 top-0 h-full w-full max-w-[460px] bg-[color:var(--paper)] border-l border-[color:var(--rule)] shadow-2xl flex flex-col">
         <div className="flex items-center justify-between gap-3 px-6 py-5 border-b border-[color:var(--rule)]">
           <div>
-            <div className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+            <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
               New file
             </div>
-            <h2 className="font-[family-name:var(--font-instrument-serif)] text-[22px] leading-[1.1] text-[color:var(--ink)] mt-1">
+            <h2 className=" text-[22px] leading-[1.1] text-[color:var(--ink)] mt-1">
               Cut a fresh file.
             </h2>
           </div>
@@ -180,7 +180,7 @@ function NewFileDrawer({
             createMutation.mutate();
           }}
         >
-          <p className="font-[family-name:var(--font-barlow)] italic text-[13.5px] text-[color:var(--ink-2)] leading-[1.55]">
+          <p className=" italic text-[13.5px] text-[color:var(--ink-2)] leading-[1.55]">
             Files are workspace-scoped sets of leads. Add leads from the leads page or via
             &ldquo;Save to file&rdquo; on any dispatch. You can target a file from a campaign.
           </p>
@@ -280,16 +280,16 @@ export default function FilesPage() {
       <section className="mb-10">
         <div className="flex items-center gap-3 mb-5">
           <span className="block w-8 h-px bg-[color:var(--ink)]" />
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
             The files
           </span>
         </div>
         <div className="flex items-end justify-between gap-6 flex-wrap">
           <div className="max-w-[780px]">
-            <h1 className="font-[family-name:var(--font-instrument-serif)] text-[44px] md:text-[60px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
+            <h1 className=" text-[44px] md:text-[60px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
               Curated <em className="italic text-[color:var(--forest)]">sets of leads</em>, named.
             </h1>
-            <p className="mt-4 font-[family-name:var(--font-barlow)] text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
+            <p className="mt-4  text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
               Every dispatch auto-files its results. Cut new files by hand to group leads
               across runs — an ICP study, a short list, a reach-out round — then target
               them from a campaign.
@@ -301,7 +301,7 @@ export default function FilesPage() {
             </GhostButton>
             <Link
               href="/dashboard/leads"
-              className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors"
+              className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors"
             >
               Open the leads archive <ArrowEast className="w-3 h-3" />
             </Link>
@@ -319,7 +319,7 @@ export default function FilesPage() {
               <button
                 key={t.k}
                 onClick={() => setTab(t.k)}
-                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full font-[family-name:var(--font-barlow)] text-[12.5px] transition-colors ${
+                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full  text-[12.5px] transition-colors ${
                   on
                     ? 'bg-[color:var(--ink)] text-[color:var(--paper)]'
                     : 'text-[color:var(--ink-2)] hover:text-[color:var(--ink)]'
@@ -327,7 +327,7 @@ export default function FilesPage() {
               >
                 <span>{t.label}</span>
                 <span
-                  className={`font-[family-name:var(--font-jetbrains-mono)] text-[10px] tabular-nums ${
+                  className={`font-mono text-[10px] tabular-nums ${
                     on ? 'text-[color:var(--paper)]/65' : 'text-[color:var(--ink-3)]'
                   }`}
                 >
@@ -342,27 +342,27 @@ export default function FilesPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search files…"
-            className="w-full bg-transparent py-2 outline-none font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
+            className="w-full bg-transparent py-2 outline-none  text-[13.5px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
           />
         </div>
       </div>
 
       {/* Grid */}
       {isLoading ? (
-        <div className="py-16 text-center font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)]">
+        <div className="py-16 text-center  italic text-[14px] text-[color:var(--ink-2)]">
           Loading files…
         </div>
       ) : filtered.length === 0 ? (
         <div className="py-20 text-center">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
             Empty
           </span>
-          <h3 className="mt-3 font-[family-name:var(--font-instrument-serif)] text-[28px] text-[color:var(--ink)]">
+          <h3 className="mt-3  text-[28px] text-[color:var(--ink)]">
             {tab === 'archived'
               ? 'Nothing in the archive.'
               : 'No files match yet.'}
           </h3>
-          <p className="mt-2 font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)]">
+          <p className="mt-2  italic text-[14px] text-[color:var(--ink-2)]">
             {tab === 'archived'
               ? 'Archive a file from its detail page when it’s run its course.'
               : 'Run a dispatch, or cut a new file by hand.'}

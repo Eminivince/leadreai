@@ -29,7 +29,7 @@ function CopyButton({ text }: { text: string }) {
     <button
       onClick={handleCopy}
       aria-label={copied ? 'Copied to clipboard' : 'Copy to clipboard'}
-      className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase px-3 py-1 border border-[color:var(--rule)] rounded-full text-[color:var(--ink-2)] hover:text-[color:var(--ink)] hover:border-[color:var(--ink)] transition-colors"
+      className="font-mono text-[10px] tracking-[0.18em] uppercase px-3 py-1 border border-[color:var(--rule)] rounded-full text-[color:var(--ink-2)] hover:text-[color:var(--ink)] hover:border-[color:var(--ink)] transition-colors"
     >
       {copied ? 'Copied' : 'Copy'}
     </button>
@@ -46,18 +46,18 @@ function ProviderBlock({ provider, webhookUrl, steps }: ProviderBlockProps) {
   return (
     <section className="border border-[color:var(--rule)] rounded-sm p-6 flex flex-col gap-5">
       <div className="flex items-center gap-3">
-        <span className="font-[family-name:var(--font-instrument-serif)] text-[22px] text-[color:var(--ink)]">
+        <span className=" text-[22px] text-[color:var(--ink)]">
           {provider}
         </span>
       </div>
 
       {/* Webhook URL */}
       <div>
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
+        <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
           Webhook URL
         </span>
         <div className="flex items-center gap-3 border border-[color:var(--rule)] rounded-sm px-3 py-2.5 bg-[color:var(--paper-3)]/60">
-          <code className="flex-1 font-[family-name:var(--font-jetbrains-mono)] text-[12px] text-[color:var(--ink)] break-all">
+          <code className="flex-1 font-mono text-[12px] text-[color:var(--ink)] break-all">
             {webhookUrl}
           </code>
           <CopyButton text={webhookUrl} />
@@ -66,16 +66,16 @@ function ProviderBlock({ provider, webhookUrl, steps }: ProviderBlockProps) {
 
       {/* Setup steps */}
       <div>
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-3">
+        <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-3">
           Setup
         </span>
         <ol className="flex flex-col gap-2">
           {steps.map((step, i) => (
             <li key={i} className="flex gap-3 items-baseline">
-              <span className="font-[family-name:var(--font-instrument-serif)] italic text-[18px] text-[color:var(--forest)] tabular-nums w-5 shrink-0">
+              <span className=" italic text-[18px] text-[color:var(--forest)] tabular-nums w-5 shrink-0">
                 {i + 1}
               </span>
-              <span className="font-[family-name:var(--font-barlow)] text-[13.5px] leading-[1.55] text-[color:var(--ink-2)]">
+              <span className=" text-[13.5px] leading-[1.55] text-[color:var(--ink-2)]">
                 {step}
               </span>
             </li>
@@ -93,7 +93,7 @@ export default function EmailSettingsPage() {
   return (
     <div className="flex flex-col gap-10">
       <div>
-        <p className="font-[family-name:var(--font-barlow)] text-[14.5px] leading-[1.6] text-[color:var(--ink-2)] max-w-[600px]">
+        <p className=" text-[14.5px] leading-[1.6] text-[color:var(--ink-2)] max-w-[600px]">
           To track replies in-app, configure your email provider to forward inbound email to LeadreAI.
           When a prospect replies, the sequence pauses automatically and the reply appears in the campaign dashboard.
         </p>
@@ -124,7 +124,7 @@ export default function EmailSettingsPage() {
         />
       </div>
 
-      <p className="font-[family-name:var(--font-barlow)] text-[12.5px] italic text-[color:var(--ink-3)]">
+      <p className=" text-[12.5px] italic text-[color:var(--ink-3)]">
         Reply tracking requires DNS access to your sending domain. Changes to MX records can take up to 48 hours to propagate.
       </p>
     </div>

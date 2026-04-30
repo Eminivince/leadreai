@@ -49,7 +49,7 @@ export default function TeamSettingsPage() {
 
   if (isLoading || !ws) {
     return (
-      <div className="py-8 font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)]">
+      <div className="py-8  italic text-[14px] text-[color:var(--ink-2)]">
         Loading masthead…
       </div>
     );
@@ -67,7 +67,7 @@ export default function TeamSettingsPage() {
           title={
             <>
               Masthead{' '}
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] not-italic ml-3">
+              <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] not-italic ml-3">
                 {members.length} {members.length === 1 ? 'seat' : 'seats'}
               </span>
             </>
@@ -90,33 +90,33 @@ export default function TeamSettingsPage() {
                   key={m.userId}
                   className="grid grid-cols-[40px_1fr_auto_auto] gap-4 items-center py-4 border-b border-[color:var(--rule)]/70"
                 >
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] tabular-nums">
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] tabular-nums">
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-full bg-[color:var(--ink)] text-[color:var(--paper)] flex items-center justify-center shrink-0 font-[family-name:var(--font-instrument-serif)] italic text-[12px]">
+                    <div className="w-8 h-8 rounded-full bg-[color:var(--ink)] text-[color:var(--paper)] flex items-center justify-center shrink-0  italic text-[12px]">
                       {initials(name)}
                     </div>
                     <div className="min-w-0">
-                      <div className="font-[family-name:var(--font-barlow)] font-medium text-[13.5px] text-[color:var(--ink)] truncate">
+                      <div className=" font-medium text-[13.5px] text-[color:var(--ink)] truncate">
                         {name}
                         {isSelf && (
-                          <span className="ml-2 font-[family-name:var(--font-jetbrains-mono)] italic text-[10px] tracking-[0.16em] uppercase text-[color:var(--forest)] not-italic">
+                          <span className="ml-2 font-mono italic text-[10px] tracking-[0.16em] uppercase text-[color:var(--forest)] not-italic">
                             you
                           </span>
                         )}
                       </div>
-                      <div className="font-[family-name:var(--font-barlow)] italic text-[12px] text-[color:var(--ink-2)] truncate">
+                      <div className=" italic text-[12px] text-[color:var(--ink-2)] truncate">
                         {subtitle}
                       </div>
                     </div>
                   </div>
                   <span
-                    className={`inline-flex items-center font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase px-2 py-0.5 border bg-[color:var(--paper-3)] ${badge.tone}`}
+                    className={`inline-flex items-center font-mono text-[9.5px] tracking-[0.18em] uppercase px-2 py-0.5 border bg-[color:var(--paper-3)] ${badge.tone}`}
                   >
                     {badge.label}
                   </span>
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] hidden md:inline">
+                  <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] hidden md:inline">
                     joined{' '}
                     {new Date(m.joinedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>

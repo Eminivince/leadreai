@@ -180,7 +180,7 @@ export default function LibraryDocumentDetailPage() {
 
   if (docLoading) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-16 font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)] text-center">
+      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-16  italic text-[14px] text-[color:var(--ink-2)] text-center">
         Loading document…
       </div>
     );
@@ -189,15 +189,15 @@ export default function LibraryDocumentDetailPage() {
   if (!doc) {
     return (
       <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
           Missing
         </span>
-        <h1 className="mt-3 font-[family-name:var(--font-instrument-serif)] text-[32px] text-[color:var(--ink)]">
+        <h1 className="mt-3  text-[32px] text-[color:var(--ink)]">
           Document not found.
         </h1>
         <Link
           href="/dashboard/library"
-          className="mt-4 inline-block font-[family-name:var(--font-barlow)] italic text-[13.5px] text-[color:var(--ink-2)] underline underline-offset-[4px] decoration-[color:var(--rule)]"
+          className="mt-4 inline-block  italic text-[13.5px] text-[color:var(--ink-2)] underline underline-offset-[4px] decoration-[color:var(--rule)]"
         >
           Back to the Library
         </Link>
@@ -214,7 +214,7 @@ export default function LibraryDocumentDetailPage() {
   return (
     <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-10 md:py-12">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-3 mb-6 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase">
+      <div className="flex items-center gap-3 mb-6 font-mono text-[10px] tracking-[0.22em] uppercase">
         <Link
           href="/dashboard/library"
           className="text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
@@ -229,7 +229,7 @@ export default function LibraryDocumentDetailPage() {
       <section className="mb-10 pb-8 border-b border-[color:var(--rule)]">
         <div className="flex items-center gap-3 mb-5">
           <span className="block w-8 h-px bg-[color:var(--ink)]" />
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
             {isAudio ? 'Transcript' : 'Document'}
           </span>
         </div>
@@ -246,18 +246,18 @@ export default function LibraryDocumentDetailPage() {
                     if (e.key === 'Enter') renameMutation.mutate(titleDraft.trim());
                     else if (e.key === 'Escape') setRenaming(false);
                   }}
-                  className="bg-transparent border-b-2 border-[color:var(--ink)] outline-none py-1 font-[family-name:var(--font-instrument-serif)] text-[36px] md:text-[44px] leading-tight text-[color:var(--ink)] flex-1"
+                  className="bg-transparent border-b-2 border-[color:var(--ink)] outline-none py-1  text-[36px] md:text-[44px] leading-tight text-[color:var(--ink)] flex-1"
                 />
                 <button
                   onClick={() => renameMutation.mutate(titleDraft.trim())}
                   disabled={!titleDraft.trim() || renameMutation.isPending}
-                  className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--forest)] disabled:opacity-60"
+                  className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--forest)] disabled:opacity-60"
                 >
                   Save
                 </button>
                 <button
                   onClick={() => setRenaming(false)}
-                  className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]"
+                  className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]"
                 >
                   Cancel
                 </button>
@@ -269,13 +269,13 @@ export default function LibraryDocumentDetailPage() {
                   setRenaming(true);
                 }}
                 title="Double-click to rename"
-                className="font-[family-name:var(--font-instrument-serif)] text-[36px] md:text-[48px] leading-[0.98] tracking-[-0.015em] text-[color:var(--ink)] cursor-text"
+                className=" text-[36px] md:text-[48px] leading-[0.98] tracking-[-0.015em] text-[color:var(--ink)] cursor-text"
               >
                 {displayTitle}
               </h1>
             )}
 
-            <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+            <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
               <span
                 className={`inline-flex items-center px-2 py-0.5 border bg-[color:var(--paper-3)] ${tone.className}`}
               >
@@ -290,10 +290,10 @@ export default function LibraryDocumentDetailPage() {
 
             {doc.status === 'failed' && doc.errorMessage && (
               <div className="mt-4 border-l-2 border-[color:var(--warn)] pl-3 py-1 max-w-[640px]">
-                <p className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--warn)]">
+                <p className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--warn)]">
                   Failure
                 </p>
-                <p className="mt-1 font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-2)] leading-[1.5] break-words">
+                <p className="mt-1  italic text-[13px] text-[color:var(--ink-2)] leading-[1.5] break-words">
                   {doc.errorMessage}
                 </p>
               </div>
@@ -332,7 +332,7 @@ export default function LibraryDocumentDetailPage() {
             <button
               onClick={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
-              className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--warn)] hover:text-[color:var(--ink)] transition disabled:opacity-60"
+              className=" text-[13px] text-[color:var(--warn)] hover:text-[color:var(--ink)] transition disabled:opacity-60"
             >
               Remove
             </button>
@@ -352,15 +352,15 @@ export default function LibraryDocumentDetailPage() {
       {/* Chunks */}
       {doc.status !== 'ready' ? (
         <div className="py-14 text-center">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
             {doc.status === 'failed' ? 'Unavailable' : 'Processing'}
           </span>
-          <h3 className="mt-3 font-[family-name:var(--font-instrument-serif)] text-[26px] text-[color:var(--ink)]">
+          <h3 className="mt-3  text-[26px] text-[color:var(--ink)]">
             {doc.status === 'failed'
               ? 'Chunks not available — processing failed.'
               : 'We\u2019re chunking + embedding this document.'}
           </h3>
-          <p className="mt-2 font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)]">
+          <p className="mt-2  italic text-[14px] text-[color:var(--ink-2)]">
             {doc.status === 'failed'
               ? 'Click Retry to re-run, or remove the document and re-upload.'
               : 'Audio files take longer (Whisper transcription). Status updates every few seconds.'}
@@ -370,10 +370,10 @@ export default function LibraryDocumentDetailPage() {
         <section>
           <div className="flex items-baseline justify-between gap-3 mb-4">
             <div>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
                 Extracted passages
               </span>
-              <span className="ml-3 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] tabular-nums">
+              <span className="ml-3 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] tabular-nums">
                 {totalChunks} chunks · page {page}/{totalPages}
               </span>
             </div>
@@ -381,18 +381,18 @@ export default function LibraryDocumentDetailPage() {
               href={`/dashboard?prefill=${encodeURIComponent(
                 `Using my uploaded "${displayTitle}" as context, find 20 similar prospects. Pull specifics from the doc via read_document first, then search.`,
               )}`}
-              className="inline-flex items-center gap-2 font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]"
+              className="inline-flex items-center gap-2  italic text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]"
             >
               Use in a dispatch <ArrowEast className="w-2.5 h-2.5" />
             </Link>
           </div>
 
           {chunksLoading ? (
-            <div className="py-10 text-center font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)]">
+            <div className="py-10 text-center  italic text-[14px] text-[color:var(--ink-2)]">
               Loading passages…
             </div>
           ) : chunks.length === 0 ? (
-            <div className="py-10 text-center font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)]">
+            <div className="py-10 text-center  italic text-[14px] text-[color:var(--ink-2)]">
               No extracted text (file may have been blank or image-only beyond OCR reach).
             </div>
           ) : (
@@ -402,13 +402,13 @@ export default function LibraryDocumentDetailPage() {
                   key={c._id}
                   className="grid grid-cols-[60px_1fr_auto] gap-4 items-baseline py-4 border-b border-[color:var(--rule)]/70"
                 >
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] tabular-nums">
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] tabular-nums">
                     #{String(c.idx + 1).padStart(3, '0')}
                   </span>
-                  <p className="font-[family-name:var(--font-barlow)] text-[13.5px] leading-[1.55] text-[color:var(--ink)] whitespace-pre-wrap break-words">
+                  <p className=" text-[13.5px] leading-[1.55] text-[color:var(--ink)] whitespace-pre-wrap break-words">
                     {c.text}
                   </p>
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)] whitespace-nowrap">
+                  <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)] whitespace-nowrap">
                     {c.pageHint ? `p. ${c.pageHint}` : c.embeddingDims > 0 ? 'embedded' : 'no embed'}
                   </span>
                 </li>
@@ -421,17 +421,17 @@ export default function LibraryDocumentDetailPage() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)] disabled:opacity-40"
+                className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)] disabled:opacity-40"
               >
                 ← Prev
               </button>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] tabular-nums">
+              <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] tabular-nums">
                 {page} / {totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)] disabled:opacity-40"
+                className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)] disabled:opacity-40"
               >
                 Next →
               </button>
@@ -510,14 +510,14 @@ function AnalysisPanel({
   const entityChip = (label: string, items: string[]) =>
     items.length === 0 ? null : (
       <div key={label} className="flex items-baseline gap-3 flex-wrap">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.2em] uppercase text-[color:var(--ink-3)] w-[90px] shrink-0">
+        <span className="font-mono text-[9.5px] tracking-[0.2em] uppercase text-[color:var(--ink-3)] w-[90px] shrink-0">
           {label}
         </span>
         <div className="flex flex-wrap gap-1.5">
           {items.map((v) => (
             <span
               key={v}
-              className="font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)] bg-[color:var(--paper-3)] border border-[color:var(--rule)] px-2 py-0.5"
+              className=" italic text-[12.5px] text-[color:var(--ink-2)] bg-[color:var(--paper-3)] border border-[color:var(--rule)] px-2 py-0.5"
             >
               {v}
             </span>
@@ -530,17 +530,17 @@ function AnalysisPanel({
     <section className="mb-10 pb-10 border-b border-[color:var(--rule)]">
       <div className="flex items-center gap-3 mb-5">
         <span className="block w-8 h-px bg-[color:var(--forest)]" />
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
+        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
           What the AI understands
         </span>
       </div>
 
       {empty && (
         <div className="border border-dashed border-[color:var(--rule)] bg-[color:var(--paper-3)]/60 rounded-sm p-6 md:p-8">
-          <h3 className="font-[family-name:var(--font-instrument-serif)] text-[24px] md:text-[28px] leading-[1.15] text-[color:var(--ink)]">
+          <h3 className=" text-[24px] md:text-[28px] leading-[1.15] text-[color:var(--ink)]">
             Let the AI read <em className="italic text-[color:var(--forest)]">{displayTitle}</em> and propose dispatches.
           </h3>
-          <p className="mt-2 font-[family-name:var(--font-barlow)] italic text-[13.5px] text-[color:var(--ink-2)] max-w-[640px] leading-[1.55]">
+          <p className="mt-2  italic text-[13.5px] text-[color:var(--ink-2)] max-w-[640px] leading-[1.55]">
             You&rsquo;ll see what it classifies this as, the entities it picked up, and 3 distinct
             prompt cards you can file with one click. Cached — analyzing once is free forever.
           </p>
@@ -558,10 +558,10 @@ function AnalysisPanel({
 
       {runAnalysis.isPending && !analysis && (
         <div className="border border-[color:var(--rule)] bg-[color:var(--paper-3)]/60 rounded-sm p-6 text-center">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
             Reading
           </span>
-          <p className="mt-2 font-[family-name:var(--font-instrument-serif)] italic text-[18px] text-[color:var(--ink)]">
+          <p className="mt-2  italic text-[18px] text-[color:var(--ink)]">
             Scanning chunks and drafting proposals\u2026
           </p>
         </div>
@@ -572,27 +572,27 @@ function AnalysisPanel({
           {/* Gist */}
           <div>
             <div className="flex items-center gap-3 flex-wrap mb-2">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase border border-[color:var(--forest)]/40 bg-[color:var(--forest)]/5 text-[color:var(--forest)] px-2 py-0.5">
+              <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase border border-[color:var(--forest)]/40 bg-[color:var(--forest)]/5 text-[color:var(--forest)] px-2 py-0.5">
                 {analysis.docType}
               </span>
               {analysis.cached ? (
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
+                <span className="font-mono text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
                   Cached
                 </span>
               ) : (
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
+                <span className="font-mono text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
                   Fresh
                 </span>
               )}
               <button
                 onClick={() => runAnalysis.mutate(true)}
                 disabled={runAnalysis.isPending}
-                className="ml-auto font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition disabled:opacity-60"
+                className="ml-auto font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition disabled:opacity-60"
               >
                 {runAnalysis.isPending ? 'Refreshing\u2026' : 'Refresh analysis'}
               </button>
             </div>
-            <p className="font-[family-name:var(--font-instrument-serif)] italic text-[20px] md:text-[22px] leading-[1.35] text-[color:var(--ink)] max-w-[820px]">
+            <p className=" italic text-[20px] md:text-[22px] leading-[1.35] text-[color:var(--ink)] max-w-[820px]">
               {analysis.summary}
             </p>
           </div>
@@ -614,7 +614,7 @@ function AnalysisPanel({
           {analysis.proposedDispatches.length > 0 && (
             <div>
               <div className="flex items-center gap-3 mb-3">
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)]">
+                <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)]">
                   Proposed dispatches
                 </span>
                 <span className="flex-1 h-px bg-[color:var(--rule)]" />
@@ -626,21 +626,21 @@ function AnalysisPanel({
                     className="border border-[color:var(--rule)] bg-[color:var(--paper-3)]/50 p-4 flex flex-col gap-3 hover:border-[color:var(--ink-2)] transition-colors"
                   >
                     <div className="flex items-baseline justify-between gap-2">
-                      <span className="font-[family-name:var(--font-instrument-serif)] italic text-[28px] leading-none text-[color:var(--forest)] tabular-nums">
+                      <span className=" italic text-[28px] leading-none text-[color:var(--forest)] tabular-nums">
                         {String(i + 1).padStart(2, '0')}
                       </span>
                       {d.targetCount !== undefined && (
-                        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] tabular-nums">
+                        <span className="font-mono text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] tabular-nums">
                           ≈{d.targetCount} leads
                         </span>
                       )}
                     </div>
-                    <p className="font-[family-name:var(--font-barlow)] text-[13.5px] leading-[1.5] text-[color:var(--ink)] line-clamp-5">
+                    <p className=" text-[13.5px] leading-[1.5] text-[color:var(--ink)] line-clamp-5">
                       {d.prompt}
                     </p>
                     {d.rationale && (
-                      <p className="font-[family-name:var(--font-barlow)] italic text-[12px] leading-[1.45] text-[color:var(--ink-2)] line-clamp-3">
-                        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)] mr-2">
+                      <p className=" italic text-[12px] leading-[1.45] text-[color:var(--ink-2)] line-clamp-3">
+                        <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)] mr-2">
                           Why
                         </span>
                         {d.rationale}
@@ -654,13 +654,13 @@ function AnalysisPanel({
                             .then(() => toast.success('Prompt copied'))
                             .catch(() => toast.error('Could not copy'));
                         }}
-                        className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
+                        className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
                       >
                         Copy
                       </button>
                       <button
                         onClick={() => launchDispatch(d.prompt)}
-                        className="inline-flex items-center gap-1.5 font-[family-name:var(--font-barlow)] text-[12.5px] font-medium text-[color:var(--ink)] hover:text-[color:var(--forest)] transition"
+                        className="inline-flex items-center gap-1.5  text-[12.5px] font-medium text-[color:var(--ink)] hover:text-[color:var(--forest)] transition"
                       >
                         File this <ArrowEast className="w-2.5 h-2.5" />
                       </button>
@@ -674,14 +674,14 @@ function AnalysisPanel({
           {/* Ambiguities */}
           {analysis.ambiguities.length > 0 && (
             <div className="border-l-2 border-[color:var(--rust)] pl-4 py-1 max-w-[820px]">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--rust)]">
+              <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--rust)]">
                 Before you dispatch — clarify these
               </span>
               <ul className="mt-2 space-y-1.5">
                 {analysis.ambiguities.map((q, i) => (
                   <li
                     key={i}
-                    className="font-[family-name:var(--font-barlow)] italic text-[13px] leading-[1.5] text-[color:var(--ink-2)]"
+                    className=" italic text-[13px] leading-[1.5] text-[color:var(--ink-2)]"
                   >
                     · {q}
                   </li>

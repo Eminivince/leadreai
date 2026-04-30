@@ -61,15 +61,15 @@ function SectionHead({
     <div className="mb-6">
       <div className="flex items-center gap-3 mb-3">
         <span className="block w-8 h-px bg-[color:var(--ink)]" />
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
           {kicker}
         </span>
       </div>
-      <h2 className="font-[family-name:var(--font-instrument-serif)] text-[28px] md:text-[34px] leading-[1.05] tracking-[-0.015em] text-[color:var(--ink)]">
+      <h2 className=" text-[28px] md:text-[34px] leading-[1.05] tracking-[-0.015em] text-[color:var(--ink)]">
         {title}
       </h2>
       {note && (
-        <p className="mt-2 font-[family-name:var(--font-barlow)] text-[14px] leading-[1.55] text-[color:var(--ink-2)] max-w-[620px]">
+        <p className="mt-2  text-[14px] leading-[1.55] text-[color:var(--ink-2)] max-w-[620px]">
           {note}
         </p>
       )}
@@ -220,33 +220,33 @@ export default function IntegrationsPage() {
         <div className="flex items-center gap-3 mb-5">
           <Link
             href="/dashboard"
-            className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
+            className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
           >
             Dispatches
           </Link>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">/</span>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+          <span className="font-mono text-[10px] text-[color:var(--ink-3)]">/</span>
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
             The Wire
           </span>
         </div>
         <div className="flex items-end justify-between gap-6 flex-wrap">
           <div className="max-w-[720px]">
-            <h1 className="font-[family-name:var(--font-instrument-serif)] text-[48px] md:text-[72px] leading-[0.94] tracking-[-0.015em] text-[color:var(--ink)]">
+            <h1 className=" text-[48px] md:text-[72px] leading-[0.94] tracking-[-0.015em] text-[color:var(--ink)]">
               The <em className="italic text-[color:var(--forest)]">Wire</em>.
             </h1>
-            <p className="mt-5 font-[family-name:var(--font-barlow)] text-[16px] md:text-[18px] leading-[1.5] text-[color:var(--ink-2)]">
+            <p className="mt-5  text-[16px] md:text-[18px] leading-[1.5] text-[color:var(--ink-2)]">
               Every desk LeadreAI speaks to — your CRM, your sender, your webhook. Three are filed;
               the rest are on the docket. Connect anything; honesty about everything.
             </p>
           </div>
           <div className="flex items-baseline gap-8 pt-2">
             <div>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+              <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
                 On the wire
               </span>
-              <div className="mt-1 font-[family-name:var(--font-instrument-serif)] text-[40px] leading-none tabular-nums text-[color:var(--ink)]">
+              <div className="mt-1  text-[40px] leading-none tabular-nums text-[color:var(--ink)]">
                 {liveConnected}
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[12px] text-[color:var(--ink-3)] ml-1">
+                <span className="font-mono text-[12px] text-[color:var(--ink-3)] ml-1">
                   / {totalLive}
                 </span>
               </div>
@@ -286,7 +286,7 @@ export default function IntegrationsPage() {
 
       {/* Trust footer */}
       <div className="mt-20 pt-6 border-t border-[color:var(--rule)] flex items-center justify-between gap-4 flex-wrap">
-        <p className="font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)] max-w-[540px]">
+        <p className=" italic text-[12.5px] text-[color:var(--ink-2)] max-w-[540px]">
           A note on forthcoming partners: we show them because they&rsquo;re on the roadmap. We
           don&rsquo;t pretend they work.{' '}
           <Link
@@ -297,7 +297,7 @@ export default function IntegrationsPage() {
           </Link>
           {' '}if one of them is blocking you.
         </p>
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
+        <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
           Vol I · Issue 07 · The Wire
           <span className="inline-flex items-baseline gap-1 ml-2">
             <ArrowEast className="w-2.5 h-2.5 relative top-[1px]" />

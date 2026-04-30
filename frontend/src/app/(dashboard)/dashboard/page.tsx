@@ -120,12 +120,12 @@ function Compose({
     >
       <div className="flex items-center gap-3 mb-7">
         <span className="block w-8 h-px bg-[color:var(--ink)]" />
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
           Compose a dispatch
         </span>
       </div>
 
-      <h1 className="font-[family-name:var(--font-instrument-serif)] text-[44px] md:text-[64px] leading-[0.94] tracking-[-0.015em] text-[color:var(--ink)] max-w-[880px]">
+      <h1 className=" text-[44px] md:text-[64px] leading-[0.94] tracking-[-0.015em] text-[color:var(--ink)] max-w-[880px]">
         Describe who you&rsquo;re <br className="hidden md:inline" />
         looking for. <em className="italic text-[color:var(--forest)]">We&rsquo;ll read</em> the rest.
       </h1>
@@ -144,10 +144,10 @@ function Compose({
             }}
             placeholder="e.g. Top 50 Nigerian fintechs with Series-B funding. CEO name, work email, phone."
             rows={3}
-            className="block w-full bg-transparent resize-none px-5 py-4 font-[family-name:var(--font-instrument-serif)] italic text-[18px] md:text-[22px] leading-[1.4] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] focus:outline-none"
+            className="block w-full bg-transparent resize-none px-5 py-4  italic text-[18px] md:text-[22px] leading-[1.4] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] focus:outline-none"
           />
           <div className="flex items-center justify-between px-5 py-3 border-t border-[color:var(--rule)]">
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+            <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
               {value.length === 0
                 ? 'Min. 10 characters'
                 : value.length < 10
@@ -157,7 +157,7 @@ function Compose({
             <button
               onClick={() => void handleSubmit()}
               disabled={isSubmitting || value.trim().length < 10}
-              className="group inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Filing\u2026' : 'File dispatch'}
               <ArrowEast className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
@@ -167,8 +167,8 @@ function Compose({
 
         {/* Error banner */}
         {error && (
-          <div className="mt-3 border-l-2 border-[color:var(--warn)] bg-[color:var(--paper-3)] px-4 py-3 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)]">
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--warn)] block mb-1">
+          <div className="mt-3 border-l-2 border-[color:var(--warn)] bg-[color:var(--paper-3)] px-4 py-3  text-[13px] text-[color:var(--ink)]">
+            <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--warn)] block mb-1">
               Rejected
             </span>
             {error}
@@ -183,10 +183,10 @@ function Compose({
               title="The agent reads these before every search"
               className="inline-flex items-center gap-2 border border-[color:var(--forest)]/40 bg-[color:var(--forest)]/5 text-[color:var(--forest)] hover:border-[color:var(--forest)] rounded-full px-3 py-1 transition-colors"
             >
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase">
+              <span className="font-mono text-[10px] tracking-[0.18em] uppercase">
                 In scope
               </span>
-              <span className="font-[family-name:var(--font-barlow)] italic text-[12.5px]">
+              <span className=" italic text-[12.5px]">
                 {readyLibraryCount} {readyLibraryCount === 1 ? 'document' : 'documents'} from your Library
               </span>
             </Link>
@@ -195,7 +195,7 @@ function Compose({
 
         {/* Example chips */}
         <div className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-2">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] mr-1">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] mr-1">
             Suggested
           </span>
           {EXAMPLE_QUERIES.map((q) => (
@@ -205,7 +205,7 @@ function Compose({
                 setValue(q);
                 inputRef.current?.focus();
               }}
-              className="font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)] bg-[color:var(--paper-2)] border border-[color:var(--rule)] hover:border-[color:var(--ink)] rounded-full px-3 py-1.5 transition-colors"
+              className=" italic text-[12.5px] text-[color:var(--ink-2)] bg-[color:var(--paper-2)] border border-[color:var(--rule)] hover:border-[color:var(--ink)] rounded-full px-3 py-1.5 transition-colors"
             >
               &ldquo;{q.length > 70 ? q.slice(0, 68) + '\u2026' : q}&rdquo;
             </button>
@@ -262,7 +262,7 @@ function ClarifyLoadingPanel({ query, startedAt }: { query: string; startedAt: n
       <div className="flex items-center justify-between gap-4 mb-5">
         <div className="flex items-center gap-3">
           <span className="block w-8 h-px bg-[color:var(--forest)]" />
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
             Verifying
           </span>
           {/* Tiny pulsing dot so the panel never feels static */}
@@ -271,17 +271,17 @@ function ClarifyLoadingPanel({ query, startedAt }: { query: string; startedAt: n
             aria-hidden
           />
         </div>
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tabular-nums tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+        <span className="font-mono text-[10px] tabular-nums tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
           {elapsedSec}s elapsed
         </span>
       </div>
 
       <div className="bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-sm px-6 md:px-8 py-7 md:py-8">
-        <h3 className="font-[family-name:var(--font-instrument-serif)] text-[28px] md:text-[34px] leading-[1.05] text-[color:var(--ink)]">
+        <h3 className=" text-[28px] md:text-[34px] leading-[1.05] text-[color:var(--ink)]">
           Verifying your <em className="italic text-[color:var(--forest)]">brief</em>…
         </h3>
         {query && (
-          <p className="mt-3 font-[family-name:var(--font-barlow)] italic text-[14.5px] text-[color:var(--ink-2)] line-clamp-2">
+          <p className="mt-3  italic text-[14.5px] text-[color:var(--ink-2)] line-clamp-2">
             &ldquo;{query}&rdquo;
           </p>
         )}
@@ -293,7 +293,7 @@ function ClarifyLoadingPanel({ query, startedAt }: { query: string; startedAt: n
           <div className="indeterminate-bar h-[2px] bg-[color:var(--rule)]/40" aria-hidden />
           <p
             key={phaseText}
-            className="mt-3 font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink-2)] animate-[fadeIn_280ms_ease-out]"
+            className="mt-3  text-[13.5px] text-[color:var(--ink-2)] animate-[fadeIn_280ms_ease-out]"
           >
             {phaseText}
           </p>
@@ -345,22 +345,22 @@ function ClarificationPanel({
     <section className="relative">
       <div className="flex items-center gap-3 mb-6">
         <span className="block w-8 h-px bg-[color:var(--forest)]" />
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
+        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
           Before we dispatch — a few clarifying questions
         </span>
       </div>
 
       {/* Query echo — read-only reminder of what they asked */}
       <div className="mb-6 border-l-2 border-[color:var(--rule)] pl-4 max-w-[880px]">
-        <div className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] mb-1">
+        <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] mb-1">
           Your query
         </div>
-        <p className="font-[family-name:var(--font-instrument-serif)] italic text-[18px] md:text-[20px] leading-[1.4] text-[color:var(--ink)]">
+        <p className=" italic text-[18px] md:text-[20px] leading-[1.4] text-[color:var(--ink)]">
           &ldquo;{query}&rdquo;
         </p>
       </div>
 
-      <p className="mb-8 font-[family-name:var(--font-barlow)] text-[14px] leading-[1.55] text-[color:var(--ink-2)] max-w-[680px]">
+      <p className="mb-8  text-[14px] leading-[1.55] text-[color:var(--ink-2)] max-w-[680px]">
         The agent would rather ask than guess. Answer what you can — required items are marked. Skipping an optional question just lets the agent infer.
       </p>
 
@@ -377,8 +377,8 @@ function ClarificationPanel({
       </div>
 
       {error && (
-        <div className="mt-6 border-l-2 border-[color:var(--warn)] bg-[color:var(--paper-3)] px-4 py-3 max-w-[880px] font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)]">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--warn)] block mb-1">
+        <div className="mt-6 border-l-2 border-[color:var(--warn)] bg-[color:var(--paper-3)] px-4 py-3 max-w-[880px]  text-[13px] text-[color:var(--ink)]">
+          <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--warn)] block mb-1">
             Rejected
           </span>
           {error}
@@ -395,7 +395,7 @@ function ClarificationPanel({
               : isSubmitting ? 'Filing the dispatch…'
               : undefined
           }
-          className="group inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="group inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? 'Starting the search…' : 'Start the search'}
           <ArrowEast className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
@@ -403,7 +403,7 @@ function ClarificationPanel({
         <button
           onClick={onEditQuery}
           disabled={isSubmitting}
-          className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] inline-flex items-center gap-2 disabled:opacity-50"
+          className=" text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] inline-flex items-center gap-2 disabled:opacity-50"
         >
           Edit query
         </button>
@@ -426,26 +426,26 @@ function QuestionRow({
   return (
     <div>
       <div className="flex items-baseline gap-4 mb-3">
-        <span className="font-[family-name:var(--font-instrument-serif)] italic text-[22px] leading-none text-[color:var(--ink-3)] tabular-nums shrink-0">
+        <span className=" italic text-[22px] leading-none text-[color:var(--ink-3)] tabular-nums shrink-0">
           {String(index + 1).padStart(2, '0')}
         </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="font-[family-name:var(--font-barlow)] text-[15px] text-[color:var(--ink)]">
+            <span className=" text-[15px] text-[color:var(--ink)]">
               {question.question}
             </span>
             {question.required ? (
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--warn)]">
+              <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--warn)]">
                 Required
               </span>
             ) : (
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+              <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
                 Optional
               </span>
             )}
           </div>
           {question.rationale && (
-            <p className="mt-1 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)]">
+            <p className="mt-1  italic text-[12.5px] text-[color:var(--ink-2)]">
               {question.rationale}
             </p>
           )}
@@ -460,7 +460,7 @@ function QuestionRow({
               value={typeof answer === 'string' ? answer : ''}
               onChange={(e) => onChange(e.target.value)}
               placeholder={question.placeholder ?? 'Type an answer'}
-              className="w-full bg-transparent py-2 outline-none font-[family-name:var(--font-barlow)] text-[14.5px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
+              className="w-full bg-transparent py-2 outline-none  text-[14.5px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
             />
           </div>
         )}
@@ -473,7 +473,7 @@ function QuestionRow({
                 <button
                   key={opt}
                   onClick={() => onChange(opt)}
-                  className={`h-9 px-4 rounded-full font-[family-name:var(--font-barlow)] text-[12.5px] transition-colors ${
+                  className={`h-9 px-4 rounded-full  text-[12.5px] transition-colors ${
                     on
                       ? 'bg-[color:var(--ink)] text-[color:var(--paper)]'
                       : 'border border-[color:var(--rule)] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] hover:border-[color:var(--ink)]'
@@ -498,7 +498,7 @@ function QuestionRow({
                     const next = selected ? current.filter((x) => x !== opt) : [...current, opt];
                     onChange(next);
                   }}
-                  className={`h-9 px-4 rounded-full font-[family-name:var(--font-barlow)] text-[12.5px] transition-colors ${
+                  className={`h-9 px-4 rounded-full  text-[12.5px] transition-colors ${
                     selected
                       ? 'bg-[color:var(--forest)] text-[color:var(--paper)]'
                       : 'border border-[color:var(--rule)] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] hover:border-[color:var(--ink)]'
@@ -558,28 +558,28 @@ function RefusalPanel({
     <section className="relative">
       <div className="flex items-center gap-3 mb-6">
         <span className="block w-8 h-px bg-[color:var(--warn)]" />
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--warn)]">
+        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--warn)]">
           Can&rsquo;t run this search — {copy.label.toLowerCase()}
         </span>
       </div>
 
       {/* Query echo */}
       <div className="mb-6 border-l-2 border-[color:var(--rule)] pl-4 max-w-[880px]">
-        <div className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] mb-1">
+        <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] mb-1">
           Your query
         </div>
-        <p className="font-[family-name:var(--font-instrument-serif)] italic text-[18px] md:text-[20px] leading-[1.4] text-[color:var(--ink)]">
+        <p className=" italic text-[18px] md:text-[20px] leading-[1.4] text-[color:var(--ink)]">
           &ldquo;{query}&rdquo;
         </p>
       </div>
 
       {/* Lede + reason */}
       <div className="max-w-[720px] mb-8">
-        <h2 className="font-[family-name:var(--font-instrument-serif)] text-[28px] md:text-[34px] leading-[1.1] text-[color:var(--ink)] mb-3">
+        <h2 className=" text-[28px] md:text-[34px] leading-[1.1] text-[color:var(--ink)] mb-3">
           {copy.lede}
         </h2>
         {policy.reason && (
-          <p className="font-[family-name:var(--font-barlow)] text-[14.5px] leading-[1.6] text-[color:var(--ink-2)]">
+          <p className=" text-[14.5px] leading-[1.6] text-[color:var(--ink-2)]">
             {policy.reason}
           </p>
         )}
@@ -588,7 +588,7 @@ function RefusalPanel({
       {/* Reframe suggestions */}
       {suggestions.length > 0 && (
         <div className="max-w-[880px] mb-8">
-          <div className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] mb-3">
+          <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] mb-3">
             Try one of these instead
           </div>
           <div className="flex flex-col gap-2">
@@ -599,10 +599,10 @@ function RefusalPanel({
                 className="group text-left border border-[color:var(--rule)] bg-[color:var(--paper-3)] hover:border-[color:var(--forest)] hover:bg-[color:var(--forest)]/5 rounded-sm px-4 py-3 transition-colors"
               >
                 <div className="flex items-start gap-3">
-                  <span className="font-[family-name:var(--font-instrument-serif)] italic text-[18px] leading-none text-[color:var(--ink-3)] group-hover:text-[color:var(--forest)] tabular-nums shrink-0 mt-1">
+                  <span className=" italic text-[18px] leading-none text-[color:var(--ink-3)] group-hover:text-[color:var(--forest)] tabular-nums shrink-0 mt-1">
                     {String(i + 1).padStart(2, '0')}
                   </span>
-                  <span className="flex-1 font-[family-name:var(--font-barlow)] text-[14px] leading-[1.55] text-[color:var(--ink)]">
+                  <span className="flex-1  text-[14px] leading-[1.55] text-[color:var(--ink)]">
                     {s}
                   </span>
                   <ArrowEast className="w-3 h-3 text-[color:var(--ink-3)] group-hover:text-[color:var(--forest)] mt-1.5 transition-colors" />
@@ -610,7 +610,7 @@ function RefusalPanel({
               </button>
             ))}
           </div>
-          <p className="mt-3 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-3)]">
+          <p className="mt-3  italic text-[12.5px] text-[color:var(--ink-3)]">
             Click a suggestion to use it, or write your own.
           </p>
         </div>
@@ -619,7 +619,7 @@ function RefusalPanel({
       <div className="flex items-center gap-3">
         <button
           onClick={onDismiss}
-          className="inline-flex items-center gap-2 border border-[color:var(--rule)] bg-[color:var(--paper-3)] text-[color:var(--ink)] hover:border-[color:var(--ink)] px-5 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] transition-colors"
+          className="inline-flex items-center gap-2 border border-[color:var(--rule)] bg-[color:var(--paper-3)] text-[color:var(--ink)] hover:border-[color:var(--ink)] px-5 py-2.5 rounded-full  text-[13px] transition-colors"
         >
           Edit my query
         </button>
@@ -643,7 +643,7 @@ function StatusChip({ status }: { status: ProspectingJob['status'] }) {
   const chip = map[status] ?? map.queued;
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.16em] uppercase px-2 py-0.5 border border-[color:var(--rule)] ${chip.color}`}
+      className={`inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.16em] uppercase px-2 py-0.5 border border-[color:var(--rule)] ${chip.color}`}
     >
       {status !== 'complete' && status !== 'failed' && status !== 'cancelled' && (
         <span className="block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)] animate-pulse" />
@@ -704,7 +704,7 @@ function LibraryCitations({ job }: { job: ProspectingJob }) {
   return (
     <div className="mt-5 pt-5 border-t border-[color:var(--rule)]">
       <div className="flex items-center gap-3 mb-3">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.2em] uppercase text-[color:var(--forest)]">
+        <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--forest)]">
           Cited from your Library
         </span>
         <span className="flex-1 h-px bg-[color:var(--forest)]/20" />
@@ -719,13 +719,13 @@ function LibraryCitations({ job }: { job: ProspectingJob }) {
                 c.topSimilarity * 100,
               )}%`}
             >
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--forest)]">
+              <span className="font-mono text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--forest)]">
                 {c.fileType}
               </span>
-              <span className="font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink)] max-w-[220px] truncate">
+              <span className=" italic text-[12.5px] text-[color:var(--ink)] max-w-[220px] truncate">
                 {c.title}
               </span>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tabular-nums text-[color:var(--forest)]">
+              <span className="font-mono text-[9.5px] tabular-nums text-[color:var(--forest)]">
                 ×{c.chunks}
               </span>
             </Link>
@@ -823,22 +823,22 @@ function AuditTrail({ job }: { job: ProspectingJob }) {
         className="w-full flex items-center justify-between gap-3 group"
       >
         <div className="flex items-center gap-3 min-w-0">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
             Audit trail
           </span>
           {isActive && (
             <span className="inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-[color:var(--forest)] stream-dot" aria-hidden />
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--forest)]">
+              <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--forest)]">
                 live
               </span>
             </span>
           )}
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)] truncate">
+          <span className="font-mono text-[10px] text-[color:var(--ink-3)] truncate">
             · {entries.length} step{entries.length === 1 ? '' : 's'}
           </span>
         </div>
-        <span className="shrink-0 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] group-hover:text-[color:var(--ink)] transition">
+        <span className="shrink-0 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] group-hover:text-[color:var(--ink)] transition">
           {open ? '— hide' : '+ show'}
         </span>
       </button>
@@ -860,7 +860,7 @@ function AuditTrail({ job }: { job: ProspectingJob }) {
             className="mt-4 max-h-[360px] overflow-y-auto border border-[color:var(--rule)] rounded-sm bg-[color:var(--paper)]"
           >
             {entries.length === 0 ? (
-              <p className="px-4 py-6 font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-3)] text-center">
+              <p className="px-4 py-6  italic text-[13px] text-[color:var(--ink-3)] text-center">
                 Waiting for the agent to file its first step…
               </p>
             ) : (
@@ -881,7 +881,7 @@ function AuditTrail({ job }: { job: ProspectingJob }) {
                   setAutoScroll(true);
                   if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
                 }}
-                className="inline-flex items-center gap-1.5 border border-[color:var(--rule)] hover:border-[color:var(--ink)] bg-[color:var(--paper)] px-3 py-1 rounded-full font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
+                className="inline-flex items-center gap-1.5 border border-[color:var(--rule)] hover:border-[color:var(--ink)] bg-[color:var(--paper)] px-3 py-1 rounded-full font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
               >
                 ↓ jump to latest
               </button>
@@ -910,10 +910,10 @@ function Counter({
         : 'text-[color:var(--ink)]';
   return (
     <div>
-      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] block">
+      <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] block">
         {label}
       </span>
-      <span className={`font-[family-name:var(--font-instrument-serif)] text-[20px] tabular-nums leading-none ${valueColor}`}>
+      <span className={` text-[20px] tabular-nums leading-none ${valueColor}`}>
         {value.toLocaleString()}
       </span>
     </div>
@@ -952,28 +952,28 @@ function AuditEntry({ entry }: { entry: JobActivityLogEntry }) {
   return (
     <li className="px-3 py-2">
       <div className="flex items-baseline gap-3">
-        <span className="shrink-0 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tabular-nums text-[color:var(--ink-3)]">
+        <span className="shrink-0 font-mono text-[10px] tabular-nums text-[color:var(--ink-3)]">
           {timeStr}
         </span>
         <span
-          className={`shrink-0 inline-flex items-center border px-1.5 py-0.5 rounded-full font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.14em] uppercase ${stepClass}`}
+          className={`shrink-0 inline-flex items-center border px-1.5 py-0.5 rounded-full font-mono text-[9px] tracking-[0.14em] uppercase ${stepClass}`}
         >
           {entry.step}
         </span>
-        <span className="min-w-0 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] leading-snug">
+        <span className="min-w-0  text-[13px] text-[color:var(--ink)] leading-snug">
           {entry.message}
         </span>
         {hasMeta && (
           <button
             onClick={() => setMetaOpen((v) => !v)}
-            className="ml-auto shrink-0 font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
+            className="ml-auto shrink-0 font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
           >
             {metaOpen ? 'less' : 'more'}
           </button>
         )}
       </div>
       {hasMeta && metaOpen && (
-        <pre className="mt-1.5 ml-[84px] max-h-40 overflow-auto bg-[color:var(--paper-3)]/60 border border-[color:var(--rule)] rounded-sm px-2 py-1.5 font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-2)] whitespace-pre-wrap">
+        <pre className="mt-1.5 ml-[84px] max-h-40 overflow-auto bg-[color:var(--paper-3)]/60 border border-[color:var(--rule)] rounded-sm px-2 py-1.5 font-mono text-[10px] text-[color:var(--ink-2)] whitespace-pre-wrap">
           {JSON.stringify(entry.meta, null, 2)}
         </pre>
       )}
@@ -998,11 +998,11 @@ function ActiveDispatch({ job }: { job: ProspectingJob }) {
       <div className="flex items-center justify-between gap-4 mb-5">
         <div className="flex items-center gap-3">
           <span className="block w-8 h-px bg-[color:var(--forest)]" />
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
             Active dispatch
           </span>
         </div>
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+        <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
           Dossier №.&nbsp;{dossierId}
         </span>
       </div>
@@ -1016,7 +1016,7 @@ function ActiveDispatch({ job }: { job: ProspectingJob }) {
         <div className="relative bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-sm">
           {/* Header */}
           <div className="flex items-center justify-between gap-4 px-5 md:px-6 py-3 border-b border-dashed border-[color:var(--rule)]">
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-2)]">
+            <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-2)]">
               Filed {relativeTime(job.createdAt)}
             </span>
             <StatusChip status={job.status} />
@@ -1025,10 +1025,10 @@ function ActiveDispatch({ job }: { job: ProspectingJob }) {
           {/* Body */}
           <div className="px-5 md:px-6 py-5 md:py-6">
             <div className="flex gap-4 md:gap-5">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-2)] pt-[5px] shrink-0 w-14">
+              <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-2)] pt-[5px] shrink-0 w-14">
                 Subject
               </span>
-              <p className="font-[family-name:var(--font-instrument-serif)] italic text-[19px] md:text-[22px] leading-[1.3] text-[color:var(--ink)]">
+              <p className=" italic text-[19px] md:text-[22px] leading-[1.3] text-[color:var(--ink)]">
                 &ldquo;{job.rawQuery}&rdquo;
               </p>
             </div>
@@ -1036,34 +1036,34 @@ function ActiveDispatch({ job }: { job: ProspectingJob }) {
             {/* Meta grid */}
             <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-5 pt-5 border-t border-[color:var(--rule)]">
               <div>
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+                <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
                   Stage
                 </span>
-                <div className="mt-1 font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink)] capitalize">
+                <div className="mt-1  text-[14px] text-[color:var(--ink)] capitalize">
                   {stage || '—'}
                 </div>
               </div>
               <div>
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+                <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
                   Leads found
                 </span>
-                <div className="mt-1 font-[family-name:var(--font-instrument-serif)] text-[22px] leading-none tabular-nums text-[color:var(--ink)]">
+                <div className="mt-1  text-[22px] leading-none tabular-nums text-[color:var(--ink)]">
                   {found}
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[11px] text-[color:var(--ink-3)] ml-1">
+                  <span className="font-mono text-[11px] text-[color:var(--ink-3)] ml-1">
                     / {target}
                   </span>
                 </div>
               </div>
               <div>
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+                <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
                   Query type
                 </span>
-                <div className="mt-1 font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink)] capitalize">
+                <div className="mt-1  text-[14px] text-[color:var(--ink)] capitalize">
                   {job.parsedIntent?.queryType?.replace(/_/g, ' ') ?? '—'}
                 </div>
               </div>
               <div>
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+                <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
                   Progress
                 </span>
                 <div className="mt-2">
@@ -1073,7 +1073,7 @@ function ActiveDispatch({ job }: { job: ProspectingJob }) {
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <div className="mt-1 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tabular-nums text-[color:var(--ink-2)]">
+                  <div className="mt-1 font-mono text-[10px] tabular-nums text-[color:var(--ink-2)]">
                     {pct}%
                   </div>
                 </div>
@@ -1089,17 +1089,17 @@ function ActiveDispatch({ job }: { job: ProspectingJob }) {
             {/* Output schema columns (if any) */}
             {schema.length > 0 && (
               <div className="mt-5 pt-5 border-t border-[color:var(--rule)]">
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
+                <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
                   Requested columns
                 </span>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {schema.map((c) => (
                     <span
                       key={c.key}
-                      className="font-[family-name:var(--font-barlow)] text-[12px] text-[color:var(--ink-2)] bg-[color:var(--paper)] border border-[color:var(--rule)] px-2.5 py-1"
+                      className=" text-[12px] text-[color:var(--ink-2)] bg-[color:var(--paper)] border border-[color:var(--rule)] px-2.5 py-1"
                     >
                       {c.label}{' '}
-                      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
+                      <span className="font-mono text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
                         · {c.type}
                       </span>
                     </span>
@@ -1111,12 +1111,12 @@ function ActiveDispatch({ job }: { job: ProspectingJob }) {
 
           {/* Footer */}
           <div className="flex items-center justify-between gap-4 px-5 md:px-6 py-3 border-t border-[color:var(--rule)]">
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
+            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
               Auto-refreshing
             </span>
             <Link
               href={`/dashboard/leads?jobId=${job._id}`}
-              className="inline-flex items-center gap-1.5 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] hover:text-[color:var(--forest)] underline underline-offset-[5px] decoration-[color:var(--rule)] hover:decoration-[color:var(--forest)] transition"
+              className="inline-flex items-center gap-1.5  text-[13px] text-[color:var(--ink)] hover:text-[color:var(--forest)] underline underline-offset-[5px] decoration-[color:var(--rule)] hover:decoration-[color:var(--forest)] transition"
             >
               Read the full dossier
               <ArrowEast className="w-3 h-3" />
@@ -1143,7 +1143,7 @@ function RecentDispatches({ jobs }: { jobs: ProspectingJob[] }) {
     <section>
       <div className="flex items-center gap-3 mb-5">
         <span className="block w-8 h-px bg-[color:var(--ink)]" />
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
           Previous dispatches
         </span>
       </div>
@@ -1158,13 +1158,13 @@ function RecentDispatches({ jobs }: { jobs: ProspectingJob[] }) {
               href={`/dashboard/leads?jobId=${j._id}`}
               className="group grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 md:gap-6 items-baseline py-5 px-0 hover:bg-[color:var(--paper-3)]/60 transition-colors"
             >
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] shrink-0 w-16">
+              <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] shrink-0 w-16">
                 {relativeTime(j.createdAt)}
               </span>
-              <p className="font-[family-name:var(--font-instrument-serif)] italic text-[16px] md:text-[18px] leading-[1.35] text-[color:var(--ink)] truncate">
+              <p className=" italic text-[16px] md:text-[18px] leading-[1.35] text-[color:var(--ink)] truncate">
                 &ldquo;{j.rawQuery}&rdquo;
               </p>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[11px] tabular-nums text-[color:var(--ink-2)] hidden md:inline">
+              <span className="font-mono text-[11px] tabular-nums text-[color:var(--ink-2)] hidden md:inline">
                 {leads}/{target}
               </span>
               <StatusChip status={j.status} />
@@ -1182,13 +1182,13 @@ function EmptyState() {
   return (
     <section className="py-4">
       <div className="border border-dashed border-[color:var(--rule)] rounded-sm p-8 md:p-10 bg-[color:var(--paper-3)]/60">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
           First issue
         </span>
-        <h3 className="mt-3 font-[family-name:var(--font-instrument-serif)] text-[26px] md:text-[30px] leading-[1.1] tracking-[-0.01em] text-[color:var(--ink)]">
+        <h3 className="mt-3  text-[26px] md:text-[30px] leading-[1.1] tracking-[-0.01em] text-[color:var(--ink)]">
           Your desk is empty. <em className="italic text-[color:var(--forest)]">File your first dispatch</em> above.
         </h3>
-        <p className="mt-3 font-[family-name:var(--font-barlow)] text-[14.5px] leading-[1.55] text-[color:var(--ink-2)] max-w-[600px]">
+        <p className="mt-3  text-[14.5px] leading-[1.55] text-[color:var(--ink-2)] max-w-[600px]">
           A dispatch is one query. Describe who you&rsquo;re looking for in a
           sentence. The desk will return a list with footnotes on every field.
           Three dispatches are on the house.

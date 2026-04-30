@@ -73,16 +73,16 @@ export default function InvocationsPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard/settings/data-sources"
-            className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
+            className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
           >
             ← Data sources
           </Link>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">/</span>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+          <span className="font-mono text-[10px] text-[color:var(--ink-3)]">/</span>
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
             Invocation log
           </span>
         </div>
-        <label className="flex items-center gap-2 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] cursor-pointer">
+        <label className="flex items-center gap-2 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] cursor-pointer">
           <input
             type="checkbox"
             checked={autoRefresh}
@@ -98,7 +98,7 @@ export default function InvocationsPage() {
         <select
           value={filterSource}
           onChange={(e) => { setFilterSource(e.target.value); setPage(1); }}
-          className="border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] bg-transparent py-1.5 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] outline-none"
+          className="border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] bg-transparent py-1.5  text-[13px] text-[color:var(--ink)] outline-none"
         >
           <option value="">All sources</option>
           {sources.map((s) => (
@@ -108,7 +108,7 @@ export default function InvocationsPage() {
         <select
           value={filterStatus}
           onChange={(e) => { setFilterStatus(e.target.value as InvocationStatus | ''); setPage(1); }}
-          className="border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] bg-transparent py-1.5 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] outline-none"
+          className="border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] bg-transparent py-1.5  text-[13px] text-[color:var(--ink)] outline-none"
         >
           <option value="">Any status</option>
           <option value="success">Success</option>
@@ -118,7 +118,7 @@ export default function InvocationsPage() {
           <option value="invalid_input">Invalid input</option>
           <option value="pending">Pending</option>
         </select>
-        <span className="ml-auto font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+        <span className="ml-auto font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
           {total.toLocaleString()} events
         </span>
       </div>
@@ -126,12 +126,12 @@ export default function InvocationsPage() {
       {/* Table */}
       <div className="border-t border-[color:var(--rule)]">
         {isLoading && invocations.length === 0 && (
-          <p className="py-6 font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-3)]">
+          <p className="py-6  italic text-[13px] text-[color:var(--ink-3)]">
             Loading events…
           </p>
         )}
         {!isLoading && invocations.length === 0 && (
-          <p className="py-6 font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-3)]">
+          <p className="py-6  italic text-[13px] text-[color:var(--ink-3)]">
             No invocations match the current filters.
           </p>
         )}
@@ -142,22 +142,22 @@ export default function InvocationsPage() {
             onClick={() => setActiveId(inv._id)}
             className="w-full grid grid-cols-[110px_1fr_auto_auto_auto] gap-4 items-baseline py-3 border-b border-[color:var(--rule)] text-left hover:bg-[color:var(--paper-3)]/50 transition"
           >
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">
+            <span className="font-mono text-[10px] text-[color:var(--ink-3)]">
               {formatTime(inv.occurredAt)}
             </span>
             <div className="min-w-0">
-              <div className="font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink)] truncate">
+              <div className=" text-[13.5px] text-[color:var(--ink)] truncate">
                 {sourceById[inv.dataSourceId]?.name ?? inv.dataSourceId}
               </div>
-              <div className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)] truncate mt-0.5">
+              <div className="font-mono text-[10px] text-[color:var(--ink-3)] truncate mt-0.5">
                 {summarizeInput(inv.input)}
               </div>
             </div>
             <StatusChip status={inv.status} />
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)] tabular-nums min-w-[60px] text-right">
+            <span className="font-mono text-[10px] text-[color:var(--ink-3)] tabular-nums min-w-[60px] text-right">
               {typeof inv.latencyMs === 'number' ? `${inv.latencyMs}ms` : '—'}
             </span>
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)] tabular-nums min-w-[60px] text-right">
+            <span className="font-mono text-[10px] text-[color:var(--ink-3)] tabular-nums min-w-[60px] text-right">
               {typeof inv.costUSD === 'number' ? fmtUsd(inv.costUSD) : '—'}
             </span>
           </button>
@@ -170,17 +170,17 @@ export default function InvocationsPage() {
           <button
             onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page === 1}
-            className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] disabled:opacity-40"
+            className=" text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] disabled:opacity-40"
           >
             ← Newer
           </button>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
             Page {page} of {Math.ceil(total / 50)}
           </span>
           <button
             onClick={() => setPage(page + 1)}
             disabled={page * 50 >= total}
-            className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] disabled:opacity-40"
+            className=" text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] disabled:opacity-40"
           >
             Older →
           </button>
@@ -216,17 +216,17 @@ function InvocationDrawer({
         <div className="px-6 md:px-8 py-6 md:py-8 flex flex-col gap-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1">
                 {formatTime(invocation.occurredAt)} · {invocation.triggeredBy}
               </span>
-              <h2 className="font-[family-name:var(--font-instrument-serif)] text-[26px] leading-[1.1] text-[color:var(--ink)]">
+              <h2 className=" text-[26px] leading-[1.1] text-[color:var(--ink)]">
                 {source?.name ?? invocation.dataSourceId}
               </h2>
               <div className="mt-1.5"><StatusChip status={invocation.status} /></div>
             </div>
             <button
               onClick={onClose}
-              className="font-[family-name:var(--font-instrument-serif)] text-[22px] leading-none text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
+              className=" text-[22px] leading-none text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
               aria-label="Close"
             >
               ×
@@ -241,8 +241,8 @@ function InvocationDrawer({
           </div>
 
           {invocation.errorMessage && (
-            <div className="border-l-2 border-[color:var(--warn)] px-3 py-2 font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink)]">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase block mb-1 text-[color:var(--ink-3)]">
+            <div className="border-l-2 border-[color:var(--warn)] px-3 py-2  text-[12.5px] text-[color:var(--ink)]">
+              <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase block mb-1 text-[color:var(--ink-3)]">
                 Error
               </span>
               {invocation.errorMessage}
@@ -255,24 +255,24 @@ function InvocationDrawer({
           {/* Parent refs */}
           {(invocation.parentJobId || invocation.parentLeadId || invocation.parentTableRowId) && (
             <div className="border-t border-[color:var(--rule)] pt-4 flex flex-col gap-2">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+              <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
                 Context
               </span>
               {invocation.parentJobId && (
                 <Link
                   href={`/dashboard/leads?jobId=${invocation.parentJobId}`}
-                  className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] hover:text-[color:var(--forest)] underline underline-offset-[4px] decoration-[color:var(--rule)]"
+                  className=" text-[13px] text-[color:var(--ink)] hover:text-[color:var(--forest)] underline underline-offset-[4px] decoration-[color:var(--rule)]"
                 >
                   Parent job → {invocation.parentJobId}
                 </Link>
               )}
               {invocation.parentLeadId && (
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[11px] text-[color:var(--ink-2)]">
+                <span className="font-mono text-[11px] text-[color:var(--ink-2)]">
                   Lead: {invocation.parentLeadId}
                 </span>
               )}
               {invocation.parentTableRowId && invocation.parentColumnKey && (
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[11px] text-[color:var(--ink-2)]">
+                <span className="font-mono text-[11px] text-[color:var(--ink-2)]">
                   Row: {invocation.parentTableRowId} · Column: {invocation.parentColumnKey}
                 </span>
               )}
@@ -293,10 +293,10 @@ function JsonBlock({ label, value }: { label: string; value: unknown }) {
   }
   return (
     <div>
-      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
+      <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
         {label}
       </span>
-      <pre className="font-[family-name:var(--font-jetbrains-mono)] text-[11px] leading-[1.5] bg-[color:var(--paper-3)] border border-[color:var(--rule)] rounded-sm p-3 overflow-x-auto whitespace-pre-wrap break-all text-[color:var(--ink)] max-h-[360px] overflow-y-auto">
+      <pre className="font-mono text-[11px] leading-[1.5] bg-[color:var(--paper-3)] border border-[color:var(--rule)] rounded-sm p-3 overflow-x-auto whitespace-pre-wrap break-all text-[color:var(--ink)] max-h-[360px] overflow-y-auto">
         {json}
       </pre>
     </div>
@@ -306,10 +306,10 @@ function JsonBlock({ label, value }: { label: string; value: unknown }) {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1">
+      <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1">
         {label}
       </span>
-      <div className="font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink)] tabular-nums">{value}</div>
+      <div className=" text-[14px] text-[color:var(--ink)] tabular-nums">{value}</div>
     </div>
   );
 }
@@ -325,7 +325,7 @@ function StatusChip({ status }: { status: InvocationStatus }) {
   };
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 border rounded-full font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase whitespace-nowrap ${styles[status]}`}
+      className={`inline-flex items-center px-2 py-0.5 border rounded-full font-mono text-[9.5px] tracking-[0.18em] uppercase whitespace-nowrap ${styles[status]}`}
     >
       {status.replace(/_/g, ' ')}
     </span>

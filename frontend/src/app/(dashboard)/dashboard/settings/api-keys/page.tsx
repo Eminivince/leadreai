@@ -90,7 +90,7 @@ export default function ApiKeysSettingsPage() {
       <section className="border-t border-[color:var(--rule)] pt-8">
         <SectionHead n="01" title="Issue a credential" />
         <div className="md:pl-[54px]">
-          <p className="font-[family-name:var(--font-barlow)] text-[14px] leading-[1.55] text-[color:var(--ink-2)] max-w-[620px] mb-6">
+          <p className=" text-[14px] leading-[1.55] text-[color:var(--ink-2)] max-w-[620px] mb-6">
             Keys are scoped to this workspace. The raw key is shown once at issue time and is not
             recoverable afterward — copy it to your secrets store before leaving this page.
           </p>
@@ -123,7 +123,7 @@ export default function ApiKeysSettingsPage() {
           {freshKey && (
             <div className="mt-5 border border-[color:var(--forest)]/40 bg-[color:var(--paper-3)] rounded-sm p-5">
               <div className="flex items-center justify-between mb-3">
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
                   Copy now — won&rsquo;t be shown again
                 </span>
                 <button
@@ -132,12 +132,12 @@ export default function ApiKeysSettingsPage() {
                     void navigator.clipboard.writeText(freshKey);
                     toast.success('Copied.');
                   }}
-                  className="font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]"
+                  className=" italic text-[12.5px] text-[color:var(--ink)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]"
                 >
                   Copy to clipboard
                 </button>
               </div>
-              <code className="block break-all font-[family-name:var(--font-jetbrains-mono)] text-[13px] text-[color:var(--ink)] select-all">
+              <code className="block break-all font-mono text-[13px] text-[color:var(--ink)] select-all">
                 {freshKey}
               </code>
             </div>
@@ -152,7 +152,7 @@ export default function ApiKeysSettingsPage() {
           title={
             <>
               Active credentials{' '}
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] not-italic ml-3">
+              <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] not-italic ml-3">
                 {keys.length}
               </span>
             </>
@@ -160,15 +160,15 @@ export default function ApiKeysSettingsPage() {
         />
         <div className="md:pl-[54px]">
           {isLoading ? (
-            <div className="py-12 text-center font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)]">
+            <div className="py-12 text-center  italic text-[14px] text-[color:var(--ink-2)]">
               Loading credentials…
             </div>
           ) : keys.length === 0 ? (
             <div className="border border-dashed border-[color:var(--rule)] bg-[color:var(--paper-3)]/60 rounded-sm py-12 text-center">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
                 No credentials
               </span>
-              <h4 className="mt-2 font-[family-name:var(--font-instrument-serif)] text-[20px] text-[color:var(--ink)]">
+              <h4 className="mt-2  text-[20px] text-[color:var(--ink)]">
                 Issue your first key above.
               </h4>
             </div>
@@ -180,17 +180,17 @@ export default function ApiKeysSettingsPage() {
                   className="grid grid-cols-[1fr_auto_140px_40px] gap-4 items-center py-3 border-b border-[color:var(--rule)]/70"
                 >
                   <div className="min-w-0">
-                    <div className="font-[family-name:var(--font-barlow)] text-[13.5px] font-medium text-[color:var(--ink)] truncate">
+                    <div className=" text-[13.5px] font-medium text-[color:var(--ink)] truncate">
                       {k.name}
                     </div>
-                    <div className="font-[family-name:var(--font-jetbrains-mono)] text-[11px] text-[color:var(--ink-3)] truncate mt-0.5">
+                    <div className="font-mono text-[11px] text-[color:var(--ink-3)] truncate mt-0.5">
                       {k.prefix}••••
                     </div>
                   </div>
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">
+                  <span className="font-mono text-[10px] text-[color:var(--ink-3)]">
                     issued {new Date(k.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">
+                  <span className="font-mono text-[10px] text-[color:var(--ink-3)]">
                     {k.lastUsedAt ? `used ${new Date(k.lastUsedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : 'never used'}
                   </span>
                   <button

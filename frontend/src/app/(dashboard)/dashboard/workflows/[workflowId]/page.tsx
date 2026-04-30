@@ -60,7 +60,7 @@ export default function WorkflowDetailPage() {
 
   if (isLoading && !workflow) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-3)]">
+      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center  italic text-[14px] text-[color:var(--ink-3)]">
         Loading workflow…
       </div>
     );
@@ -69,8 +69,8 @@ export default function WorkflowDetailPage() {
   if (!workflow) {
     return (
       <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center">
-        <p className="font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink-2)]">Workflow not found.</p>
-        <Link href="/dashboard/workflows" className="mt-4 inline-block font-[family-name:var(--font-jetbrains-mono)] text-[11px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)]">
+        <p className=" text-[14px] text-[color:var(--ink-2)]">Workflow not found.</p>
+        <Link href="/dashboard/workflows" className="mt-4 inline-block font-mono text-[11px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)]">
           ← All workflows
         </Link>
       </div>
@@ -84,20 +84,20 @@ export default function WorkflowDetailPage() {
         <div className="flex items-center gap-3 mb-4">
           <Link
             href="/dashboard/workflows"
-            className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
+            className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
           >
             Workflows
           </Link>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">/</span>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+          <span className="font-mono text-[10px] text-[color:var(--ink-3)]">/</span>
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
             {workflow.tableTemplate.rowType}
           </span>
         </div>
-        <h1 className="font-[family-name:var(--font-instrument-serif)] text-[38px] md:text-[52px] leading-[0.97] tracking-[-0.015em] text-[color:var(--ink)]">
+        <h1 className=" text-[38px] md:text-[52px] leading-[0.97] tracking-[-0.015em] text-[color:var(--ink)]">
           {workflow.name}
         </h1>
         {workflow.description && (
-          <p className="mt-3 font-[family-name:var(--font-barlow)] text-[15px] leading-[1.55] text-[color:var(--ink-2)] max-w-[780px]">
+          <p className="mt-3  text-[15px] leading-[1.55] text-[color:var(--ink-2)] max-w-[780px]">
             {workflow.description}
           </p>
         )}
@@ -112,7 +112,7 @@ export default function WorkflowDetailPage() {
           <div className="mt-10 border-t border-[color:var(--rule)] pt-6">
             <button
               onClick={() => void handleDelete()}
-              className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--warn)] hover:text-[color:var(--ink)] transition"
+              className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--warn)] hover:text-[color:var(--ink)] transition"
             >
               Delete workflow
             </button>
@@ -165,7 +165,7 @@ function WorkflowMeta({
 
   if (!editing) {
     return (
-      <div className="mb-8 flex items-center justify-between gap-3 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+      <div className="mb-8 flex items-center justify-between gap-3 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
         <span>
           Run {workflow.stats.timesRun}× · Created {new Date(workflow.createdAt).toLocaleDateString()}
         </span>
@@ -186,14 +186,14 @@ function WorkflowMeta({
       <div className="flex items-center justify-end gap-3">
         <button
           onClick={() => setEditing(false)}
-          className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
+          className=" text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
         >
           Cancel
         </button>
         <button
           onClick={() => void save()}
           disabled={!name.trim() || saving}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40"
         >
           {saving ? 'Saving…' : 'Save'}
         </button>
@@ -211,13 +211,13 @@ function ColumnsSummary({ workflow }: { workflow: Workflow }) {
     <div className="mb-8">
       <div className="flex items-center gap-3 mb-3">
         <span className="block w-6 h-px bg-[color:var(--ink-2)]" />
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
           Columns ({cols.length})
         </span>
       </div>
       <div className="border-t border-[color:var(--rule)]">
         {cols.length === 0 && (
-          <p className="py-4 font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-3)]">
+          <p className="py-4  italic text-[13px] text-[color:var(--ink-3)]">
             No columns in this template.
           </p>
         )}
@@ -231,23 +231,23 @@ function ColumnsSummary({ workflow }: { workflow: Workflow }) {
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink)] truncate">
+                  <span className=" text-[13.5px] text-[color:var(--ink)] truncate">
                     {c.label}
                   </span>
                   {isEnriched && (
-                    <span className="font-[family-name:var(--font-jetbrains-mono)] text-[8.5px] text-[color:var(--forest)] shrink-0">
+                    <span className="font-mono text-[8.5px] text-[color:var(--forest)] shrink-0">
                       AI
                     </span>
                   )}
                 </div>
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
+                <span className="font-mono text-[9px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
                   {c.key}
                 </span>
               </div>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+              <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
                 {c.type}
               </span>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] min-w-[110px] text-right truncate">
+              <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] min-w-[110px] text-right truncate">
                 {sourceId ?? 'static'}
               </span>
             </div>
@@ -266,28 +266,28 @@ function SeedSummary({ workflow }: { workflow: Workflow }) {
     <div className="mb-8">
       <div className="flex items-center gap-3 mb-3">
         <span className="block w-6 h-px bg-[color:var(--forest)]" />
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
+        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
           Seed query
         </span>
       </div>
       <div className="border border-[color:var(--rule)] bg-[color:var(--paper-3)]/40 rounded-sm p-4">
-        <p className="font-[family-name:var(--font-barlow)] text-[14px] leading-[1.55] text-[color:var(--ink)]">
+        <p className=" text-[14px] leading-[1.55] text-[color:var(--ink)]">
           {seed.rawQueryTemplate}
         </p>
         {seed.parameters.length > 0 && (
           <div className="mt-3 pt-3 border-t border-[color:var(--rule)]/60">
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
+            <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
               Parameters
             </span>
             <ul className="flex flex-col gap-1">
               {seed.parameters.map((p) => (
-                <li key={p.key} className="flex items-baseline justify-between gap-3 font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink-2)]">
+                <li key={p.key} className="flex items-baseline justify-between gap-3  text-[12.5px] text-[color:var(--ink-2)]">
                   <span>
-                    <span className="font-[family-name:var(--font-jetbrains-mono)] text-[11px] text-[color:var(--ink)]">{`{{${p.key}}}`}</span>
+                    <span className="font-mono text-[11px] text-[color:var(--ink)]">{`{{${p.key}}}`}</span>
                     <span className="ml-2">{p.label}</span>
                     {p.required && <span className="text-[color:var(--warn)] ml-1">*</span>}
                   </span>
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
+                  <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
                     {p.type}
                   </span>
                 </li>
@@ -375,10 +375,10 @@ function RunForm({
 
   return (
     <div className="border border-[color:var(--ink)] bg-[color:var(--paper)] rounded-sm p-6">
-      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)] block mb-1">
+      <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)] block mb-1">
         Run
       </span>
-      <h2 className="font-[family-name:var(--font-instrument-serif)] text-[26px] leading-tight text-[color:var(--ink)] mb-5">
+      <h2 className=" text-[26px] leading-tight text-[color:var(--ink)] mb-5">
         Dispatch a fresh sheet.
       </h2>
 
@@ -397,7 +397,7 @@ function RunForm({
 
         {hasSeed && (
           <>
-            <label className="flex items-center gap-2 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)]">
+            <label className="flex items-center gap-2  text-[13px] text-[color:var(--ink)]">
               <input
                 type="checkbox"
                 checked={dispatchSeedJob}
@@ -409,7 +409,7 @@ function RunForm({
 
             {dispatchSeedJob && workflow.seed!.parameters.length > 0 && (
               <div className="border border-[color:var(--rule)] rounded-sm p-4 flex flex-col gap-3">
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+                <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
                   Parameters
                 </span>
                 {workflow.seed!.parameters.map((p) => (
@@ -427,7 +427,7 @@ function RunForm({
       </div>
 
       {error && (
-        <div className="mt-4 border-l-2 border-[color:var(--warn)] px-3 py-2 font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink)]">
+        <div className="mt-4 border-l-2 border-[color:var(--warn)] px-3 py-2  text-[12.5px] text-[color:var(--ink)]">
           {error}
         </div>
       )}
@@ -440,7 +440,7 @@ function RunForm({
             ? `Missing: ${missingRequired.map((p) => p.label).join(', ')}`
             : undefined
         }
-        className="mt-6 w-full inline-flex items-center justify-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-4 py-3 rounded-full font-[family-name:var(--font-barlow)] text-[13.5px] font-medium transition-colors disabled:opacity-40"
+        className="mt-6 w-full inline-flex items-center justify-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-4 py-3 rounded-full  text-[13.5px] font-medium transition-colors disabled:opacity-40"
       >
         {running ? 'Running…' : hasSeed && dispatchSeedJob ? 'Create table + dispatch →' : 'Create table →'}
       </button>
@@ -465,14 +465,14 @@ function ParamInput({
   if (param.type === 'select' && param.options) {
     return (
       <label className="block">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1.5">
+        <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1.5">
           {param.label}
           {param.required && <span className="text-[color:var(--warn)] ml-1">*</span>}
         </span>
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-1.5 outline-none font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink)]"
+          className="w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-1.5 outline-none  text-[13.5px] text-[color:var(--ink)]"
         >
           <option value="">{defaultStr ? `Default: ${defaultStr}` : '— pick —'}</option>
           {param.options.map((o) => (
@@ -485,7 +485,7 @@ function ParamInput({
 
   return (
     <label className="block">
-      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1.5">
+      <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1.5">
         {param.label}
         {param.required && <span className="text-[color:var(--warn)] ml-1">*</span>}
       </span>
@@ -494,7 +494,7 @@ function ParamInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-1.5 outline-none font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
+        className="w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-1.5 outline-none  text-[13.5px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
       />
     </label>
   );
@@ -513,7 +513,7 @@ function LabeledInput({
 }) {
   return (
     <label className="block">
-      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1.5">
+      <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1.5">
         {label}
       </span>
       <input
@@ -521,7 +521,7 @@ function LabeledInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         autoFocus={autoFocus}
-        className="w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-2 outline-none font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
+        className="w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-2 outline-none  text-[14px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
       />
     </label>
   );

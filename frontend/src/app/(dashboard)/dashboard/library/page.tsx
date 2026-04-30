@@ -236,16 +236,16 @@ export default function LibraryPage() {
       <section className="mb-10">
         <div className="flex items-center gap-3 mb-5">
           <span className="block w-8 h-px bg-[color:var(--ink)]" />
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
             The library
           </span>
         </div>
         <div className="flex items-end justify-between gap-6 flex-wrap">
           <div className="max-w-[780px]">
-            <h1 className="font-[family-name:var(--font-instrument-serif)] text-[44px] md:text-[60px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
+            <h1 className=" text-[44px] md:text-[60px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
               Your <em className="italic text-[color:var(--forest)]">source material</em>.
             </h1>
-            <p className="mt-4 font-[family-name:var(--font-barlow)] text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
+            <p className="mt-4  text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
               Drop in pitch decks, portfolio lists, ICP notes, case studies — anything that should inform a
               dispatch. We parse, chunk, and index each file so the agent can quote them back to you while
               researching.
@@ -261,7 +261,7 @@ export default function LibraryPage() {
             </GhostButton>
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors"
+              className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors"
             >
               Back to the desk <ArrowEast className="w-3 h-3" />
             </Link>
@@ -292,10 +292,10 @@ export default function LibraryPage() {
         <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[color:var(--paper)] border border-[color:var(--rule)] mb-3 text-[color:var(--ink-2)]">
           <UploadIcon />
         </div>
-        <div className="font-[family-name:var(--font-instrument-serif)] text-[22px] text-[color:var(--ink)]">
+        <div className=" text-[22px] text-[color:var(--ink)]">
           Drop files here <em className="italic text-[color:var(--forest)]">or click to browse</em>
         </div>
-        <p className="mt-2 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)]">
+        <p className="mt-2  italic text-[12.5px] text-[color:var(--ink-2)]">
           Docs: PDF · DOCX · XLSX · CSV · TXT · MD · HTML — Audio: MP3 · M4A · WAV · MP4 · WebM — up to 25MB each
         </p>
       </section>
@@ -303,20 +303,20 @@ export default function LibraryPage() {
       {/* Summary strip */}
       {(docs.length > 0 || isLoading) && (
         <div className="flex items-center gap-6 pb-4 mb-6 border-b border-[color:var(--rule)] flex-wrap">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] tabular-nums">
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] tabular-nums">
             {total} {total === 1 ? 'file' : 'files'}
           </span>
           {summary.inFlight > 0 && (
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] tabular-nums">
+            <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] tabular-nums">
               {summary.inFlight} processing…
             </span>
           )}
           {summary.failed > 0 && (
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--warn)] tabular-nums">
+            <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--warn)] tabular-nums">
               {summary.failed} failed
             </span>
           )}
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--forest)] tabular-nums">
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--forest)] tabular-nums">
             {summary.ready} searchable
           </span>
         </div>
@@ -324,18 +324,18 @@ export default function LibraryPage() {
 
       {/* List */}
       {isLoading ? (
-        <div className="py-12 text-center font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)]">
+        <div className="py-12 text-center  italic text-[14px] text-[color:var(--ink-2)]">
           Loading the library…
         </div>
       ) : docs.length === 0 ? (
         <div className="py-20 text-center">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
             Empty shelf
           </span>
-          <h3 className="mt-3 font-[family-name:var(--font-instrument-serif)] text-[28px] text-[color:var(--ink)]">
+          <h3 className="mt-3  text-[28px] text-[color:var(--ink)]">
             Nothing filed yet.
           </h3>
-          <p className="mt-2 font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)]">
+          <p className="mt-2  italic text-[14px] text-[color:var(--ink-2)]">
             Drop a pitch deck, portfolio list, or ICP doc above and the agent will start citing it.
           </p>
         </div>
@@ -349,17 +349,17 @@ export default function LibraryPage() {
                 key={d._id}
                 className="grid grid-cols-[40px_1fr_auto_auto_auto] gap-4 items-center py-3 border-b border-[color:var(--rule)]/70 hover:bg-[color:var(--paper-3)]/60 transition-colors"
               >
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] tabular-nums">
+                <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] tabular-nums">
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <button
                   onClick={() => router.push(`/dashboard/library/${d._id}`)}
                   className="min-w-0 text-left"
                 >
-                  <div className="font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink)] truncate">
+                  <div className=" text-[13.5px] text-[color:var(--ink)] truncate">
                     {d.title ?? d.originalFilename}
                   </div>
-                  <div className="font-[family-name:var(--font-jetbrains-mono)] text-[10.5px] text-[color:var(--ink-3)] truncate">
+                  <div className="font-mono text-[10.5px] text-[color:var(--ink-3)] truncate">
                     {d.fileType.toUpperCase()} · {bytesLabel(d.bytes)}
                     {d.pageCount ? ` · ${d.pageCount} pages` : ''}
                     {d.chunkCount ? ` · ${d.chunkCount} chunks` : ''}
@@ -369,11 +369,11 @@ export default function LibraryPage() {
                   </div>
                 </button>
                 <span
-                  className={`font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase px-2 py-0.5 border bg-[color:var(--paper-3)] ${tone.className}`}
+                  className={`font-mono text-[9.5px] tracking-[0.18em] uppercase px-2 py-0.5 border bg-[color:var(--paper-3)] ${tone.className}`}
                 >
                   {tone.label}
                 </span>
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)] tabular-nums whitespace-nowrap">
+                <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)] tabular-nums whitespace-nowrap">
                   {relativeTime(d.createdAt)}
                 </span>
                 <div className="flex items-center gap-1">
@@ -385,7 +385,7 @@ export default function LibraryPage() {
                       }}
                       disabled={retryMutation.isPending}
                       title="Retry processing"
-                      className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--forest)] hover:text-[color:var(--ink)] transition disabled:opacity-60 px-1.5"
+                      className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--forest)] hover:text-[color:var(--ink)] transition disabled:opacity-60 px-1.5"
                     >
                       Retry
                     </button>

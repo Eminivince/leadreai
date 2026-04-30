@@ -56,18 +56,18 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
         <div className="flex items-center gap-3 mb-5">
           <Link
             href="/dashboard"
-            className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
+            className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
           >
             Dispatches
           </Link>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">/</span>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+          <span className="font-mono text-[10px] text-[color:var(--ink-3)]">/</span>
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
             Settings
           </span>
           {active && (
             <>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">/</span>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+              <span className="font-mono text-[10px] text-[color:var(--ink-3)]">/</span>
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
                 {active.label}
               </span>
             </>
@@ -76,7 +76,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
         <div className="flex items-end justify-between gap-6 flex-wrap">
           <div className="max-w-[720px]">
-            <h1 className="font-[family-name:var(--font-instrument-serif)] text-[48px] md:text-[64px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
+            <h1 className=" text-[48px] md:text-[64px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
               {isIndex ? (
                 <>
                   <em className="italic text-[color:var(--forest)]">Settings</em>, the table of contents.
@@ -85,7 +85,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                 active?.label ?? 'Settings'
               )}
             </h1>
-            <p className="mt-4 font-[family-name:var(--font-barlow)] text-[15px] md:text-[17px] leading-[1.5] text-[color:var(--ink-2)]">
+            <p className="mt-4  text-[15px] md:text-[17px] leading-[1.5] text-[color:var(--ink-2)]">
               {isIndex
                 ? 'Nine sections. Bookmark any of them — settings are routed, not tabbed.'
                 : active?.lede ?? 'Manage your workspace.'}
@@ -108,7 +108,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                     key={s.href}
                     href={s.href}
                     className={cn(
-                      'inline-flex items-center gap-2 px-3 py-1.5 rounded-full border font-[family-name:var(--font-barlow)] text-[12.5px] transition-colors whitespace-nowrap',
+                      'inline-flex items-center gap-2 px-3 py-1.5 rounded-full border  text-[12.5px] transition-colors whitespace-nowrap',
                       isActive
                         ? 'bg-[color:var(--ink)] text-[color:var(--paper)] border-[color:var(--ink)]'
                         : 'border-[color:var(--rule)] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]',
@@ -123,7 +123,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
           {/* Desktop: vertical rail */}
           <nav className="hidden lg:block">
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-4 px-3">
+            <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-4 px-3">
               Sections
             </span>
             <ul>
@@ -143,7 +143,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                       {isActive && (
                         <span className="absolute left-0 top-[9px] bottom-[9px] w-[2px] bg-[color:var(--forest)]" />
                       )}
-                      <span className="flex-1 font-[family-name:var(--font-barlow)] text-[13.5px]">{s.label}</span>
+                      <span className="flex-1  text-[13.5px]">{s.label}</span>
                       <ArrowEast
                         className={cn(
                           'w-3 h-3 shrink-0 transition-all',

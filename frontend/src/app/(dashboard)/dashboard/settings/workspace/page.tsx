@@ -72,9 +72,9 @@ function ToggleRow({
   return (
     <div className="flex items-start justify-between gap-6 py-4 border-b border-[color:var(--rule)]/70">
       <div className="min-w-0 flex-1">
-        <div className="font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink)]">{label}</div>
+        <div className=" text-[14px] text-[color:var(--ink)]">{label}</div>
         {sub && (
-          <div className="mt-1 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)]">
+          <div className="mt-1  italic text-[12.5px] text-[color:var(--ink-2)]">
             {sub}
           </div>
         )}
@@ -133,7 +133,7 @@ export default function WorkspaceSettingsPage() {
 
   if (isLoading || !ws) {
     return (
-      <div className="py-8 font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)]">
+      <div className="py-8  italic text-[14px] text-[color:var(--ink-2)]">
         Loading workspace…
       </div>
     );
@@ -163,11 +163,11 @@ export default function WorkspaceSettingsPage() {
           <div>
             <Label>Slug</Label>
             <div className="border-b border-[color:var(--rule)] py-2">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[13px] text-[color:var(--ink)]">
+              <span className="font-mono text-[13px] text-[color:var(--ink)]">
                 {ws.slug}
               </span>
             </div>
-            <p className="mt-2 font-[family-name:var(--font-barlow)] italic text-[12px] text-[color:var(--ink-2)]">
+            <p className="mt-2  italic text-[12px] text-[color:var(--ink-2)]">
               Slugs are immutable today. Rename the desk above; the slug stays for URL stability.
             </p>
           </div>
@@ -203,10 +203,10 @@ export default function WorkspaceSettingsPage() {
 
           <div className="flex items-start justify-between gap-6 py-4 border-b border-[color:var(--rule)]/70">
             <div className="min-w-0 flex-1">
-              <div className="font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink)]">
+              <div className=" text-[14px] text-[color:var(--ink)]">
                 Default export format
               </div>
-              <div className="mt-1 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)]">
+              <div className="mt-1  italic text-[12.5px] text-[color:var(--ink-2)]">
                 Controls the default format of the Export CSV button across leads and dossiers.
               </div>
             </div>

@@ -123,7 +123,7 @@ export default function TableDetailPage() {
 
   if (loadingTable && !table) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-3)]">
+      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center  italic text-[14px] text-[color:var(--ink-3)]">
         Loading table…
       </div>
     );
@@ -132,8 +132,8 @@ export default function TableDetailPage() {
   if (!table) {
     return (
       <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center">
-        <p className="font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink-2)]">Table not found.</p>
-        <Link href="/dashboard/tables" className="mt-4 inline-block font-[family-name:var(--font-jetbrains-mono)] text-[11px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)]">
+        <p className=" text-[14px] text-[color:var(--ink-2)]">Table not found.</p>
+        <Link href="/dashboard/tables" className="mt-4 inline-block font-mono text-[11px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)]">
           ← All tables
         </Link>
       </div>
@@ -148,24 +148,24 @@ export default function TableDetailPage() {
           <div className="flex items-center gap-3 mb-4">
             <Link
               href="/dashboard/tables"
-              className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
+              className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
             >
               Tables
             </Link>
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">/</span>
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+            <span className="font-mono text-[10px] text-[color:var(--ink-3)]">/</span>
+            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
               {table.rowType}
             </span>
           </div>
-          <h1 className="font-[family-name:var(--font-instrument-serif)] text-[38px] md:text-[52px] leading-[0.97] tracking-[-0.015em] text-[color:var(--ink)]">
+          <h1 className=" text-[38px] md:text-[52px] leading-[0.97] tracking-[-0.015em] text-[color:var(--ink)]">
             {table.name}
           </h1>
           {table.description && (
-            <p className="mt-3 font-[family-name:var(--font-barlow)] text-[14.5px] leading-[1.5] text-[color:var(--ink-2)]">
+            <p className="mt-3  text-[14.5px] leading-[1.5] text-[color:var(--ink-2)]">
               {table.description}
             </p>
           )}
-          <div className="mt-4 flex items-center gap-4 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+          <div className="mt-4 flex items-center gap-4 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
             <span>{table.columns.length} cols</span>
             <span>·</span>
             <span>{table.rowCount.toLocaleString()} rows</span>
@@ -175,25 +175,25 @@ export default function TableDetailPage() {
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setSeedOpen(true)}
-            className="inline-flex items-center gap-2 border border-[color:var(--rule)] bg-[color:var(--paper-3)] text-[color:var(--ink)] hover:border-[color:var(--ink)] px-4 py-2 rounded-full font-[family-name:var(--font-barlow)] text-[13px] transition"
+            className="inline-flex items-center gap-2 border border-[color:var(--rule)] bg-[color:var(--paper-3)] text-[color:var(--ink)] hover:border-[color:var(--ink)] px-4 py-2 rounded-full  text-[13px] transition"
           >
             Seed from dispatch
           </button>
           <button
             onClick={() => setAddRowOpen(true)}
-            className="inline-flex items-center gap-2 border border-[color:var(--rule)] bg-[color:var(--paper-3)] text-[color:var(--ink)] hover:border-[color:var(--ink)] px-4 py-2 rounded-full font-[family-name:var(--font-barlow)] text-[13px] transition"
+            className="inline-flex items-center gap-2 border border-[color:var(--rule)] bg-[color:var(--paper-3)] text-[color:var(--ink)] hover:border-[color:var(--ink)] px-4 py-2 rounded-full  text-[13px] transition"
           >
             Add row +
           </button>
           <button
             onClick={() => setAddColOpen(true)}
-            className="inline-flex items-center gap-2 border border-[color:var(--rule)] bg-[color:var(--paper-3)] text-[color:var(--ink)] hover:border-[color:var(--ink)] px-4 py-2 rounded-full font-[family-name:var(--font-barlow)] text-[13px] transition"
+            className="inline-flex items-center gap-2 border border-[color:var(--rule)] bg-[color:var(--paper-3)] text-[color:var(--ink)] hover:border-[color:var(--ink)] px-4 py-2 rounded-full  text-[13px] transition"
           >
             Add column +
           </button>
           <button
             onClick={() => setSaveWorkflowOpen(true)}
-            className="inline-flex items-center gap-2 border border-[color:var(--rule)] bg-[color:var(--paper-3)] text-[color:var(--ink)] hover:border-[color:var(--ink)] px-4 py-2 rounded-full font-[family-name:var(--font-barlow)] text-[13px] transition"
+            className="inline-flex items-center gap-2 border border-[color:var(--rule)] bg-[color:var(--paper-3)] text-[color:var(--ink)] hover:border-[color:var(--ink)] px-4 py-2 rounded-full  text-[13px] transition"
             title="Save this table's shape as a reusable workflow"
           >
             Save as workflow
@@ -202,7 +202,7 @@ export default function TableDetailPage() {
             onClick={() => setActionOpen(true)}
             disabled={table.rowCount === 0}
             title={table.rowCount === 0 ? 'Add rows before running an action' : undefined}
-            className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-4 py-2 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium transition disabled:opacity-40"
+            className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-4 py-2 rounded-full  text-[13px] font-medium transition disabled:opacity-40"
           >
             Run action →
           </button>
@@ -231,7 +231,7 @@ export default function TableDetailPage() {
       {(hiddenCount > 0 || showHidden || hiddenColCount > 0 || showHiddenCols) && (
         <div className="mb-3 flex items-center gap-5 flex-wrap">
           {(hiddenCount > 0 || showHidden) && (
-            <label className="flex items-center gap-2 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] cursor-pointer">
+            <label className="flex items-center gap-2 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] cursor-pointer">
               <input
                 type="checkbox"
                 checked={showHidden}
@@ -245,7 +245,7 @@ export default function TableDetailPage() {
             </label>
           )}
           {(hiddenColCount > 0 || showHiddenCols) && (
-            <label className="flex items-center gap-2 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] cursor-pointer">
+            <label className="flex items-center gap-2 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] cursor-pointer">
               <input
                 type="checkbox"
                 checked={showHiddenCols}
@@ -264,10 +264,10 @@ export default function TableDetailPage() {
       {/* Grid */}
       {rows.length === 0 ? (
         <div className="border border-dashed border-[color:var(--rule)] bg-[color:var(--paper-3)]/50 rounded-sm p-10 text-center">
-          <p className="font-[family-name:var(--font-instrument-serif)] italic text-[20px] text-[color:var(--ink)]">
+          <p className=" italic text-[20px] text-[color:var(--ink)]">
             Empty worksheet.
           </p>
-          <p className="mt-2 font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink-2)] max-w-[420px] mx-auto">
+          <p className="mt-2  text-[13.5px] text-[color:var(--ink-2)] max-w-[420px] mx-auto">
             Seed from a completed dispatch, or add rows manually.
           </p>
         </div>
@@ -466,7 +466,7 @@ function TableGrid({
                 />
               </th>
               <th
-                className="sticky z-20 bg-[color:var(--paper-2)] border-r border-[color:var(--rule)] px-4 py-3 text-left font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)]"
+                className="sticky z-20 bg-[color:var(--paper-2)] border-r border-[color:var(--rule)] px-4 py-3 text-left font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)]"
                 style={{ left: CHECKBOX_COL_W }}
               >
                 {pkLabel}
@@ -534,13 +534,13 @@ function TableGrid({
                     />
                   </td>
                   <td
-                    className={`sticky z-10 ${stickyBg} border-r border-[color:var(--rule)] px-4 py-2.5 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)]`}
+                    className={`sticky z-10 ${stickyBg} border-r border-[color:var(--rule)] px-4 py-2.5  text-[13px] text-[color:var(--ink)]`}
                     style={{ left: CHECKBOX_COL_W }}
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="truncate">{row.primaryKey}</span>
                       {isHidden && (
-                        <span className="shrink-0 font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] border border-[color:var(--rule)] px-1.5 py-0.5 rounded-full">
+                        <span className="shrink-0 font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] border border-[color:var(--rule)] px-1.5 py-0.5 rounded-full">
                           Hidden
                         </span>
                       )}
@@ -636,7 +636,7 @@ function ColumnHeader({
 
   return (
     <th
-      className={`relative px-3 py-3 text-left font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase border-r border-[color:var(--rule)] last:border-r-0 align-top ${
+      className={`relative px-3 py-3 text-left font-mono text-[10px] tracking-[0.18em] uppercase border-r border-[color:var(--rule)] last:border-r-0 align-top ${
         isHidden ? 'bg-[color:var(--paper-3)]/60' : ''
       }`}
     >
@@ -647,25 +647,25 @@ function ColumnHeader({
               {column.label}
             </span>
             {isEnriched && (
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[8.5px] text-[color:var(--forest)] whitespace-nowrap">
+              <span className="font-mono text-[8.5px] text-[color:var(--forest)] whitespace-nowrap">
                 AI
               </span>
             )}
             {isEnriching && (
               <span
-                className="font-[family-name:var(--font-jetbrains-mono)] text-[8.5px] text-[color:var(--forest)] animate-pulse whitespace-nowrap"
+                className="font-mono text-[8.5px] text-[color:var(--forest)] animate-pulse whitespace-nowrap"
                 title="Enriching…"
               >
                 ⟳
               </span>
             )}
             {isHidden && (
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[8.5px] text-[color:var(--ink-3)] whitespace-nowrap">
+              <span className="font-mono text-[8.5px] text-[color:var(--ink-3)] whitespace-nowrap">
                 hidden
               </span>
             )}
           </div>
-          <div className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] text-[color:var(--ink-3)] mt-0.5 normal-case tracking-normal">
+          <div className="font-mono text-[9px] text-[color:var(--ink-3)] mt-0.5 normal-case tracking-normal">
             {column.type}
           </div>
         </div>
@@ -673,7 +673,7 @@ function ColumnHeader({
           {isEnriched && !isHidden && (
             <button
               onClick={onRunEnrichment}
-              className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.18em] uppercase text-[color:var(--forest)] hover:text-[color:var(--ink)] transition"
+              className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--forest)] hover:text-[color:var(--ink)] transition"
               title="Re-run enrichment on this column"
             >
               Run →
@@ -682,7 +682,7 @@ function ColumnHeader({
           <button
             onClick={onMenuToggle}
             aria-label="Column actions"
-            className="text-[color:var(--ink-3)] hover:text-[color:var(--ink)] px-1 font-[family-name:var(--font-jetbrains-mono)] text-[14px] leading-none"
+            className="text-[color:var(--ink-3)] hover:text-[color:var(--ink)] px-1 font-mono text-[14px] leading-none"
           >
             ⋯
           </button>
@@ -770,19 +770,19 @@ function ColumnMenuPopover({
       <div className="h-px bg-[color:var(--rule)] my-1" />
       {confirmDelete ? (
         <div className="px-3 py-2">
-          <p className="font-[family-name:var(--font-barlow)] text-[12px] text-[color:var(--ink-2)] mb-2 leading-snug">
+          <p className=" text-[12px] text-[color:var(--ink-2)] mb-2 leading-snug">
             Delete column and purge every cell? This is permanent.
           </p>
           <div className="flex items-center gap-2">
             <button
               onClick={onCancelConfirmDelete}
-              className="font-[family-name:var(--font-barlow)] text-[12px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
+              className=" text-[12px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
             >
               Cancel
             </button>
             <button
               onClick={() => void onDelete()}
-              className="ml-auto inline-flex items-center bg-[color:var(--warn)] text-[color:var(--paper)] hover:opacity-90 px-2.5 py-1 rounded-full font-[family-name:var(--font-barlow)] text-[12px] font-medium transition"
+              className="ml-auto inline-flex items-center bg-[color:var(--warn)] text-[color:var(--paper)] hover:opacity-90 px-2.5 py-1 rounded-full  text-[12px] font-medium transition"
             >
               Delete
             </button>
@@ -809,7 +809,7 @@ function MenuItem({
   return (
     <button
       onClick={onClick}
-      className={`block w-full text-left px-3 py-1.5 font-[family-name:var(--font-barlow)] text-[13px] transition ${
+      className={`block w-full text-left px-3 py-1.5  text-[13px] transition ${
         danger
           ? 'text-[color:var(--warn)] hover:bg-[color:var(--warn)]/10'
           : 'text-[color:var(--ink)] hover:bg-[color:var(--paper-3)]'
@@ -874,10 +874,10 @@ function BulkActionBar({
     <div className="sticky top-4 z-30 mb-4 border border-[color:var(--ink)] bg-[color:var(--paper)] rounded-sm shadow-[0_8px_24px_-12px_rgba(0,0,0,0.25)]">
       <div className="flex items-center justify-between gap-4 px-4 py-3">
         <div className="flex items-baseline gap-3">
-          <span className="font-[family-name:var(--font-instrument-serif)] text-[20px] text-[color:var(--ink)]">
+          <span className=" text-[20px] text-[color:var(--ink)]">
             {selectedIds.size}
           </span>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)]">
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)]">
             {selectedIds.size === 1 ? 'row selected' : 'rows selected'}
           </span>
         </div>
@@ -885,33 +885,33 @@ function BulkActionBar({
           <button
             onClick={() => void run('hide')}
             disabled={running !== null}
-            className="inline-flex items-center gap-2 border border-[color:var(--rule)] hover:border-[color:var(--ink)] px-3 py-1.5 rounded-full font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink)] transition disabled:opacity-40"
+            className="inline-flex items-center gap-2 border border-[color:var(--rule)] hover:border-[color:var(--ink)] px-3 py-1.5 rounded-full  text-[12.5px] text-[color:var(--ink)] transition disabled:opacity-40"
           >
             {running === 'hide' ? 'Hiding…' : 'Hide'}
           </button>
           <button
             onClick={() => void run('unhide')}
             disabled={running !== null}
-            className="inline-flex items-center gap-2 border border-[color:var(--rule)] hover:border-[color:var(--ink)] px-3 py-1.5 rounded-full font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink)] transition disabled:opacity-40"
+            className="inline-flex items-center gap-2 border border-[color:var(--rule)] hover:border-[color:var(--ink)] px-3 py-1.5 rounded-full  text-[12.5px] text-[color:var(--ink)] transition disabled:opacity-40"
           >
             {running === 'unhide' ? 'Restoring…' : 'Unhide'}
           </button>
           {confirmDelete ? (
             <>
-              <span className="font-[family-name:var(--font-barlow)] italic text-[12px] text-[color:var(--ink-2)]">
+              <span className=" italic text-[12px] text-[color:var(--ink-2)]">
                 Permanent — are you sure?
               </span>
               <button
                 onClick={() => setConfirmDelete(false)}
                 disabled={running !== null}
-                className="font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] disabled:opacity-40"
+                className=" text-[12.5px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] disabled:opacity-40"
               >
                 Cancel
               </button>
               <button
                 onClick={() => void run('delete')}
                 disabled={running !== null}
-                className="inline-flex items-center gap-2 bg-[color:var(--warn)] text-[color:var(--paper)] hover:opacity-90 px-3 py-1.5 rounded-full font-[family-name:var(--font-barlow)] text-[12.5px] font-medium transition disabled:opacity-40"
+                className="inline-flex items-center gap-2 bg-[color:var(--warn)] text-[color:var(--paper)] hover:opacity-90 px-3 py-1.5 rounded-full  text-[12.5px] font-medium transition disabled:opacity-40"
               >
                 {running === 'delete' ? 'Deleting…' : 'Yes, delete'}
               </button>
@@ -920,7 +920,7 @@ function BulkActionBar({
             <button
               onClick={() => setConfirmDelete(true)}
               disabled={running !== null}
-              className="inline-flex items-center gap-2 border border-[color:var(--warn)] text-[color:var(--warn)] hover:bg-[color:var(--warn)] hover:text-[color:var(--paper)] px-3 py-1.5 rounded-full font-[family-name:var(--font-barlow)] text-[12.5px] transition disabled:opacity-40"
+              className="inline-flex items-center gap-2 border border-[color:var(--warn)] text-[color:var(--warn)] hover:bg-[color:var(--warn)] hover:text-[color:var(--paper)] px-3 py-1.5 rounded-full  text-[12.5px] transition disabled:opacity-40"
             >
               Delete
             </button>
@@ -928,14 +928,14 @@ function BulkActionBar({
           <span className="mx-1 h-4 w-px bg-[color:var(--rule)]" aria-hidden />
           <button
             onClick={onCleared}
-            className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
+            className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
           >
             Clear
           </button>
         </div>
       </div>
       {error && (
-        <div className="border-t border-[color:var(--rule)] border-l-2 border-l-[color:var(--warn)] px-4 py-2 font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink)]">
+        <div className="border-t border-[color:var(--rule)] border-l-2 border-l-[color:var(--warn)] px-4 py-2  text-[12.5px] text-[color:var(--ink)]">
           {error}
         </div>
       )}
@@ -1078,7 +1078,7 @@ function EditableCell({
               setEditing(false);
             }
           }}
-          className="w-full bg-[color:var(--forest)]/5 border border-[color:var(--forest)] px-3 py-2 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] outline-none"
+          className="w-full bg-[color:var(--forest)]/5 border border-[color:var(--forest)] px-3 py-2  text-[13px] text-[color:var(--ink)] outline-none"
         />
       </td>
     );
@@ -1097,7 +1097,7 @@ function EditableCell({
           // Toned values render as a small pill so the color reads as
           // intentional categorization, not a styling accident.
           <span
-            className={`inline-flex items-center px-2 py-0.5 border rounded-full font-[family-name:var(--font-jetbrains-mono)] text-[11px] tracking-[0.1em] uppercase whitespace-nowrap truncate min-w-0 ${toneCls.badge}`}
+            className={`inline-flex items-center px-2 py-0.5 border rounded-full font-mono text-[11px] tracking-[0.1em] uppercase whitespace-nowrap truncate min-w-0 ${toneCls.badge}`}
           >
             {saving
               ? <span className="italic">saving…</span>
@@ -1105,7 +1105,7 @@ function EditableCell({
           </span>
         ) : (
           <span
-            className={`font-[family-name:var(--font-barlow)] text-[13px] truncate min-w-0 ${
+            className={` text-[13px] truncate min-w-0 ${
               rawValue === undefined || rawValue === null || rawValue === ''
                 ? 'text-[color:var(--ink-3)]'
                 : 'text-[color:var(--ink)]'
@@ -1126,7 +1126,7 @@ function EditableCell({
               }}
               title="View source"
               aria-label="View cell sources"
-              className={`font-[family-name:var(--font-jetbrains-mono)] text-[8.5px] text-[color:var(--forest)] transition ${
+              className={`font-mono text-[8.5px] text-[color:var(--forest)] transition ${
                 showSources ? 'opacity-100' : 'opacity-0 group-hover/cell:opacity-100'
               }`}
             >
@@ -1137,7 +1137,7 @@ function EditableCell({
                 style={popoverPos ? { top: popoverPos.top, right: popoverPos.right } : undefined}
                 className="fixed z-50 w-72 bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-sm shadow-lg p-3 flex flex-col gap-2"
               >
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
+                <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
                   Sources
                 </span>
                 {cellSources.map((src, i) => (
@@ -1148,28 +1148,28 @@ function EditableCell({
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="font-[family-name:var(--font-barlow)] text-[12px] text-[color:var(--forest)] hover:underline truncate"
+                        className=" text-[12px] text-[color:var(--forest)] hover:underline truncate"
                       >
                         {src.sourceUrl}
                       </a>
                     ) : (
-                      <span className="font-[family-name:var(--font-barlow)] text-[12px] text-[color:var(--ink-3)] italic">
+                      <span className=" text-[12px] text-[color:var(--ink-3)] italic">
                         No URL
                       </span>
                     )}
                     <div className="flex gap-3 flex-wrap">
                       {src.dataSourceId && (
-                        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] text-[color:var(--ink-3)]">
+                        <span className="font-mono text-[9px] text-[color:var(--ink-3)]">
                           {src.dataSourceId}
                         </span>
                       )}
                       {typeof src.confidence === 'number' && (
-                        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] text-[color:var(--ink-3)]">
+                        <span className="font-mono text-[9px] text-[color:var(--ink-3)]">
                           {Math.round(src.confidence * 100)}% confidence
                         </span>
                       )}
                       {src.scrapedAt && (
-                        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] text-[color:var(--ink-3)]">
+                        <span className="font-mono text-[9px] text-[color:var(--ink-3)]">
                           {new Date(src.scrapedAt).toLocaleDateString()}
                         </span>
                       )}
@@ -1184,7 +1184,7 @@ function EditableCell({
           <button
             onClick={handleReEnrich}
             title={reEnriching ? 'Enriching…' : 'Re-enrich this cell'}
-            className={`shrink-0 font-[family-name:var(--font-jetbrains-mono)] text-[11px] text-[color:var(--forest)] transition ml-0.5 ${
+            className={`shrink-0 font-mono text-[11px] text-[color:var(--forest)] transition ml-0.5 ${
               reEnriching
                 ? 'animate-pulse opacity-100'
                 : 'opacity-0 group-hover/cell:opacity-100'
@@ -1349,12 +1349,12 @@ function AddColumnDialog({
           autoFocus
         />
         {key && (
-          <div className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)]">
+          <div className="font-mono text-[10px] text-[color:var(--ink-3)]">
             Stored as <span className="text-[color:var(--ink)]">{key}</span>
           </div>
         )}
         <div>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
+          <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
             Value type
           </span>
           <div className="grid grid-cols-5 gap-2">
@@ -1362,7 +1362,7 @@ function AddColumnDialog({
               <button
                 key={t.value}
                 onClick={() => setType(t.value)}
-                className={`h-9 rounded-full font-[family-name:var(--font-barlow)] text-[12px] transition-colors ${
+                className={`h-9 rounded-full  text-[12px] transition-colors ${
                   type === t.value
                     ? 'bg-[color:var(--ink)] text-[color:var(--paper)]'
                     : 'border border-[color:var(--rule)] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]'
@@ -1380,7 +1380,7 @@ function AddColumnDialog({
             <button
               key={m}
               onClick={() => setMode(m)}
-              className={`px-4 py-1.5 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase transition-colors ${
+              className={`px-4 py-1.5 font-mono text-[10px] tracking-[0.18em] uppercase transition-colors ${
                 mode === m
                   ? 'bg-[color:var(--ink)] text-[color:var(--paper)]'
                   : 'text-[color:var(--ink-2)] hover:text-[color:var(--ink)]'
@@ -1395,7 +1395,7 @@ function AddColumnDialog({
           <div className="flex flex-col gap-4 border border-[color:var(--rule)] rounded-sm px-4 py-4 bg-[color:var(--paper-3)]/60">
             {/* Source picker */}
             <div>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
+              <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
                 Data source
               </span>
               <select
@@ -1405,7 +1405,7 @@ function AddColumnDialog({
                   setInputMappings({});
                   setOutputPath('');
                 }}
-                className="w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-1.5 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] outline-none"
+                className="w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-1.5  text-[13px] text-[color:var(--ink)] outline-none"
               >
                 <option value="">— Pick a source —</option>
                 {availableSources.map((s) => (
@@ -1419,7 +1419,7 @@ function AddColumnDialog({
             {/* Input mappings — one row per source input field */}
             {selectedSource && selectedSource.inputFields.length > 0 && (
               <div>
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
+                <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
                   Inputs
                 </span>
                 <div className="flex flex-col gap-2">
@@ -1427,7 +1427,7 @@ function AddColumnDialog({
                     const mapping = inputMappings[field.key];
                     return (
                       <div key={field.key} className="flex items-center gap-3">
-                        <span className="font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink-2)] w-28 shrink-0">
+                        <span className=" text-[12.5px] text-[color:var(--ink-2)] w-28 shrink-0">
                           {field.label}
                           {field.required && <span className="text-[color:var(--warn)]"> *</span>}
                         </span>
@@ -1442,7 +1442,7 @@ function AddColumnDialog({
                               return next;
                             });
                           }}
-                          className="flex-1 bg-transparent border-b border-[color:var(--rule)] py-1 font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink)] outline-none"
+                          className="flex-1 bg-transparent border-b border-[color:var(--rule)] py-1  text-[12.5px] text-[color:var(--ink)] outline-none"
                         >
                           <option value="">— Column —</option>
                           {table.columns.map((c) => (
@@ -1461,13 +1461,13 @@ function AddColumnDialog({
             {/* Output field picker */}
             {selectedSource && selectedSource.outputFields.length > 0 && (
               <div>
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
+                <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
                   Extract field
                 </span>
                 <select
                   value={outputPath}
                   onChange={(e) => setOutputPath(e.target.value)}
-                  className="w-full bg-transparent border-b border-[color:var(--rule)] py-1.5 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] outline-none"
+                  className="w-full bg-transparent border-b border-[color:var(--rule)] py-1.5  text-[13px] text-[color:var(--ink)] outline-none"
                 >
                   <option value="">— Whole response —</option>
                   {selectedSource.outputFields.map((f) => (
@@ -1483,7 +1483,7 @@ function AddColumnDialog({
       </div>
 
       {error && (
-        <div className="mt-4 border-l-2 border-[color:var(--warn)] px-3 py-2 font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink)]">
+        <div className="mt-4 border-l-2 border-[color:var(--warn)] px-3 py-2  text-[12.5px] text-[color:var(--ink)]">
           {error}
         </div>
       )}
@@ -1491,14 +1491,14 @@ function AddColumnDialog({
       <DialogFooter>
         <button
           onClick={onClose}
-          className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
+          className=" text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
         >
           Cancel
         </button>
         <button
           onClick={() => void handleSave()}
           disabled={!label.trim() || saving || keyConflict || (mode === 'enriched' && !sourceId)}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40"
         >
           {saving ? 'Adding…' : 'Add column'}
         </button>
@@ -1578,7 +1578,7 @@ function AddRowDialog({
       </div>
 
       {error && (
-        <div className="mt-4 border-l-2 border-[color:var(--warn)] px-3 py-2 font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink)]">
+        <div className="mt-4 border-l-2 border-[color:var(--warn)] px-3 py-2  text-[12.5px] text-[color:var(--ink)]">
           {error}
         </div>
       )}
@@ -1586,14 +1586,14 @@ function AddRowDialog({
       <DialogFooter>
         <button
           onClick={onClose}
-          className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
+          className=" text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
         >
           Cancel
         </button>
         <button
           onClick={() => void handleSave()}
           disabled={!primaryKey.trim() || saving}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40"
         >
           {saving ? 'Adding…' : 'Add row'}
         </button>
@@ -1652,14 +1652,14 @@ function SeedFromJobDialog({
   if (incompatible) {
     return (
       <Dialog onClose={onClose} title="Seed from dispatch">
-        <p className="font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink-2)]">
+        <p className=" text-[14px] text-[color:var(--ink-2)]">
           Seeding from dispatches works for <span className="text-[color:var(--ink)]">company</span>-type tables in v1.
           This table is <span className="text-[color:var(--ink)]">{table.rowType}</span>.
         </p>
         <DialogFooter>
           <button
             onClick={onClose}
-            className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium"
+            className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full  text-[13px] font-medium"
           >
             Close
           </button>
@@ -1670,12 +1670,12 @@ function SeedFromJobDialog({
 
   return (
     <Dialog onClose={onClose} title="Seed from dispatch">
-      <p className="font-[family-name:var(--font-barlow)] text-[13.5px] leading-[1.55] text-[color:var(--ink-2)] mb-5">
+      <p className=" text-[13.5px] leading-[1.55] text-[color:var(--ink-2)] mb-5">
         Pick a completed dispatch and we&rsquo;ll append its leads as rows. Standard fields (company name, domain, email, phone, top contact) auto-map onto matching columns.
       </p>
 
       {jobs.length === 0 ? (
-        <p className="font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-3)]">
+        <p className=" italic text-[13px] text-[color:var(--ink-3)]">
           No completed dispatches yet.
         </p>
       ) : (
@@ -1694,14 +1694,14 @@ function SeedFromJobDialog({
                 }`}
               >
                 <div className="min-w-0">
-                  <div className="font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink)] truncate">
+                  <div className=" text-[13.5px] text-[color:var(--ink)] truncate">
                     &ldquo;{j.rawQuery}&rdquo;
                   </div>
-                  <div className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)] mt-0.5">
+                  <div className="font-mono text-[10px] text-[color:var(--ink-3)] mt-0.5">
                     {new Date(j.completedAt ?? j.createdAt).toLocaleString()}
                   </div>
                 </div>
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+                <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
                   {leads.toLocaleString()} leads
                 </span>
               </button>
@@ -1711,7 +1711,7 @@ function SeedFromJobDialog({
       )}
 
       {error && (
-        <div className="mt-4 border-l-2 border-[color:var(--warn)] px-3 py-2 font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink)]">
+        <div className="mt-4 border-l-2 border-[color:var(--warn)] px-3 py-2  text-[12.5px] text-[color:var(--ink)]">
           {error}
         </div>
       )}
@@ -1719,14 +1719,14 @@ function SeedFromJobDialog({
       <DialogFooter>
         <button
           onClick={onClose}
-          className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
+          className=" text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
         >
           Cancel
         </button>
         <button
           onClick={() => void handleSeed()}
           disabled={!selectedId || saving}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40"
         >
           {saving ? 'Seeding…' : 'Seed rows'}
         </button>
@@ -1795,7 +1795,7 @@ function SaveAsWorkflowDialog({
 
   return (
     <Dialog onClose={onClose} title="Save as workflow">
-      <p className="font-[family-name:var(--font-barlow)] text-[13.5px] leading-[1.55] text-[color:var(--ink-2)] mb-5">
+      <p className=" text-[13.5px] leading-[1.55] text-[color:var(--ink-2)] mb-5">
         Captures this table&rsquo;s columns and definitions as a reusable template. Running the workflow later creates a fresh table with the same shape — and, if you capture the seed query below, dispatches an agent job to populate it.
       </p>
 
@@ -1814,7 +1814,7 @@ function SaveAsWorkflowDialog({
           placeholder="What does this workflow research?"
         />
 
-        <label className={`flex items-start gap-2 font-[family-name:var(--font-barlow)] text-[13px] ${canIncludeSeed ? 'text-[color:var(--ink)] cursor-pointer' : 'text-[color:var(--ink-3)] cursor-not-allowed'}`}>
+        <label className={`flex items-start gap-2  text-[13px] ${canIncludeSeed ? 'text-[color:var(--ink)] cursor-pointer' : 'text-[color:var(--ink-3)] cursor-not-allowed'}`}>
           <input
             type="checkbox"
             checked={canIncludeSeed && includeSeed}
@@ -1824,7 +1824,7 @@ function SaveAsWorkflowDialog({
           />
           <span>
             Capture this table&rsquo;s dispatch query as the workflow seed
-            <span className="block font-[family-name:var(--font-barlow)] italic text-[11.5px] text-[color:var(--ink-3)] mt-0.5">
+            <span className="block  italic text-[11.5px] text-[color:var(--ink-3)] mt-0.5">
               {canIncludeSeed
                 ? 'You can add {{placeholders}} to the query after saving.'
                 : 'This table was not seeded from a dispatch — no seed query to capture.'}
@@ -1834,7 +1834,7 @@ function SaveAsWorkflowDialog({
       </div>
 
       {error && (
-        <div className="mt-4 border-l-2 border-[color:var(--warn)] px-3 py-2 font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink)]">
+        <div className="mt-4 border-l-2 border-[color:var(--warn)] px-3 py-2  text-[12.5px] text-[color:var(--ink)]">
           {error}
         </div>
       )}
@@ -1842,14 +1842,14 @@ function SaveAsWorkflowDialog({
       <DialogFooter>
         <button
           onClick={onClose}
-          className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
+          className=" text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
         >
           Cancel
         </button>
         <button
           onClick={() => void handleSave()}
           disabled={!name.trim() || saving}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-5 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-5 py-2.5 rounded-full  text-[13px] font-medium transition-colors disabled:opacity-40"
         >
           {saving ? 'Saving…' : 'Save workflow →'}
         </button>
@@ -1866,7 +1866,7 @@ function Dialog({ title, children, onClose }: { title: string; children: React.R
       <div className="absolute inset-0 bg-[color:var(--ink)]/40" onClick={onClose} aria-hidden />
       <div className="relative w-[min(92vw,560px)] bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-sm">
         <div className="p-8 md:p-10">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)] block mb-2">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)] block mb-2">
             {title}
           </span>
           {children}
@@ -1899,7 +1899,7 @@ function LabeledInput({
 }) {
   return (
     <label className="block">
-      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1.5">
+      <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1.5">
         {label}
       </span>
       <input
@@ -1908,7 +1908,7 @@ function LabeledInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         autoFocus={autoFocus}
-        className="w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-2 outline-none font-[family-name:var(--font-barlow)] text-[14px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
+        className="w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-2 outline-none  text-[14px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
       />
     </label>
   );
@@ -1991,7 +1991,7 @@ function RunEnrichmentDialog({
   return (
     <Dialog onClose={onClose} title={`Run enrichment · ${column.label}`}>
       <div className="flex flex-col gap-5">
-        <label className="flex items-center gap-3 font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink)]">
+        <label className="flex items-center gap-3  text-[13.5px] text-[color:var(--ink)]">
           <input
             type="checkbox"
             checked={skipExisting}
@@ -2002,7 +2002,7 @@ function RunEnrichmentDialog({
         </label>
 
         {isLoading && !est ? (
-          <p className="font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-3)]">
+          <p className=" italic text-[13px] text-[color:var(--ink-3)]">
             Estimating…
           </p>
         ) : est ? (
@@ -2023,13 +2023,13 @@ function RunEnrichmentDialog({
           </div>
         ) : null}
 
-        <p className="font-[family-name:var(--font-barlow)] italic text-[12px] text-[color:var(--ink-3)]">
+        <p className=" italic text-[12px] text-[color:var(--ink-3)]">
           Each eligible row becomes one background job. Progress shows in the invocation log.
         </p>
       </div>
 
       {error && (
-        <div className="mt-4 border-l-2 border-[color:var(--warn)] px-3 py-2 font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink)]">
+        <div className="mt-4 border-l-2 border-[color:var(--warn)] px-3 py-2  text-[12.5px] text-[color:var(--ink)]">
           {error}
         </div>
       )}
@@ -2037,14 +2037,14 @@ function RunEnrichmentDialog({
       <DialogFooter>
         <button
           onClick={onClose}
-          className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
+          className=" text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
         >
           Cancel
         </button>
         <button
           onClick={() => void handleLaunch()}
           disabled={launching || !est || est.rowsWithResolvableInputs === 0}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40"
         >
           {launching ? 'Launching…' : `Enrich ${est?.rowsWithResolvableInputs ?? 0} rows`}
         </button>
@@ -2056,10 +2056,10 @@ function RunEnrichmentDialog({
 function Row({ label, value, emphasize, muted }: { label: string; value: string; emphasize?: boolean; muted?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className={`font-[family-name:var(--font-barlow)] text-[13px] ${muted ? 'text-[color:var(--ink-3)]' : 'text-[color:var(--ink-2)]'}`}>
+      <span className={` text-[13px] ${muted ? 'text-[color:var(--ink-3)]' : 'text-[color:var(--ink-2)]'}`}>
         {label}
       </span>
-      <span className={`font-[family-name:var(--font-jetbrains-mono)] tabular-nums ${emphasize ? 'text-[15px] text-[color:var(--ink)]' : 'text-[12.5px] text-[color:var(--ink-2)]'}`}>
+      <span className={`font-mono tabular-nums ${emphasize ? 'text-[15px] text-[color:var(--ink)]' : 'text-[12.5px] text-[color:var(--ink-2)]'}`}>
         {value}
       </span>
     </div>
@@ -2119,7 +2119,7 @@ function ActionModal({
   return (
     <Dialog onClose={onClose} title="Run action">
       {isLoading && !entries.length ? (
-        <p className="font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-3)]">
+        <p className=" italic text-[13px] text-[color:var(--ink-3)]">
           Loading actions…
         </p>
       ) : !selectedId ? (
@@ -2141,7 +2141,7 @@ function ActionModal({
         <DialogFooter>
           <button
             onClick={onClose}
-            className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
+            className=" text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
           >
             Cancel
           </button>
@@ -2162,7 +2162,7 @@ function ActionCatalogList({
 }) {
   if (entries.length === 0) {
     return (
-      <p className="font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-3)]">
+      <p className=" italic text-[13px] text-[color:var(--ink-3)]">
         No actions available for this table type.
       </p>
     );
@@ -2181,7 +2181,7 @@ function ActionCatalogList({
         if (rows.length === 0) return null;
         return (
           <div key={cat}>
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-3">
+            <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-3">
               {cat}
             </span>
             <div className="flex flex-col gap-2">
@@ -2200,26 +2200,26 @@ function ActionCatalogList({
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="font-[family-name:var(--font-instrument-serif)] text-[17px] leading-tight text-[color:var(--ink)]">
+                        <div className=" text-[17px] leading-tight text-[color:var(--ink)]">
                           {action.label}
                         </div>
-                        <p className="mt-1 font-[family-name:var(--font-barlow)] text-[12.5px] leading-[1.45] text-[color:var(--ink-2)]">
+                        <p className="mt-1  text-[12.5px] leading-[1.45] text-[color:var(--ink-2)]">
                           {action.description}
                         </p>
                       </div>
-                      <span className="shrink-0 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] whitespace-nowrap">
+                      <span className="shrink-0 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] whitespace-nowrap">
                         {action.sourceDisplayName}
                       </span>
                     </div>
                     {!available && (
                       <div className="mt-2 flex items-center gap-2">
-                        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--warn)]">
+                        <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--warn)]">
                           Needs credentials
                         </span>
                         <Link
                           href="/dashboard/settings/data-sources"
                           onClick={(evt) => evt.stopPropagation()}
-                          className="font-[family-name:var(--font-barlow)] italic text-[11.5px] text-[color:var(--forest)] underline underline-offset-[3px]"
+                          className=" italic text-[11.5px] text-[color:var(--forest)] underline underline-offset-[3px]"
                         >
                           Connect {action.sourceDisplayName} →
                         </Link>
@@ -2315,19 +2315,19 @@ function ActionConfigureStep({
     <div className="flex flex-col gap-5 max-h-[65vh] overflow-y-auto pr-1">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block">
             {action.sourceDisplayName}
           </span>
-          <h3 className="font-[family-name:var(--font-instrument-serif)] text-[22px] leading-tight text-[color:var(--ink)] mt-0.5">
+          <h3 className=" text-[22px] leading-tight text-[color:var(--ink)] mt-0.5">
             {action.label}
           </h3>
-          <p className="mt-1 font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink-2)]">
+          <p className="mt-1  text-[12.5px] text-[color:var(--ink-2)]">
             {action.description}
           </p>
         </div>
         <button
           onClick={onBack}
-          className="shrink-0 font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
+          className="shrink-0 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
         >
           ← Change action
         </button>
@@ -2335,7 +2335,7 @@ function ActionConfigureStep({
 
       {/* Inputs */}
       <div>
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
+        <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
           Inputs
         </span>
         <div className="flex flex-col gap-3">
@@ -2360,7 +2360,7 @@ function ActionConfigureStep({
 
       {/* Output */}
       <div>
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
+        <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
           Output → new column
         </span>
         <div className="grid grid-cols-2 gap-3">
@@ -2377,7 +2377,7 @@ function ActionConfigureStep({
           />
         </div>
         {willOverwrite && (
-          <label className="mt-3 flex items-center gap-2 font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink)]">
+          <label className="mt-3 flex items-center gap-2  text-[12.5px] text-[color:var(--ink)]">
             <input
               type="checkbox"
               checked={overwriteExisting}
@@ -2390,7 +2390,7 @@ function ActionConfigureStep({
       </div>
 
       {/* Scope */}
-      <label className="flex items-center gap-2 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)]">
+      <label className="flex items-center gap-2  text-[13px] text-[color:var(--ink)]">
         <input
           type="checkbox"
           checked={skipExisting}
@@ -2401,7 +2401,7 @@ function ActionConfigureStep({
       </label>
 
       {error && (
-        <div className="border-l-2 border-[color:var(--warn)] px-3 py-2 font-[family-name:var(--font-barlow)] text-[12.5px] text-[color:var(--ink)]">
+        <div className="border-l-2 border-[color:var(--warn)] px-3 py-2  text-[12.5px] text-[color:var(--ink)]">
           {error}
         </div>
       )}
@@ -2409,7 +2409,7 @@ function ActionConfigureStep({
       <DialogFooter>
         <button
           onClick={onBack}
-          className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
+          className=" text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
         >
           Back
         </button>
@@ -2423,7 +2423,7 @@ function ActionConfigureStep({
               : !outputKey.trim() ? 'Column key required'
               : undefined
           }
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-5 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-5 py-2.5 rounded-full  text-[13px] font-medium transition-colors disabled:opacity-40"
         >
           {launching ? 'Running…' : 'Run action'}
         </button>
@@ -2449,12 +2449,12 @@ function ActionInputRow({
     <div className="border border-[color:var(--rule)] bg-[color:var(--paper-3)]/50 rounded-sm px-3 py-3">
       <div className="flex items-baseline justify-between gap-3">
         <div>
-          <div className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)]">
+          <div className=" text-[13px] text-[color:var(--ink)]">
             {input.label}
             {input.required && <span className="text-[color:var(--warn)]"> *</span>}
           </div>
           {input.hint && (
-            <p className="font-[family-name:var(--font-barlow)] italic text-[11.5px] text-[color:var(--ink-3)] mt-0.5">
+            <p className=" italic text-[11.5px] text-[color:var(--ink-3)] mt-0.5">
               {input.hint}
             </p>
           )}
@@ -2468,7 +2468,7 @@ function ActionInputRow({
             else if (k === 'literal') onChange({ kind: 'literal', value: '' });
             else if (k === 'row_type_id') onChange({ kind: 'row_type_id' });
           }}
-          className="bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-1 font-[family-name:var(--font-jetbrains-mono)] text-[11px] tracking-[0.1em] uppercase text-[color:var(--ink-2)] outline-none"
+          className="bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-1 font-mono text-[11px] tracking-[0.1em] uppercase text-[color:var(--ink-2)] outline-none"
         >
           <option value="">—</option>
           <option value="column">Column</option>
@@ -2481,7 +2481,7 @@ function ActionInputRow({
         <select
           value={(value as { key: string }).key}
           onChange={(e) => onChange({ kind: 'column', key: e.target.value })}
-          className="mt-2 w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-1.5 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] outline-none"
+          className="mt-2 w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-1.5  text-[13px] text-[color:var(--ink)] outline-none"
         >
           <option value="">— Pick a column —</option>
           {columns.map((c) => (
@@ -2497,11 +2497,11 @@ function ActionInputRow({
           value={(value as { value: string }).value}
           onChange={(e) => onChange({ kind: 'literal', value: e.target.value })}
           placeholder="Hardcoded value (same on every row)"
-          className="mt-2 w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-1.5 font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] outline-none"
+          className="mt-2 w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-1.5  text-[13px] text-[color:var(--ink)] outline-none"
         />
       )}
       {kind === 'row_type_id' && (
-        <p className="mt-2 font-[family-name:var(--font-barlow)] italic text-[12px] text-[color:var(--ink-3)]">
+        <p className="mt-2  italic text-[12px] text-[color:var(--ink-3)]">
           Uses each row’s primary key (the value in the left-most column).
         </p>
       )}
@@ -2522,7 +2522,7 @@ function SmallLabel({
 }) {
   return (
     <label className="block">
-      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1.5">
+      <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1.5">
         {label}
       </span>
       <input
@@ -2531,8 +2531,8 @@ function SmallLabel({
         onChange={(e) => onChange(e.target.value)}
         className={`w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-1.5 outline-none text-[color:var(--ink)] ${
           mono
-            ? 'font-[family-name:var(--font-jetbrains-mono)] text-[12.5px]'
-            : 'font-[family-name:var(--font-barlow)] text-[13.5px]'
+            ? 'font-mono text-[12.5px]'
+            : ' text-[13.5px]'
         }`}
       />
     </label>

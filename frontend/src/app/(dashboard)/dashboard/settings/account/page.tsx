@@ -52,7 +52,7 @@ export default function AccountSettingsPage() {
 
   if (!user) {
     return (
-      <div className="py-8 font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)]">
+      <div className="py-8  italic text-[14px] text-[color:var(--ink-2)]">
         Loading account…
       </div>
     );
@@ -117,26 +117,26 @@ export default function AccountSettingsPage() {
           <div>
             <Label>Email</Label>
             <div className="flex items-baseline gap-3 border-b border-[color:var(--rule)] py-2">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[13px] text-[color:var(--ink)] flex-1 truncate">
+              <span className="font-mono text-[13px] text-[color:var(--ink)] flex-1 truncate">
                 {user.email}
               </span>
               {user.isEmailVerified ? (
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--forest)]">
+                <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--forest)]">
                   Verified
                 </span>
               ) : (
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+                <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
                   Unverified
                 </span>
               )}
             </div>
-            <p className="mt-2 font-[family-name:var(--font-barlow)] italic text-[12px] text-[color:var(--ink-2)]">
+            <p className="mt-2  italic text-[12px] text-[color:var(--ink-2)]">
               Email changes are forthcoming. Reach out if you need one moved today.
             </p>
           </div>
           <div>
             <Label>Last signed in</Label>
-            <div className="border-b border-[color:var(--rule)] py-2 font-[family-name:var(--font-jetbrains-mono)] text-[13px] text-[color:var(--ink)]">
+            <div className="border-b border-[color:var(--rule)] py-2 font-mono text-[13px] text-[color:var(--ink)]">
               {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : '—'}
             </div>
           </div>

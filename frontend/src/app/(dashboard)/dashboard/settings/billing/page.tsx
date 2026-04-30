@@ -70,18 +70,18 @@ function BalanceCard({
       <div className="absolute inset-0 translate-x-1 translate-y-1 bg-[color:var(--rule)]/25" aria-hidden />
       <div className="relative bg-[color:var(--paper-3)] border border-[color:var(--rule)] p-5 md:p-6">
         <div className="flex items-center justify-between gap-3 mb-3">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
+          <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
             {kicker}
           </span>
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
+          <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
             {label}
           </span>
         </div>
-        <div className="font-[family-name:var(--font-instrument-serif)] text-[48px] leading-none tabular-nums text-[color:var(--ink)]">
+        <div className=" text-[48px] leading-none tabular-nums text-[color:var(--ink)]">
           {value.toLocaleString()}
         </div>
         {sub && (
-          <div className="mt-3 font-[family-name:var(--font-barlow)] text-[12.5px] leading-[1.5] text-[color:var(--ink-2)]">
+          <div className="mt-3  text-[12.5px] leading-[1.5] text-[color:var(--ink-2)]">
             {sub}
           </div>
         )}
@@ -121,7 +121,7 @@ export default function BillingSettingsPage() {
         <SectionHead n="01" title="Subscription" />
         <div className="md:pl-[54px]">
           {creditsLoading ? (
-            <div className="py-6 font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)]">
+            <div className="py-6  italic text-[14px] text-[color:var(--ink-2)]">
               Loading plan…
             </div>
           ) : (
@@ -132,25 +132,25 @@ export default function BillingSettingsPage() {
               />
               <div className="relative bg-[color:var(--paper-2)] border border-[color:var(--rule)] p-6 md:p-7">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
+                  <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
                     Current plan
                   </span>
-                  <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
                     {credits?.subscriptionRenewsAt
                       ? `Renews ${fmtDate(credits.subscriptionRenewsAt)}`
                       : 'No renewal scheduled'}
                   </span>
                 </div>
-                <h3 className="font-[family-name:var(--font-instrument-serif)] text-[44px] md:text-[56px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
+                <h3 className=" text-[44px] md:text-[56px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
                   {cfg.label}
                 </h3>
-                <p className="mt-2 font-[family-name:var(--font-barlow)] italic text-[15px] text-[color:var(--ink-2)]">
+                <p className="mt-2  italic text-[15px] text-[color:var(--ink-2)]">
                   {cfg.tagline}
                 </p>
 
                 {/* Monthly allowance rail */}
                 <div className="mt-6">
-                  <div className="flex items-center justify-between mb-2 text-[11px] font-[family-name:var(--font-jetbrains-mono)] tracking-[0.16em] uppercase">
+                  <div className="flex items-center justify-between mb-2 text-[11px] font-mono tracking-[0.16em] uppercase">
                     <span className="text-[color:var(--ink-3)]">
                       This month
                     </span>
@@ -173,7 +173,7 @@ export default function BillingSettingsPage() {
                 <div className="mt-6 pt-5 border-t border-dashed border-[color:var(--rule)] flex items-center justify-between gap-4 flex-wrap">
                   <Link
                     href="/pricing"
-                    className="font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]"
+                    className=" italic text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]"
                   >
                     Compare plans on the pricing page
                   </Link>
@@ -194,7 +194,7 @@ export default function BillingSettingsPage() {
           title={
             <>
               Credits{' '}
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] not-italic ml-3 tabular-nums">
+              <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] not-italic ml-3 tabular-nums">
                 {totalBalance.toLocaleString()} total
               </span>
             </>
@@ -227,7 +227,7 @@ export default function BillingSettingsPage() {
               }
             />
           </div>
-          <p className="mt-5 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)] max-w-[620px]">
+          <p className="mt-5  italic text-[12.5px] text-[color:var(--ink-2)] max-w-[620px]">
             A dispatch draws from the monthly allowance first; top-ups cover overage. Payments
             aren&rsquo;t wired yet — the Top up and Change plan buttons credit your account
             instantly for testing the ledger.
@@ -242,7 +242,7 @@ export default function BillingSettingsPage() {
           title={
             <>
               Ledger{' '}
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] not-italic ml-3">
+              <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] not-italic ml-3">
                 last {txns.length} {txns.length === 1 ? 'entry' : 'entries'}
               </span>
             </>
@@ -250,18 +250,18 @@ export default function BillingSettingsPage() {
         />
         <div className="md:pl-[54px]">
           {txnsLoading ? (
-            <div className="py-6 font-[family-name:var(--font-barlow)] italic text-[14px] text-[color:var(--ink-2)]">
+            <div className="py-6  italic text-[14px] text-[color:var(--ink-2)]">
               Loading ledger…
             </div>
           ) : txns.length === 0 ? (
             <div className="border border-dashed border-[color:var(--rule)] bg-[color:var(--paper-3)]/60 py-10 text-center">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
                 Blank page
               </span>
-              <h4 className="mt-2 font-[family-name:var(--font-instrument-serif)] text-[22px] text-[color:var(--ink)]">
+              <h4 className="mt-2  text-[22px] text-[color:var(--ink)]">
                 No transactions yet.
               </h4>
-              <p className="mt-1 font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-2)]">
+              <p className="mt-1  italic text-[13px] text-[color:var(--ink-2)]">
                 Run a dispatch, top up, or subscribe — all leave a row here.
               </p>
             </div>
@@ -278,33 +278,33 @@ export default function BillingSettingsPage() {
                     key={t._id}
                     className="grid grid-cols-[40px_1fr_auto_auto_auto] gap-4 items-baseline py-3 border-b border-[color:var(--rule)]/70"
                   >
-                    <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] tabular-nums">
+                    <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] tabular-nums">
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <div className="min-w-0">
-                      <div className="font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink)] truncate">
+                      <div className=" text-[13.5px] text-[color:var(--ink)] truncate">
                         {txnLabel(t.reason)}
                       </div>
                       {t.description && (
-                        <div className="font-[family-name:var(--font-barlow)] italic text-[12px] text-[color:var(--ink-2)] truncate">
+                        <div className=" italic text-[12px] text-[color:var(--ink-2)] truncate">
                           {t.description}
                         </div>
                       )}
                     </div>
                     <span
-                      className={`font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.16em] uppercase px-2 py-0.5 border bg-[color:var(--paper-3)] ${bucketTone}`}
+                      className={`font-mono text-[9.5px] tracking-[0.16em] uppercase px-2 py-0.5 border bg-[color:var(--paper-3)] ${bucketTone}`}
                     >
                       {t.bucket}
                     </span>
                     <span
-                      className={`font-[family-name:var(--font-jetbrains-mono)] text-[13px] tabular-nums whitespace-nowrap ${
+                      className={`font-mono text-[13px] tabular-nums whitespace-nowrap ${
                         isCredit ? 'text-[color:var(--forest)]' : 'text-[color:var(--ink)]'
                       }`}
                     >
                       {isCredit ? '+' : ''}
                       {t.delta.toLocaleString()}
                     </span>
-                    <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)] tabular-nums whitespace-nowrap">
+                    <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)] tabular-nums whitespace-nowrap">
                       {new Date(t.createdAt).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
