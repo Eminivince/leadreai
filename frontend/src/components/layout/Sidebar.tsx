@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/useAppStore';
 import { useCredits } from '@/hooks/useCredits';
@@ -476,13 +476,13 @@ export function Sidebar() {
     setCollapsed(readCollapsed());
   }, []);
 
-  const toggleCollapsed = () => {
+  const toggleCollapsed = useCallback(() => {
     setCollapsed((prev) => {
       const next = !prev;
       writeCollapsed(next);
       return next;
     });
-  };
+  }, []);
 
   // Keyboard shortcut — Cmd/Ctrl + \ toggles the sidebar. Avoids
   // conflicts with textarea typing ([ and ] are fair game otherwise)
@@ -496,7 +496,7 @@ export function Sidebar() {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [toggleCollapsed]);
 
   const toggleExpanded = (key: string) => {
     setExpanded((prev) => {
@@ -746,6 +746,7 @@ export function Sidebar() {
           <button
             onClick={handleLogout}
             title="Sign out"
+            aria-label="Sign out"
             className="p-1.5 text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition shrink-0"
           >
             <LogOutGlyph className="w-3.5 h-3.5" />
