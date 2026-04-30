@@ -59,7 +59,7 @@ export function IntegrationDrawer({
       >
         {/* Top bar */}
         <div className="flex items-center justify-between px-7 md:px-8 pt-7 pb-4 border-b border-[color:var(--rule)]">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
+          <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
             Wire · {meta.id}
           </span>
           <button
@@ -73,10 +73,10 @@ export function IntegrationDrawer({
 
         {/* Header */}
         <div className="px-7 md:px-8 pt-6 pb-5 border-b border-[color:var(--rule)]">
-          <h2 className="font-[family-name:var(--font-instrument-serif)] text-[40px] md:text-[48px] leading-[1.02] tracking-[-0.01em] text-[color:var(--ink)]">
+          <h2 className=" text-[40px] md:text-[48px] leading-[1.02] tracking-[-0.01em] text-[color:var(--ink)]">
             {meta.name}
           </h2>
-          <p className="mt-2 font-[family-name:var(--font-barlow)] italic text-[14px] leading-[1.5] text-[color:var(--ink-2)]">
+          <p className="mt-2  italic text-[14px] leading-[1.5] text-[color:var(--ink-2)]">
             {meta.tagline}
           </p>
         </div>
@@ -85,7 +85,7 @@ export function IntegrationDrawer({
         <div className="px-7 md:px-8 py-7 flex flex-col gap-7">{children}</div>
 
         {/* Esc hint */}
-        <div className="pb-6 font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.2em] uppercase text-[color:var(--ink-3)] text-center">
+        <div className="pb-6 font-mono text-[9.5px] tracking-[0.2em] uppercase text-[color:var(--ink-3)] text-center">
           Press Esc to close
         </div>
       </div>

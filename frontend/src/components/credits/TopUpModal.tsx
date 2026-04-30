@@ -55,20 +55,20 @@ function PackageCard({
         <span className="absolute left-0 top-2 bottom-2 w-[2px] bg-[color:var(--forest)]" />
       )}
       <div className="min-w-0">
-        <div className="font-[family-name:var(--font-instrument-serif)] text-[22px] leading-tight text-[color:var(--ink)]">
+        <div className=" text-[22px] leading-tight text-[color:var(--ink)]">
           {pkg.label}
         </div>
         {pkg.tagline && (
-          <div className="mt-0.5 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)]">
+          <div className="mt-0.5  italic text-[12.5px] text-[color:var(--ink-2)]">
             {pkg.tagline}
           </div>
         )}
       </div>
       <div className="text-right shrink-0">
-        <div className="font-[family-name:var(--font-instrument-serif)] text-[20px] leading-none text-[color:var(--ink)] tabular-nums">
+        <div className=" text-[20px] leading-none text-[color:var(--ink)] tabular-nums">
           ${pkg.priceUsd}
         </div>
-        <div className="mt-1 font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] tabular-nums">
+        <div className="mt-1 font-mono text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] tabular-nums">
           ${(pkg.priceUsd / pkg.credits).toFixed(2)} / cr
         </div>
       </div>
@@ -130,16 +130,16 @@ export function TopUpModal() {
         {/* Header */}
         <div className="flex items-start justify-between gap-3 px-6 py-5 border-b border-[color:var(--rule)]">
           <div>
-            <div className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+            <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
               Top up
             </div>
             <h2
               id="topup-title"
-              className="mt-1 font-[family-name:var(--font-instrument-serif)] text-[26px] leading-[1.05] text-[color:var(--ink)]"
+              className="mt-1  text-[26px] leading-[1.05] text-[color:var(--ink)]"
             >
               Buy <em className="italic text-[color:var(--forest)]">dispatches</em>.
             </h2>
-            <p className="mt-1 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)]">
+            <p className="mt-1  italic text-[12.5px] text-[color:var(--ink-2)]">
               One credit covers one dispatch, regardless of lead count.
             </p>
           </div>
@@ -167,10 +167,10 @@ export function TopUpModal() {
         {/* Footer — placeholder notice + CTAs */}
         <div className="px-6 pb-6 flex flex-col gap-4">
           <div className="border-l-2 border-[color:var(--rust)] pl-3 py-1">
-            <p className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--rust)]">
+            <p className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--rust)]">
               Placeholder
             </p>
-            <p className="mt-1 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)] leading-[1.5]">
+            <p className="mt-1  italic text-[12.5px] text-[color:var(--ink-2)] leading-[1.5]">
               Payments aren&rsquo;t wired yet. Clicking below credits your account instantly without
               charging a card — use it to test the ledger. Stripe Checkout ships next.
             </p>

@@ -21,17 +21,20 @@ const MAX_OUTPUT_CHARS = 10_000;
  * Script is written to a host temp file and volume-mounted read-only
  * into the container — avoids shell injection via -c flags.
  *
- * Input data: passed as SANDBOX_INPUT env var (JSON string).
+ * Input data: written to a second temp file (input.json) and mounted
+ * read-only at /sandbox/input.json — avoids the ~128 KB per-variable
+ * OS limit that -e would impose on large scraped payloads.
  * Output: stdout, capped at MAX_OUTPUT_CHARS.
  * ───────────────────────────────────────────────────────────────── */
 
 export const runCodeTool: ToolDef = {
   name: 'run_code',
   description:
-    'Execute a Python 3 script in an isolated sandbox (no network, 256 MB RAM, 30 s timeout). ' +
+    `Execute a Python 3 script in an isolated sandbox (no network, ${env.SANDBOX_MEMORY_MB} MB RAM, ` +
+    `${Math.round(env.SANDBOX_TIMEOUT_MS / 1000)} s timeout). ` +
     'Libraries available: beautifulsoup4, lxml, pandas, requests (parsing only — no outbound calls). ' +
-    'Pass data in via `input` (string or JSON); read it with: ' +
-    '  import os, json; data = json.loads(os.environ.get("SANDBOX_INPUT", "null")). ' +
+    'Pass data in via `input` (string or JSON-serialisable value); read it with: ' +
+    '  import json; data = json.load(open("/sandbox/input.json")). ' +
     'Everything printed to stdout is returned (max 10 000 chars). ' +
     'Use for: parsing HTML tables, fuzzy-matching company lists, structuring scraped text.',
   parametersSchema: '{"code": string, "input"?: string}',
@@ -48,20 +51,22 @@ export const runCodeTool: ToolDef = {
     const code = String(args?.code ?? '').trim();
     if (!code) return { ok: false, output: 'code is required' };
 
-    // Always JSON-encode so the value is a safe, single-line string with no
-    // newlines or null bytes that could corrupt Docker's -e argument parsing.
-    const inputStr: string = JSON.stringify(
-      args?.input == null ? null : args.input,
-    );
-
     const runId = randomUUID();
     const containerName = `leadreai-sandbox-${runId}`;
     const tmpDir = join(tmpdir(), `sandbox-${runId}`);
     const scriptPath = join(tmpDir, 'script.py');
+    const inputPath = join(tmpDir, 'input.json');
+
+    // Write input as a file rather than via -e to avoid the ~128 KB per-variable
+    // OS limit that would silently truncate or fail on large scraped payloads.
+    const inputJson: string = JSON.stringify(
+      args?.input == null ? null : args.input,
+    );
 
     try {
       await mkdir(tmpDir, { recursive: true });
       await writeFile(scriptPath, code, 'utf-8');
+      await writeFile(inputPath, inputJson, 'utf-8');
 
       const dockerArgs = [
         'run', '--rm',
@@ -70,10 +75,15 @@ export const runCodeTool: ToolDef = {
         '--memory', `${env.SANDBOX_MEMORY_MB}m`,
         '--memory-swap', `${env.SANDBOX_MEMORY_MB}m`, // disable swap
         '--cpus', '0.5',
+        '--pids-limit', '64',               // prevent fork-bomb
+        '--cap-drop', 'ALL',                // drop all Linux capabilities
+        '--security-opt', 'no-new-privileges',
+        '--stop-signal', 'SIGKILL',         // instant stop on timeout; no grace period
+        '--user', '1001:1001',              // belt-and-suspenders with Dockerfile USER
         '--read-only',
         '--tmpfs', '/tmp:size=64m,mode=1777',
         '-v', `${scriptPath}:/sandbox/script.py:ro`,
-        '-e', `SANDBOX_INPUT=${inputStr}`,
+        '-v', `${inputPath}:/sandbox/input.json:ro`,
         env.SANDBOX_IMAGE,
         'python', '-u', '/sandbox/script.py',
       ];

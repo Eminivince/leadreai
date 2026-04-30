@@ -46,7 +46,7 @@ export function JobCostCard({ workspaceId, jobId, frozen = false }: JobCostCardP
 
   if (isLoading && !data) {
     return (
-      <div className="py-4 font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-3)]">
+      <div className="py-4  italic text-[13px] text-[color:var(--ink-3)]">
         Tallying costs…
       </div>
     );
@@ -54,7 +54,7 @@ export function JobCostCard({ workspaceId, jobId, frozen = false }: JobCostCardP
 
   if (error || !data?.data) {
     return (
-      <div className="py-4 font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-3)]">
+      <div className="py-4  italic text-[13px] text-[color:var(--ink-3)]">
         Costs unavailable right now.
       </div>
     );
@@ -72,10 +72,10 @@ export function JobCostCard({ workspaceId, jobId, frozen = false }: JobCostCardP
     <section className="relative">
       <div className="flex items-center gap-3 mb-5">
         <span className="block w-8 h-px bg-[color:var(--ink)]" />
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
           Receipt
         </span>
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] ml-auto">
+        <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] ml-auto">
           {summary.eventCount} line{summary.eventCount === 1 ? '' : 's'}
         </span>
       </div>
@@ -89,15 +89,15 @@ export function JobCostCard({ workspaceId, jobId, frozen = false }: JobCostCardP
           {/* Hero — total */}
           <div className="flex items-baseline justify-between gap-4 px-5 md:px-6 py-5 border-b border-dashed border-[color:var(--rule)]">
             <div>
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block">
+              <span className="font-mono text-[9px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block">
                 Total cost
               </span>
-              <div className="mt-1 font-[family-name:var(--font-instrument-serif)] text-[44px] md:text-[56px] leading-none tabular-nums text-[color:var(--ink)]">
+              <div className="mt-1  text-[44px] md:text-[56px] leading-none tabular-nums text-[color:var(--ink)]">
                 {fmtUsd(total)}
               </div>
             </div>
             {total > 0 && (
-              <span className="font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-3)] text-right">
+              <span className=" italic text-[12.5px] text-[color:var(--ink-3)] text-right">
                 Tallied from provider receipts at
                 <br />
                 the unit prices in effect at call time.
@@ -108,7 +108,7 @@ export function JobCostCard({ workspaceId, jobId, frozen = false }: JobCostCardP
           {/* By category */}
           <div className="px-5 md:px-6 py-5">
             {categoryRows.length === 0 ? (
-              <div className="font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-3)]">
+              <div className=" italic text-[13px] text-[color:var(--ink-3)]">
                 No cost events recorded for this dispatch yet.
               </div>
             ) : (
@@ -116,16 +116,16 @@ export function JobCostCard({ workspaceId, jobId, frozen = false }: JobCostCardP
                 <tbody>
                   {categoryRows.map(([cat, amount]) => (
                     <tr key={cat} className="border-b border-[color:var(--rule)]/40 last:border-b-0">
-                      <td className="py-2.5 pr-3 font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink-2)]">
+                      <td className="py-2.5 pr-3  text-[13.5px] text-[color:var(--ink-2)]">
                         {CATEGORY_LABEL[cat]}
                       </td>
                       <td className="py-2.5 pr-3 w-[40%]">
                         <Bar value={amount} max={total} />
                       </td>
-                      <td className="py-2.5 text-right font-[family-name:var(--font-jetbrains-mono)] text-[12.5px] tabular-nums text-[color:var(--ink)] min-w-[70px]">
+                      <td className="py-2.5 text-right font-mono text-[12.5px] tabular-nums text-[color:var(--ink)] min-w-[70px]">
                         {fmtUsd(amount)}
                       </td>
-                      <td className="py-2.5 pl-3 text-right font-[family-name:var(--font-jetbrains-mono)] text-[10px] text-[color:var(--ink-3)] min-w-[48px]">
+                      <td className="py-2.5 pl-3 text-right font-mono text-[10px] text-[color:var(--ink-3)] min-w-[48px]">
                         {total > 0 ? `${Math.round((amount / total) * 100)}%` : '—'}
                       </td>
                     </tr>
@@ -138,7 +138,7 @@ export function JobCostCard({ workspaceId, jobId, frozen = false }: JobCostCardP
           {/* Per-provider detail */}
           {topProviders.length > 0 && (
             <div className="px-5 md:px-6 pb-5 pt-1 border-t border-dashed border-[color:var(--rule)]">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-3 mt-4">
+              <span className="font-mono text-[9px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-3 mt-4">
                 Providers
               </span>
               <div className="flex flex-col">
@@ -147,16 +147,16 @@ export function JobCostCard({ workspaceId, jobId, frozen = false }: JobCostCardP
                     key={`${p.category}-${p.provider}-${p.modelSlug ?? i}`}
                     className="grid grid-cols-[1fr_auto_auto] gap-4 items-baseline py-1.5 border-b border-[color:var(--rule)]/30 last:border-b-0"
                   >
-                    <span className="font-[family-name:var(--font-barlow)] text-[13px] text-[color:var(--ink)] truncate">
-                      <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] mr-2">
+                    <span className=" text-[13px] text-[color:var(--ink)] truncate">
+                      <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] mr-2">
                         {CATEGORY_LABEL[p.category]}
                       </span>
                       {p.modelSlug ?? p.provider}
                     </span>
-                    <span className="font-[family-name:var(--font-jetbrains-mono)] text-[11px] text-[color:var(--ink-3)] tabular-nums">
+                    <span className="font-mono text-[11px] text-[color:var(--ink-3)] tabular-nums">
                       {p.eventCount} call{p.eventCount === 1 ? '' : 's'}
                     </span>
-                    <span className="font-[family-name:var(--font-jetbrains-mono)] text-[12.5px] text-[color:var(--ink)] tabular-nums min-w-[70px] text-right">
+                    <span className="font-mono text-[12.5px] text-[color:var(--ink)] tabular-nums min-w-[70px] text-right">
                       {fmtUsd(p.totalUSD)}
                     </span>
                   </div>

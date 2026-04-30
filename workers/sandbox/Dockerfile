@@ -9,7 +9,13 @@ RUN pip install --no-cache-dir \
     pandas==2.2.2 \
     requests==2.32.3
 
+# Drop to a non-root user before running any code.
+RUN addgroup --gid 1001 sandbox \
+ && adduser --uid 1001 --gid 1001 --no-create-home --disabled-password sandbox
+
 # /sandbox is the working directory and the mount point for scripts.
 WORKDIR /sandbox
+
+USER sandbox
 
 # No ENTRYPOINT — the caller supplies `python -u /sandbox/script.py`.

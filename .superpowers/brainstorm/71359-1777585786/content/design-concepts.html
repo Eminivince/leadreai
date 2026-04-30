@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeadreAI /althome — Design Concepts</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f0f13;
+    color: #e8e8e8;
+    min-height: 100vh;
+    padding: 32px 24px;
+  }
+  h1 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #888;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 36px;
+  }
+  .concepts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    max-width: 1280px;
+  }
+  .concept {
+    border: 1.5px solid #222;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+    background: #0a0a0d;
+  }
+  .concept:hover { border-color: #444; transform: translateY(-2px); }
+  .concept.selected { border-color: #6366f1; box-shadow: 0 0 0 2px #6366f120; }
+  .concept-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid #1a1a1f;
+    background: #111116;
+  }
+  .letter {
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .letter-a { background: #6366f120; color: #818cf8; border: 1px solid #6366f140; }
+  .letter-b { background: #10b98120; color: #34d399; border: 1px solid #10b98140; }
+  .letter-c { background: #f59e0b20; color: #fbbf24; border: 1px solid #f59e0b40; }
+  .concept-name { font-size: 13px; font-weight: 600; color: #d4d4d8; }
+  .concept-tag { font-size: 11px; color: #555; margin-left: auto; }
+  .mockup-frame { height: 420px; overflow: hidden; position: relative; }
+
+  /* CONCEPT A: Search Console */
+  .search-console { background: #06060a; height: 100%; padding: 28px 22px; display: flex; flex-direction: column; }
+  .sc-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 48px; }
+  .sc-logo { font-size: 13px; font-weight: 700; color: #818cf8; letter-spacing: -0.01em; }
+  .sc-nav-links { display: flex; gap: 18px; }
+  .sc-nav-links span { font-size: 11px; color: #444; }
+  .sc-hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 20px; }
+  .sc-eyebrow { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #6366f180; display: flex; align-items: center; gap: 8px; }
+  .sc-eyebrow::before, .sc-eyebrow::after { content: ''; display: block; width: 24px; height: 1px; background: #6366f140; }
+  .sc-headline { font-size: 30px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; color: #f4f4f5; max-width: 320px; }
+  .sc-headline em { color: #818cf8; font-style: normal; }
+  .sc-search-wrap { width: 100%; max-width: 400px; position: relative; }
+  .sc-search { width: 100%; background: #0f0f1a; border: 1.5px solid #2a2a3d; border-radius: 10px; padding: 12px 16px 12px 40px; font-size: 12px; color: #888; display: flex; align-items: center; gap: 8px; position: relative; }
+  .sc-search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; border: 1.5px solid #444; border-radius: 50%; background: none; }
+  .sc-placeholder { color: #333; }
+  .sc-kbd { margin-left: auto; font-size: 9px; border: 1px solid #2a2a3d; border-radius: 4px; padding: 2px 6px; color: #444; }
+  .sc-suggestions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; max-width: 400px; }
+  .sc-chip { font-size: 10px; background: #0f0f1a; border: 1px solid #1f1f2e; border-radius: 20px; padding: 4px 10px; color: #555; cursor: pointer; }
+  .sc-results-preview { width: 100%; max-width: 400px; background: #0a0a12; border: 1px solid #1a1a28; border-radius: 8px; overflow: hidden; }
+  .sc-result-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid #111120; }
+  .sc-result-row:last-child { border-bottom: none; }
+  .sc-dot { width: 6px; height: 6px; border-radius: 50%; background: #6366f160; flex-shrink: 0; }
+  .sc-dot-dim { background: #374151; }
+  .sc-result-name { font-size: 11px; color: #6b7280; flex: 1; }
+  .sc-result-name-dim { color: #374151; }
+  .sc-result-tag { font-size: 10px; color: #374151; background: #111120; border-radius: 4px; padding: 2px 6px; }
+
+  /* CONCEPT B: Command Centre */
+  .command-centre { background: #08100d; height: 100%; display: flex; flex-direction: column; font-family: 'Menlo', 'Courier New', monospace; }
+  .cc-topbar { display: flex; align-items: center; height: 32px; border-bottom: 1px solid #0f1f16; background: #060d09; }
+  .cc-tab { font-size: 10px; color: #1a3d28; padding: 0 14px; height: 100%; display: flex; align-items: center; border-right: 1px solid #0f1f16; white-space: nowrap; }
+  .cc-tab.active { color: #34d399; background: #0a1810; }
+  .cc-topbar-logo { margin-left: auto; padding-right: 12px; font-size: 9px; color: #1a3d28; }
+  .cc-body { display: flex; flex: 1; overflow: hidden; }
+  .cc-sidebar { width: 140px; border-right: 1px solid #0f1f16; padding: 12px 0; flex-shrink: 0; }
+  .cc-sidebar-label { font-size: 8px; letter-spacing: 0.15em; color: #1a3d28; text-transform: uppercase; padding: 0 12px 6px; }
+  .cc-sidebar-item { font-size: 10px; color: #1e5c3a; padding: 5px 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 2px solid transparent; }
+  .cc-sidebar-item.active { color: #34d399; border-left-color: #34d399; background: #0d1f16; }
+  .cc-sidebar-item.dim { color: #0f2c1c; }
+  .cc-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .cc-prompt-bar { border-bottom: 1px solid #0f1f16; padding: 8px 14px; display: flex; align-items: center; gap: 8px; background: #060d09; }
+  .cc-prompt-label { font-size: 10px; color: #1e5c3a; }
+  .cc-prompt-input { flex: 1; font-size: 10px; color: #34d399; background: #0d1f16; border: 1px solid #1a3d28; border-radius: 4px; padding: 4px 8px; font-family: inherit; }
+  .cc-run-btn { font-size: 9px; color: #060d09; background: #34d399; border: none; border-radius: 3px; padding: 4px 10px; cursor: pointer; font-family: inherit; }
+  .cc-output { flex: 1; padding: 10px 14px; overflow: hidden; display: flex; flex-direction: column; gap: 4px; }
+  .cc-line { font-size: 10px; line-height: 1.5; display: flex; gap: 10px; }
+  .cc-ts { color: #1a3d28; }
+  .cc-text-mid { color: #1e5c3a; }
+  .cc-text-bright { color: #34d399; }
+  .cc-text-data { color: #6ee7b7; }
+  .cc-text-muted { color: #0f2c1c; }
+  .cc-status-bar { height: 20px; background: #060d09; border-top: 1px solid #0f1f16; display: flex; align-items: center; gap: 16px; padding: 0 14px; }
+  .cc-status-item { font-size: 9px; color: #1a3d28; display: flex; align-items: center; gap: 4px; }
+  .cc-status-item.ok { color: #34d399; }
+  .cc-status-right { margin-left: auto; }
+  .cc-pulse { width: 6px; height: 6px; background: #34d399; border-radius: 50%; }
+
+  /* CONCEPT C: Modern SaaS */
+  .modern-saas { background: #ffffff; height: 100%; display: flex; flex-direction: column; }
+  .ms-nav { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #f0f0f0; }
+  .ms-logo { font-size: 13px; font-weight: 700; color: #111; letter-spacing: -0.02em; }
+  .ms-logo-accent { color: #f59e0b; }
+  .ms-nav-right { display: flex; align-items: center; gap: 12px; }
+  .ms-nav-link { font-size: 11px; color: #6b7280; }
+  .ms-nav-cta { font-size: 11px; font-weight: 600; color: white; background: #111; border-radius: 20px; padding: 5px 12px; }
+  .ms-hero { padding: 32px 20px 20px; text-align: center; background: linear-gradient(to bottom, #fefce8, #ffffff); }
+  .ms-badge { display: inline-flex; align-items: center; gap: 5px; background: #fef3c7; border: 1px solid #fde68a; border-radius: 20px; padding: 3px 10px; font-size: 10px; color: #92400e; margin-bottom: 14px; }
+  .ms-badge-dot { width: 6px; height: 6px; background: #f59e0b; border-radius: 50%; }
+  .ms-headline { font-size: 24px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; color: #111; max-width: 300px; margin: 0 auto 8px; }
+  .ms-headline-accent { color: #f59e0b; }
+  .ms-sub { font-size: 11px; color: #9ca3af; max-width: 260px; margin: 0 auto 16px; line-height: 1.5; }
+  .ms-search-row { display: flex; gap: 6px; max-width: 380px; margin: 0 auto; }
+  .ms-search-input { flex: 1; background: #f9fafb; border: 1.5px solid #e5e7eb; border-radius: 8px; padding: 8px 12px; font-size: 11px; color: #374151; }
+  .ms-search-btn { background: #f59e0b; color: white; border: none; border-radius: 8px; padding: 8px 14px; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .ms-filters { display: flex; gap: 6px; max-width: 380px; margin: 8px auto 0; flex-wrap: wrap; justify-content: center; }
+  .ms-filter-chip { font-size: 10px; background: white; border: 1px solid #e5e7eb; border-radius: 6px; padding: 3px 8px; color: #6b7280; display: flex; align-items: center; gap: 4px; }
+  .ms-filter-chip.active { border-color: #f59e0b; color: #92400e; background: #fef3c7; }
+  .ms-results { flex: 1; padding: 14px 16px; overflow: hidden; background: #f9fafb; }
+  .ms-results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .ms-results-count { font-size: 11px; font-weight: 600; color: #111; }
+  .ms-results-actions { display: flex; gap: 6px; }
+  .ms-action-btn { font-size: 10px; border: 1px solid #e5e7eb; border-radius: 6px; padding: 3px 8px; color: #6b7280; background: white; cursor: pointer; }
+  .ms-cards { display: flex; flex-direction: column; gap: 6px; }
+  .ms-card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+  .ms-avatar { width: 28px; height: 28px; border-radius: 6px; background: linear-gradient(135deg, #fde68a, #f59e0b); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: white; }
+  .ms-avatar-blue { background: linear-gradient(135deg, #bfdbfe, #3b82f6); }
+  .ms-card-info { flex: 1; }
+  .ms-card-name { font-size: 11px; font-weight: 600; color: #111; }
+  .ms-card-meta { font-size: 10px; color: #9ca3af; margin-top: 1px; }
+  .ms-card-badges { display: flex; gap: 4px; }
+  .ms-badge-pill { font-size: 9px; border-radius: 4px; padding: 2px 6px; font-weight: 500; }
+  .ms-badge-green { background: #dcfce7; color: #166534; }
+  .ms-badge-blue { background: #dbeafe; color: #1d4ed8; }
+
+  /* Selection */
+  .concept.selected { border-color: #6366f1; }
+  .concept.selected.b-concept { border-color: #10b981; }
+  .concept.selected.c-concept { border-color: #f59e0b; }
+  .selected-indicator { margin-top: 16px; font-size: 12px; color: #555; text-align: center; min-height: 20px; }
+  .selected-indicator strong { color: #818cf8; }
+</style>
+</head>
+<body>
+
+<h1>LeadreAI &middot; /althome &mdash; Design Concepts</h1>
+<p class="subtitle">Three distinct directions &mdash; click a concept to select it, then let me know what resonates (or what doesn&rsquo;t).</p>
+
+<div class="concepts">
+
+  <!-- CONCEPT A: Search Console -->
+  <div class="concept" id="concept-a" onclick="selectConcept('a')">
+    <div class="concept-label">
+      <div class="letter letter-a">A</div>
+      <div>
+        <div class="concept-name">Search Console</div>
+      </div>
+      <div class="concept-tag">Perplexity-meets-Apollo</div>
+    </div>
+    <div class="mockup-frame">
+      <div class="search-console">
+        <div class="sc-nav">
+          <div class="sc-logo">LeadreAI</div>
+          <div class="sc-nav-links">
+            <span>How it works</span>
+            <span>Pricing</span>
+            <span style="color:#818cf8">Sign up &rarr;</span>
+          </div>
+        </div>
+        <div class="sc-hero">
+          <div class="sc-eyebrow">AI-powered prospecting</div>
+          <div class="sc-headline">Find anyone. <em>Anywhere.</em></div>
+          <div class="sc-search-wrap">
+            <div class="sc-search">
+              <div class="sc-search-icon"></div>
+              <span class="sc-placeholder">Series B fintechs in Lagos with a CTO&hellip;</span>
+              <div class="sc-kbd">&ldquo;K</div>
+            </div>
+          </div>
+          <div class="sc-suggestions">
+            <div class="sc-chip">Fintech CEOs &middot; Lagos</div>
+            <div class="sc-chip">Law firms &middot; Nairobi</div>
+            <div class="sc-chip">Manufacturers &middot; Ghana</div>
+          </div>
+          <div class="sc-results-preview">
+            <div class="sc-result-row">
+              <div class="sc-dot"></div>
+              <div class="sc-result-name">Paystack &middot; Shola Akinlade &middot; shola@paystack.com</div>
+              <div class="sc-result-tag">Verified</div>
+            </div>
+            <div class="sc-result-row">
+              <div class="sc-dot sc-dot-dim"></div>
+              <div class="sc-result-name sc-result-name-dim">Moniepoint &middot; Tosin Eniolorunda &middot; &mdash;</div>
+              <div class="sc-result-tag">Enriching</div>
+            </div>
+            <div class="sc-result-row">
+              <div class="sc-dot sc-dot-dim"></div>
+              <div class="sc-result-name sc-result-name-dim">Flutterwave &middot; Olugbenga Agboola &middot; &mdash;</div>
+              <div class="sc-result-tag">Queued</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONCEPT B: Intelligence Terminal -->
+  <div class="concept b-concept" id="concept-b" onclick="selectConcept('b')">
+    <div class="concept-label">
+      <div class="letter letter-b">B</div>
+      <div>
+        <div class="concept-name">Intelligence Terminal</div>
+      </div>
+      <div class="concept-tag">Operator&rsquo;s command centre</div>
+    </div>
+    <div class="mockup-frame">
+      <div class="command-centre">
+        <div class="cc-topbar">
+          <div class="cc-tab active">leadre://search</div>
+          <div class="cc-tab">pipelines</div>
+          <div class="cc-tab">exports</div>
+          <div class="cc-topbar-logo">LeadreAI v2.4</div>
+        </div>
+        <div class="cc-body">
+          <div class="cc-sidebar">
+            <div class="cc-sidebar-label">Saved queries</div>
+            <div class="cc-sidebar-item active">&#9654; Lagos fintechs</div>
+            <div class="cc-sidebar-item">&#9654; Nairobi law</div>
+            <div class="cc-sidebar-item">&#9654; Ghana logistics</div>
+            <div class="cc-sidebar-label" style="margin-top:12px">History</div>
+            <div class="cc-sidebar-item dim">April 29</div>
+            <div class="cc-sidebar-item dim">April 27</div>
+            <div class="cc-sidebar-item dim">April 25</div>
+          </div>
+          <div class="cc-main">
+            <div class="cc-prompt-bar">
+              <div class="cc-prompt-label">&rsaquo;</div>
+              <div class="cc-prompt-input">Top 20 Nigerian fintechs Series-B+. CEO name + email.</div>
+              <button class="cc-run-btn">RUN</button>
+            </div>
+            <div class="cc-output">
+              <div class="cc-line"><span class="cc-ts">[00:00.1]</span><span class="cc-text-mid">Parsing &rarr; persona:CEO geo:Nigeria stage:Series-B+</span></div>
+              <div class="cc-line"><span class="cc-ts">[00:00.8]</span><span class="cc-text-mid">Seeding from Wikipedia:Nigerian_fintechs &rarr; 34 candidates</span></div>
+              <div class="cc-line"><span class="cc-ts">[00:01.6]</span><span class="cc-text-bright">&#10003; Paystack &middot; Shola Akinlade &middot; shola@paystack.com [MX+SMTP]</span></div>
+              <div class="cc-line"><span class="cc-ts">[00:02.1]</span><span class="cc-text-bright">&#10003; Moniepoint &middot; Tosin Eniolorunda &middot; tosin@moniepoint.com</span></div>
+              <div class="cc-line"><span class="cc-ts">[00:02.9]</span><span class="cc-text-bright">&#10003; Flutterwave &middot; Olugbenga Agboola [direct-reply]</span></div>
+              <div class="cc-line"><span class="cc-ts">[00:03.4]</span><span class="cc-text-data">&nbsp;&nbsp;Kuda Bank &middot; Babs Ogundeyi &rarr; enriching /team page&hellip;</span></div>
+              <div class="cc-line"><span class="cc-ts">[00:03.8]</span><span class="cc-text-data">&nbsp;&nbsp;Carbon &middot; Chijioke Dozie &rarr; permuting email patterns&hellip;</span></div>
+              <div class="cc-line"><span class="cc-ts">[00:04.1]</span><span class="cc-text-muted">&nbsp;&nbsp;Cowrywise &middot; contact withheld (honesty &mdash;)</span></div>
+            </div>
+            <div class="cc-status-bar">
+              <div class="cc-status-item ok"><div class="cc-pulse"></div>RUNNING</div>
+              <div class="cc-status-item">8 / 20 resolved</div>
+              <div class="cc-status-item">3 sources active</div>
+              <div class="cc-status-item cc-status-right">ETA ~2m 30s</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONCEPT C: Modern SaaS -->
+  <div class="concept c-concept" id="concept-c" onclick="selectConcept('c')">
+    <div class="concept-label">
+      <div class="letter letter-c">C</div>
+      <div>
+        <div class="concept-name">Modern SaaS</div>
+      </div>
+      <div class="concept-tag">Clean B2B, filter-forward</div>
+    </div>
+    <div class="mockup-frame">
+      <div class="modern-saas">
+        <div class="ms-nav">
+          <div class="ms-logo">Leadre<span class="ms-logo-accent">AI</span></div>
+          <div class="ms-nav-right">
+            <span class="ms-nav-link">Pricing</span>
+            <span class="ms-nav-link">Docs</span>
+            <span class="ms-nav-cta">Get started</span>
+          </div>
+        </div>
+        <div class="ms-hero">
+          <div class="ms-badge"><div class="ms-badge-dot"></div>Built for African markets</div>
+          <div class="ms-headline">Prospect smarter.<br><span class="ms-headline-accent">Convert faster.</span></div>
+          <div class="ms-sub">Describe who you&rsquo;re selling to. Get a verified list, with contacts, in minutes.</div>
+          <div class="ms-search-row">
+            <div class="ms-search-input">Fintech CTOs in Lagos who raised in 2024&hellip;</div>
+            <button class="ms-search-btn">Search &rarr;</button>
+          </div>
+          <div class="ms-filters">
+            <div class="ms-filter-chip active">Nigeria</div>
+            <div class="ms-filter-chip active">Fintech</div>
+            <div class="ms-filter-chip">Series A+</div>
+            <div class="ms-filter-chip">+ More filters</div>
+          </div>
+        </div>
+        <div class="ms-results">
+          <div class="ms-results-header">
+            <div class="ms-results-count">24 leads found</div>
+            <div class="ms-results-actions">
+              <button class="ms-action-btn">Export CSV</button>
+              <button class="ms-action-btn">CRM sync</button>
+            </div>
+          </div>
+          <div class="ms-cards">
+            <div class="ms-card">
+              <div class="ms-avatar">P</div>
+              <div class="ms-card-info">
+                <div class="ms-card-name">Shola Akinlade &middot; Paystack</div>
+                <div class="ms-card-meta">shola@paystack.com &middot; Lagos</div>
+              </div>
+              <div class="ms-card-badges">
+                <div class="ms-badge-pill ms-badge-green">Email &#10003;</div>
+                <div class="ms-badge-pill ms-badge-blue">$8M</div>
+              </div>
+            </div>
+            <div class="ms-card">
+              <div class="ms-avatar ms-avatar-blue">M</div>
+              <div class="ms-card-info">
+                <div class="ms-card-name">Tosin Eniolorunda &middot; Moniepoint</div>
+                <div class="ms-card-meta">tosin@moniepoint.com &middot; Lagos</div>
+              </div>
+              <div class="ms-card-badges">
+                <div class="ms-badge-pill ms-badge-green">Email &#10003;</div>
+                <div class="ms-badge-pill ms-badge-blue">$110M</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="selected-indicator" id="indicator">Click a concept to select it</div>
+
+<script>
+  var selected = null;
+  var names = { a: 'A &mdash; Search Console', b: 'B &mdash; Intelligence Terminal', c: 'C &mdash; Modern SaaS' };
+  var plainNames = { a: 'A — Search Console', b: 'B — Intelligence Terminal', c: 'C — Modern SaaS' };
+
+  function selectConcept(choice) {
+    document.querySelectorAll('.concept').forEach(function(el) { el.classList.remove('selected'); });
+    var el = document.getElementById('concept-' + choice);
+    if (el) { el.classList.add('selected'); }
+    selected = choice;
+    var indicator = document.getElementById('indicator');
+    indicator.textContent = 'Selected: ' + plainNames[choice] + ' — let me know in the terminal';
+    var strong = document.createElement('strong');
+    strong.textContent = plainNames[choice];
+    indicator.textContent = 'Selected: ';
+    indicator.appendChild(strong);
+    var rest = document.createTextNode(' — let me know in the terminal what you think');
+    indicator.appendChild(rest);
+    try {
+      fetch('/__select', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ choice: choice, text: plainNames[choice] }) });
+    } catch(e) {}
+  }
+</script>
+</body>
+</html>

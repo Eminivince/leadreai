@@ -63,30 +63,30 @@ function PlanCard({
       <div className="flex items-start justify-between gap-4 mb-1">
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-[family-name:var(--font-instrument-serif)] text-[24px] leading-tight text-[color:var(--ink)]">
+            <span className=" text-[24px] leading-tight text-[color:var(--ink)]">
               {plan.label}
             </span>
             {current && (
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.18em] uppercase text-[color:var(--forest)] border border-[color:var(--forest)]/40 px-1.5 py-0.5">
+              <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--forest)] border border-[color:var(--forest)]/40 px-1.5 py-0.5">
                 Current
               </span>
             )}
           </div>
-          <div className="mt-0.5 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)]">
+          <div className="mt-0.5  italic text-[12.5px] text-[color:var(--ink-2)]">
             {plan.tagline}
           </div>
         </div>
         <div className="text-right shrink-0">
-          <div className="font-[family-name:var(--font-instrument-serif)] text-[20px] leading-none text-[color:var(--ink)] tabular-nums">
+          <div className=" text-[20px] leading-none text-[color:var(--ink)] tabular-nums">
             {priceLabel(plan)}
           </div>
         </div>
       </div>
       <div className="mt-3 pt-3 border-t border-dashed border-[color:var(--rule)]/70 flex items-baseline justify-between gap-3">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+        <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
           Monthly allowance
         </span>
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[14px] tabular-nums text-[color:var(--ink)]">
+        <span className="font-mono text-[14px] tabular-nums text-[color:var(--ink)]">
           {plan.monthlyCredits.toLocaleString()} dispatches
         </span>
       </div>
@@ -149,16 +149,16 @@ export function ChangePlanModal() {
       >
         <div className="flex items-start justify-between gap-3 px-6 py-5 border-b border-[color:var(--rule)]">
           <div>
-            <div className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+            <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
               Change plan
             </div>
             <h2
               id="changeplan-title"
-              className="mt-1 font-[family-name:var(--font-instrument-serif)] text-[26px] leading-[1.05] text-[color:var(--ink)]"
+              className="mt-1  text-[26px] leading-[1.05] text-[color:var(--ink)]"
             >
               Pick a <em className="italic text-[color:var(--forest)]">subscription</em>.
             </h2>
-            <p className="mt-1 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)]">
+            <p className="mt-1  italic text-[12.5px] text-[color:var(--ink-2)]">
               Subscriptions refill a monthly allowance. Top-ups stack on top.
             </p>
           </div>
@@ -185,10 +185,10 @@ export function ChangePlanModal() {
 
         <div className="px-6 pb-6 flex flex-col gap-4">
           <div className="border-l-2 border-[color:var(--rust)] pl-3 py-1">
-            <p className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--rust)]">
+            <p className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--rust)]">
               Placeholder
             </p>
-            <p className="mt-1 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)] leading-[1.5]">
+            <p className="mt-1  italic text-[12.5px] text-[color:var(--ink-2)] leading-[1.5]">
               Billing isn&rsquo;t wired yet. Subscribing sets your plan and refills the monthly
               allowance instantly. Stripe Checkout ships next.
             </p>

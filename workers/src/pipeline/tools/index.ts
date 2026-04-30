@@ -94,6 +94,8 @@ export async function executeTool(
 
 // ── Role-scoped tool subsets for Phase 14 fan-out ──────────────────────────
 
+// scrape_page excluded from dispatcher — Playwright JS rendering cost is
+// reserved for per-company subagents where per-page ROI is clear.
 const DISPATCHER_TOOL_NAMES = new Set([
   'read_document',
   'search_workspace_leads',
@@ -101,6 +103,7 @@ const DISPATCHER_TOOL_NAMES = new Set([
   'lookup_registry',
   'search_web',
   'fetch_url',
+  'run_code',
 ]);
 
 const SUBAGENT_TOOL_NAMES = new Set([
@@ -112,6 +115,7 @@ const SUBAGENT_TOOL_NAMES = new Set([
   'extract_names_from_urls',
   'permute_email',
   'verify_email',
+  'run_code',
   'score_lead',
   'write_lead',
 ]);

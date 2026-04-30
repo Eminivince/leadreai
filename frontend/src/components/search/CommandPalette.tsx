@@ -305,9 +305,9 @@ export function CommandPalette() {
             }}
             onKeyDown={onInputKey}
             placeholder="Search leads, dispatches, files, campaigns…"
-            className="flex-1 bg-transparent outline-none font-[family-name:var(--font-barlow)] text-[15px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
+            className="flex-1 bg-transparent outline-none  text-[15px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
           />
-          <kbd className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.14em] uppercase text-[color:var(--ink-3)] border border-[color:var(--rule)] bg-[color:var(--paper-3)] px-1.5 py-0.5 rounded-sm">
+          <kbd className="font-mono text-[9.5px] tracking-[0.14em] uppercase text-[color:var(--ink-3)] border border-[color:var(--rule)] bg-[color:var(--paper-3)] px-1.5 py-0.5 rounded-sm">
             esc
           </kbd>
         </div>
@@ -316,10 +316,10 @@ export function CommandPalette() {
         <div ref={listRef} className="flex-1 overflow-y-auto">
           {rows.length === 0 ? (
             <div className="px-5 py-12 text-center">
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
                 {isFetching ? 'Searching' : 'No matches'}
               </span>
-              <p className="mt-2 font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-2)]">
+              <p className="mt-2  italic text-[13px] text-[color:var(--ink-2)]">
                 {isFetching
                   ? 'Looking across the desk\u2026'
                   : query
@@ -331,7 +331,7 @@ export function CommandPalette() {
             <ul>
               {sections.map((sec) => (
                 <li key={sec.key}>
-                  <div className="px-5 pt-3 pb-1 font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+                  <div className="px-5 pt-3 pb-1 font-mono text-[9px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
                     {sec.label}
                   </div>
                   {sec.rows.map(({ row, idx }) => {
@@ -351,21 +351,21 @@ export function CommandPalette() {
                         {active && (
                           <span className="absolute left-0 top-2 bottom-2 w-[2px] bg-[color:var(--forest)]" />
                         )}
-                        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] shrink-0">
+                        <span className="font-mono text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] shrink-0">
                           {row.kicker}
                         </span>
                         <span className="min-w-0">
-                          <span className="block font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink)] truncate">
+                          <span className="block  text-[13.5px] text-[color:var(--ink)] truncate">
                             {row.title}
                           </span>
                           {row.sub && (
-                            <span className="block font-[family-name:var(--font-barlow)] italic text-[12px] text-[color:var(--ink-2)] truncate">
+                            <span className="block  italic text-[12px] text-[color:var(--ink-2)] truncate">
                               {row.sub}
                             </span>
                           )}
                         </span>
                         {active && (
-                          <kbd className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.14em] uppercase text-[color:var(--ink-2)] border border-[color:var(--rule)] bg-[color:var(--paper)] px-1.5 py-0.5 rounded-sm shrink-0">
+                          <kbd className="font-mono text-[9px] tracking-[0.14em] uppercase text-[color:var(--ink-2)] border border-[color:var(--rule)] bg-[color:var(--paper)] px-1.5 py-0.5 rounded-sm shrink-0">
                             enter
                           </kbd>
                         )}
@@ -380,10 +380,10 @@ export function CommandPalette() {
 
         {/* Footer hint */}
         <div className="px-5 py-2.5 border-t border-[color:var(--rule)] bg-[color:var(--paper-3)]/60 flex items-center justify-between gap-3">
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+          <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
             The wire
           </span>
-          <div className="flex items-center gap-3 font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
+          <div className="flex items-center gap-3 font-mono text-[9px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
             <span>
               <kbd className="border border-[color:var(--rule)] bg-[color:var(--paper)] px-1 py-0.5 rounded-sm mr-1">↑</kbd>
               <kbd className="border border-[color:var(--rule)] bg-[color:var(--paper)] px-1 py-0.5 rounded-sm">↓</kbd>{' '}

@@ -18,7 +18,7 @@ import type { ApiResponse, Workspace } from '@leadreai/shared';
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-2">
+    <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-2">
       {children}
     </span>
   );
@@ -90,7 +90,7 @@ export function WebhookPanel({ workspaceId }: { workspaceId: string }) {
   if (isLoading) {
     return (
       <div className="h-24 bg-[color:var(--paper-2)] border border-dashed border-[color:var(--rule)] rounded-sm flex items-center justify-center">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
+        <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
           Loading cable…
         </span>
       </div>
@@ -107,13 +107,13 @@ export function WebhookPanel({ workspaceId }: { workspaceId: string }) {
     >
       <div>
         <span
-          className={`font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.22em] uppercase ${
+          className={`font-mono text-[9.5px] tracking-[0.22em] uppercase ${
             connected ? 'text-[color:var(--forest)]' : 'text-[color:var(--ink-3)]'
           }`}
         >
           {connected ? 'On the wire' : 'Not filed'}
         </span>
-        <h3 className="mt-2 font-[family-name:var(--font-instrument-serif)] text-[22px] leading-[1.2] text-[color:var(--ink)]">
+        <h3 className="mt-2  text-[22px] leading-[1.2] text-[color:var(--ink)]">
           {connected ? (
             <>
               Cable dispatched to{' '}
@@ -125,7 +125,7 @@ export function WebhookPanel({ workspaceId }: { workspaceId: string }) {
             </>
           )}
         </h3>
-        <p className="mt-2 font-[family-name:var(--font-barlow)] text-[13.5px] leading-[1.55] text-[color:var(--ink-2)]">
+        <p className="mt-2  text-[13.5px] leading-[1.55] text-[color:var(--ink-2)]">
           We POST a small JSON payload to the URL below whenever a dispatch finishes. Use it to pipe
           events into Slack (via Incoming Webhooks), Zapier, or anywhere HTTP can reach.
         </p>
@@ -142,10 +142,10 @@ export function WebhookPanel({ workspaceId }: { workspaceId: string }) {
               setDirty(true);
               setUrl(e.target.value);
             }}
-            className="block w-full bg-transparent py-2 outline-none font-[family-name:var(--font-jetbrains-mono)] text-[13px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
+            className="block w-full bg-transparent py-2 outline-none font-mono text-[13px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
           />
         </div>
-        <p className="mt-2 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)]">
+        <p className="mt-2  italic text-[12.5px] text-[color:var(--ink-2)]">
           HMAC signing is not yet available. Gate your endpoint on a shared secret in the URL for now.
         </p>
       </div>
@@ -159,14 +159,14 @@ export function WebhookPanel({ workspaceId }: { workspaceId: string }) {
               key={ev.key}
               className="flex items-baseline gap-4 py-3 border-b border-[color:var(--rule)]/70"
             >
-              <span className="font-[family-name:var(--font-jetbrains-mono)] text-[11px] text-[color:var(--forest)] shrink-0 w-[130px]">
+              <span className="font-mono text-[11px] text-[color:var(--forest)] shrink-0 w-[130px]">
                 {ev.key}
               </span>
               <div className="min-w-0 flex-1">
-                <div className="font-[family-name:var(--font-barlow)] text-[13.5px] text-[color:var(--ink)]">
+                <div className=" text-[13.5px] text-[color:var(--ink)]">
                   {ev.label}
                 </div>
-                <div className="font-[family-name:var(--font-barlow)] italic text-[12px] text-[color:var(--ink-2)] mt-0.5">
+                <div className=" italic text-[12px] text-[color:var(--ink-2)] mt-0.5">
                   {ev.detail}
                 </div>
               </div>
@@ -178,7 +178,7 @@ export function WebhookPanel({ workspaceId }: { workspaceId: string }) {
       {/* Sample payload */}
       <div>
         <Label>Sample payload</Label>
-        <pre className="relative bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-sm p-4 overflow-x-auto font-[family-name:var(--font-jetbrains-mono)] text-[12px] leading-[1.5] text-[color:var(--ink)] whitespace-pre">
+        <pre className="relative bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-sm p-4 overflow-x-auto font-mono text-[12px] leading-[1.5] text-[color:var(--ink)] whitespace-pre">
           {SAMPLE_PAYLOAD}
         </pre>
       </div>
@@ -194,7 +194,7 @@ export function WebhookPanel({ workspaceId }: { workspaceId: string }) {
               saveMutation.mutate('');
             }}
             disabled={saveMutation.isPending}
-            className="font-[family-name:var(--font-barlow)] italic text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--warn)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--warn)] transition disabled:opacity-60"
+            className=" italic text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--warn)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--warn)] transition disabled:opacity-60"
           >
             Remove cable
           </button>
@@ -202,7 +202,7 @@ export function WebhookPanel({ workspaceId }: { workspaceId: string }) {
         <button
           type="submit"
           disabled={saveMutation.isPending || (!dirty && !!existingUrl)}
-          className="group ml-auto inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-3 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          className="group ml-auto inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-3 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {saveMutation.isPending ? 'Saving…' : connected ? 'Save cable' : 'File this cable'}
           <ArrowEast className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />

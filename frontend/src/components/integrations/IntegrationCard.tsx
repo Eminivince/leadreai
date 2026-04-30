@@ -40,7 +40,7 @@ function StatusChip({ status }: { status: CardStatus }) {
   const chip = map[status];
   return (
     <span
-      className={`inline-flex items-center font-[family-name:var(--font-jetbrains-mono)] text-[9.5px] tracking-[0.18em] uppercase px-2 py-0.5 border bg-[color:var(--paper-3)] ${chip.tone}`}
+      className={`inline-flex items-center font-mono text-[9.5px] tracking-[0.18em] uppercase px-2 py-0.5 border bg-[color:var(--paper-3)] ${chip.tone}`}
     >
       {chip.label}
     </span>
@@ -100,7 +100,7 @@ export function IntegrationCard({
           <StatusChip status={status} />
           {!isForthcoming && (
             <span
-              className={`font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase transition-opacity ${
+              className={`font-mono text-[10px] tracking-[0.18em] uppercase transition-opacity ${
                 isConnected
                   ? 'text-[color:var(--ink-3)] opacity-0 group-hover:opacity-100'
                   : 'text-[color:var(--ink-3)] opacity-0 group-hover:opacity-100'
@@ -112,10 +112,10 @@ export function IntegrationCard({
         </div>
 
         {/* Wordmark + tagline */}
-        <h3 className="font-[family-name:var(--font-instrument-serif)] text-[28px] leading-[1.05] tracking-[-0.01em] text-[color:var(--ink)]">
+        <h3 className=" text-[28px] leading-[1.05] tracking-[-0.01em] text-[color:var(--ink)]">
           {meta.name}
         </h3>
-        <p className="mt-1.5 font-[family-name:var(--font-barlow)] italic text-[13px] leading-[1.4] text-[color:var(--ink-2)]">
+        <p className="mt-1.5  italic text-[13px] leading-[1.4] text-[color:var(--ink-2)]">
           {meta.tagline}
         </p>
 
@@ -124,14 +124,14 @@ export function IntegrationCard({
           <div className="mt-5 pt-4 border-t border-dashed border-[color:var(--rule)] grid grid-cols-2 gap-x-4 gap-y-3">
             {metaEntries.map((entry) => (
               <div key={entry.label} className="min-w-0">
-                <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
+                <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
                   {entry.label}
                 </span>
                 <div
                   className={`mt-0.5 truncate text-[color:var(--ink)] ${
                     entry.mono
-                      ? 'font-[family-name:var(--font-jetbrains-mono)] text-[12px]'
-                      : 'font-[family-name:var(--font-barlow)] text-[13px]'
+                      ? 'font-mono text-[12px]'
+                      : ' text-[13px]'
                   }`}
                 >
                   {entry.value}
@@ -149,7 +149,7 @@ export function IntegrationCard({
             }`}
           >
             <span
-              className={`font-[family-name:var(--font-barlow)] text-[12.5px] font-medium ${
+              className={` text-[12.5px] font-medium ${
                 isConnected ? 'text-[color:var(--ink-2)]' : 'text-[color:var(--ink)]'
               }`}
             >
@@ -161,7 +161,7 @@ export function IntegrationCard({
 
         {isForthcoming && (
           <div className="mt-5 pt-4 border-t border-[color:var(--rule)]/50">
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+            <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
               — forthcoming
             </span>
           </div>

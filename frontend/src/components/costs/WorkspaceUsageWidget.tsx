@@ -72,13 +72,13 @@ export function WorkspaceUsageWidget({
       <div className="flex items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
           <span className="block w-8 h-px bg-[color:var(--ink)]" />
-          <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
             Ledger · last {windowDays} days
           </span>
         </div>
         <a
           href={`/api/v1/workspaces/${workspaceId}/usage/export`}
-          className="inline-flex items-center gap-1.5 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)] hover:text-[color:var(--forest)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--forest)] transition"
+          className="inline-flex items-center gap-1.5  italic text-[12.5px] text-[color:var(--ink-2)] hover:text-[color:var(--forest)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--forest)] transition"
         >
           Export CSV
         </a>
@@ -87,14 +87,14 @@ export function WorkspaceUsageWidget({
       <div className="bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-sm px-5 md:px-6 py-4 md:py-5">
         <div className="flex items-baseline justify-between gap-6 flex-wrap">
           <div>
-            <span className="font-[family-name:var(--font-jetbrains-mono)] text-[9px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block">
+            <span className="font-mono text-[9px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block">
               Spend
             </span>
-            <div className="mt-1 font-[family-name:var(--font-instrument-serif)] text-[40px] leading-none tabular-nums text-[color:var(--ink)]">
+            <div className="mt-1  text-[40px] leading-none tabular-nums text-[color:var(--ink)]">
               {fmtUsd(report.totalUSD)}
             </div>
             {topCategory && (
-              <p className="mt-2 font-[family-name:var(--font-barlow)] italic text-[12.5px] text-[color:var(--ink-2)]">
+              <p className="mt-2  italic text-[12.5px] text-[color:var(--ink-2)]">
                 Mostly {humanCategory(topCategory[0])} · {fmtUsd(topCategory[1])} (
                 {Math.round((topCategory[1] / report.totalUSD) * 100)}%)
               </p>
@@ -119,7 +119,7 @@ export function WorkspaceUsageWidget({
           )}
         </div>
 
-        <div className="mt-4 pt-4 border-t border-dashed border-[color:var(--rule)] flex items-center gap-6 flex-wrap font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
+        <div className="mt-4 pt-4 border-t border-dashed border-[color:var(--rule)] flex items-center gap-6 flex-wrap font-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
           <span>
             {report.eventCount.toLocaleString()} line item{report.eventCount === 1 ? '' : 's'}
           </span>
