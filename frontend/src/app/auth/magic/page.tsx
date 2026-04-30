@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { setAccessToken } from '@/lib/auth';
@@ -9,24 +9,13 @@ import type { ApiResponse, User } from '@leadreai/shared';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
-/* ─────────────────────────────────────────────────────────────────
- * Magic-link verify page.
- *
- * Lands here via the emailed link (?token=...). We POST the token
- * to /auth/magic-link/verify, which consumes it atomically and
- * either signs the user in or creates them + a starter workspace.
- * The response mirrors /auth/login: { accessToken, user } + a
- * refresh_token cookie, so the rest of the app is oblivious to
- * which auth path was used.
- * ───────────────────────────────────────────────────────────────── */
-
 interface VerifyResponse {
   accessToken: string;
   user: User;
   isNew: boolean;
 }
 
-export default function MagicLinkVerifyPage() {
+function MagicLinkVerifyContent() {
   const router = useRouter();
   const params = useSearchParams();
   const { setUser } = useAppStore();
@@ -75,45 +64,35 @@ export default function MagicLinkVerifyPage() {
   }, []);
 
   return (
-    <main className="min-h-screen w-full bg-[color:var(--paper)] text-[color:var(--ink)] flex items-center justify-center px-6">
+    <main className="min-h-screen w-full bg-white text-[#111827] flex items-center justify-center px-6">
       <div className="max-w-[440px] text-center">
-        <span className="font-[family-name:var(--font-jetbrains-mono)] text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
-          {state === 'working' ? 'Signing you in' : 'We hit a snag'}
+        <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[#6b7280]">
+          {state === 'working' ? 'Signing you in' : 'Something went wrong'}
         </span>
-        <h1 className="mt-3 font-[family-name:var(--font-instrument-serif)] text-[36px] leading-tight text-[color:var(--ink)]">
+        <h1 className="mt-3 font-extrabold text-[32px] tracking-[-0.03em] leading-tight text-[#111827]">
           {state === 'working' ? (
-            <>
-              Checking your <em className="italic text-[color:var(--forest)]">press pass</em>.
-            </>
+            <>Verifying your <span className="text-[#f59e0b]">magic link.</span></>
           ) : (
-            <>
-              That link didn&rsquo;t <em className="italic text-[color:var(--rust)]">work</em>.
-            </>
+            <>That link didn&rsquo;t <span className="text-[#dc2626]">work.</span></>
           )}
         </h1>
-        <p className="mt-3 font-[family-name:var(--font-barlow)] italic text-[13.5px] text-[color:var(--ink-2)] leading-[1.55]">
+        <p className="mt-3 text-[14px] text-[#6b7280] leading-relaxed">
           {state === 'working'
             ? 'One moment — trading your one-time token for a session.'
             : errorMessage || 'The link is invalid, expired, or already used.'}
         </p>
 
         {state === 'working' ? (
-          <div className="mt-6 flex justify-center gap-1.5" aria-hidden>
-            <span className="w-1.5 h-1.5 rounded-full bg-[color:var(--forest)] opacity-80 animate-pulse" />
-            <span
-              className="w-1.5 h-1.5 rounded-full bg-[color:var(--forest)] opacity-60 animate-pulse"
-              style={{ animationDelay: '150ms' }}
-            />
-            <span
-              className="w-1.5 h-1.5 rounded-full bg-[color:var(--forest)] opacity-40 animate-pulse"
-              style={{ animationDelay: '300ms' }}
-            />
+          <div className="mt-6 flex justify-center gap-1.5" aria-hidden="true">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b] opacity-80 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b] opacity-60 animate-pulse" style={{ animationDelay: '150ms' }} />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b] opacity-40 animate-pulse" style={{ animationDelay: '300ms' }} />
           </div>
         ) : (
           <div className="mt-8 flex items-center justify-center gap-3">
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full font-[family-name:var(--font-barlow)] text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors"
+              className="inline-flex items-center gap-2 bg-[#111827] text-white px-4 py-2.5 rounded-full text-[13px] font-semibold hover:bg-[#f59e0b] transition-colors"
             >
               Request a new link
             </Link>
@@ -121,5 +100,13 @@ export default function MagicLinkVerifyPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function MagicLinkVerifyPage() {
+  return (
+    <Suspense>
+      <MagicLinkVerifyContent />
+    </Suspense>
   );
 }

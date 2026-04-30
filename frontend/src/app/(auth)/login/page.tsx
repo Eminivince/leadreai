@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
@@ -10,12 +11,12 @@ import { AuthShell } from '@/components/auth/AuthShell';
 import type { ApiResponse, User } from '@leadreai/shared';
 
 const OAUTH_ERROR_MESSAGES: Record<string, string> = {
-  missing_code: 'Google didn\u2019t return a code. Please try again.',
+  missing_code: "Google didn’t return a code. Please try again.",
   state_mismatch: 'Sign-in session expired. Please try again.',
   token_exchange_failed: 'Google rejected the sign-in. Please try again.',
-  userinfo_failed: 'Couldn\u2019t read your Google profile. Please try again.',
+  userinfo_failed: "Couldn’t read your Google profile. Please try again.",
   missing_email: 'Your Google account has no primary email. Use email + password instead.',
-  user_create_failed: 'We couldn\u2019t create your account. Please try again.',
+  user_create_failed: "We couldn’t create your account. Please try again.",
   no_user: 'Sign-in failed. Please try again.',
   oauth_bootstrap_failed: 'Session bootstrap failed. Please sign in again.',
   access_denied: 'You cancelled the Google sign-in.',
@@ -26,7 +27,7 @@ interface LoginResponseData {
   user: User;
 }
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const params = useSearchParams();
   const { setUser } = useAppStore();
@@ -36,14 +37,12 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Surface any OAuth error that bounced back from the backend redirect.
   useEffect(() => {
     const err = params.get('error');
     if (!err) return;
     const msg = OAUTH_ERROR_MESSAGES[err] ?? 'Sign-in failed. Please try again.';
     setSubmitError(msg);
     toast.error(msg);
-    // Clear the query param so a manual reload doesn't re-trigger the toast.
     router.replace('/login');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -80,5 +79,13 @@ export default function LoginPage() {
       password={password}
       onPasswordChange={setPassword}
     />
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginPageContent />
+    </Suspense>
   );
 }
