@@ -8,6 +8,8 @@ import AltFooter from '@/components/marketing/AltFooter'
 import EmailGate from '@/components/marketing/EmailGate'
 import { altTokens } from '@/components/marketing/alt-tokens'
 
+const GATE_THRESHOLD = 3
+
 const CHIPS = [
   'Fintech CEOs · Lagos',
   'Law firms · Nairobi',
@@ -18,7 +20,7 @@ const CHIPS = [
 
 export default function AlthomePage() {
   const [query, setQuery] = useState('')
-  const showGate = query.length > 3
+  const showGate = query.length > GATE_THRESHOLD
 
   return (
     <main style={altTokens as CSSProperties}>
@@ -99,10 +101,14 @@ function HeroSection({
             }}
           />
           <button
+            disabled={query.length === 0}
             style={{
-              background: 'var(--alt-amber)', color: '#fff',
+              background: query.length > 0 ? 'var(--alt-amber)' : 'var(--alt-rule)',
+              color: query.length > 0 ? '#fff' : 'var(--alt-ink-4)',
               border: 'none', borderRadius: 7, padding: '8px 20px',
-              fontSize: 14, fontWeight: 700, cursor: 'pointer', flexShrink: 0,
+              fontSize: 14, fontWeight: 700,
+              cursor: query.length > 0 ? 'pointer' : 'not-allowed',
+              flexShrink: 0, transition: 'background 0.15s, color 0.15s',
             }}
             onClick={() => { if (!showGate) setQuery(query + ' ') }}
           >
@@ -112,7 +118,7 @@ function HeroSection({
 
         {/* Email gate — inline below search */}
         <AnimatePresence>
-          {showGate && <EmailGate query={query} />}
+          {showGate && <EmailGate key="email-gate" query={query} />}
         </AnimatePresence>
       </div>
 
