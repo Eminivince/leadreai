@@ -1,4 +1,6 @@
-export const altTokens: Record<string, string> = {
+import type { CSSProperties } from 'react'
+
+export const altTokens: CSSProperties & Record<string, string> = {
   '--alt-amber':        '#f59e0b',
   '--alt-amber-light':  '#fef3c7',
   '--alt-amber-border': '#fde68a',
