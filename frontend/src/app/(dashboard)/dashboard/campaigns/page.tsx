@@ -1596,7 +1596,7 @@ function LaunchedModal({
   onViewDetail,
   workspaceId,
   campaignId,
-  seq,
+  seq: _seq,
   schedule,
 }: {
   open: boolean;

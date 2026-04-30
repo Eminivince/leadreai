@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/api';
 import { getAccessToken } from '@/lib/auth';
 import { useWorkspace } from '@/hooks/useWorkspace';
-import type { ApiResponse, Notification } from '@leadreai/shared';
+import type { Notification } from '@leadreai/shared';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 

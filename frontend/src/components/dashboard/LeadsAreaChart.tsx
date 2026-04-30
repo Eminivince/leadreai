@@ -44,13 +44,13 @@ function buildChartData(jobs: ProspectingJob[]): DayBucket[] {
   return Object.entries(buckets).map(([date, leads]) => ({ date, leads }));
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-lg border border-border bg-card px-3 py-2 text-xs shadow-lg">
       <p className="font-medium text-foreground">{label}</p>
       <p className="text-muted-foreground mt-0.5">
-        <span className="text-foreground font-semibold">{payload[0].value}</span> leads
+        <span className="text-foreground font-semibold">{payload?.[0]?.value}</span> leads
       </p>
     </div>
   );

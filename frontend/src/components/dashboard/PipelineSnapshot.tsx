@@ -7,7 +7,7 @@ interface PipelineSnapshotProps {
   totalExports?: number;
 }
 
-export function PipelineSnapshot({ totalLeadsFound, totalExports }: PipelineSnapshotProps) {
+export function PipelineSnapshot({ totalLeadsFound, totalExports: _totalExports }: PipelineSnapshotProps) {
   const items = [
     {
       k: 'Qualified leads',

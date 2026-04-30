@@ -16,8 +16,6 @@ const TelescopeIcon = (p: { className?: string }) => <Svg {...p}><path d="M10.06
 const CheckIcon     = (p: { className?: string }) => <Svg {...p}><polyline points="20 6 9 17 4 12"/></Svg>;
 const ArrowRIcon    = (p: { className?: string }) => <Svg {...p}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></Svg>;
 const SendIcon      = (p: { className?: string }) => <Svg {...p}><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></Svg>;
-const AlertIcon     = (p: { className?: string }) => <Svg {...p}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></Svg>;
-const RefreshIcon   = (p: { className?: string }) => <Svg {...p}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></Svg>;
 
 /* ── Static data ─────────────────────────────────────────── */
 const EXAMPLES = [
@@ -362,7 +360,7 @@ export function NewQueryModal({ workspaceId, onSubmit }: NewQueryModalProps) {
   const [tone, setTone] = useState('direct');
   const [goal, setGoal] = useState('demo');
   const [schedule, setSchedule] = useState('once');
-  const [blocklist] = useState('existing-crm');
+  const [_blocklist] = useState('existing-crm');
   const taRef = useRef<HTMLTextAreaElement>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [jobResult, setJobResult] = useState<{ leadsFound: number; creditsUsed: number } | null>(null);

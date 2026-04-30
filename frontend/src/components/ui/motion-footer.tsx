@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ArrowRight, ArrowUp, Heart, LogIn, UserPlus } from 'lucide-react';
+import { ArrowRight, ArrowUp, LogIn, UserPlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 if (typeof window !== 'undefined') {
