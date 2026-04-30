@@ -6,79 +6,75 @@
 
 @layer base {
   :root {
-    /* ── Editorial broadsheet palette (light) ─────────────────
-     * Warm ivory paper + deep ink. The accent is deep forest
-     * green — used sparingly for active state and highlights. */
-    --paper:    #F2EADD;   /* primary background */
-    --paper-2:  #E9DFCB;   /* raised surface (toolbars, dividers) */
-    --paper-3:  #F7F1E5;   /* subtle panel tint (cards, hover) */
-    --ink:      #15130F;   /* primary text */
-    --ink-2:    #5A5346;   /* secondary / body */
-    --ink-3:    #8A8170;   /* tertiary / meta */
-    --rule:     #B5AB95;   /* hairline */
-    --forest:   #2D4634;   /* forest accent */
-    --forest-2: #4C6A54;
-    --rust:     #B84F2B;
-    --warn:     #A83828;
+    /* ── Modern SaaS palette (light) ──────────────────────────
+     * Clean white + amber accent. Replaces the broadsheet
+     * ivory/forest palette across dashboard and app shell. */
+    --paper:    #ffffff;   /* primary background */
+    --paper-2:  #f9fafb;   /* raised surface (toolbars, dividers) */
+    --paper-3:  #f3f4f6;   /* subtle panel tint (cards, hover) */
+    --ink:      #111827;   /* primary text */
+    --ink-2:    #374151;   /* secondary / body */
+    --ink-3:    #6b7280;   /* tertiary / meta */
+    --rule:     #e5e7eb;   /* hairline */
+    --forest:   #f59e0b;   /* amber accent (replaces forest green) */
+    --forest-2: #d97706;   /* amber-600 */
+    --rust:     #92400e;   /* amber-800 (high usage / warning tint) */
+    --warn:     #dc2626;   /* red — actual error / destructive */
 
-    /* Legacy shadcn tokens — kept so the few remaining shadcn
-     * components still theme correctly. Bound to the editorial
-     * palette above, not a separate gray scale. */
-    --background: 39 36% 91%;          /* ≈ paper */
-    --foreground: 40 10% 7%;           /* ≈ ink */
-    --card: 39 54% 94%;                /* ≈ paper-3 */
-    --card-foreground: 40 10% 7%;
-    --border: 41 16% 65%;              /* ≈ rule */
-    --input: 41 16% 65%;
-    --ring: 136 23% 23%;               /* ≈ forest */
-    --primary: 40 10% 7%;              /* ink */
-    --primary-foreground: 39 36% 91%;  /* paper */
-    --secondary: 41 32% 85%;           /* paper-2 */
-    --secondary-foreground: 40 10% 7%;
-    --muted: 41 32% 85%;
-    --muted-foreground: 35 13% 31%;    /* ink-2 */
-    --accent: 136 23% 23%;
-    --accent-foreground: 39 36% 91%;
-    --destructive: 5 60% 44%;          /* warn */
-    --destructive-foreground: 39 36% 91%;
+    /* Legacy shadcn tokens — rebound to new palette */
+    --background: 0 0% 100%;              /* white */
+    --foreground: 221 39% 11%;            /* --ink */
+    --card: 210 40% 98%;                  /* --paper-2 */
+    --card-foreground: 221 39% 11%;
+    --border: 214 32% 91%;                /* --rule */
+    --input: 214 32% 91%;
+    --ring: 38 92% 50%;                   /* --forest (amber) */
+    --primary: 221 39% 11%;               /* ink */
+    --primary-foreground: 0 0% 100%;      /* white */
+    --secondary: 210 40% 96%;             /* paper-2 */
+    --secondary-foreground: 221 39% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 220 9% 46%;       /* ink-3 */
+    --accent: 38 92% 50%;                 /* amber */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;             /* warn */
+    --destructive-foreground: 0 0% 100%;
     --radius: 0.75rem;
   }
 
   /* ── Dark mode ───────────────────────────────────────────────
-   * "Newsroom after hours" — warm charcoal, off-white ink,
-   * sage-lifted forest. Every hue preserves the ochre undertone
-   * rather than swinging blue; the editorial voice survives the
-   * flip. */
+   * Dark charcoal + amber accent. Clean modern SaaS night mode. */
   html.dark {
-    --paper:    #13110D;
-    --paper-2:  #1B1814;
-    --paper-3:  #1F1C17;
-    --ink:      #EFE7D6;
-    --ink-2:    #B0A693;
-    --ink-3:    #807763;
-    --rule:     #2E2A22;
-    --forest:   #7CA087;
-    --forest-2: #5E7F69;
-    --rust:     #D97854;
-    --warn:     #D04A3C;
+    --paper:    #111827;   /* gray-900 */
+    --paper-2:  #1f2937;   /* gray-800 */
+    --paper-3:  #374151;   /* gray-700 */
+    --ink:      #f9fafb;   /* gray-50 */
+    --ink-2:    #d1d5db;   /* gray-300 */
+    --ink-3:    #9ca3af;   /* gray-400 */
+    --rule:     #374151;   /* gray-700 */
+    --forest:   #fbbf24;   /* amber-400 (lighter for dark bg) */
+    --forest-2: #f59e0b;   /* amber-500 */
+    --rust:     #fde68a;   /* amber-200 (warning tint on dark) */
+    --warn:     #f87171;   /* red-400 */
 
-    --background: 40 15% 6%;
-    --foreground: 40 30% 89%;
-    --card: 40 15% 10%;
-    --card-foreground: 40 30% 89%;
-    --border: 40 14% 16%;
-    --input: 40 14% 16%;
-    --ring: 136 15% 56%;
-    --primary: 40 30% 89%;
-    --primary-foreground: 40 15% 6%;
-    --secondary: 40 14% 10%;
-    --secondary-foreground: 40 30% 89%;
-    --muted: 40 14% 12%;
-    --muted-foreground: 40 12% 63%;
-    --accent: 136 15% 56%;
-    --accent-foreground: 40 15% 6%;
-    --destructive: 8 62% 52%;
-    --destructive-foreground: 40 30% 89%;
+    --background: 221 39% 11%;
+    --foreground: 210 40% 98%;
+    --card: 215 28% 17%;
+    --card-foreground: 210 40% 98%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 38 92% 50%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 221 39% 11%;
+    --secondary: 215 28% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 215 28% 17%;
+    --muted-foreground: 218 11% 65%;
+    --accent: 38 79% 56%;
+    --accent-foreground: 221 39% 11%;
+    --destructive: 0 63% 70%;
+    --destructive-foreground: 221 39% 11%;
+    --radius: 0.75rem;
   }
 
   * {
