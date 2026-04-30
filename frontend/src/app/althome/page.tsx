@@ -112,6 +112,7 @@ export default function AlthomePage() {
       <ResultsDemoSection query={query} />
       <TestimonialsSection />
       <PricingSection />
+      <FinalCTASection query={query} setQuery={setQuery} showGate={showGate} />
       <AltFooter />
     </main>
   )
@@ -471,6 +472,82 @@ function TestimonialsSection() {
             </div>
           </div>
         ))}
+      </div>
+    </section>
+  )
+}
+
+function FinalCTASection({
+  query,
+  setQuery,
+  showGate,
+}: {
+  query: string
+  setQuery: (v: string) => void
+  showGate: boolean
+}) {
+  return (
+    <section
+      style={{
+        background: 'var(--alt-amber-light)',
+        borderTop: '1px solid var(--alt-amber-border)',
+        padding: '80px 24px',
+        textAlign: 'center',
+      }}
+    >
+      <h2 style={{
+        fontSize: 'clamp(28px, 3.5vw, 44px)', fontWeight: 800,
+        letterSpacing: '-0.04em', color: 'var(--alt-ink)',
+        lineHeight: 1.15, maxWidth: 600, margin: '0 auto 12px',
+      }}>
+        Start finding your next customer today.
+      </h2>
+      <p style={{
+        fontSize: 16, color: 'var(--alt-amber-dark)', maxWidth: 380,
+        margin: '0 auto 32px', lineHeight: 1.5,
+      }}>
+        Free to start. No credit card. No sales call.
+      </p>
+
+      {/* Search bar — same treatment as hero */}
+      <div style={{ maxWidth: 540, margin: '0 auto' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          background: '#fff', border: '2px solid var(--alt-amber-border)',
+          borderRadius: 10, padding: '10px 10px 10px 16px',
+          boxShadow: query.length > 0 ? '0 0 0 4px #f59e0b18' : 'none',
+          transition: 'box-shadow 0.2s',
+        }}>
+          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} style={{ color: 'var(--alt-ink-4)', flexShrink: 0 }}>
+            <circle cx={11} cy={11} r={8} /><path d="m21 21-4.35-4.35" />
+          </svg>
+          <input
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Describe who you're looking for…"
+            style={{
+              flex: 1, border: 'none', outline: 'none',
+              fontSize: 15, color: 'var(--alt-ink)', background: 'transparent',
+            }}
+          />
+          <button
+            disabled={query.length === 0}
+            style={{
+              background: query.length > 0 ? 'var(--alt-amber)' : 'var(--alt-rule)',
+              color: query.length > 0 ? '#fff' : 'var(--alt-ink-4)',
+              border: 'none', borderRadius: 7, padding: '8px 20px',
+              fontSize: 14, fontWeight: 700,
+              cursor: query.length > 0 ? 'pointer' : 'not-allowed',
+              flexShrink: 0, transition: 'background 0.15s, color 0.15s',
+            }}
+          >
+            Search
+          </button>
+        </div>
+        <AnimatePresence>
+          {showGate && <EmailGate key="final-email-gate" query={query} />}
+        </AnimatePresence>
       </div>
     </section>
   )
