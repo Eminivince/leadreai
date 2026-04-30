@@ -27,7 +27,7 @@ export default function EmailGate({ query }: { query: string }) {
       transition={{ duration: 0.2 }}
       className="w-full bg-[color:var(--alt-amber-light)] border border-[color:var(--alt-amber-border)] rounded-xl p-3.5 flex flex-wrap items-center gap-3"
     >
-      <span className="text-lg shrink-0" aria-hidden>🔒</span>
+      <span className="text-lg shrink-0" aria-hidden={true}>🔒</span>
       <div className="flex-1 min-w-[160px]">
         <p className="text-[13px] font-semibold text-[color:var(--alt-ink)] leading-snug">
           Enter your work email to run this search

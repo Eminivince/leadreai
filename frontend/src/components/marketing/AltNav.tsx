@@ -13,7 +13,7 @@ export default function AltNav() {
           <div className="hidden md:flex items-center gap-6">
             <a href="#how" className="text-[13px] text-[color:var(--alt-ink-3)] hover:text-[color:var(--alt-ink)] transition-colors">How it works</a>
             <a href="#pricing" className="text-[13px] text-[color:var(--alt-ink-3)] hover:text-[color:var(--alt-ink)] transition-colors">Pricing</a>
-            <div className="w-px h-4 bg-[color:var(--alt-rule)]" aria-hidden />
+            <div className="w-px h-4 bg-[color:var(--alt-rule)]" aria-hidden={true} />
           </div>
           <Link href="/login" className="hidden md:inline text-[13px] text-[color:var(--alt-ink-2)] hover:text-[color:var(--alt-ink)] transition-colors">
             Sign in

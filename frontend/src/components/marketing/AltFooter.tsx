@@ -1,4 +1,10 @@
-const FOOTER_LINKS = ['How it works', 'Pricing', 'Docs', 'Privacy', 'Terms'] as const;
+const FOOTER_LINKS: Array<{ label: string; href: string }> = [
+  { label: 'How it works', href: '#how' },
+  { label: 'Pricing',      href: '#pricing' },
+  { label: 'Docs',         href: '/docs' },
+  { label: 'Privacy',      href: '#' },
+  { label: 'Terms',        href: '#' },
+];
 
 export default function AltFooter() {
   return (
@@ -11,8 +17,8 @@ export default function AltFooter() {
         </div>
         <nav className="flex flex-wrap gap-5" aria-label="Footer">
           {FOOTER_LINKS.map(link => (
-            <a key={link} href="#" className="text-[12px] text-white/40 hover:text-white/70 transition-colors">
-              {link}
+            <a key={link.label} href={link.href} className="text-[12px] text-white/40 hover:text-white/70 transition-colors">
+              {link.label}
             </a>
           ))}
         </nav>
