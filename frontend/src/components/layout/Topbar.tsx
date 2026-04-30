@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/store/useAppStore';
 import { useTheme } from '@/hooks/useTheme';
@@ -28,11 +29,12 @@ function routeBreadcrumb(pathname: string): { page: string } {
 }
 
 function formatDateline(d: Date = new Date()): string {
-  const weekday = d.toLocaleDateString('en-US', { weekday: 'long' });
-  const month = d.toLocaleDateString('en-US', { month: 'long' });
-  const day = d.getDate();
-  const year = d.getFullYear();
-  return `${weekday}, ${month} ${day}, ${year}`;
+  return d.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
 function greeting(): string {
@@ -43,14 +45,14 @@ function greeting(): string {
 }
 
 const SearchGlyph = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" className={className}>
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
     <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.6" />
     <path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
   </svg>
 );
 
 const SunGlyph = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" className={className}>
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
     <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5" />
     <path
       d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
@@ -62,7 +64,7 @@ const SunGlyph = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
 );
 
 const MoonGlyph = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" className={className}>
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
     <path
       d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"
       stroke="currentColor"
@@ -74,7 +76,7 @@ const MoonGlyph = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
 );
 
 const SystemGlyph = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" className={className}>
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
     <rect x="3" y="4" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="1.5" />
     <path d="M8 21h8M12 17v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
   </svg>
@@ -86,6 +88,19 @@ export function Topbar() {
   const { preference, toggle } = useTheme();
   const { page } = routeBreadcrumb(pathname);
   const firstName = user?.firstName ?? '';
+
+  const [dateline, setDateline] = React.useState(() => formatDateline());
+
+  React.useEffect(() => {
+    const msToMidnight = () => {
+      const now = new Date();
+      const midnight = new Date(now);
+      midnight.setHours(24, 0, 0, 0);
+      return midnight.getTime() - now.getTime();
+    };
+    const id = setTimeout(() => setDateline(formatDateline()), msToMidnight());
+    return () => clearTimeout(id);
+  }, [dateline]);
 
   const themeLabel =
     preference === 'light'
@@ -106,16 +121,16 @@ export function Topbar() {
       {/* Middle: dateline */}
       <div className="ml-auto hidden md:flex items-center gap-3">
         <span className="text-[13px] text-[color:var(--ink-3)]">
-          {formatDateline()}
+          {dateline}
         </span>
       </div>
 
       {/* Right: glyph actions */}
       <div className="flex items-center gap-1">
         <button
-          onClick={openSearch}
+          onClick={() => openSearch?.()}
           title="Search (⌘K)"
-          aria-label="Search"
+          aria-label="Search (Command K)"
           className="h-8 w-8 flex items-center justify-center text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
         >
           <SearchGlyph />
