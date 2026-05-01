@@ -278,7 +278,7 @@ function CheckRow({
         />
         {checked && (
           <svg className="absolute top-0 left-0 w-4 h-4 p-[2px]" viewBox="0 0 16 16" fill="none" aria-hidden>
-            <path d="m3 8 3.5 3.5L13 5" stroke="#F2EADD" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="m3 8 3.5 3.5L13 5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}
       </span>
@@ -1213,7 +1213,7 @@ function StepEditor({
               />
               {step.useAI && (
                 <svg className="absolute top-0 left-0 w-4 h-4 p-[2px]" viewBox="0 0 16 16" fill="none" aria-hidden>
-                  <path d="m3 8 3.5 3.5L13 5" stroke="#F2EADD" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="m3 8 3.5 3.5L13 5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               )}
             </span>
@@ -1519,7 +1519,7 @@ function Summary({
     <aside className="sticky top-24 bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-sm p-6 flex flex-col gap-5">
       <div>
         <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
-          Campaign masthead
+          Campaign details
         </span>
         <h3 className="mt-2  text-[26px] leading-[1.1] text-[color:var(--ink)]">
           {name || <span className="italic text-[color:var(--ink-3)]">Untitled</span>}

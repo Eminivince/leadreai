@@ -33,20 +33,6 @@ function truncateUrl(u: string, max = 42): string {
   return u.slice(0, max - 1) + '…';
 }
 
-function ArrowEast({ className = 'w-3 h-3' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" className={className}>
-      <path
-        d="M2 8h12M10 4l4 4-4 4"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 /* ── Section header ─────────────────────────────────────────── */
 function SectionHead({
   kicker,
@@ -226,7 +212,7 @@ export default function IntegrationsPage() {
           </Link>
           <span className="font-mono text-[10px] text-[color:var(--ink-3)]">/</span>
           <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
-            The Wire
+            Activity Feed
           </span>
         </div>
         <div className="flex items-end justify-between gap-6 flex-wrap">
@@ -297,12 +283,6 @@ export default function IntegrationsPage() {
           </Link>
           {' '}if one of them is blocking you.
         </p>
-        <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
-          Vol I · Issue 07 · The Wire
-          <span className="inline-flex items-baseline gap-1 ml-2">
-            <ArrowEast className="w-2.5 h-2.5 relative top-[1px]" />
-          </span>
-        </span>
       </div>
 
       {/* Drawer */}

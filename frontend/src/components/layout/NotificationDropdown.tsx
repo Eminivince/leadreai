@@ -108,7 +108,7 @@ export function NotificationDropdown() {
           <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[color:var(--rule)]">
             <div>
               <div className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
-                The wire
+                Activity
               </div>
               <div className=" italic text-[18px] leading-tight text-[color:var(--ink)]">
                 Dispatches in.
@@ -131,7 +131,7 @@ export function NotificationDropdown() {
                   Quiet
                 </span>
                 <p className="mt-2  italic text-[13px] text-[color:var(--ink-2)]">
-                  Nothing on the wire yet.
+                  Nothing yet.
                 </p>
               </div>
             ) : (

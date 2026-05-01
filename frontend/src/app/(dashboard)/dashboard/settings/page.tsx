@@ -30,7 +30,7 @@ const ENTRIES: Array<{ href: string; number: string; label: string; description:
     href: '/dashboard/settings/account',
     number: '01',
     label: 'Account',
-    description: 'Your byline — name shown on dispatches and outreach drafts. Password and session controls.',
+    description: 'Your profile — name shown on dispatches and outreach drafts. Password and session controls.',
   },
   {
     href: '/dashboard/settings/workspace',
@@ -109,7 +109,7 @@ export default function SettingsIndexPage() {
           href="/dashboard/integrations"
           className="text-[color:var(--ink)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]"
         >
-          The Wire
+          Activity Feed
         </Link>
         .
       </p>

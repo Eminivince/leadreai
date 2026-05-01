@@ -50,7 +50,7 @@ export default function TeamSettingsPage() {
   if (isLoading || !ws) {
     return (
       <div className="py-8  italic text-[14px] text-[color:var(--ink-2)]">
-        Loading masthead…
+        Loading team…
       </div>
     );
   }
@@ -60,13 +60,13 @@ export default function TeamSettingsPage() {
 
   return (
     <div className="flex flex-col gap-14">
-      {/* Masthead */}
+      {/* Team */}
       <section className="border-t border-[color:var(--rule)] pt-8">
         <SectionHead
           n="01"
           title={
             <>
-              Masthead{' '}
+              Team{' '}
               <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] not-italic ml-3">
                 {members.length} {members.length === 1 ? 'seat' : 'seats'}
               </span>

@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
  * ───────────────────────────────────────────────────────────────── */
 
 const SECTIONS: Array<{ href: string; label: string; lede: string; live: boolean }> = [
-  { href: '/dashboard/settings/account',         label: 'Account',          lede: 'Your byline, password, and session.',                          live: true  },
+  { href: '/dashboard/settings/account',         label: 'Account',          lede: 'Your profile, password, and session.',                          live: true  },
   { href: '/dashboard/settings/workspace',       label: 'Workspace',        lede: 'The desk name, defaults, and preferences.',                    live: true  },
   { href: '/dashboard/settings/team',            label: 'Team',             lede: 'Members, roles, and invitations.',                             live: true  },
   { href: '/dashboard/settings/knowledge-base',  label: 'Knowledge base',   lede: 'House style — what the agent should know about your company.', live: true  },

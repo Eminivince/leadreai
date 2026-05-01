@@ -45,7 +45,7 @@ export default function AccountSettingsPage() {
     onSuccess: (u) => {
       setUser(u);
       setDirty(false);
-      toast.success('Byline saved.');
+      toast.success('Profile saved.');
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to save.'),
   });
@@ -72,7 +72,7 @@ export default function AccountSettingsPage() {
         }}
       >
         <section className="border-t border-[color:var(--rule)] pt-8">
-          <SectionHead n="01" title="Your byline" />
+          <SectionHead n="01" title="Your profile" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:pl-[54px]">
             <div>
               <Label>First name</Label>
@@ -103,7 +103,7 @@ export default function AccountSettingsPage() {
             </div>
             <div className="md:col-span-2 flex items-center justify-end pt-2">
               <PrimaryButton type="submit" disabled={saveMutation.isPending || !dirty}>
-                {saveMutation.isPending ? 'Saving…' : 'Save byline'}
+                {saveMutation.isPending ? 'Saving…' : 'Save profile'}
               </PrimaryButton>
             </div>
           </div>
