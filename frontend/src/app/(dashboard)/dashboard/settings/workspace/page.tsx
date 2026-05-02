@@ -168,7 +168,7 @@ export default function WorkspaceSettingsPage() {
               </span>
             </div>
             <p className="mt-2  italic text-[12px] text-[color:var(--ink-2)]">
-              Slugs are immutable today. Rename the desk above; the slug stays for URL stability.
+              Slugs are immutable today. Rename the workspace above; the slug stays for URL stability.
             </p>
           </div>
           <div className="md:col-span-2">
@@ -191,8 +191,8 @@ export default function WorkspaceSettingsPage() {
           <ToggleRow
             checked={notifyOnJobComplete}
             onChange={(v) => { setDirty(true); setNotifyOnJobComplete(v); }}
-            label="Notify when a dispatch completes"
-            sub="We&rsquo;ll fire the outbound webhook and surface the dossier in your inbox."
+            label="Notify when a search completes"
+            sub="We&rsquo;ll fire the outbound webhook and surface the results in your inbox."
           />
           <ToggleRow
             checked={cheapMode}
@@ -207,7 +207,7 @@ export default function WorkspaceSettingsPage() {
                 Default export format
               </div>
               <div className="mt-1  italic text-[12.5px] text-[color:var(--ink-2)]">
-                Controls the default format of the Export CSV button across leads and dossiers.
+                Controls the default format of the Export CSV button across leads and results.
               </div>
             </div>
             <div className="w-[160px]">
@@ -234,7 +234,7 @@ export default function WorkspaceSettingsPage() {
         <SectionHead n="03" title="Danger zone" />
         <div className="md:pl-[54px]">
           <ForthcomingPanel title="Archive or delete this desk.">
-            Archiving hides the workspace and stops all running dispatches. Deletion is permanent.
+            Archiving hides the workspace and stops all running searches. Deletion is permanent.
             Both operations are forthcoming — contact us today if you need either.
           </ForthcomingPanel>
         </div>

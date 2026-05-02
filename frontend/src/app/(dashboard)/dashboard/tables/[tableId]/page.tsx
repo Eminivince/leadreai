@@ -177,7 +177,7 @@ export default function TableDetailPage() {
             onClick={() => setSeedOpen(true)}
             className="inline-flex items-center gap-2 border border-[color:var(--rule)] bg-[color:var(--paper-3)] text-[color:var(--ink)] hover:border-[color:var(--ink)] px-4 py-2 rounded-full  text-[13px] transition"
           >
-            Seed from dispatch
+            Seed from search
           </button>
           <button
             onClick={() => setAddRowOpen(true)}
@@ -268,7 +268,7 @@ export default function TableDetailPage() {
             Empty worksheet.
           </p>
           <p className="mt-2  text-[13.5px] text-[color:var(--ink-2)] max-w-[420px] mx-auto">
-            Seed from a completed dispatch, or add rows manually.
+            Seed from a completed search, or add rows manually.
           </p>
         </div>
       ) : (
@@ -1651,9 +1651,9 @@ function SeedFromJobDialog({
 
   if (incompatible) {
     return (
-      <Dialog onClose={onClose} title="Seed from dispatch">
+      <Dialog onClose={onClose} title="Seed from search">
         <p className=" text-[14px] text-[color:var(--ink-2)]">
-          Seeding from dispatches works for <span className="text-[color:var(--ink)]">company</span>-type tables in v1.
+          Seeding from searches works for <span className="text-[color:var(--ink)]">company</span>-type tables in v1.
           This table is <span className="text-[color:var(--ink)]">{table.rowType}</span>.
         </p>
         <DialogFooter>
@@ -1669,14 +1669,14 @@ function SeedFromJobDialog({
   }
 
   return (
-    <Dialog onClose={onClose} title="Seed from dispatch">
+    <Dialog onClose={onClose} title="Seed from search">
       <p className=" text-[13.5px] leading-[1.55] text-[color:var(--ink-2)] mb-5">
-        Pick a completed dispatch and we&rsquo;ll append its leads as rows. Standard fields (company name, domain, email, phone, top contact) auto-map onto matching columns.
+        Pick a completed search and we&rsquo;ll append its leads as rows. Standard fields (company name, domain, email, phone, top contact) auto-map onto matching columns.
       </p>
 
       {jobs.length === 0 ? (
         <p className=" italic text-[13px] text-[color:var(--ink-3)]">
-          No completed dispatches yet.
+          No completed searches yet.
         </p>
       ) : (
         <div className="border-t border-[color:var(--rule)] max-h-[50vh] overflow-y-auto">

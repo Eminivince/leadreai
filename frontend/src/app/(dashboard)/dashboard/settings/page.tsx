@@ -30,13 +30,13 @@ const ENTRIES: Array<{ href: string; number: string; label: string; description:
     href: '/dashboard/settings/account',
     number: '01',
     label: 'Account',
-    description: 'Your profile — name shown on dispatches and outreach drafts. Password and session controls.',
+    description: 'Your profile — name shown on searches and outreach drafts. Password and session controls.',
   },
   {
     href: '/dashboard/settings/workspace',
     number: '02',
     label: 'Workspace',
-    description: 'Rename the desk. Toggle defaults: notification on complete, export format, thrift mode for quick cheap runs.',
+    description: 'Rename the workspace. Toggle defaults: notification on complete, export format, thrift mode for quick cheap runs.',
   },
   {
     href: '/dashboard/settings/team',

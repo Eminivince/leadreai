@@ -228,7 +228,7 @@ export default function BillingSettingsPage() {
             />
           </div>
           <p className="mt-5  italic text-[12.5px] text-[color:var(--ink-2)] max-w-[620px]">
-            A dispatch draws from the monthly allowance first; top-ups cover overage. Payments
+            A search draws from the monthly allowance first; top-ups cover overage. Payments
             aren&rsquo;t wired yet — the Top up and Change plan buttons credit your account
             instantly for testing the ledger.
           </p>
@@ -262,7 +262,7 @@ export default function BillingSettingsPage() {
                 No transactions yet.
               </h4>
               <p className="mt-1  italic text-[13px] text-[color:var(--ink-2)]">
-                Run a dispatch, top up, or subscribe — all leave a row here.
+                Run a search, top up, or subscribe — all leave a row here.
               </p>
             </div>
           ) : (
@@ -324,7 +324,7 @@ export default function BillingSettingsPage() {
         <SectionHead n="04" title="Usage" />
         <div className="md:pl-[54px]">
           <ForthcomingPanel title="Workspace usage metrics.">
-            Dispatches run, leads filed, exports shipped, and credits consumed per workspace — all
+            Searches run, leads collected, exports shipped, and credits consumed per workspace — all
             tracked server-side but not yet wired to an API. We&rsquo;ll surface a full dashboard on
             this page and on the upcoming Analytics section.
           </ForthcomingPanel>

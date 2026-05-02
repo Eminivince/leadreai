@@ -80,7 +80,7 @@ export default function TablesIndexPage() {
             No tables yet.
           </p>
           <p className="mt-2  text-[13.5px] text-[color:var(--ink-2)] max-w-[420px] mx-auto">
-            Start one from a completed dispatch or create an empty table for manual data entry.
+            Start one from a completed search or create an empty table for manual data entry.
           </p>
           <button
             onClick={() => setDialogOpen(true)}

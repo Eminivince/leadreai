@@ -110,7 +110,7 @@ export default function SuppressionSettingsPage() {
         <SectionHead n="01" title="Add to the blocklist" />
         <div className="md:pl-[54px]">
           <p className=" text-[14px] leading-[1.55] text-[color:var(--ink-2)] max-w-[620px] mb-6">
-            Entries here are honored by every dispatch — the engine will skip any lead whose email
+            Entries here are honored by every search — the engine will skip any lead whose email
             matches, and any lead whose domain matches. Use it for competitors, test accounts, and
             anyone who has asked to be left alone.
           </p>

@@ -109,7 +109,7 @@ function WorkflowCard({ workflow }: { workflow: Workflow }) {
         </span>
         {hasSeed && (
           <span
-            title="This workflow seeds a new table via an agent dispatch"
+            title="This workflow seeds a new table via an agent search"
             className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--forest)]"
           >
             ● seeded

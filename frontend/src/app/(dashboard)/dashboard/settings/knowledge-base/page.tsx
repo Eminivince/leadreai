@@ -100,7 +100,7 @@ export default function KnowledgeBaseSettingsPage() {
         body: JSON.stringify(payload),
       }),
     onSuccess: () => {
-      toast.success('Entry filed.');
+      toast.success('Entry saved.');
       qc.invalidateQueries({ queryKey: ['knowledge-base', workspaceId] });
       closeDialog();
     },
