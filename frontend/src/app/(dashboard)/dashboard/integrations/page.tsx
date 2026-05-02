@@ -100,7 +100,7 @@ export default function IntegrationsPage() {
   useEffect(() => {
     const crm = searchParams.get('crm');
     if (crm === 'connected') {
-      toast.success('HubSpot connected — welcome to the wire.');
+      toast.success('HubSpot connected — Connected successfully.');
       setOpenId('hubspot');
       router.replace('/dashboard/integrations');
     } else if (crm === 'error') {
@@ -128,7 +128,7 @@ export default function IntegrationsPage() {
             meta: [
               { label: 'Portal', value: hubspotStatus.portalId ?? '—', mono: true },
               {
-                label: 'Last dispatched',
+                label: 'Last synced',
                 value: hubspotStatus.lastSyncAt
                   ? new Date(hubspotStatus.lastSyncAt).toLocaleDateString('en-US', {
                       month: 'short',
@@ -208,7 +208,7 @@ export default function IntegrationsPage() {
             href="/dashboard"
             className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
           >
-            Dispatches
+            Dashboard
           </Link>
           <span className="font-mono text-[10px] text-[color:var(--ink-3)]">/</span>
           <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
@@ -218,17 +218,17 @@ export default function IntegrationsPage() {
         <div className="flex items-end justify-between gap-6 flex-wrap">
           <div className="max-w-[720px]">
             <h1 className=" text-[48px] md:text-[72px] leading-[0.94] tracking-[-0.015em] text-[color:var(--ink)]">
-              The <em className="italic text-[color:var(--forest)]">Wire</em>.
+              Integrations
             </h1>
             <p className="mt-5  text-[16px] md:text-[18px] leading-[1.5] text-[color:var(--ink-2)]">
-              Every desk LeadreAI speaks to — your CRM, your sender, your webhook. Three are filed;
+              Every tool LeadreAI connects to — your CRM, your sender, your webhook. Three are connected;
               the rest are on the docket. Connect anything; honesty about everything.
             </p>
           </div>
           <div className="flex items-baseline gap-8 pt-2">
             <div>
               <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
-                On the wire
+                Connected
               </span>
               <div className="mt-1  text-[40px] leading-none tabular-nums text-[color:var(--ink)]">
                 {liveConnected}

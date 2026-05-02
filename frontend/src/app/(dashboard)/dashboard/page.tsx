@@ -121,7 +121,7 @@ function Compose({
       <div className="flex items-center gap-3 mb-7">
         <span className="block w-8 h-px bg-[color:var(--ink)]" />
         <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
-          Compose a dispatch
+          Create a search
         </span>
       </div>
 
@@ -152,14 +152,14 @@ function Compose({
                 ? 'Min. 10 characters'
                 : value.length < 10
                   ? `${10 - value.length} more characters`
-                  : `${value.length} characters · ⌘↵ to file`}
+                  : `${value.length} characters · ⌘↵ to run`}
             </span>
             <button
               onClick={() => void handleSubmit()}
               disabled={isSubmitting || value.trim().length < 10}
               className="group inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Filing\u2026' : 'File dispatch'}
+              {isSubmitting ? 'Running\u2026' : 'Run search'}
               <ArrowEast className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
             </button>
           </div>
@@ -245,7 +245,7 @@ function ClarifyLoadingPanel({ query, startedAt }: { query: string; startedAt: n
   // promising "almost done" indefinitely.
   const phases = runningLong
     ? [
-        'Still verifying — this brief needs extra reasoning.',
+        'Still verifying — this search needs extra reasoning.',
         'Cross-checking policy and intent.',
         'Refining the clarifying questions.',
       ]
@@ -278,7 +278,7 @@ function ClarifyLoadingPanel({ query, startedAt }: { query: string; startedAt: n
 
       <div className="bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-sm px-6 md:px-8 py-7 md:py-8">
         <h3 className=" text-[28px] md:text-[34px] leading-[1.05] text-[color:var(--ink)]">
-          Verifying your <em className="italic text-[color:var(--forest)]">brief</em>…
+          Verifying your <em className="italic text-[color:var(--forest)]">search</em>…
         </h3>
         {query && (
           <p className="mt-3  italic text-[14.5px] text-[color:var(--ink-2)] line-clamp-2">
@@ -346,7 +346,7 @@ function ClarificationPanel({
       <div className="flex items-center gap-3 mb-6">
         <span className="block w-8 h-px bg-[color:var(--forest)]" />
         <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
-          Before we dispatch — a few clarifying questions
+          Before we search — a few clarifying questions
         </span>
       </div>
 
@@ -392,7 +392,7 @@ function ClarificationPanel({
           disabled={!requiredAnswered || isSubmitting}
           title={
             !requiredAnswered ? 'Answer the required questions first'
-              : isSubmitting ? 'Filing the dispatch…'
+              : isSubmitting ? 'Running the search…'
               : undefined
           }
           className="group inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -999,11 +999,11 @@ function ActiveDispatch({ job }: { job: ProspectingJob }) {
         <div className="flex items-center gap-3">
           <span className="block w-8 h-px bg-[color:var(--forest)]" />
           <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
-            Active dispatch
+            Active search
           </span>
         </div>
         <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
-          Dossier №.&nbsp;{dossierId}
+          Search №.&nbsp;{dossierId}
         </span>
       </div>
 
@@ -1118,7 +1118,7 @@ function ActiveDispatch({ job }: { job: ProspectingJob }) {
               href={`/dashboard/leads?jobId=${job._id}`}
               className="inline-flex items-center gap-1.5  text-[13px] text-[color:var(--ink)] hover:text-[color:var(--forest)] underline underline-offset-[5px] decoration-[color:var(--rule)] hover:decoration-[color:var(--forest)] transition"
             >
-              Read the full dossier
+              View all leads
               <ArrowEast className="w-3 h-3" />
             </Link>
           </div>
@@ -1144,7 +1144,7 @@ function RecentDispatches({ jobs }: { jobs: ProspectingJob[] }) {
       <div className="flex items-center gap-3 mb-5">
         <span className="block w-8 h-px bg-[color:var(--ink)]" />
         <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
-          Previous dispatches
+          Past searches
         </span>
       </div>
 
@@ -1183,15 +1183,15 @@ function EmptyState() {
     <section className="py-4">
       <div className="border border-dashed border-[color:var(--rule)] rounded-sm p-8 md:p-10 bg-[color:var(--paper-3)]/60">
         <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
-          First issue
+          Get started
         </span>
         <h3 className="mt-3  text-[26px] md:text-[30px] leading-[1.1] tracking-[-0.01em] text-[color:var(--ink)]">
-          Your desk is empty. <em className="italic text-[color:var(--forest)]">File your first dispatch</em> above.
+          Ready when you are. <em className="italic text-[color:var(--forest)]">Run your first search</em> above.
         </h3>
         <p className="mt-3  text-[14.5px] leading-[1.55] text-[color:var(--ink-2)] max-w-[600px]">
-          A dispatch is one query. Describe who you&rsquo;re looking for in a
-          sentence. The desk will return a list with footnotes on every field.
-          Three dispatches are on the house.
+          A search is one query. Describe who you&rsquo;re looking for in a
+          sentence. The dashboard will return a list with footnotes on every field.
+          Three searches are free.
         </p>
       </div>
     </section>
@@ -1268,7 +1268,7 @@ export default function DashboardPage() {
       await queryClient.invalidateQueries({ queryKey: ['workspace-stats', workspaceId] });
       return res.data._id;
     } catch (err) {
-      throw err instanceof Error ? err : new Error('Could not file that dispatch. Try again.');
+      throw err instanceof Error ? err : new Error('Could not run that search. Try again.');
     }
   }
 
@@ -1379,7 +1379,7 @@ export default function DashboardPage() {
       setInitialPrompt(undefined);
       setPhase('idle');
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Could not file that dispatch. Try again.');
+      setSubmitError(err instanceof Error ? err.message : 'Could not run that search. Try again.');
       setPhase('answering');
     }
   }

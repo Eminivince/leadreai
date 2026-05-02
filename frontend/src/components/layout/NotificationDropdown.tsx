@@ -111,7 +111,7 @@ export function NotificationDropdown() {
                 Activity
               </div>
               <div className=" italic text-[18px] leading-tight text-[color:var(--ink)]">
-                Dispatches in.
+                Updates.
               </div>
             </div>
             {unread > 0 && (
@@ -199,7 +199,7 @@ export function NotificationDropdown() {
               onClick={() => setOpen(false)}
               className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition"
             >
-              Back to the desk →
+              Back to dashboard →
             </Link>
           </div>
         </div>

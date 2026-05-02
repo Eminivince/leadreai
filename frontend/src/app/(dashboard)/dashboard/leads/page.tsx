@@ -172,11 +172,11 @@ function DossierHeader({ job }: { job: ProspectingJob }) {
           href="/dashboard"
           className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
         >
-          Dispatches
+          Searches
         </Link>
         <span className="font-mono text-[10px] text-[color:var(--ink-3)]">/</span>
         <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
-          Dossier №.&nbsp;{job._id.slice(-4).toUpperCase()}
+          Search №.&nbsp;{job._id.slice(-4).toUpperCase()}
         </span>
       </div>
 
@@ -781,16 +781,16 @@ export default function LeadsPage() {
           <div className="flex items-center gap-3 mb-5">
             <span className="block w-8 h-px bg-[color:var(--ink)]" />
             <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
-              The archive
+              All leads
             </span>
           </div>
           <div className="flex items-end justify-between gap-6 flex-wrap">
             <div className="max-w-[720px]">
               <h1 className=" text-[44px] md:text-[60px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
-                Every lead the desk <em className="italic text-[color:var(--forest)]">has filed</em>.
+                All leads <em className="italic text-[color:var(--forest)]">you&apos;ve collected</em>.
               </h1>
               <p className="mt-4  text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
-                {isLoading ? 'Loading\u2026' : `${total} leads across all dispatches.`}
+                {isLoading ? 'Loading\u2026' : `${total} leads across all searches.`}
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -901,7 +901,7 @@ export default function LeadsPage() {
                               {f.name}
                             </span>
                             <span className="block font-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
-                              {f.source === 'job' ? 'From dispatch' : 'Curated'} · {f.leadCount}
+                              {f.source === 'job' ? 'From search' : 'Curated'} · {f.leadCount}
                             </span>
                           </span>
                         </button>
@@ -989,7 +989,7 @@ export default function LeadsPage() {
                 <tr>
                   <td colSpan={7 + schema.length} className="py-16 text-center">
                     <span className=" italic text-[14px] text-[color:var(--ink-2)]">
-                      Loading the dossier\u2026
+                      Loading leads\u2026
                     </span>
                   </td>
                 </tr>

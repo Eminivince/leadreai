@@ -131,7 +131,7 @@ export default function TeamSettingsPage() {
       <section className="border-t border-[color:var(--rule)] pt-8">
         <SectionHead n="02" title="Invitations" />
         <div className="md:pl-[54px]">
-          <ForthcomingPanel title="Add a correspondent to this desk.">
+          <ForthcomingPanel title="Invite a team member.">
             Invitations, role changes, and seat removal are coming in a later release. For now we
             seat the workspace owner automatically. Reach out if you need a colleague added today
             and we&rsquo;ll provision them by hand.

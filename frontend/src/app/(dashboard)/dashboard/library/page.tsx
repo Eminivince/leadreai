@@ -243,11 +243,11 @@ export default function LibraryPage() {
         <div className="flex items-end justify-between gap-6 flex-wrap">
           <div className="max-w-[780px]">
             <h1 className=" text-[44px] md:text-[60px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
-              Your <em className="italic text-[color:var(--forest)]">source material</em>.
+              Your documents.
             </h1>
             <p className="mt-4  text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
               Drop in pitch decks, portfolio lists, ICP notes, case studies — anything that should inform a
-              dispatch. We parse, chunk, and index each file so the agent can quote them back to you while
+              search. We parse, chunk, and index each file so the agent can quote them back to you while
               researching.
             </p>
           </div>
@@ -263,7 +263,7 @@ export default function LibraryPage() {
               href="/dashboard"
               className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors"
             >
-              Back to the desk <ArrowEast className="w-3 h-3" />
+              Back to dashboard <ArrowEast className="w-3 h-3" />
             </Link>
           </div>
         </div>
@@ -330,10 +330,10 @@ export default function LibraryPage() {
       ) : docs.length === 0 ? (
         <div className="py-20 text-center">
           <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
-            Empty shelf
+            No documents
           </span>
           <h3 className="mt-3  text-[28px] text-[color:var(--ink)]">
-            Nothing filed yet.
+            No documents yet.
           </h3>
           <p className="mt-2  italic text-[14px] text-[color:var(--ink-2)]">
             Drop a pitch deck, portfolio list, or ICP doc above and the agent will start citing it.
