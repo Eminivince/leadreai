@@ -66,7 +66,7 @@ export default function WorkflowsIndexPage() {
             No workflows yet.
           </p>
           <p className="mt-2  text-[13.5px] text-[color:var(--ink-2)] max-w-[480px] mx-auto">
-            Shape a table the way you want it — columns, enrichments, a seed dispatch — then hit <span className="text-[color:var(--ink)]">Save as workflow</span> on the table detail page.
+            Shape a table the way you want it — columns, enrichments, a seed search — then hit <span className="text-[color:var(--ink)]">Save as workflow</span> on the table detail page.
           </p>
           <Link
             href="/dashboard/tables"

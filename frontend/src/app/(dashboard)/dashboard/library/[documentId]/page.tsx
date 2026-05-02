@@ -383,7 +383,7 @@ export default function LibraryDocumentDetailPage() {
               )}`}
               className="inline-flex items-center gap-2  italic text-[13px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]"
             >
-              Use in a dispatch <ArrowEast className="w-2.5 h-2.5" />
+              Use in a search <ArrowEast className="w-2.5 h-2.5" />
             </Link>
           </div>
 
@@ -538,11 +538,11 @@ function AnalysisPanel({
       {empty && (
         <div className="border border-dashed border-[color:var(--rule)] bg-[color:var(--paper-3)]/60 rounded-sm p-6 md:p-8">
           <h3 className=" text-[24px] md:text-[28px] leading-[1.15] text-[color:var(--ink)]">
-            Let the AI read <em className="italic text-[color:var(--forest)]">{displayTitle}</em> and propose dispatches.
+            Let the AI read <em className="italic text-[color:var(--forest)]">{displayTitle}</em> and propose searches.
           </h3>
           <p className="mt-2  italic text-[13.5px] text-[color:var(--ink-2)] max-w-[640px] leading-[1.55]">
             You&rsquo;ll see what it classifies this as, the entities it picked up, and 3 distinct
-            prompt cards you can file with one click. Cached — analyzing once is free forever.
+            prompt cards you can run with one click. Cached — analyzing once is free forever.
           </p>
           <div className="mt-5">
             <PrimaryButton

@@ -1796,7 +1796,7 @@ function SaveAsWorkflowDialog({
   return (
     <Dialog onClose={onClose} title="Save as workflow">
       <p className=" text-[13.5px] leading-[1.55] text-[color:var(--ink-2)] mb-5">
-        Captures this table&rsquo;s columns and definitions as a reusable template. Running the workflow later creates a fresh table with the same shape — and, if you capture the seed query below, dispatches an agent job to populate it.
+        Captures this table&rsquo;s columns and definitions as a reusable template. Running the workflow later creates a fresh table with the same shape — and, if you capture the seed query below, runs an agent search to populate it.
       </p>
 
       <div className="flex flex-col gap-5">
@@ -1823,11 +1823,11 @@ function SaveAsWorkflowDialog({
             className="accent-[color:var(--forest)] mt-0.5"
           />
           <span>
-            Capture this table&rsquo;s dispatch query as the workflow seed
+            Capture this table&rsquo;s search query as the workflow seed
             <span className="block  italic text-[11.5px] text-[color:var(--ink-3)] mt-0.5">
               {canIncludeSeed
                 ? 'You can add {{placeholders}} to the query after saving.'
-                : 'This table was not seeded from a dispatch — no seed query to capture.'}
+                : 'This table was not seeded from a search — no seed query to capture.'}
             </span>
           </span>
         </label>
