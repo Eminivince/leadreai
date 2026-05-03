@@ -465,9 +465,9 @@ function LeadDrawer({
               </div>
               <StatusChip status={lead.qualificationStatus ?? 'pending'} />
             </div>
-            {lead.qualificationReason && (
+            {(lead.agentReasoning || lead.qualificationReason) && (
               <p className="text-[12.5px] text-[color:var(--ink-2)] leading-relaxed">
-                {lead.qualificationReason}
+                {lead.agentReasoning || lead.qualificationReason}
               </p>
             )}
           </div>

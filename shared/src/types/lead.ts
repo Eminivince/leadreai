@@ -108,6 +108,9 @@ export interface Lead {
   qualificationStatus: QualificationStatus;
   qualificationScore?: number;
   qualificationReason?: string;
+  /** Research agent's commit-time rationale — "why I'm emitting this lead".
+   *  Written by writeLead.ts from the agent's `reasoning` argument. */
+  agentReasoning?: string;
   tags: string[];
   notes?: string;
   contactIds?: string[];
