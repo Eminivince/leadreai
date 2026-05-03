@@ -452,17 +452,24 @@ function LeadDrawer({
           )}
 
           {/* Score + scoring signal */}
-          <div className="pt-5 border-t border-[color:var(--rule)] flex items-center justify-between gap-3">
-            <div className="flex flex-col">
-              <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
-                AI score
-              </span>
-              <span className="mt-1  text-[32px] leading-none tabular-nums text-[color:var(--ink)]">
-                {Math.round(score * 100)}
-                <span className="font-mono text-[11px] text-[color:var(--ink-3)] ml-1">/100</span>
-              </span>
+          <div className="pt-5 border-t border-[color:var(--rule)] flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col">
+                <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+                  AI score
+                </span>
+                <span className="mt-1 text-[32px] leading-none tabular-nums text-[color:var(--ink)]">
+                  {Math.round(score * 100)}
+                  <span className="font-mono text-[11px] text-[color:var(--ink-3)] ml-1">/100</span>
+                </span>
+              </div>
+              <StatusChip status={lead.qualificationStatus ?? 'pending'} />
             </div>
-            <StatusChip status={lead.qualificationStatus ?? 'pending'} />
+            {lead.qualificationReason && (
+              <p className="text-[12.5px] text-[color:var(--ink-2)] leading-relaxed">
+                {lead.qualificationReason}
+              </p>
+            )}
           </div>
 
           {/* Esc hint */}
