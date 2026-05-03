@@ -163,6 +163,21 @@ export function LeadDetailDrawer({ lead, onClose }: LeadDetailDrawerProps) {
                 <div className="text-xs text-muted-foreground mt-0.5">Completeness</div>
               </div>
             </div>
+            {typeof lead.qualificationScore === 'number' && (
+              <div className="rounded-lg bg-secondary/50 p-3">
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className="text-2xl font-bold text-foreground">
+                    {Math.round(lead.qualificationScore * 100)}%
+                  </span>
+                  <span className="text-xs text-muted-foreground">AI Score</span>
+                </div>
+                {lead.qualificationReason && (
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {lead.qualificationReason}
+                  </p>
+                )}
+              </div>
+            )}
           </section>
 
           {/* Sources */}
@@ -216,12 +231,11 @@ export function LeadDetailDrawer({ lead, onClose }: LeadDetailDrawerProps) {
  */
 function LeadJustification({ lead }: { lead: Lead }) {
   const hasAgent = Boolean(lead.agentReasoning && lead.agentReasoning.trim());
-  const hasQual = Boolean(lead.qualificationReason && lead.qualificationReason.trim());
   const topSources = (lead.sources ?? []).slice(0, 3);
 
   // Placeholder — still visually anchors the section, doesn't leave
   // the drawer feeling like it's missing something.
-  if (!hasAgent && !hasQual) {
+  if (!hasAgent) {
     return (
       <section className="rounded-lg border border-dashed border-border bg-secondary/30 p-4">
         <div className="flex items-center gap-2 mb-1">
@@ -239,43 +253,17 @@ function LeadJustification({ lead }: { lead: Lead }) {
 
   return (
     <section className="rounded-lg border border-border bg-secondary/40 p-4 space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Sparkles size={13} className="text-foreground" />
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Why this lead
-          </h3>
-        </div>
-        {typeof lead.qualificationScore === 'number' && (
-          <span
-            className="text-[10px] font-mono tabular-nums text-muted-foreground"
-            title="Grader confidence (0–1)"
-          >
-            {Math.round(lead.qualificationScore * 100)}%
-          </span>
-        )}
+      <div className="flex items-center gap-2">
+        <Sparkles size={13} className="text-foreground" />
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Why this lead
+        </h3>
       </div>
 
       {hasAgent && (
-        <div>
-          <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-1">
-            Research agent
-          </div>
-          <p className="text-sm text-foreground leading-relaxed">
-            {lead.agentReasoning}
-          </p>
-        </div>
-      )}
-
-      {hasQual && (
-        <div>
-          <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-1">
-            Qualifier
-          </div>
-          <p className="text-sm text-foreground leading-relaxed">
-            {lead.qualificationReason}
-          </p>
-        </div>
+        <p className="text-sm text-foreground leading-relaxed">
+          {lead.agentReasoning}
+        </p>
       )}
 
       {topSources.length > 0 && (
