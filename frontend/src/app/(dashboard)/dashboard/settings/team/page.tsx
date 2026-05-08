@@ -101,7 +101,7 @@ export default function TeamSettingsPage() {
           <div className="text-[12.5px] text-[color:var(--ink-3)] truncate">{subtitle}</div>
          </div>
          <span
-          className={`inline-flex items-center text-[11px] font-semibold px-2.5 py-1 rounded-full border ${badge.cls}`}
+          className={`inline-flex items-center text-[11px] font-semibold px-2.5 py-1 rounded-md border ${badge.cls}`}
          >
           {badge.label}
          </span>

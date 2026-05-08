@@ -150,19 +150,19 @@ export default function KnowledgeBaseSettingsPage() {
 
   return (
     <div className="flex flex-col gap-14">
-      <section className="border-t border-[color:var(--rule)] pt-8">
+      <section>
         <SectionHead
           n="01"
           title={
             <>
               House style{' '}
-              <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] not-italic ml-3">
+              <span className="font-mono text-[10px] tracking-[0.06em] text-[color:var(--ink-3)] not-italic ml-3">
                 {entries.length} / {MAX_ENTRIES}
               </span>
             </>
           }
         />
-        <div className="md:pl-[54px]">
+        <div className="">
           <div className="flex items-center justify-between mb-5">
             <p className=" text-[14px] leading-[1.5] text-[color:var(--ink-2)] max-w-[560px]">
               Entries teach the agent what to say, how to say it, and who you sell to. The engine
@@ -174,17 +174,17 @@ export default function KnowledgeBaseSettingsPage() {
           </div>
 
           {isLoading ? (
-            <div className="py-12 text-center  italic text-[14px] text-[color:var(--ink-2)]">
+            <div className="py-12 text-center  text-[14px] text-[color:var(--ink-2)]">
               Loading entries…
             </div>
           ) : entries.length === 0 ? (
-            <div className="border border-dashed border-[color:var(--rule)] bg-[color:var(--paper-3)]/60 rounded-sm py-12 text-center">
-              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
-                No entries
-              </span>
-              <h4 className="mt-2  text-[20px] text-[color:var(--ink)]">
-                Start with <em className="italic text-[color:var(--forest)]">About the company</em>.
+            <div className="border border-[color:var(--rule)] bg-[color:var(--paper-2)]/40 rounded-xl p-10 md:p-12 text-center">
+              <h4 className="text-[15px] font-semibold text-[color:var(--ink)]">
+                No entries yet
               </h4>
+              <p className="mt-1.5 text-[13px] text-[color:var(--ink-2)] max-w-[420px] mx-auto leading-[1.55]">
+                Start with an <span className="font-medium text-[color:var(--ink)]">About the company</span> entry — the agent will quote it when drafting outreach.
+              </p>
             </div>
           ) : (
             <ol className="border-t border-[color:var(--rule)]">
@@ -198,7 +198,7 @@ export default function KnowledgeBaseSettingsPage() {
                       <h4 className=" text-[18px] leading-tight text-[color:var(--ink)]">
                         {entry.title}
                       </h4>
-                      <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] border border-[color:var(--rule)] px-2 py-0.5 bg-[color:var(--paper-3)]">
+                      <span className="font-mono text-[9.5px] tracking-[0.06em] text-[color:var(--ink-2)] border border-[color:var(--rule)] px-2 py-0.5 bg-[color:var(--paper-3)]">
                         {TYPE_LABELS[entry.type] ?? entry.type}
                       </span>
                     </div>
@@ -257,7 +257,7 @@ export default function KnowledgeBaseSettingsPage() {
               style={{ animation: 'kbSlide .26s cubic-bezier(.2,.9,.25,1) both' }}
             >
               <div className="flex items-center justify-between px-7 pt-7 pb-4 border-b border-[color:var(--rule)]">
-                <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
+                <span className="font-mono text-[10px] tracking-[0.06em] text-[color:var(--ink-3)]">
                   {editing ? 'Edit entry' : 'New entry'}
                 </span>
                 <button
@@ -269,10 +269,13 @@ export default function KnowledgeBaseSettingsPage() {
                 </button>
               </div>
 
-              <div className="px-7 pt-6 pb-5 border-b border-[color:var(--rule)]">
-                <h2 className=" text-[32px] leading-[1.05] text-[color:var(--ink)]">
-                  {editing ? editing.title : 'Teach the agent something new.'}
+              <div className="px-7 pt-5 pb-4 border-b border-[color:var(--rule)]">
+                <h2 className="text-[18px] font-semibold tracking-[-0.005em] text-[color:var(--ink)]">
+                  {editing ? editing.title : 'Add a knowledge entry'}
                 </h2>
+                <p className="mt-1 text-[12.5px] text-[color:var(--ink-3)]">
+                  Anything the agent should remember about your company or how you write.
+                </p>
               </div>
 
               <div className="px-7 py-7 flex flex-col gap-6">

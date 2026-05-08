@@ -52,7 +52,7 @@ export default function AccountSettingsPage() {
 
   if (!user) {
     return (
-      <div className="py-8  italic text-[14px] text-[color:var(--ink-2)]">
+      <div className="py-8  text-[14px] text-[color:var(--ink-2)]">
         Loading account…
       </div>
     );
@@ -71,9 +71,9 @@ export default function AccountSettingsPage() {
           });
         }}
       >
-        <section className="border-t border-[color:var(--rule)] pt-8">
+        <section>
           <SectionHead n="01" title="Your profile" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:pl-[54px]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 ">
             <div>
               <Label>First name</Label>
               <HairlineInput
@@ -111,9 +111,9 @@ export default function AccountSettingsPage() {
       </form>
 
       {/* Contact (read-only) */}
-      <section className="border-t border-[color:var(--rule)] pt-8">
+      <section>
         <SectionHead n="02" title="Contact" />
-        <div className="md:pl-[54px] grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className=" grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <Label>Email</Label>
             <div className="flex items-baseline gap-3 border-b border-[color:var(--rule)] py-2">
@@ -121,16 +121,16 @@ export default function AccountSettingsPage() {
                 {user.email}
               </span>
               {user.isEmailVerified ? (
-                <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--forest)]">
+                <span className="font-mono text-[9.5px] tracking-[0.06em] text-[color:var(--forest)]">
                   Verified
                 </span>
               ) : (
-                <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+                <span className="font-mono text-[9.5px] tracking-[0.06em] text-[color:var(--ink-3)]">
                   Unverified
                 </span>
               )}
             </div>
-            <p className="mt-2  italic text-[12px] text-[color:var(--ink-2)]">
+            <p className="mt-2  text-[12px] text-[color:var(--ink-2)]">
               Email changes are forthcoming. Reach out if you need one moved today.
             </p>
           </div>
@@ -144,9 +144,9 @@ export default function AccountSettingsPage() {
       </section>
 
       {/* Security */}
-      <section className="border-t border-[color:var(--rule)] pt-8">
+      <section>
         <SectionHead n="03" title="Security" />
-        <div className="md:pl-[54px]">
+        <div className="">
           <ForthcomingPanel title="Password change and two-factor authentication.">
             For now, auth uses your initial credentials. If you need a password reset,
             sign out and use the forgotten-password flow on the sign-in page.

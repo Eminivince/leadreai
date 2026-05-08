@@ -106,9 +106,9 @@ export default function SuppressionSettingsPage() {
   return (
     <div className="flex flex-col gap-14">
       {/* Add */}
-      <section className="border-t border-[color:var(--rule)] pt-8">
+      <section>
         <SectionHead n="01" title="Add to the blocklist" />
-        <div className="md:pl-[54px]">
+        <div className="">
           <p className=" text-[14px] leading-[1.55] text-[color:var(--ink-2)] max-w-[620px] mb-6">
             Entries here are honored by every search — the engine will skip any lead whose email
             matches, and any lead whose domain matches. Use it for competitors, test accounts, and
@@ -162,26 +162,26 @@ export default function SuppressionSettingsPage() {
       </section>
 
       {/* List */}
-      <section className="border-t border-[color:var(--rule)] pt-8">
+      <section>
         <SectionHead
           n="02"
           title={
             <>
               Blocklist{' '}
-              <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] not-italic ml-3">
+              <span className="font-mono text-[10px] tracking-[0.06em] text-[color:var(--ink-3)] not-italic ml-3">
                 {entries.length}
               </span>
             </>
           }
         />
-        <div className="md:pl-[54px]">
+        <div className="">
           {isLoading ? (
-            <div className="py-12 text-center  italic text-[14px] text-[color:var(--ink-2)]">
+            <div className="py-12 text-center  text-[14px] text-[color:var(--ink-2)]">
               Loading blocklist…
             </div>
           ) : entries.length === 0 ? (
-            <div className="border border-dashed border-[color:var(--rule)] bg-[color:var(--paper-3)]/60 rounded-sm py-12 text-center">
-              <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+            <div className="border border-dashed border-[color:var(--rule)] bg-[color:var(--paper-3)]/60 rounded-md py-12 text-center">
+              <span className="font-mono text-[10px] tracking-[0.06em] text-[color:var(--ink-3)]">
                 Empty
               </span>
               <h4 className="mt-2  text-[20px] text-[color:var(--ink)]">
@@ -198,7 +198,7 @@ export default function SuppressionSettingsPage() {
                   <span className="font-mono text-[13px] text-[color:var(--ink)] truncate">
                     {entry.email ?? entry.domain ?? '—'}
                   </span>
-                  <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] border border-[color:var(--rule)] bg-[color:var(--paper-3)] px-2 py-0.5 justify-self-start">
+                  <span className="font-mono text-[9.5px] tracking-[0.06em] text-[color:var(--ink-2)] border border-[color:var(--rule)] bg-[color:var(--paper-3)] px-2 py-0.5 justify-self-start">
                     {REASON_LABELS[entry.reason]}
                   </span>
                   <span className="font-mono text-[10px] text-[color:var(--ink-3)]">

@@ -2,20 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { PageHelp } from '@/components/ui/PageHelp';
 
 /* ─────────────────────────────────────────────────────────────────
- * Settings shell — header + left-sidebar nav + content slot.
+ * Settings shell — header + left sidebar nav + content slot.
  *
  * Each sub-route renders its own content; the layout provides:
- *  - a page header bar (title + breadcrumb)
- *  - a left sidebar with all settings sections
- *  - the content frame (right)
+ *  - the page header (title + lede)
+ *  - a left-sidebar nav listing every settings section
+ *  - the content frame on the right
  *
- * Active state is driven by the current pathname. Mobile collapses
- * the sidebar into a horizontal scrollable chip list.
+ * Active state is driven by pathname. Mobile collapses the sidebar
+ * into a horizontal scrollable segmented list.
  * ───────────────────────────────────────────────────────────────── */
 
 const SECTIONS: Array<{ href: string; label: string; lede: string; helpBody: string; helpTips?: string[] }> = [
@@ -90,72 +89,52 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
  const active = SECTIONS.find((s) => pathname === s.href || pathname.startsWith(s.href + '/'));
 
  return (
-  <motion.div
-   initial={{ opacity: 0, y: 10 }}
-   animate={{ opacity: 1, y: 0 }}
-   transition={{ duration: 0.28 }}
-  >
-   {/* Settings header */}
-   <div className="bg-[color:var(--paper)] border-b border-[color:var(--rule)] px-8 py-6">
-    <div className="max-w-4xl mx-auto flex items-start justify-between gap-4">
-     <div>
-      <h1 className="text-[24px] font-bold tracking-tight text-[color:var(--ink)]">Settings</h1>
-      <p className="text-[13.5px] text-[color:var(--ink-3)] mt-0.5">
-       {isIndex
-        ? 'Manage your workspace, team, integrations, and billing.'
-        : (active?.lede ?? 'Manage your workspace.')}
-      </p>
-     </div>
-     {active && (
-      <PageHelp
-       title={active.label}
-       body={active.helpBody}
-       tips={active.helpTips}
-      />
-     )}
-     {isIndex && (
-      <PageHelp
-       title="Settings"
-       body="Central settings hub. Navigate to account, billing, team, email, and workspace configuration. Integrations (HubSpot, webhooks, email) are on the Integrations page."
-       tips={[
-        'Changes to workspace settings affect all members.',
-        'API keys and billing are per-workspace, not per-user.',
-       ]}
-      />
-     )}
+  <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10 animate-fade-up">
+   {/* Inline header — same pattern as Dashboard / Leads / Tables */}
+   <section className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+    <div>
+     <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)]">
+      {isIndex ? 'Settings' : (active?.label ?? 'Settings')}
+     </h1>
+     <p className="mt-0.5 text-[12.5px] text-[color:var(--ink-3)]">
+      {isIndex
+       ? 'Manage your workspace, team, integrations, and billing.'
+       : (active?.lede ?? 'Manage your workspace.')}
+     </p>
     </div>
-   </div>
+    {active && (
+     <PageHelp
+      title={active.label}
+      body={active.helpBody}
+      tips={active.helpTips}
+     />
+    )}
+    {isIndex && (
+     <PageHelp
+      title="Settings"
+      body="Central settings hub. Navigate to account, billing, team, email, and workspace configuration. Integrations and Context (uploaded documents) live here too."
+      tips={[
+       'Changes to workspace settings affect all members.',
+       'API keys and billing are per-workspace, not per-user.',
+      ]}
+     />
+    )}
+   </section>
 
    {/* Body: sidebar + content */}
-   <div className="max-w-4xl mx-auto px-8 py-6 flex gap-6">
+   <div className="flex gap-6 md:gap-8">
 
-    {/* Left sidebar nav */}
-    <nav className="w-48 shrink-0">
-     {/* Mobile: horizontal scroll */}
-     <div className="lg:hidden -mx-2 px-2 overflow-x-auto mb-4">
-      <div className="flex items-center gap-2 pb-3 min-w-max">
-       {SECTIONS.map((s) => {
-        const isActive = active?.href === s.href;
-        return (
-         <Link
-          key={s.href}
-          href={s.href}
-          className={cn(
-           'inline-flex items-center px-3 py-1.5 rounded-full border text-[12px] font-medium transition-colors whitespace-nowrap',
-           isActive
-            ? 'bg-[color:var(--forest)] text-white border-[color:var(--forest)]'
-            : 'border-[color:var(--rule)] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]',
-          )}
-         >
-          {s.label}
-         </Link>
-        );
-       })}
-      </div>
-     </div>
+    {/* Mobile horizontal nav (only sub-pages, not the index) */}
+    {!isIndex && (
+     <nav className="lg:hidden -mx-2 px-2 overflow-x-auto mb-4 absolute left-0 right-0 top-0 hidden">
+      {/* placeholder — mobile gets the full-width segmented bar
+          rendered just below the header outside this layout flex */}
+     </nav>
+    )}
 
-     {/* Desktop: vertical list */}
-     <ul className="hidden lg:flex flex-col gap-0.5">
+    {/* Desktop vertical nav */}
+    <nav className="w-52 shrink-0 hidden lg:block">
+     <ul className="flex flex-col gap-0.5">
       {SECTIONS.map((s) => {
        const isActive = active?.href === s.href;
        return (
@@ -163,16 +142,13 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
          <Link
           href={s.href}
           className={cn(
-           'flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors',
+           'flex items-center gap-2 px-3 h-8 rounded-md text-[12.5px] transition-colors',
            isActive
-            ? 'bg-[color:var(--forest)]/10 text-[color:var(--forest)]'
-            : 'text-[color:var(--ink-2)] hover:bg-[color:var(--paper-3)] hover:text-[color:var(--ink)]',
+            ? 'bg-[color:var(--ink)] text-[color:var(--paper)] font-medium'
+            : 'text-[color:var(--ink-2)] hover:text-[color:var(--ink)] hover:bg-[color:var(--paper-2)]',
           )}
          >
-          {isActive && (
-           <span className="w-1 h-1 rounded-full bg-[color:var(--forest)] shrink-0" />
-          )}
-          <span className={isActive ? '' : 'ml-3'}>{s.label}</span>
+          {s.label}
          </Link>
         </li>
        );
@@ -180,9 +156,37 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
      </ul>
     </nav>
 
-    {/* Main content */}
-    <div className="flex-1 min-w-0">{children}</div>
+    {/* Main content — mobile gets a horizontal nav strip above */}
+    <div className="flex-1 min-w-0">
+     {/* Mobile-only horizontal scrollable nav. We render it here
+         (inside the content column) so it appears above the
+         active sub-page's content on small screens. */}
+     <nav className="lg:hidden -mx-2 mb-4 overflow-x-auto">
+      <ul className="flex items-center gap-1 px-2 pb-1 min-w-max">
+       {SECTIONS.map((s) => {
+        const isActive = active?.href === s.href;
+        return (
+         <li key={s.href} className="shrink-0">
+          <Link
+           href={s.href}
+           className={cn(
+            'inline-flex items-center h-7 px-3 rounded-md text-[12px] transition-colors',
+            isActive
+             ? 'bg-[color:var(--ink)] text-[color:var(--paper)] font-medium'
+             : 'text-[color:var(--ink-2)] border border-[color:var(--rule)] bg-[color:var(--paper)] hover:border-[color:var(--ink-3)]',
+           )}
+          >
+           {s.label}
+          </Link>
+         </li>
+        );
+       })}
+      </ul>
+     </nav>
+
+     {children}
+    </div>
    </div>
-  </motion.div>
+  </div>
  );
 }

@@ -5,13 +5,20 @@ import React from 'react';
 /* ─────────────────────────────────────────────────────────────────
  * Shared UI primitives for settings sub-pages.
  *
- * Keeps the editorial input treatment consistent across Account,
- * Workspace, Knowledge base, Suppression, API keys, Billing.
+ * Redesigned to match the rest of the app's B2B SaaS aesthetic:
+ * mono lowercase labels (was tracking-[0.22em] uppercase), bordered
+ * rounded-md inputs with soft amber focus rings (was border-b
+ * underline-only), and a clean SectionHead (was 28px italic
+ * chapter numeral + decorative rule + italic title).
+ *
+ * Every settings sub-page imports from here, so the redesign
+ * cascades automatically. Pages still own their own copy and
+ * data-fetching; only the rendering primitives changed.
  * ───────────────────────────────────────────────────────────────── */
 
 export function Label({ children }: { children: React.ReactNode }) {
  return (
-  <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] block mb-2">
+  <span className="font-mono text-[10.5px] tracking-[0.06em] text-[color:var(--ink-3)] block mb-1.5">
    {children}
   </span>
  );
@@ -20,28 +27,28 @@ export function Label({ children }: { children: React.ReactNode }) {
 export const HairlineInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
  function HairlineInput({ className = '', ...props }, ref) {
   return (
-   <div className="border-b border-[color:var(--rule)] focus-within:border-[color:var(--ink)] transition-colors">
-    <input
-     ref={ref}
-     {...props}
-     className={`block w-full bg-transparent py-2 outline-none text-[14px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] disabled:text-[color:var(--ink-3)] disabled:cursor-not-allowed ${className}`}
-    />
-   </div>
+   <input
+    ref={ref}
+    {...props}
+    className={`block w-full bg-[color:var(--paper)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] focus:border-[color:var(--forest)]/60 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--forest)_8%,transparent)] disabled:bg-[color:var(--paper-2)] disabled:hover:border-[color:var(--rule)] disabled:cursor-not-allowed rounded-md px-3 h-9 outline-none text-[13.5px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] transition-colors ${className}`}
+   />
   );
  },
 );
 
 export function HairlineTextarea({ className = '', ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
  return (
-  <div className="border-b border-[color:var(--rule)] focus-within:border-[color:var(--ink)] transition-colors">
-   <textarea
-    {...props}
-    className={`block w-full bg-transparent py-2 outline-none text-[14px] leading-[1.55] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] resize-none ${className}`}
-   />
-  </div>
+  <textarea
+   {...props}
+   className={`block w-full bg-[color:var(--paper)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] focus:border-[color:var(--forest)]/60 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--forest)_8%,transparent)] rounded-md px-3 py-2 outline-none text-[13.5px] leading-[1.55] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] resize-none transition-colors ${className}`}
+  />
  );
 }
 
+/**
+ * Select with a native chevron in the right slot. Same shape as
+ * HairlineInput so a row of mixed inputs aligns vertically.
+ */
 export function HairlineSelect({
  value,
  onChange,
@@ -52,14 +59,22 @@ export function HairlineSelect({
  children: React.ReactNode;
 }) {
  return (
-  <div className="border-b border-[color:var(--rule)]">
+  <div className="relative">
    <select
     value={value}
     onChange={(e) => onChange(e.target.value)}
-    className="block w-full bg-transparent py-2 outline-none text-[14px] text-[color:var(--ink)] appearance-none cursor-pointer"
+    className="block w-full bg-[color:var(--paper)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] focus:border-[color:var(--forest)]/60 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--forest)_8%,transparent)] rounded-md pl-3 pr-9 h-9 outline-none text-[13.5px] text-[color:var(--ink)] appearance-none cursor-pointer transition-colors"
    >
     {children}
    </select>
+   <svg
+    aria-hidden
+    viewBox="0 0 16 16"
+    fill="none"
+    className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[color:var(--ink-3)]"
+   >
+    <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+   </svg>
   </div>
  );
 }
@@ -79,26 +94,30 @@ export function ArrowEast({ className = 'w-3 h-3' }: { className?: string }) {
 }
 
 /**
- * Section header with a large forest-green numeral + editorial rule
- * + italic serif title. Used on every settings sub-page to number
- * the sections in a given route (01, 02, 03 per page).
+ * Section header — mono numeral + 14.5/600 title. Replaces the
+ * editorial 28px italic numeral + decorative rule + italic title.
+ * Used on every settings sub-page to number sections (01, 02, ...)
+ * within the route's content.
  */
 export function SectionHead({ n, title }: { n: string; title: React.ReactNode }) {
  return (
-  <div className="flex items-baseline gap-5 mb-6">
-   <span className=" italic text-[28px] leading-none text-[color:var(--forest)] tabular-nums">
+  <div className="flex items-baseline gap-2 mb-3">
+   <span className="font-mono text-[10.5px] tabular-nums tracking-[0.04em] text-[color:var(--ink-3)]">
     {n}
    </span>
-   <div className="flex-1 border-t border-[color:var(--rule)] pb-0.5" />
-   <span className=" italic text-[18px] text-[color:var(--ink)] self-end pb-0.5">
+   <h2 className="text-[14.5px] font-semibold text-[color:var(--ink)] tracking-[-0.005em]">
     {title}
-   </span>
+   </h2>
   </div>
  );
 }
 
-/** A paper-3 "forthcoming" panel — used on sections that need backend
- * work we haven't shipped yet. Honesty over pretense. */
+/**
+ * "Forthcoming" panel — for sections that need backend work that
+ * hasn't shipped yet. Honesty over pretending. Now a clean
+ * rounded-md card with a small status-dot indicator instead of
+ * the former dashed border + italic title.
+ */
 export function ForthcomingPanel({
  title,
  children,
@@ -107,21 +126,24 @@ export function ForthcomingPanel({
  children: React.ReactNode;
 }) {
  return (
-  <div className="border border-dashed border-[color:var(--rule)] bg-[color:var(--paper-3)]/60 rounded-sm p-5">
-   <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
-    Forthcoming
-   </span>
-   <h4 className="mt-2 text-[20px] leading-[1.15] text-[color:var(--ink)]">
+  <div className="rounded-md border border-[color:var(--rule)] bg-[color:var(--paper-2)]/40 px-4 py-3.5">
+   <div className="flex items-center gap-2 mb-1">
+    <span className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ink-3)]" aria-hidden />
+    <span className="font-mono text-[10.5px] tracking-[0.06em] text-[color:var(--ink-3)]">
+     forthcoming
+    </span>
+   </div>
+   <h4 className="text-[14px] font-semibold text-[color:var(--ink)] leading-snug">
     {title}
    </h4>
-   <div className="mt-2 text-[13px] leading-[1.55] text-[color:var(--ink-2)] max-w-[560px]">
+   <div className="mt-1 text-[12.5px] leading-[1.55] text-[color:var(--ink-2)] max-w-[560px]">
     {children}
    </div>
   </div>
  );
 }
 
-/** Primary dark-ink button with arrow, matches CTAs across the product. */
+/** Primary filled button — ink fill, amber on hover. */
 export function PrimaryButton({
  children,
  disabled,
@@ -131,15 +153,14 @@ export function PrimaryButton({
   <button
    {...rest}
    disabled={disabled}
-   className={`group inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${rest.className ?? ''}`}
+   className={`inline-flex items-center gap-1.5 bg-[color:var(--ink)] text-[color:var(--paper)] px-3.5 h-8 rounded-md text-[12.5px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[color:var(--ink)] ${rest.className ?? ''}`}
   >
-   <span>{children}</span>
-   <ArrowEast className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+   {children}
   </button>
  );
 }
 
-/** Secondary outline button (paper-3 bg, hairline border, ink text) */
+/** Secondary outline button — paper-2 bg, hairline border. */
 export function GhostButton({
  children,
  ...rest
@@ -147,7 +168,7 @@ export function GhostButton({
  return (
   <button
    {...rest}
-   className={`inline-flex items-center gap-1.5 text-[13px] text-[color:var(--ink)] border border-[color:var(--rule)] bg-[color:var(--paper-3)] hover:border-[color:var(--ink)] px-4 py-2 rounded-full transition disabled:opacity-60 disabled:cursor-not-allowed ${rest.className ?? ''}`}
+   className={`inline-flex items-center gap-1.5 text-[12.5px] font-medium text-[color:var(--ink-2)] border border-[color:var(--rule)] bg-[color:var(--paper-2)] hover:border-[color:var(--ink-3)] hover:text-[color:var(--ink)] px-3 h-8 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${rest.className ?? ''}`}
   >
    {children}
   </button>

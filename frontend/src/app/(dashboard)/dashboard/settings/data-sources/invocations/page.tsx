@@ -174,7 +174,7 @@ export default function InvocationsPage() {
      >
       ← Newer
      </button>
-     <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+     <span className="font-mono text-[10px] tracking-[0.06em] text-[color:var(--ink-3)]">
       Page {page} of {Math.ceil(total / 50)}
      </span>
      <button
@@ -216,7 +216,7 @@ function InvocationDrawer({
     <div className="px-6 md:px-8 py-6 md:py-8 flex flex-col gap-6">
      <div className="flex items-start justify-between gap-4">
       <div>
-       <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1">
+       <span className="font-mono text-[10px] tracking-[0.06em] text-[color:var(--ink-3)] block mb-1">
         {formatTime(invocation.occurredAt)} · {invocation.triggeredBy}
        </span>
        <h2 className=" text-[26px] leading-[1.1] text-[color:var(--ink)]">
@@ -242,7 +242,7 @@ function InvocationDrawer({
 
      {invocation.errorMessage && (
       <div className="border-l-2 border-[color:var(--warn)] px-3 py-2 text-[12.5px] text-[color:var(--ink)]">
-       <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase block mb-1 text-[color:var(--ink-3)]">
+       <span className="font-mono text-[9.5px] tracking-[0.06em] block mb-1 text-[color:var(--ink-3)]">
         Error
        </span>
        {invocation.errorMessage}
@@ -255,7 +255,7 @@ function InvocationDrawer({
      {/* Parent refs */}
      {(invocation.parentJobId || invocation.parentLeadId || invocation.parentTableRowId) && (
       <div className="border-t border-[color:var(--rule)] pt-4 flex flex-col gap-2">
-       <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+       <span className="font-mono text-[9.5px] tracking-[0.06em] text-[color:var(--ink-3)]">
         Context
        </span>
        {invocation.parentJobId && (
@@ -293,10 +293,10 @@ function JsonBlock({ label, value }: { label: string; value: unknown }) {
  }
  return (
   <div>
-   <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
+   <span className="font-mono text-[9.5px] tracking-[0.06em] text-[color:var(--ink-3)] block mb-2">
     {label}
    </span>
-   <pre className="font-mono text-[11px] leading-[1.5] bg-[color:var(--paper-3)] border border-[color:var(--rule)] rounded-sm p-3 overflow-x-auto whitespace-pre-wrap break-all text-[color:var(--ink)] max-h-[360px] overflow-y-auto">
+   <pre className="font-mono text-[11px] leading-[1.5] bg-[color:var(--paper-3)] border border-[color:var(--rule)] rounded-md p-3 overflow-x-auto whitespace-pre-wrap break-all text-[color:var(--ink)] max-h-[360px] overflow-y-auto">
     {json}
    </pre>
   </div>
@@ -306,7 +306,7 @@ function JsonBlock({ label, value }: { label: string; value: unknown }) {
 function Stat({ label, value }: { label: string; value: string }) {
  return (
   <div>
-   <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1">
+   <span className="font-mono text-[9.5px] tracking-[0.06em] text-[color:var(--ink-3)] block mb-1">
     {label}
    </span>
    <div className=" text-[14px] text-[color:var(--ink)] tabular-nums">{value}</div>
@@ -325,7 +325,7 @@ function StatusChip({ status }: { status: InvocationStatus }) {
  };
  return (
   <span
-   className={`inline-flex items-center px-2 py-0.5 border rounded-full font-mono text-[9.5px] tracking-[0.18em] uppercase whitespace-nowrap ${styles[status]}`}
+   className={`inline-flex items-center px-2 py-0.5 border rounded-md font-mono text-[9.5px] tracking-[0.06em] whitespace-nowrap ${styles[status]}`}
   >
    {status.replace(/_/g, ' ')}
   </span>

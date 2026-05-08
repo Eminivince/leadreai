@@ -48,13 +48,13 @@ function GmailCard({ workspaceId }: { workspaceId: string }) {
 
   if (isLoading) {
     return (
-      <div className="border border-[color:var(--rule)] rounded-sm p-5 h-[72px] animate-pulse bg-[color:var(--paper-2)]" />
+      <div className="border border-[color:var(--rule)] rounded-md p-5 h-[72px] animate-pulse bg-[color:var(--paper-2)]" />
     );
   }
 
   return (
     <div
-      className={`border rounded-sm p-5 flex items-center justify-between gap-4 transition-colors ${
+      className={`border rounded-md p-5 flex items-center justify-between gap-4 transition-colors ${
         status?.connected
           ? 'border-[color:var(--forest)] bg-[color:var(--forest)]/5'
           : 'border-[color:var(--rule)]'
@@ -87,7 +87,7 @@ function GmailCard({ workspaceId }: { workspaceId: string }) {
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[14px] font-medium text-[color:var(--ink)]">Gmail</span>
             {status?.connected && (
-              <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--forest)] bg-[color:var(--forest)]/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+              <span className="font-mono text-[9px] tracking-[0.06em] text-[color:var(--forest)] bg-[color:var(--forest)]/10 px-2 py-0.5 rounded-md whitespace-nowrap">
                 Active sender
               </span>
             )}
@@ -109,14 +109,14 @@ function GmailCard({ workspaceId }: { workspaceId: string }) {
         <button
           onClick={() => disconnect.mutate()}
           disabled={disconnect.isPending}
-          className="shrink-0 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] hover:text-red-500 border border-[color:var(--rule)] hover:border-red-400 px-3 py-1.5 rounded-full transition-colors disabled:opacity-40"
+          className="shrink-0 font-mono text-[10px] tracking-[0.06em] text-[color:var(--ink-3)] hover:text-red-500 border border-[color:var(--rule)] hover:border-red-400 px-3 py-1.5 rounded-md transition-colors disabled:opacity-40"
         >
           {disconnect.isPending ? 'Disconnecting…' : 'Disconnect'}
         </button>
       ) : (
         <button
           onClick={handleConnect}
-          className="shrink-0 inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2 rounded-full text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors"
+          className="shrink-0 inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2 rounded-md text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors"
         >
           Connect Gmail
         </button>
@@ -144,7 +144,7 @@ function CopyButton({ text }: { text: string }) {
     <button
       onClick={handleCopy}
       aria-label={copied ? 'Copied to clipboard' : 'Copy to clipboard'}
-      className="font-mono text-[10px] tracking-[0.18em] uppercase px-3 py-1 border border-[color:var(--rule)] rounded-full text-[color:var(--ink-2)] hover:text-[color:var(--ink)] hover:border-[color:var(--ink)] transition-colors"
+      className="font-mono text-[10px] tracking-[0.06em] px-3 py-1 border border-[color:var(--rule)] rounded-md text-[color:var(--ink-2)] hover:text-[color:var(--ink)] hover:border-[color:var(--ink)] transition-colors"
     >
       {copied ? 'Copied' : 'Copy'}
     </button>
@@ -159,16 +159,16 @@ interface ProviderBlockProps {
 
 function ProviderBlock({ provider, webhookUrl, steps }: ProviderBlockProps) {
   return (
-    <section className="border border-[color:var(--rule)] rounded-sm p-6 flex flex-col gap-5">
+    <section className="border border-[color:var(--rule)] rounded-md p-6 flex flex-col gap-5">
       <div className="flex items-center gap-3">
         <span className="text-[18px] text-[color:var(--ink)]">{provider}</span>
       </div>
 
       <div>
-        <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-2">
+        <span className="font-mono text-[9.5px] tracking-[0.06em] text-[color:var(--ink-3)] block mb-2">
           Webhook URL
         </span>
-        <div className="flex items-center gap-3 border border-[color:var(--rule)] rounded-sm px-3 py-2.5 bg-[color:var(--paper-3)]/60">
+        <div className="flex items-center gap-3 border border-[color:var(--rule)] rounded-md px-3 py-2.5 bg-[color:var(--paper-3)]/60">
           <code className="flex-1 font-mono text-[12px] text-[color:var(--ink)] break-all">
             {webhookUrl}
           </code>
@@ -177,7 +177,7 @@ function ProviderBlock({ provider, webhookUrl, steps }: ProviderBlockProps) {
       </div>
 
       <div>
-        <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-3">
+        <span className="font-mono text-[9.5px] tracking-[0.06em] text-[color:var(--ink-3)] block mb-3">
           Setup
         </span>
         <ol className="flex flex-col gap-2">
@@ -211,12 +211,11 @@ export default function EmailSettingsPage() {
       {/* ── Section 1: Sender setup ────────────────────────────────── */}
       <section className="flex flex-col gap-6">
         <div>
-          <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1.5">
+          <span className="font-mono text-[9.5px] tracking-[0.06em] text-[color:var(--ink-3)] block mb-1.5">
             Sender
           </span>
-          <h2 className="text-[22px] leading-[1.2] text-[color:var(--ink)]">
-            How should outreach{' '}
-            <em className="italic text-[color:var(--forest)]">land in inboxes</em>?
+          <h2 className="text-[16px] font-semibold tracking-[-0.005em] text-[color:var(--ink)]">
+            Outbound sender
           </h2>
           <p className="mt-2 text-[13.5px] leading-[1.6] text-[color:var(--ink-2)] max-w-[540px]">
             Gmail OAuth is the fastest path — one click, no credentials. Or configure
@@ -228,7 +227,7 @@ export default function EmailSettingsPage() {
 
         <div className="flex items-center gap-3">
           <span className="flex-1 h-px bg-[color:var(--rule)]" />
-          <span className="font-mono text-[9px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+          <span className="font-mono text-[9px] tracking-[0.06em] text-[color:var(--ink-3)]">
             or API provider
           </span>
           <span className="flex-1 h-px bg-[color:var(--rule)]" />
@@ -240,12 +239,11 @@ export default function EmailSettingsPage() {
       {/* ── Section 2: Inbound reply routing ──────────────────────── */}
       <section className="flex flex-col gap-6 pt-6 border-t border-[color:var(--rule)]">
         <div>
-          <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1.5">
+          <span className="font-mono text-[9.5px] tracking-[0.06em] text-[color:var(--ink-3)] block mb-1.5">
             Inbound replies
           </span>
-          <h2 className="text-[22px] leading-[1.2] text-[color:var(--ink)]">
-            Route replies{' '}
-            <em className="italic text-[color:var(--forest)]">back in</em>.
+          <h2 className="text-[16px] font-semibold tracking-[-0.005em] text-[color:var(--ink)]">
+            Inbound routing
           </h2>
           <p className="mt-2 text-[13.5px] leading-[1.6] text-[color:var(--ink-2)] max-w-[560px]">
             Configure your provider to forward inbound email here. When a prospect replies,
@@ -278,7 +276,7 @@ export default function EmailSettingsPage() {
           />
         </div>
 
-        <p className="text-[12.5px] italic text-[color:var(--ink-3)]">
+        <p className="text-[12.5px] text-[color:var(--ink-3)]">
           Reply tracking requires DNS access to your sending domain. MX record changes can
           take up to 48 hours to propagate.
         </p>
