@@ -3,157 +3,98 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/store/useAppStore';
-import { useTheme } from '@/hooks/useTheme';
 import { NotificationDropdown } from './NotificationDropdown';
+import { ThemeToggle } from '@/components/shared/ThemeToggle';
+import { CreditsChip } from '@/components/shared/CreditsChip';
 
-/* ─────────────────────────────────────────────────────────────────
- * Topbar
- * ─────────────────────────────────────────────────────────────────
- * A single slim strip: route breadcrumb on the left, greeting and
- * date on the right. No primary CTAs here — the dashboard page's
- * hero input owns "new query". Search / notifications are small
- * glyphs that don't compete with the page title below.
- * ───────────────────────────────────────────────────────────────── */
+const ROUTE_MAP: Record<string, string> = {
+ '/dashboard':       'Dashboard',
+ '/dashboard/leads':    'Leads',
+ '/dashboard/campaigns':  'Campaigns',
+ '/dashboard/tables':    'Tables',
+ '/dashboard/workflows':  'Workflows',
+ '/dashboard/files':    'Files',
+ '/dashboard/library':   'Library',
+ '/dashboard/integrations': 'Integrations',
+ '/dashboard/settings':   'Settings',
+};
 
-function routeBreadcrumb(pathname: string): { page: string } {
-  if (pathname === '/dashboard') return { page: 'Dashboard' };
-  if (pathname.startsWith('/dashboard/leads')) return { page: 'Leads' };
-  if (pathname.startsWith('/dashboard/campaigns')) return { page: 'Campaigns' };
-  if (pathname.startsWith('/dashboard/tables')) return { page: 'Tables' };
-  if (pathname.startsWith('/dashboard/workflows')) return { page: 'Workflows' };
-  if (pathname.startsWith('/dashboard/files')) return { page: 'Files' };
-  if (pathname.startsWith('/dashboard/library')) return { page: 'Library' };
-  if (pathname.startsWith('/dashboard/integrations')) return { page: 'Integrations' };
-  if (pathname.startsWith('/dashboard/settings')) return { page: 'Settings' };
-  return { page: '' };
-}
-
-function formatDateline(d: Date = new Date()): string {
-  return d.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
+function resolveTitle(pathname: string): string {
+ if (ROUTE_MAP[pathname]) return ROUTE_MAP[pathname];
+ for (const [prefix, label] of Object.entries(ROUTE_MAP)) {
+  if (pathname.startsWith(prefix + '/')) return label;
+ }
+ return '';
 }
 
 function greeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  return 'Good evening';
+ const h = new Date().getHours();
+ if (h < 12) return 'Good morning';
+ if (h < 17) return 'Good afternoon';
+ return 'Good evening';
 }
 
-const SearchGlyph = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-    <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.6" />
-    <path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-  </svg>
-);
+function formatDate(d: Date = new Date()): string {
+ return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
 
-const SunGlyph = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-    <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5" />
-    <path
-      d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    />
-  </svg>
-);
-
-const MoonGlyph = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-    <path
-      d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
-const SystemGlyph = ({ className = 'w-3.5 h-3.5' }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-    <rect x="3" y="4" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="1.5" />
-    <path d="M8 21h8M12 17v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-  </svg>
+const SearchIcon = () => (
+ <svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+  <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.75" />
+  <path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+ </svg>
 );
 
 export function Topbar() {
-  const pathname = usePathname();
-  const { user, openSearch } = useAppStore();
-  const { preference, toggle } = useTheme();
-  const { page } = routeBreadcrumb(pathname);
-  const firstName = user?.firstName ?? '';
+ const pathname = usePathname();
+ const { user, openSearch } = useAppStore();
+ const title = resolveTitle(pathname);
+ const firstName = user?.firstName ?? '';
 
-  const [dateline, setDateline] = React.useState(() => formatDateline());
-  const [greetingText, setGreetingText] = React.useState(() => greeting());
+ const [dateStr, setDateStr] = React.useState(() => formatDate());
+ const [greet, setGreet] = React.useState(() => greeting());
 
-  React.useEffect(() => {
-    const id = setInterval(() => {
-      setDateline(formatDateline());
-      setGreetingText(greeting());
-    }, 60_000);
-    return () => clearInterval(id);
-  }, []);
+ React.useEffect(() => {
+  const id = setInterval(() => { setDateStr(formatDate()); setGreet(greeting()); }, 60_000);
+  return () => clearInterval(id);
+ }, []);
 
-  const themeLabel =
-    preference === 'light'
-      ? 'Light · click for dark'
-      : preference === 'dark'
-        ? 'Dark · click for system'
-        : 'System · click for light';
+ return (
+  <div className="h-[52px] flex items-center gap-4 px-6 md:px-8">
+   {/* Page title */}
+   {title && (
+    <span className="text-[15px] font-semibold text-[color:var(--ink)] truncate">
+     {title}
+    </span>
+   )}
 
-  return (
-    <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-3 flex items-center gap-6">
-      {/* Left: breadcrumb */}
-      <div className="flex items-baseline gap-2 min-w-0">
-        <span className="text-[14px] font-semibold text-[color:var(--ink)] truncate">
-          {page}
-        </span>
-      </div>
+   {/* Date — subtle */}
+   <span className="hidden md:block ml-auto text-[12.5px] text-[color:var(--ink-3)]">
+    {dateStr}
+   </span>
 
-      {/* Middle: dateline */}
-      <div className="ml-auto hidden md:flex items-center gap-3">
-        <span className="text-[13px] text-[color:var(--ink-3)]">
-          {dateline}
-        </span>
-      </div>
+   {/* Actions */}
+   <div className="flex items-center gap-0.5 ml-auto md:ml-0">
+    <button
+     onClick={() => openSearch?.()}
+     title="Search (⌘K)"
+     className="h-8 w-8 flex items-center justify-center rounded-lg text-[color:var(--ink-3)] hover:text-[color:var(--ink)] hover:bg-[color:var(--paper-3)] transition-all"
+    >
+     <SearchIcon />
+    </button>
 
-      {/* Right: glyph actions */}
-      <div className="flex items-center gap-1">
-        <button
-          onClick={() => openSearch?.()}
-          title="Search (⌘K)"
-          aria-label="Search (Command K)"
-          className="h-8 w-8 flex items-center justify-center text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
-        >
-          <SearchGlyph />
-        </button>
-        <button
-          onClick={toggle}
-          title={themeLabel}
-          aria-label={themeLabel}
-          className="h-8 w-8 flex items-center justify-center text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
-        >
-          {preference === 'light' ? (
-            <SunGlyph />
-          ) : preference === 'dark' ? (
-            <MoonGlyph />
-          ) : (
-            <SystemGlyph />
-          )}
-        </button>
-        <NotificationDropdown />
-        {firstName && (
-          <span className="hidden lg:inline ml-3 text-[14px] text-[color:var(--ink-2)]">
-            {greetingText}, {firstName}.
-          </span>
-        )}
-      </div>
-    </div>
-  );
+    <CreditsChip className="ml-1" />
+
+    <NotificationDropdown />
+
+    <ThemeToggle className="h-8 w-8" />
+
+    {firstName && (
+     <span className="hidden lg:inline ml-2 text-[13px] text-[color:var(--ink-2)]">
+      {greet}, <span className="font-semibold text-[color:var(--ink)]">{firstName}</span>.
+     </span>
+    )}
+   </div>
+  </div>
+ );
 }

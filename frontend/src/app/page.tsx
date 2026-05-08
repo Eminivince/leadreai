@@ -2,11 +2,9 @@
 
 import { useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import type { CSSProperties } from 'react'
 import AltNav from '@/components/marketing/AltNav'
 import AltFooter from '@/components/marketing/AltFooter'
 import EmailGate from '@/components/marketing/EmailGate'
-import { altTokens } from '@/components/marketing/alt-tokens'
 
 const GATE_THRESHOLD = 3
 
@@ -27,12 +25,12 @@ const HOW_STEPS = [
   {
     num: '02',
     title: 'Discover & Enrich',
-    body: 'Our agent reads registries, company websites, and the open web. Emails are MX + SMTP verified. Every field has a source URL.',
+    body: 'Our agent reads registries, company websites, and the open web. Where the source supports it, emails are MX + SMTP checked. Every contact ships with source links so you can verify what we found.',
   },
   {
     num: '03',
     title: 'Export & Act',
-    body: 'Download CSV, push directly to HubSpot or Salesforce, or copy individual contacts. Your CRM, your workflow.',
+    body: 'Download CSV, push directly to HubSpot, or copy individual contacts. Your CRM, your workflow.',
   },
 ]
 
@@ -66,7 +64,7 @@ const PRICING_TIERS = [
     price: '$29',
     period: '/month',
     tagline: 'For solo prospectors getting started.',
-    features: ['50 verified contacts/month', 'Email + phone enrichment', 'CSV export', 'Email support'],
+    features: ['Up to 50 contacts/month', 'Email + phone enrichment', 'CSV export', 'Email support'],
     cta: 'Get started free',
     ctaHref: '/auth/register',
     highlighted: false,
@@ -76,7 +74,7 @@ const PRICING_TIERS = [
     price: '$99',
     period: '/month',
     tagline: 'For growing sales teams.',
-    features: ['500 verified contacts/month', 'CRM sync (HubSpot, Salesforce)', 'Priority enrichment queue', 'Slack alerts', 'Live chat support'],
+    features: ['Up to 500 contacts/month', 'CRM sync (HubSpot)', 'Priority enrichment queue', 'Outbound webhooks', 'Live chat support'],
     cta: 'Start free trial',
     ctaHref: '/auth/register',
     highlighted: true,
@@ -105,7 +103,7 @@ export default function LandingPage() {
   const showGate = query.length > GATE_THRESHOLD
 
   return (
-    <main style={altTokens as CSSProperties}>
+    <main className="alt-tokens bg-[color:var(--paper)] text-[color:var(--alt-ink)]">
       <AltNav />
       <HeroSection query={query} setQuery={setQuery} showGate={showGate} />
       <HowItWorksSection />
@@ -411,7 +409,7 @@ function ResultsDemoSection({ query }: { query: string }) {
         }}>
           {[
             { num: '50k+', label: 'leads delivered' },
-            { num: '94%', label: 'email accuracy' },
+            { num: 'MX+SMTP', label: 'email verified' },
             { num: '8 min', label: 'avg delivery' },
             { num: '3×', label: 'sources cross-checked' },
           ].map(stat => (

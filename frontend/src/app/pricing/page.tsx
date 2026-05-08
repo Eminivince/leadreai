@@ -1,7 +1,5 @@
-import type { CSSProperties } from 'react'
 import AltNav from '@/components/marketing/AltNav'
 import AltFooter from '@/components/marketing/AltFooter'
-import { altTokens } from '@/components/marketing/alt-tokens'
 
 const PRICING_TIERS = [
   {
@@ -9,7 +7,7 @@ const PRICING_TIERS = [
     price: '$29',
     period: '/month',
     tagline: 'For solo prospectors getting started.',
-    features: ['50 verified contacts/month', 'Email + phone enrichment', 'CSV export', 'Email support'],
+    features: ['Up to 50 contacts/month', 'Email + phone enrichment', 'CSV export', 'Email support'],
     cta: 'Get started free',
     ctaHref: '/auth/register',
     highlighted: false,
@@ -19,7 +17,7 @@ const PRICING_TIERS = [
     price: '$99',
     period: '/month',
     tagline: 'For growing sales teams.',
-    features: ['500 verified contacts/month', 'CRM sync (HubSpot, Salesforce)', 'Priority enrichment queue', 'Slack alerts', 'Live chat support'],
+    features: ['Up to 500 contacts/month', 'CRM sync (HubSpot)', 'Priority enrichment queue', 'Outbound webhooks', 'Live chat support'],
     cta: 'Start free trial',
     ctaHref: '/auth/register',
     highlighted: true,
@@ -40,25 +38,25 @@ const PRICING_TIERS = [
 const FAQS = [
   {
     q: 'How accurate are the email addresses?',
-    a: 'We achieve 94%+ email accuracy through MX record validation and SMTP verification before delivery. Every email that fails verification is flagged, not delivered.',
+    a: 'Where the source supports it, we run MX record validation and SMTP handshake checks. Each email is delivered with a confidence badge so you can see how it was sourced and how strongly it was checked.',
   },
   {
     q: 'How long does a search take?',
-    a: 'Most searches complete in under 8 minutes. Complex multi-country searches may take up to 20 minutes.',
+    a: 'Most searches complete in 8–15 minutes. Complex multi-country searches may take up to 25 minutes.',
   },
   {
     q: 'Can I try before I subscribe?',
-    a: 'Yes — the Reader plan is free for the first 10 contacts. No credit card required.',
+    a: 'Yes — start free with 5 research credits, no credit card required. Each credit covers one search job.',
   },
   {
     q: 'Do you cover markets outside Nigeria?',
-    a: 'Yes. We cover all major African markets including Kenya, Ghana, South Africa, and Egypt. Data density is highest in Nigeria.',
+    a: 'Nigeria is our primary focus and where data density is highest. Other African markets are supported on a best-effort basis — quality varies by country.',
   },
 ]
 
 export default function PricingPage() {
   return (
-    <main style={altTokens as CSSProperties}>
+    <main className="alt-tokens bg-[color:var(--paper)] text-[color:var(--alt-ink)]">
       <AltNav />
 
       {/* Hero */}

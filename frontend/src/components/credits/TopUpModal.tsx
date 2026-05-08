@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
 import { useAppStore } from '@/store/useAppStore';
@@ -9,19 +9,54 @@ import { CREDIT_PACKAGES, type CreditPackage } from '@leadreai/shared';
 import { PrimaryButton, GhostButton } from '@/components/settings/primitives';
 
 /* ─────────────────────────────────────────────────────────────────
- * Top-up modal — editorial packet selection.
+ * Top-up modal — package selection + Paystack inline popup.
  *
- * Packages come from the shared catalogue (CREDIT_PACKAGES). Today
- * this POSTs to /credits/test-topup which just increments the balance
- * and writes a ledger row — the modal is explicit about being a test
- * placeholder until Stripe is wired. The catalogue, the card layout,
- * and the button contract are what Stripe will replace; the surface
- * stays identical.
+ * Paystack flow: server initialises the transaction and returns an
+ * accessCode. We pass it to PaystackPop.newTransaction so the popup
+ * appears inline — the user never leaves the page. After success we
+ * call /paystack/verify to grant credits server-side.
+ *
+ * Stripe flow: redirects in a new tab (Checkout requires a redirect;
+ * this is the least disruptive option until Stripe embeds are wired).
  * ───────────────────────────────────────────────────────────────── */
 
-interface TopUpResponse {
+interface PaystackPopInstance {
+  newTransaction(options: {
+    accessCode: string;
+    onSuccess: (transaction: { reference: string }) => void;
+    onCancel: () => void;
+  }): void;
+}
+
+declare global {
+  interface Window {
+    // PaystackPop v2 is a class — must be instantiated with `new`
+    PaystackPop?: new () => PaystackPopInstance;
+  }
+}
+
+interface TopUpInitResponse {
   success: true;
-  data: { balanceAfter: number; transactionId: string; credited: number };
+  data: { url: string; accessCode: string; reference: string };
+}
+
+interface VerifyResponse {
+  success: true;
+  data: { credits?: number; packageId?: string; already_processed?: boolean };
+}
+
+function loadPaystackScript(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (typeof window !== 'undefined' && window.PaystackPop) { resolve(); return; }
+    const existing = document.getElementById('paystack-inline-js');
+    if (existing) { existing.addEventListener('load', () => resolve()); return; }
+    const script = document.createElement('script');
+    script.id = 'paystack-inline-js';
+    script.src = 'https://js.paystack.co/v2/inline.js';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Failed to load Paystack script'));
+    document.head.appendChild(script);
+  });
 }
 
 function CloseIcon({ className = 'w-3.5 h-3.5' }: { className?: string }) {
@@ -47,7 +82,7 @@ function PackageCard({
       onClick={onSelect}
       className={`relative w-full flex items-center justify-between gap-4 p-4 text-left border transition-colors ${
         selected
-          ? 'border-[color:var(--ink)] bg-[color:var(--paper-3)]'
+          ? 'border-[color:var(--forest)] bg-[color:var(--paper-3)]'
           : 'border-[color:var(--rule)] hover:border-[color:var(--ink-2)] bg-[color:var(--paper)]'
       }`}
     >
@@ -59,7 +94,7 @@ function PackageCard({
           {pkg.label}
         </div>
         {pkg.tagline && (
-          <div className="mt-0.5  italic text-[12.5px] text-[color:var(--ink-2)]">
+          <div className="mt-0.5 italic text-[12.5px] text-[color:var(--ink-2)]">
             {pkg.tagline}
           </div>
         )}
@@ -80,6 +115,7 @@ export function TopUpModal() {
   const { topUpOpen, closeTopUp } = useAppStore();
   const qc = useQueryClient();
   const [selectedId, setSelectedId] = useState<string>(CREDIT_PACKAGES[1]?.id ?? CREDIT_PACKAGES[0]?.id ?? '');
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!topUpOpen) return;
@@ -90,25 +126,61 @@ export function TopUpModal() {
     return () => document.removeEventListener('keydown', onKey);
   }, [topUpOpen, closeTopUp]);
 
-  const topUp = useMutation({
-    mutationFn: (packageId: string) =>
-      apiFetch<TopUpResponse>('/api/v1/credits/test-topup', {
-        method: 'POST',
-        body: JSON.stringify({ packageId }),
-      }),
-    onSuccess: (res) => {
-      const pkg = CREDIT_PACKAGES.find((p) => p.id === selectedId);
-      toast.success(
-        `Balance ${res.data.balanceAfter.toLocaleString()}. +${res.data.credited} credits ${
-          pkg ? `(${pkg.label})` : ''
-        }.`,
+  async function handlePaystack() {
+    if (!selectedId) return;
+    setBusy(true);
+    try {
+      await loadPaystackScript();
+      if (!window.PaystackPop) throw new Error('Paystack script not available');
+
+      const res = await apiFetch<TopUpInitResponse>(
+        '/api/v1/credits/paystack/topup',
+        { method: 'POST', body: JSON.stringify({ packageId: selectedId }) },
       );
-      void qc.invalidateQueries({ queryKey: ['credits'] });
-      void qc.invalidateQueries({ queryKey: ['credit-transactions'] });
-      closeTopUp();
-    },
-    onError: (err) => toast.error(err instanceof Error ? err.message : 'Top-up failed.'),
-  });
+      const { accessCode } = res.data;
+
+      const popup = new window.PaystackPop();
+      popup.newTransaction({
+        accessCode,
+        onSuccess: async (transaction) => {
+          try {
+            await apiFetch<VerifyResponse>(
+              '/api/v1/credits/paystack/verify',
+              { method: 'POST', body: JSON.stringify({ reference: transaction.reference }) },
+            );
+            await qc.invalidateQueries({ queryKey: ['credits'] });
+            toast.success('Credits added — you\'re all set.');
+            closeTopUp();
+          } catch {
+            toast.error('Payment received but credit grant failed — please contact support.');
+          }
+          setBusy(false);
+        },
+        onCancel: () => {
+          setBusy(false);
+        },
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to start Paystack checkout.');
+      setBusy(false);
+    }
+  }
+
+  async function handleStripe() {
+    if (!selectedId) return;
+    setBusy(true);
+    try {
+      const res = await apiFetch<{ success: true; data: { url: string } }>(
+        '/api/v1/credits/stripe/topup',
+        { method: 'POST', body: JSON.stringify({ packageId: selectedId }) },
+      );
+      window.open(res.data.url, '_blank', 'noopener');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to start Stripe checkout.');
+    } finally {
+      setBusy(false);
+    }
+  }
 
   if (!topUpOpen) return null;
 
@@ -135,11 +207,11 @@ export function TopUpModal() {
             </div>
             <h2
               id="topup-title"
-              className="mt-1  text-[26px] leading-[1.05] text-[color:var(--ink)]"
+              className="mt-1 text-[26px] leading-[1.05] text-[color:var(--ink)]"
             >
               Buy <em className="italic text-[color:var(--forest)]">dispatches</em>.
             </h2>
-            <p className="mt-1  italic text-[12.5px] text-[color:var(--ink-2)]">
+            <p className="mt-1 italic text-[12.5px] text-[color:var(--ink-2)]">
               One credit covers one dispatch, regardless of lead count.
             </p>
           </div>
@@ -164,36 +236,33 @@ export function TopUpModal() {
           ))}
         </div>
 
-        {/* Footer — placeholder notice + CTAs */}
+        {/* Footer — payment provider buttons */}
         <div className="px-6 pb-6 flex flex-col gap-4">
-          <div className="border-l-2 border-[color:var(--rust)] pl-3 py-1">
-            <p className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--rust)]">
-              Placeholder
+          <div className="flex flex-col gap-3">
+            <p className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+              {selectedPkg
+                ? `${selectedPkg.credits} dispatches — $${selectedPkg.priceUsd} — choose provider`
+                : 'Select a package above'}
             </p>
-            <p className="mt-1  italic text-[12.5px] text-[color:var(--ink-2)] leading-[1.5]">
-              Payments aren&rsquo;t wired yet. Clicking below credits your account instantly without
-              charging a card — use it to test the ledger. Stripe Checkout ships next.
-            </p>
-          </div>
-
-          <div className="flex items-center justify-end gap-3">
-            <GhostButton type="button" onClick={closeTopUp} disabled={topUp.isPending}>
-              Cancel
-            </GhostButton>
-            <PrimaryButton
-              type="button"
-              onClick={() => {
-                if (!selectedId) return;
-                topUp.mutate(selectedId);
-              }}
-              disabled={!selectedId || topUp.isPending}
-            >
-              {topUp.isPending
-                ? 'Crediting…'
-                : selectedPkg
-                  ? `Add ${selectedPkg.credits} credits`
-                  : 'Top up'}
-            </PrimaryButton>
+            <div className="flex items-center gap-3 flex-wrap">
+              <GhostButton type="button" onClick={closeTopUp} disabled={busy}>
+                Cancel
+              </GhostButton>
+              <PrimaryButton
+                type="button"
+                onClick={() => void handlePaystack()}
+                disabled={!selectedId || busy}
+              >
+                {busy ? 'Opening…' : 'Pay with Paystack'}
+              </PrimaryButton>
+              <GhostButton
+                type="button"
+                onClick={() => void handleStripe()}
+                disabled={!selectedId || busy}
+              >
+                Stripe (new tab)
+              </GhostButton>
+            </div>
           </div>
         </div>
       </div>

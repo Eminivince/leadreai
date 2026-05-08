@@ -10,10 +10,9 @@ import type { ApiResponse, Campaign } from '@leadreai/shared';
 
 /* ─────────────────────────────────────────────────────────────────
  * Campaign detail — analytics-first view of a saved + (optionally)
- * activated campaign. Matches the editorial shell of the builder:
- * paper sections divided by hairline rules, numbered kickers, forest
- * for active state. Primary surfaces: KPIs, per-step breakdown,
- * pause/resume. Legacy bulk-draft review UI lives elsewhere.
+ * activated campaign. Refreshed to match the rest of the redesigned
+ * dashboard: dot-pill status, mono tabular metrics, hairline rows,
+ * rounded-xl cards. Pause/resume controls available when applicable.
  * ───────────────────────────────────────────────────────────────── */
 
 interface SequenceStepLite {
@@ -40,36 +39,70 @@ interface StatsResponse {
   };
 }
 
-const STATUS_STYLES: Record<string, string> = {
-  draft:     'bg-[color:var(--paper-3)] text-[color:var(--ink-2)] border-[color:var(--rule)]',
-  active:    'bg-[color:var(--forest)]/10 text-[color:var(--forest)] border-[color:var(--forest)]/40',
-  paused:    'bg-[color:var(--warn)]/10 text-[color:var(--warn)] border-[color:var(--warn)]/40',
-  completed: 'bg-[color:var(--paper-3)] text-[color:var(--ink-2)] border-[color:var(--rule)]',
-  archived:  'bg-[color:var(--paper-3)] text-[color:var(--ink-3)] border-[color:var(--rule)]',
-};
-
-function StatusPill({ status }: { status: string }) {
-  const cls = STATUS_STYLES[status] ?? STATUS_STYLES.draft!;
+function ArrowEast({ className = 'w-3 h-3' }: { className?: string }) {
   return (
-    <span className={`inline-flex items-center rounded-full border px-3 py-0.5 font-mono text-[10.5px] tracking-[0.18em] uppercase ${cls}`}>
-      {status}
+    <svg viewBox="0 0 16 16" fill="none" className={className}>
+      <path d="M2 8h12M10 4l4 4-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/**
+ * Status pill — dot + lowercase mono. Same shape used on the
+ * campaigns list and dashboard. Active state pulses; everything
+ * else stays still.
+ */
+function StatusPill({ status }: { status: string }) {
+  const map: Record<string, { label: string; dot: string; text: string; border: string; pulse: boolean }> = {
+    active:    { label: 'active',    dot: 'bg-[color:var(--forest)]',   text: 'text-[color:var(--forest-2)]', border: 'border-[color:var(--forest)]/30 bg-[color:var(--forest)]/[0.06]', pulse: true },
+    paused:    { label: 'paused',    dot: 'bg-[color:var(--warn)]',     text: 'text-[color:var(--warn)]',     border: 'border-[color:var(--warn)]/30 bg-[color:var(--warn)]/[0.04]',    pulse: false },
+    draft:     { label: 'draft',     dot: 'bg-[color:var(--ink-3)]',    text: 'text-[color:var(--ink-2)]',    border: 'border-[color:var(--rule)] bg-[color:var(--paper-2)]',          pulse: false },
+    completed: { label: 'completed', dot: 'bg-[color:var(--ink-3)]',    text: 'text-[color:var(--ink-2)]',    border: 'border-[color:var(--rule)] bg-[color:var(--paper-2)]',          pulse: false },
+    archived:  { label: 'archived',  dot: 'bg-[color:var(--ink-3)]/60', text: 'text-[color:var(--ink-3)]',    border: 'border-[color:var(--rule)] bg-[color:var(--paper-2)]',          pulse: false },
+  };
+  const m = map[status] ?? map.draft!;
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-md border px-2 h-6 ${m.border}`}>
+      {m.pulse ? (
+        <span className="relative inline-flex">
+          <span className={`relative inline-block w-1.5 h-1.5 rounded-full ${m.dot}`} />
+          <span className={`absolute inset-0 inline-block w-1.5 h-1.5 rounded-full ${m.dot} opacity-60 animate-ping`} />
+        </span>
+      ) : (
+        <span className={`inline-block w-1.5 h-1.5 rounded-full ${m.dot}`} />
+      )}
+      <span className={`font-mono text-[10.5px] ${m.text}`}>{m.label}</span>
     </span>
   );
 }
 
+/**
+ * KPI cell — one of a row inside a rounded-xl card. Tabular-nums
+ * carry the number; mono lowercase carries the label. Same visual
+ * register as the dashboard's MetricsStrip so the two surfaces feel
+ * like one product.
+ */
 function Kpi({ label, value, accent = false }: { label: string; value: number | string; accent?: boolean }) {
   return (
-    <div className="border border-[color:var(--rule)] bg-[color:var(--paper-3)]/60 rounded-sm p-5">
-      <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block">
+    <div className="px-4 md:px-5 py-4 flex flex-col gap-1.5">
+      <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
         {label}
       </span>
-      <div className={`mt-2  text-[44px] leading-none tabular-nums ${accent ? 'text-[color:var(--forest)]' : 'text-[color:var(--ink)]'}`}>
+      <div
+        className={`font-mono text-[24px] md:text-[28px] leading-none tabular-nums ${
+          accent ? 'text-[color:var(--ink)]' : 'text-[color:var(--ink-2)]'
+        }`}
+      >
         {value}
       </div>
     </div>
   );
 }
 
+/**
+ * Section primitive — drops the editorial chapter numeral + italic
+ * title. Now a clean header row with mono numeral + 14.5/600 title.
+ */
 function Section({ chapter, title, children, action }: {
   chapter: string;
   title: React.ReactNode;
@@ -77,18 +110,19 @@ function Section({ chapter, title, children, action }: {
   action?: React.ReactNode;
 }) {
   return (
-    <section className="border-t border-[color:var(--rule)] pt-8 pb-2">
-      <div className="flex items-baseline gap-5 mb-5">
-        <span className=" text-[36px] leading-none text-[color:var(--forest)]">
-          {chapter}
-        </span>
-        <div className="flex-1 border-t border-[color:var(--rule)] pb-1" />
-        <span className=" italic text-[18px] text-[color:var(--ink)] self-end pb-0.5">
-          {title}
-        </span>
-        {action && <div className="self-end pb-0.5">{action}</div>}
+    <section className="mt-6">
+      <div className="flex items-baseline justify-between gap-3 mb-3">
+        <div className="flex items-baseline gap-2">
+          <span className="font-mono text-[10.5px] tabular-nums tracking-[0.04em] text-[color:var(--ink-3)]">
+            {chapter}
+          </span>
+          <h2 className="text-[14.5px] font-semibold text-[color:var(--ink)] tracking-[-0.005em]">
+            {title}
+          </h2>
+        </div>
+        {action}
       </div>
-      <div className="pl-0 md:pl-[54px]">{children}</div>
+      <div>{children}</div>
     </section>
   );
 }
@@ -132,23 +166,24 @@ export default function CampaignDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center  italic text-[14px] text-[color:var(--ink-3)]">
-        Loading campaign…
+      <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-16 text-center">
+        <span className="font-mono text-[12px] text-[color:var(--ink-3)]">Loading campaign…</span>
       </div>
     );
   }
 
   if (error || !data?.data) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center">
-        <p className=" text-[14px] text-[color:var(--warn)]">
+      <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-16 text-center">
+        <p className="text-[14px] font-medium text-[color:var(--warn)]">
           Couldn&rsquo;t load this campaign.
         </p>
         <button
-          onClick={() => router.push('/dashboard')}
-          className="mt-4 font-mono text-[11px] tracking-[0.22em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
+          onClick={() => router.push('/dashboard/campaigns')}
+          className="mt-4 inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[12.5px] font-medium text-[color:var(--ink-2)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition-colors"
         >
-          Back to dispatches
+          <ArrowEast className="w-3 h-3 rotate-180" />
+          Back to campaigns
         </button>
       </div>
     );
@@ -157,127 +192,161 @@ export default function CampaignDetailPage() {
   const { campaign, sequence, enrollments, perStep, campaignStats } = data.data;
 
   return (
-    <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-10 md:py-12">
-      {/* ── Header ────────────────────────────────── */}
-      <section className="mb-10 flex items-end justify-between gap-6 flex-wrap">
-        <div className="max-w-[720px]">
-          <div className="flex items-center gap-3 mb-4">
-            <Link
-              href="/dashboard"
-              className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
-            >
-              Dispatches
-            </Link>
-            <span className="font-mono text-[10px] text-[color:var(--ink-3)]">/</span>
-            <Link
-              href="/dashboard/campaigns"
-              className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
-            >
-              Campaigns
-            </Link>
-            <span className="font-mono text-[10px] text-[color:var(--ink-3)]">/</span>
-            <StatusPill status={campaign.status} />
-          </div>
-          <h1 className=" text-[44px] md:text-[56px] leading-[0.97] tracking-[-0.015em] text-[color:var(--ink)]">
-            {campaign.name}
-          </h1>
-          {campaign.description && (
-            <p className="mt-3  text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
-              {campaign.description}
-            </p>
-          )}
+    <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10 animate-fade-up">
+      {/* Header — breadcrumb + title row + actions */}
+      <section className="mb-6">
+        <div className="flex items-center gap-1.5 mb-3 font-mono text-[10.5px] text-[color:var(--ink-3)]">
+          <Link
+            href="/dashboard/campaigns"
+            className="hover:text-[color:var(--ink)] transition-colors"
+          >
+            Campaigns
+          </Link>
+          <span className="text-[color:var(--ink-3)]/60">/</span>
+          <span className="text-[color:var(--ink-2)] truncate max-w-[480px]">{campaign.name}</span>
         </div>
-        <div className="flex items-center gap-2">
-          {campaign.status === 'active' && (
-            <button
-              onClick={() => void runAction('pause')}
-              disabled={busy !== null}
-              className="inline-flex items-center gap-2 border border-[color:var(--rule)] bg-[color:var(--paper-3)] text-[color:var(--ink)] hover:border-[color:var(--ink)] px-4 py-2.5 rounded-full  text-[13px] disabled:opacity-50 transition"
-            >
-              {busy === 'pause' ? 'Pausing…' : 'Pause'}
-            </button>
-          )}
-          {campaign.status === 'paused' && (
-            <button
-              onClick={() => void runAction('resume')}
-              disabled={busy !== null}
-              className="inline-flex items-center gap-2 bg-[color:var(--forest)] text-[color:var(--paper)] hover:bg-[color:var(--forest-2)] px-4 py-2.5 rounded-full  text-[13px] font-medium disabled:opacity-50 transition"
-            >
-              {busy === 'resume' ? 'Resuming…' : 'Resume'}
-            </button>
-          )}
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)] truncate">
+                {campaign.name}
+              </h1>
+              <StatusPill status={campaign.status} />
+            </div>
+            {campaign.description && (
+              <p className="mt-1 text-[13px] text-[color:var(--ink-2)] leading-[1.5] max-w-[680px]">
+                {campaign.description}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {campaign.status === 'active' && (
+              <button
+                onClick={() => void runAction('pause')}
+                disabled={busy !== null}
+                className="inline-flex items-center h-8 px-3 rounded-md text-[12.5px] font-medium text-[color:var(--ink-2)] border border-[color:var(--rule)] bg-[color:var(--paper-2)] hover:border-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition-colors disabled:opacity-50"
+              >
+                {busy === 'pause' ? 'Pausing…' : 'Pause'}
+              </button>
+            )}
+            {campaign.status === 'paused' && (
+              <button
+                onClick={() => void runAction('resume')}
+                disabled={busy !== null}
+                className="inline-flex items-center h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--forest)] text-white hover:bg-[color:var(--forest-2)] transition-colors disabled:opacity-50"
+              >
+                {busy === 'resume' ? 'Resuming…' : 'Resume'}
+              </button>
+            )}
+          </div>
         </div>
       </section>
 
       {actionError && (
-        <div role="alert" className="mb-6 border border-[color:var(--warn)]/60 bg-[color:var(--warn)]/10 rounded-sm p-4  text-[13.5px] text-[color:var(--ink)]">
-          {actionError}
+        <div role="alert" className="mb-4 flex items-start gap-3 rounded-lg border border-[color:var(--warn)]/30 bg-[color:var(--warn)]/[0.04] px-4 py-3 text-[13px] text-[color:var(--ink)]">
+          <span className="mt-[6px] inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--warn)] shrink-0" aria-hidden />
+          <span className="text-[color:var(--ink-2)]">{actionError}</span>
         </div>
       )}
 
-      {/* ── KPI grid ────────────────────────────────── */}
+      {/* KPI strip — single rounded-xl card with mono tabular numbers */}
       <Section chapter="01" title="At a glance">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <Kpi label="Enrolled" value={enrollments.total} accent />
-          <Kpi label="Active" value={enrollments.active} />
-          <Kpi label="Sent" value={campaignStats.sent} />
-          <Kpi label="Replied" value={enrollments.replied + campaignStats.replied} />
-          <Kpi label="Bounced" value={enrollments.bounced + campaignStats.bounced} />
-          <Kpi label="Unsubscribed" value={enrollments.unsubscribed} />
+        <div
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 rounded-xl border border-[color:var(--rule)] bg-[color:var(--paper)] overflow-hidden"
+          aria-label="Campaign metrics"
+        >
+          {[
+            { label: 'Enrolled',     value: enrollments.total,                                                accent: true },
+            { label: 'Active',       value: enrollments.active,                                              accent: false },
+            { label: 'Sent',         value: campaignStats.sent,                                              accent: false },
+            { label: 'Replied',      value: enrollments.replied + campaignStats.replied,                     accent: false },
+            { label: 'Bounced',      value: enrollments.bounced + campaignStats.bounced,                     accent: false },
+            { label: 'Unsubscribed', value: enrollments.unsubscribed,                                        accent: false },
+          ].map((c, i) => (
+            <div
+              key={c.label}
+              className={`${i > 0 ? 'border-l border-t md:border-t-0 border-[color:var(--rule)]' : ''}`}
+            >
+              <Kpi label={c.label} value={c.value} accent={c.accent} />
+            </div>
+          ))}
         </div>
-        <p className="mt-4  italic text-[12.5px] text-[color:var(--ink-3)]">
-          {enrollments.paused > 0 ? `${enrollments.paused} enrollments paused. ` : ''}
-          {enrollments.completed > 0 ? `${enrollments.completed} completed. ` : ''}
-          {enrollments.stopped > 0 ? `${enrollments.stopped} stopped. ` : ''}
+        <p className="mt-3 font-mono text-[10.5px] tabular-nums text-[color:var(--ink-3)]">
+          {enrollments.paused > 0 ? `${enrollments.paused} paused · ` : ''}
+          {enrollments.completed > 0 ? `${enrollments.completed} completed · ` : ''}
+          {enrollments.stopped > 0 ? `${enrollments.stopped} stopped · ` : ''}
           {enrollments.total === 0 && 'Not activated yet — enroll leads from the campaigns index.'}
         </p>
       </Section>
 
-      {/* ── Per-step ────────────────────────────────── */}
+      {/* Per-step sequence */}
       <Section chapter="02" title="Per-step">
         {sequence ? (
-          <div className="border-t border-[color:var(--rule)]">
-            {sequence.steps.map((step) => {
+          <div className="rounded-xl border border-[color:var(--rule)] overflow-hidden bg-[color:var(--paper)]">
+            {sequence.steps.map((step, idx) => {
               const stats = perStep.find((p) => p.stepNumber === step.stepNumber) ?? { sent: 0, bounced: 0, replied: 0 };
               return (
                 <div
                   key={step.stepNumber}
-                  className="grid grid-cols-[48px_auto_1fr_auto_auto_auto] gap-4 items-center py-4 border-b border-[color:var(--rule)]"
+                  className={`grid grid-cols-[36px_auto_1fr_auto_auto_auto] gap-3 md:gap-4 items-center px-4 md:px-5 py-3 ${
+                    idx > 0 ? 'border-t border-[color:var(--rule)]' : ''
+                  }`}
                 >
-                  <span className=" italic text-[26px] leading-none text-[color:var(--ink-3)] tabular-nums">
-                    {String(step.stepNumber).padStart(2, '0')}
+                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full font-mono text-[11px] tabular-nums text-[color:var(--ink-3)] border border-[color:var(--rule)] bg-[color:var(--paper-2)]">
+                    {step.stepNumber}
                   </span>
-                  <span className="font-mono text-[10.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
-                    {step.channel}{step.useAI ? ' · AI' : ''}
+                  <span className="font-mono text-[10.5px] tabular-nums text-[color:var(--ink-3)] uppercase">
+                    {step.channel}{step.useAI ? ' · ai' : ''}
                   </span>
                   <div className="min-w-0">
-                    <div className=" text-[14px] text-[color:var(--ink)] truncate">
-                      {step.emailTemplate?.subject || <span className="italic text-[color:var(--ink-3)]">No subject</span>}
+                    <div className="text-[13.5px] text-[color:var(--ink)] font-medium truncate">
+                      {step.emailTemplate?.subject || (
+                        <span className="text-[color:var(--ink-3)] font-normal">No subject</span>
+                      )}
                     </div>
-                    <div className="font-mono text-[10.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] mt-1 truncate">
-                      Day {step.delayDays}{step.tone ? ` · ${step.tone}` : ''}{step.goal ? ` · goal: ${step.goal}` : ''}
+                    <div className="font-mono text-[10.5px] tabular-nums text-[color:var(--ink-3)] mt-0.5 truncate">
+                      Day {step.delayDays}
+                      {step.tone ? ` · ${step.tone}` : ''}
+                      {step.goal ? ` · ${step.goal}` : ''}
                     </div>
                   </div>
                   <StepCount label="sent" n={stats.sent} />
-                  <StepCount label="replied" n={stats.replied} />
-                  <StepCount label="bounced" n={stats.bounced} tone={stats.bounced > 0 ? 'warn' : 'muted'} />
+                  <StepCount label="repl" n={stats.replied} />
+                  <StepCount label="bnc" n={stats.bounced} tone={stats.bounced > 0 ? 'warn' : 'muted'} />
                 </div>
               );
             })}
           </div>
         ) : (
-          <p className=" italic text-[13.5px] text-[color:var(--ink-3)]">
-            This campaign has no linked sequence. (Legacy campaigns created before the builder update.)
-          </p>
+          <div className="rounded-xl border border-[color:var(--rule)] bg-[color:var(--paper-2)]/40 p-6 text-center">
+            <p className="text-[13px] text-[color:var(--ink-2)]">
+              This campaign has no linked sequence.
+              <span className="text-[color:var(--ink-3)] ml-1">(Legacy campaigns predate the builder update.)</span>
+            </p>
+          </div>
         )}
       </Section>
 
-      {/* ── Activity footer ────────────────────────────────── */}
+      {/* Notes */}
       <Section chapter="03" title="Notes">
-        <ul className=" text-[13.5px] text-[color:var(--ink-2)] space-y-2">
-          <li>Stats refresh every 15 seconds. <span className="text-[color:var(--ink-3)]">Sent counter is maintained by the sequence worker per successful delivery.</span></li>
-          <li>Reply + bounce ingestion comes online with the webhook milestone; those columns will stay at zero until then.</li>
-          <li>Drafts generated via AI per-send are persisted under <Link href={`/dashboard/leads?campaignId=${campaign._id}`} className="underline decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]">leads</Link> for audit.</li>
+        <ul className="text-[12.5px] text-[color:var(--ink-2)] space-y-1.5 leading-[1.55]">
+          <li>
+            Stats refresh every 15 seconds.
+            <span className="text-[color:var(--ink-3)] ml-1">Sent counter is maintained by the sequence worker per successful delivery.</span>
+          </li>
+          <li>
+            Reply + bounce ingestion comes online with the webhook milestone; those columns will stay at zero until then.
+          </li>
+          <li>
+            AI-generated drafts are persisted under{' '}
+            <Link
+              href={`/dashboard/leads?campaignId=${campaign._id}`}
+              className="text-[color:var(--ink)] hover:text-[color:var(--forest)] underline underline-offset-[3px] decoration-[color:var(--rule)] hover:decoration-[color:var(--forest)] transition-colors"
+            >
+              leads
+            </Link>{' '}
+            for audit.
+          </li>
         </ul>
       </Section>
     </div>
@@ -289,11 +358,11 @@ function StepCount({ label, n, tone = 'muted' }: { label: string; n: number; ton
     ? 'text-[color:var(--warn)]'
     : n > 0 ? 'text-[color:var(--ink)]' : 'text-[color:var(--ink-3)]';
   return (
-    <div className="w-[76px] text-right">
-      <div className={` text-[22px] leading-none tabular-nums ${numCls}`}>
+    <div className="w-[60px] text-right">
+      <div className={`font-mono text-[16px] leading-none tabular-nums ${numCls}`}>
         {n}
       </div>
-      <div className="mt-1 font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+      <div className="mt-1 font-mono text-[9.5px] tracking-[0.04em] text-[color:var(--ink-3)]">
         {label}
       </div>
     </div>

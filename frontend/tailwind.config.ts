@@ -1,8 +1,11 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
+  // class strategy lets next-themes toggle by adding `.dark` to <html>.
+  // Required for `dark:` variants to fire only when the dark class is set,
+  // not based on the OS preference.
   darkMode: 'class',
-  content: [
+content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
@@ -10,9 +13,16 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
+        // Primary B2B SaaS pairing — Geist for everything UI, mono for
+        // all numbers, labels, and IDs. Tabular-numbers feature is on
+        // by default for both Geist faces.
+        sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-geist-mono)', 'ui-monospace', 'monospace'],
+        // Legacy — kept while marketing pages and older components
+        // still reference them. Will retire as those migrate.
         heading: ['var(--font-instrument-serif)', 'serif'],
         body: ['var(--font-barlow)', 'sans-serif'],
-        mono: ['var(--font-jetbrains-mono)', 'ui-monospace', 'monospace'],
+        'mono-legacy': ['var(--font-jetbrains-mono)', 'ui-monospace', 'monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',

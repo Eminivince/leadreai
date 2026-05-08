@@ -101,14 +101,32 @@ export function LeadTable({
         id: 'emails',
         header: 'Email',
         cell: ({ row }) => {
-          const emails = row.original.emails;
-          const first = emails[0];
-          if (!first?.address) return <span className="text-xs text-muted-foreground">—</span>;
+          const emails = row.original.emails ?? [];
+          const real = emails.filter((e) => e.type !== 'pattern_inferred');
+          const inferredCount = emails.length - real.length;
+          const first = real[0];
+
+          if (!first?.address) {
+            // No real email. Show a quiet "guess only" hint if there are
+            // inferred emails — never a real address as the primary email.
+            if (inferredCount > 0) {
+              return (
+                <span
+                  className="text-[10px] uppercase tracking-wider text-amber-600 dark:text-amber-500"
+                  title={`${inferredCount} inferred email guess${inferredCount === 1 ? '' : 'es'} only — no public source.`}
+                >
+                  Guess only
+                </span>
+              );
+            }
+            return <span className="text-xs text-muted-foreground">—</span>;
+          }
+
           return (
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="text-xs text-foreground truncate max-w-[180px]">{first.address}</span>
-              {emails.length > 1 && (
-                <span className="shrink-0 text-[10px] font-mono text-muted-foreground bg-secondary rounded px-1">+{emails.length - 1}</span>
+              {real.length > 1 && (
+                <span className="shrink-0 text-[10px] font-mono text-muted-foreground bg-secondary rounded px-1">+{real.length - 1}</span>
               )}
             </div>
           );

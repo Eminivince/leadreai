@@ -7,8 +7,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useWorkspace } from '@/hooks/useWorkspace';
 import { useJob } from '@/hooks/useJob';
 import { apiFetch } from '@/lib/api';
-import { JobCostCard } from '@/components/costs/JobCostCard';
-import { WorkspaceUsageWidget } from '@/components/costs/WorkspaceUsageWidget';
+import { useAppStore } from '@/store/useAppStore';
+import { PageHelp } from '@/components/ui/PageHelp';
 import type {
   ApiResponse,
   ProspectingJob,
@@ -19,17 +19,17 @@ import type {
 } from '@leadreai/shared';
 
 /* ─────────────────────────────────────────────────────────────────
- * Dashboard — editorial broadsheet.
+ * Dashboard — refined B2B SaaS surface.
  *
- * One page, one job: the primary action is composing a new dispatch.
- * Everything else (running jobs, past dossiers) stacks below.
+ * Composition (top → bottom):
+ *   1. MetricsStrip   — live counters in tabular-nums (signature)
+ *   2. Compose        — the primary action, with focus-ring textarea
+ *   3. ActiveDispatch — the running/most-recent job, expanded card
+ *   4. RecentDispatches — past jobs as a hoverable table
  *
- * Sections:
- *   1. Hero compose — big query input, example prompt chips
- *   2. Active dispatch — the most recent running/recent job, live
- *   3. Recent dispatches — editorial list of past jobs
- *
- * Stats, charts, and widgets live on Analytics (not here).
+ * Cost is intentionally NOT shown here — the credits chip in the
+ * Topbar carries balance awareness; the 30-day usage widget moved
+ * to settings/billing. Per-job cost lives on the lead detail view.
  * ───────────────────────────────────────────────────────────────── */
 
 const EXAMPLE_QUERIES = [
@@ -53,6 +53,21 @@ function ArrowEast({ className = 'w-3.5 h-3.5' }: { className?: string }) {
   );
 }
 
+function SpinIcon({ className = 'w-3 h-3' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={`${className} animate-spin`} aria-hidden>
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5" strokeOpacity="0.25" />
+      <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+const SEARCH_LOADING_COPY = [
+  'Analysing query…',
+  'Checking policy…',
+  'Generating questions…',
+];
+
 /* ── Compose — hero query input ─────────────────────────────── */
 function Compose({
   onSubmit,
@@ -69,8 +84,33 @@ function Compose({
   initialPrompt?: string;
 }) {
   const { workspaceId } = useWorkspace();
+  const { openTopUp } = useAppStore();
+  const qc = useQueryClient();
   const [value, setValue] = useState(initialPrompt ?? '');
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [loadingCopyIdx, setLoadingCopyIdx] = useState(0);
+  const [devBusy, setDevBusy] = useState(false);
+
+  const isInsufficientCredits = error?.startsWith('Insufficient credits') ?? false;
+
+  async function handleDevAddCredits() {
+    setDevBusy(true);
+    try {
+      await apiFetch('/api/v1/credits/test-topup', {
+        method: 'POST',
+        body: JSON.stringify({ amount: 10 }),
+      });
+      await qc.invalidateQueries({ queryKey: ['credits'] });
+    } finally {
+      setDevBusy(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!isSubmitting) { setLoadingCopyIdx(0); return; }
+    const id = setInterval(() => setLoadingCopyIdx((p) => (p + 1) % SEARCH_LOADING_COPY.length), 2200);
+    return () => clearInterval(id);
+  }, [isSubmitting]);
 
   // Focus + scroll into view the moment a prefilled prompt lands (e.g.
   // the user came here from the Library detail page). Textarea stays a
@@ -118,20 +158,35 @@ function Compose({
       className={`relative transition-opacity ${isDimmed ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}
       aria-hidden={isDimmed || undefined}
     >
-      <div className="flex items-center gap-3 mb-7">
-        <span className="block w-8 h-px bg-[color:var(--ink)]" />
-        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
-          Create a search
+      <div className="flex items-center justify-between mb-3">
+        <span className="font-mono text-[10.5px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
+          New search
         </span>
+        <PageHelp
+          title="New search"
+          body="Describe the contacts you need and the AI builds a list of leads. One credit covers the whole job."
+          tips={[
+            'Be specific — include industry, geography, seniority, or funding stage.',
+            'You can ask for extra columns like revenue, headcount, or LinkedIn URL.',
+            'Running searches appear below. Click them to watch progress in real time.',
+          ]}
+        />
       </div>
 
-      <h1 className=" text-[44px] md:text-[64px] leading-[0.94] tracking-[-0.015em] text-[color:var(--ink)] max-w-[880px]">
-        Describe who you&rsquo;re <br className="hidden md:inline" />
-        looking for. <em className="italic text-[color:var(--forest)]">We&rsquo;ll read</em> the rest.
-      </h1>
-
-      <div className="mt-8">
-        <div className="bg-[color:var(--paper-3)] border border-[color:var(--rule)] rounded-sm">
+      <div>
+        {/* Compose card — quiet by default. Soft amber glow ring on
+            focus-within so the textarea + the submit button read as
+            one connected surface. The same ring stays lit while the
+            request is in-flight, signalling activity without yanking
+            colour. Replaces the old broadsheet headline + dashed
+            border treatment. */}
+        <div
+          className={`relative bg-[color:var(--paper)] border rounded-xl transition-all duration-200 focus-within:border-[color:var(--forest)]/60 focus-within:shadow-[0_0_0_4px_color-mix(in_srgb,var(--forest)_8%,transparent)] ${
+            isSubmitting
+              ? 'border-[color:var(--forest)]/60 shadow-[0_0_0_4px_color-mix(in_srgb,var(--forest)_8%,transparent)]'
+              : 'border-[color:var(--rule)]'
+          }`}
+        >
           <textarea
             ref={inputRef}
             value={value}
@@ -142,61 +197,98 @@ function Compose({
                 void handleSubmit();
               }
             }}
-            placeholder="e.g. Top 50 Nigerian fintechs with Series-B funding. CEO name, work email, phone."
+            placeholder="Top 50 Nigerian fintechs with Series-B funding. CEO name, work email, phone..."
             rows={3}
-            className="block w-full bg-transparent resize-none px-5 py-4  italic text-[18px] md:text-[22px] leading-[1.4] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] focus:outline-none"
+            className="block w-full bg-transparent resize-none px-5 pt-5 pb-3 text-[15.5px] md:text-[16.5px] leading-[1.55] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] focus:outline-none"
           />
-          <div className="flex items-center justify-between px-5 py-3 border-t border-[color:var(--rule)]">
-            <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+          <div className="flex items-center justify-between gap-3 px-5 pb-4">
+            <span className="font-mono text-[10.5px] tabular-nums tracking-[0.04em] text-[color:var(--ink-3)]">
               {value.length === 0
-                ? 'Min. 10 characters'
+                ? 'Min 10 characters'
                 : value.length < 10
-                  ? `${10 - value.length} more characters`
-                  : `${value.length} characters · ⌘↵ to run`}
+                  ? `${10 - value.length} more`
+                  : `${value.length} chars · ⌘↵`}
             </span>
             <button
               onClick={() => void handleSubmit()}
               disabled={isSubmitting || value.trim().length < 10}
-              className="group inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`group inline-flex items-center gap-1.5 px-3.5 h-8 rounded-md text-[12.5px] font-medium tabular-nums transition-all disabled:cursor-not-allowed ${
+                isSubmitting
+                  ? 'bg-[color:var(--forest)] text-white'
+                  : 'bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] disabled:opacity-40 disabled:hover:bg-[color:var(--ink)]'
+              }`}
             >
-              {isSubmitting ? 'Running\u2026' : 'Run search'}
-              <ArrowEast className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+              {isSubmitting ? (
+                <>
+                  <SpinIcon className="w-3 h-3 shrink-0" />
+                  <span key={loadingCopyIdx} className="animate-[fadeIn_200ms_ease-out]">
+                    {SEARCH_LOADING_COPY[loadingCopyIdx]}
+                  </span>
+                </>
+              ) : (
+                <>
+                  Run
+                  <ArrowEast className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                </>
+              )}
             </button>
           </div>
         </div>
 
-        {/* Error banner */}
+        {/* Error banner — soft red bar with status dot */}
         {error && (
-          <div className="mt-3 border-l-2 border-[color:var(--warn)] bg-[color:var(--paper-3)] px-4 py-3  text-[13px] text-[color:var(--ink)]">
-            <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--warn)] block mb-1">
-              Rejected
-            </span>
-            {error}
+          <div className="mt-3 flex items-start gap-3 rounded-lg border border-[color:var(--warn)]/30 bg-[color:var(--warn)]/[0.04] px-4 py-3 text-[13px] text-[color:var(--ink)]">
+            <span className="mt-[6px] inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--warn)] shrink-0" aria-hidden />
+            <div className="flex-1 min-w-0">
+              <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--warn)] block mb-0.5">
+                Rejected
+              </span>
+              <span className="text-[color:var(--ink-2)]">{error}</span>
+              {isInsufficientCredits && (
+                <div className="mt-3 flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={openTopUp}
+                    className="inline-flex items-center gap-1.5 bg-[color:var(--ink)] text-[color:var(--paper)] px-3 h-7 rounded-md text-[12px] font-medium hover:bg-[color:var(--forest)] transition-colors"
+                  >
+                    Buy credits
+                  </button>
+                  {process.env.NODE_ENV === 'development' && (
+                    <button
+                      type="button"
+                      onClick={() => void handleDevAddCredits()}
+                      disabled={devBusy}
+                      className="inline-flex items-center gap-1.5 border border-[color:var(--rule)] px-3 h-7 rounded-md text-[12px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] hover:border-[color:var(--ink-2)] transition-colors disabled:opacity-50"
+                    >
+                      {devBusy ? 'Adding…' : 'Dev: +10 credits'}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        {/* Library-in-scope chip — only when there's something to surface */}
+        {/* Library-in-scope chip — small, mono, sits with the suggestions */}
         {readyLibraryCount > 0 && (
-          <div className="mt-4 flex items-center gap-2.5 flex-wrap">
+          <div className="mt-4">
             <Link
               href="/dashboard/library"
               title="The agent reads these before every search"
-              className="inline-flex items-center gap-2 border border-[color:var(--forest)]/40 bg-[color:var(--forest)]/5 text-[color:var(--forest)] hover:border-[color:var(--forest)] rounded-full px-3 py-1 transition-colors"
+              className="inline-flex items-center gap-2 rounded-md border border-[color:var(--forest)]/30 bg-[color:var(--forest)]/[0.06] hover:border-[color:var(--forest)]/60 px-2.5 h-7 transition-colors"
             >
-              <span className="font-mono text-[10px] tracking-[0.18em] uppercase">
-                In scope
-              </span>
-              <span className=" italic text-[12.5px]">
-                {readyLibraryCount} {readyLibraryCount === 1 ? 'document' : 'documents'} from your Library
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)]" aria-hidden />
+              <span className="font-mono text-[10.5px] tracking-[0.06em] text-[color:var(--forest-2)] tabular-nums">
+                {readyLibraryCount} {readyLibraryCount === 1 ? 'doc' : 'docs'} in scope
               </span>
             </Link>
           </div>
         )}
 
         {/* Example chips */}
-        <div className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-2">
-          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] mr-1">
-            Suggested
+        <div className="mt-5 flex flex-wrap items-center gap-1.5">
+          <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)] mr-1.5">
+            Try
           </span>
           {EXAMPLE_QUERIES.map((q) => (
             <button
@@ -205,9 +297,9 @@ function Compose({
                 setValue(q);
                 inputRef.current?.focus();
               }}
-              className=" italic text-[12.5px] text-[color:var(--ink-2)] bg-[color:var(--paper-2)] border border-[color:var(--rule)] hover:border-[color:var(--ink)] rounded-full px-3 py-1.5 transition-colors"
+              className="text-[12px] text-[color:var(--ink-2)] bg-[color:var(--paper-2)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] hover:text-[color:var(--ink)] rounded-md px-2.5 py-1 transition-colors"
             >
-              &ldquo;{q.length > 70 ? q.slice(0, 68) + '\u2026' : q}&rdquo;
+              {q.length > 64 ? q.slice(0, 62) + '\u2026' : q}
             </button>
           ))}
         </div>
@@ -329,6 +421,24 @@ function ClarificationPanel({
   isSubmitting: boolean;
   error: string | null;
 }) {
+  const { openTopUp } = useAppStore();
+  const qc = useQueryClient();
+  const [devBusy, setDevBusy] = useState(false);
+  const isInsufficientCredits = error?.startsWith('Insufficient credits') ?? false;
+
+  async function handleDevAddCredits() {
+    setDevBusy(true);
+    try {
+      await apiFetch('/api/v1/credits/test-topup', {
+        method: 'POST',
+        body: JSON.stringify({ amount: 10 }),
+      });
+      await qc.invalidateQueries({ queryKey: ['credits'] });
+    } finally {
+      setDevBusy(false);
+    }
+  }
+
   const requiredAnswered = questions
     .filter((q) => q.required)
     .every((q) => {
@@ -381,7 +491,28 @@ function ClarificationPanel({
           <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--warn)] block mb-1">
             Rejected
           </span>
-          {error}
+          <span>{error}</span>
+          {isInsufficientCredits && (
+            <div className="mt-3 flex items-center gap-3 flex-wrap">
+              <button
+                type="button"
+                onClick={openTopUp}
+                className="inline-flex items-center gap-1.5 bg-[color:var(--ink)] text-[color:var(--paper)] px-3 py-1.5 rounded-full text-[12px] font-medium hover:bg-[color:var(--forest)] transition-colors"
+              >
+                Buy credits
+              </button>
+              {process.env.NODE_ENV === 'development' && (
+                <button
+                  type="button"
+                  onClick={() => void handleDevAddCredits()}
+                  disabled={devBusy}
+                  className="inline-flex items-center gap-1.5 border border-[color:var(--rule)] px-3 py-1.5 rounded-full text-[12px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] hover:border-[color:var(--ink-2)] transition-colors disabled:opacity-50"
+                >
+                  {devBusy ? 'Adding…' : 'Dev: Add 10 credits'}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -988,187 +1119,183 @@ function ActiveDispatch({ job }: { job: ProspectingJob }) {
   const found = job.progress?.leadsFoundSoFar ?? 0;
   const target = job.parsedIntent?.targetCount ?? '—';
   const schema = job.parsedIntent?.outputSchema ?? [];
-
   const dossierId = job._id.slice(-4).toUpperCase();
-  const workspaceId = job.workspaceId;
-  const isTerminal = job.status === 'complete' || job.status === 'failed' || job.status === 'cancelled';
+  const isLive = job.status !== 'complete' && job.status !== 'failed' && job.status !== 'cancelled';
 
   return (
     <section className="relative">
-      <div className="flex items-center justify-between gap-4 mb-5">
-        <div className="flex items-center gap-3">
-          <span className="block w-8 h-px bg-[color:var(--forest)]" />
-          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
-            Active search
+      <div className="flex items-center justify-between gap-4 mb-3">
+        <div className="flex items-center gap-2">
+          {/* Live-pulse dot when the job is still running, dimmed dot
+              when terminal. Replaces the "Active search" + amber rule
+              eyebrow which was a broadsheet motif. */}
+          {isLive ? (
+            <span className="relative inline-flex">
+              <span className="relative inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)]" />
+              <span className="absolute inset-0 inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)] opacity-60 animate-ping" />
+            </span>
+          ) : (
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ink-3)]" />
+          )}
+          <span className="font-mono text-[10.5px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
+            {isLive ? 'Running' : 'Latest search'}
           </span>
         </div>
-        <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
-          Search №.&nbsp;{dossierId}
+        <span className="font-mono text-[10.5px] tabular-nums text-[color:var(--ink-3)]">
+          #{dossierId}
         </span>
       </div>
 
-      <div className="relative">
-        {/* paper shadow */}
-        <div
-          className="absolute inset-0 translate-x-1 translate-y-1 bg-[color:var(--rule)]/20 rounded-sm"
-          aria-hidden
-        />
-        <div className="relative bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-sm">
-          {/* Header */}
-          <div className="flex items-center justify-between gap-4 px-5 md:px-6 py-3 border-b border-dashed border-[color:var(--rule)]">
-            <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-2)]">
-              Filed {relativeTime(job.createdAt)}
-            </span>
-            <StatusChip status={job.status} />
-          </div>
-
-          {/* Body */}
-          <div className="px-5 md:px-6 py-5 md:py-6">
-            <div className="flex gap-4 md:gap-5">
-              <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-2)] pt-[5px] shrink-0 w-14">
-                Subject
-              </span>
-              <p className=" italic text-[19px] md:text-[22px] leading-[1.3] text-[color:var(--ink)]">
-                &ldquo;{job.rawQuery}&rdquo;
-              </p>
-            </div>
-
-            {/* Meta grid */}
-            <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-5 pt-5 border-t border-[color:var(--rule)]">
-              <div>
-                <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
-                  Stage
-                </span>
-                <div className="mt-1  text-[14px] text-[color:var(--ink)] capitalize">
-                  {stage || '—'}
-                </div>
-              </div>
-              <div>
-                <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
-                  Leads found
-                </span>
-                <div className="mt-1  text-[22px] leading-none tabular-nums text-[color:var(--ink)]">
-                  {found}
-                  <span className="font-mono text-[11px] text-[color:var(--ink-3)] ml-1">
-                    / {target}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
-                  Query type
-                </span>
-                <div className="mt-1  text-[14px] text-[color:var(--ink)] capitalize">
-                  {job.parsedIntent?.queryType?.replace(/_/g, ' ') ?? '—'}
-                </div>
-              </div>
-              <div>
-                <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
-                  Progress
-                </span>
-                <div className="mt-2">
-                  <div className="h-[2px] bg-[color:var(--rule)]/40 overflow-hidden">
-                    <div
-                      className="h-full bg-[color:var(--forest)] transition-all"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <div className="mt-1 font-mono text-[10px] tabular-nums text-[color:var(--ink-2)]">
-                    {pct}%
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Library citations (if the agent cited any workspace docs) */}
-            <LibraryCitations job={job} />
-
-            {/* Live audit trail — every tool call, every decision */}
-            <AuditTrail job={job} />
-
-            {/* Output schema columns (if any) */}
-            {schema.length > 0 && (
-              <div className="mt-5 pt-5 border-t border-[color:var(--rule)]">
-                <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
-                  Requested columns
-                </span>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {schema.map((c) => (
-                    <span
-                      key={c.key}
-                      className=" text-[12px] text-[color:var(--ink-2)] bg-[color:var(--paper)] border border-[color:var(--rule)] px-2.5 py-1"
-                    >
-                      {c.label}{' '}
-                      <span className="font-mono text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
-                        · {c.type}
-                      </span>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="flex items-center justify-between gap-4 px-5 md:px-6 py-3 border-t border-[color:var(--rule)]">
-            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">
-              Auto-refreshing
-            </span>
-            <Link
-              href={`/dashboard/leads?jobId=${job._id}`}
-              className="inline-flex items-center gap-1.5  text-[13px] text-[color:var(--ink)] hover:text-[color:var(--forest)] underline underline-offset-[5px] decoration-[color:var(--rule)] hover:decoration-[color:var(--forest)] transition"
-            >
-              View all leads
-              <ArrowEast className="w-3 h-3" />
-            </Link>
-          </div>
+      {/* Single calm card — no decorative paper-shadow, no dashed
+          rules, no italic subject quote. The status pill, the metric
+          row, and the progress bar do all the work. */}
+      <div className="relative bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-xl overflow-hidden">
+        {/* Header — relative time + status pill */}
+        <div className="flex items-center justify-between gap-3 px-5 md:px-6 py-3 border-b border-[color:var(--rule)]">
+          <span className="font-mono text-[10.5px] text-[color:var(--ink-3)]">
+            Started {relativeTime(job.createdAt)}
+          </span>
+          <StatusChip status={job.status} />
         </div>
-      </div>
 
-      {/* Receipt — cost breakdown. Polls while in-flight, freezes on terminal.
-       *  Hidden entirely for jobs with zero cost (e.g. dry runs) to avoid
-       *  a visually-distracting $0.00 block. */}
-      <div className="mt-10">
-        <JobCostCard workspaceId={workspaceId} jobId={job._id} frozen={isTerminal} />
+        {/* Body — query, then metrics, then progress */}
+        <div className="px-5 md:px-6 py-5">
+          <p className="text-[15px] md:text-[16.5px] leading-[1.55] text-[color:var(--ink)] font-medium">
+            {job.rawQuery}
+          </p>
+
+          {/* 3-cell metric row — tabular-nums dominates */}
+          <div className="mt-5 grid grid-cols-3 gap-x-6 gap-y-4 pt-5 border-t border-[color:var(--rule)]">
+            <div>
+              <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--ink-3)]">
+                Stage
+              </span>
+              <div className="mt-1.5 text-[14px] text-[color:var(--ink)] capitalize">
+                {(stage || '—').replace(/_/g, ' ')}
+              </div>
+            </div>
+            <div>
+              <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--ink-3)]">
+                Leads
+              </span>
+              <div className="mt-1 font-mono text-[26px] leading-none tabular-nums text-[color:var(--ink)]">
+                {found}
+                <span className="text-[12px] text-[color:var(--ink-3)] ml-1">
+                  / {target}
+                </span>
+              </div>
+            </div>
+            <div>
+              <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--ink-3)]">
+                Progress
+              </span>
+              <div className="mt-2.5">
+                <div className="h-[3px] rounded-full bg-[color:var(--paper-3)] overflow-hidden">
+                  <div
+                    className="h-full bg-[color:var(--forest)] transition-all duration-500"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                <div className="mt-1.5 font-mono text-[10.5px] tabular-nums text-[color:var(--ink-2)]">
+                  {pct}%
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Library citations (if the agent cited any workspace docs) */}
+          <LibraryCitations job={job} />
+
+          {/* Live audit trail — every tool call, every decision */}
+          <AuditTrail job={job} />
+
+          {/* Output schema columns (if any) — small mono chips */}
+          {schema.length > 0 && (
+            <div className="mt-5 pt-5 border-t border-[color:var(--rule)]">
+              <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--ink-3)]">
+                Requested columns
+              </span>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {schema.map((c) => (
+                  <span
+                    key={c.key}
+                    className="inline-flex items-center gap-1.5 text-[11.5px] text-[color:var(--ink-2)] bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-md px-2 py-1"
+                  >
+                    {c.label}
+                    <span className="font-mono text-[10px] text-[color:var(--ink-3)]">
+                      {c.type}
+                    </span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer — auto-refresh hint + view-all-leads link */}
+        <div className="flex items-center justify-between gap-3 px-5 md:px-6 py-3 border-t border-[color:var(--rule)] bg-[color:var(--paper-2)]/40">
+          <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--ink-3)]">
+            {isLive ? 'Auto-refreshing' : 'Final'}
+          </span>
+          <Link
+            href={`/dashboard/leads?jobId=${job._id}`}
+            className="group inline-flex items-center gap-1.5 text-[12.5px] font-medium text-[color:var(--ink)] hover:text-[color:var(--forest)] transition-colors"
+          >
+            View all leads
+            <ArrowEast className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        </div>
       </div>
     </section>
   );
 }
 
-/* ── Recent dispatches list ────────────────────────────────── */
+/* ── Recent dispatches table ───────────────────────────────────
+ * Tightened from the broadsheet "italic-quote stack" into a clean
+ * row-based table. Each row reads at a glance: time, query, lead
+ * count, status, action. Hairline dividers, hover tint, click
+ * anywhere on the row to drill in. Keeps density high — recent
+ * searches are reference material, not the page's hero.
+ * ─────────────────────────────────────────────────────────────── */
 function RecentDispatches({ jobs }: { jobs: ProspectingJob[] }) {
   if (jobs.length === 0) return null;
 
   return (
     <section>
-      <div className="flex items-center gap-3 mb-5">
-        <span className="block w-8 h-px bg-[color:var(--ink)]" />
-        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
-          Past searches
+      <div className="flex items-center justify-between mb-3">
+        <span className="font-mono text-[10.5px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
+          Recent searches
+        </span>
+        <span className="font-mono text-[10.5px] tabular-nums text-[color:var(--ink-3)]">
+          {jobs.length}
         </span>
       </div>
 
-      <div className="divide-y divide-[color:var(--rule)] border-t border-b border-[color:var(--rule)]">
-        {jobs.map((j) => {
+      <div className="rounded-xl border border-[color:var(--rule)] overflow-hidden bg-[color:var(--paper)]">
+        {jobs.map((j, idx) => {
           const leads = j.result?.totalLeadsFound ?? j.progress?.leadsFoundSoFar ?? 0;
           const target = j.parsedIntent?.targetCount ?? '—';
           return (
             <Link
               key={j._id}
               href={`/dashboard/leads?jobId=${j._id}`}
-              className="group grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 md:gap-6 items-baseline py-5 px-0 hover:bg-[color:var(--paper-3)]/60 transition-colors"
+              className={`group flex items-center gap-3 md:gap-4 px-4 md:px-5 py-3 hover:bg-[color:var(--paper-2)] transition-colors ${
+                idx > 0 ? 'border-t border-[color:var(--rule)]' : ''
+              }`}
             >
-              <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] shrink-0 w-16">
+              <span className="font-mono text-[10.5px] tabular-nums text-[color:var(--ink-3)] shrink-0 w-14">
                 {relativeTime(j.createdAt)}
               </span>
-              <p className=" italic text-[16px] md:text-[18px] leading-[1.35] text-[color:var(--ink)] truncate">
-                &ldquo;{j.rawQuery}&rdquo;
+              <p className="flex-1 min-w-0 text-[13.5px] leading-[1.45] text-[color:var(--ink)] truncate">
+                {j.rawQuery}
               </p>
-              <span className="font-mono text-[11px] tabular-nums text-[color:var(--ink-2)] hidden md:inline">
-                {leads}/{target}
+              <span className="font-mono text-[11px] tabular-nums text-[color:var(--ink-2)] hidden md:inline shrink-0 w-14 text-right">
+                {leads}<span className="text-[color:var(--ink-3)]">/{target}</span>
               </span>
-              <StatusChip status={j.status} />
-              <ArrowEast className="w-3 h-3 text-[color:var(--ink-3)] group-hover:text-[color:var(--ink)] group-hover:translate-x-0.5 transition" />
+              <div className="shrink-0">
+                <StatusChip status={j.status} />
+              </div>
+              <ArrowEast className="w-3 h-3 text-[color:var(--ink-3)] group-hover:text-[color:var(--ink)] group-hover:translate-x-0.5 transition shrink-0" />
             </Link>
           );
         })}
@@ -1177,23 +1304,107 @@ function RecentDispatches({ jobs }: { jobs: ProspectingJob[] }) {
   );
 }
 
-/* ── Empty state ────────────────────────────────────────────── */
+/* ── Empty state ──────────────────────────────────────────────
+ * No prior searches. Soft card pointing the user back to the
+ * compose box. No editorial italic, no decorative dashed border. */
 function EmptyState() {
   return (
-    <section className="py-4">
-      <div className="border border-dashed border-[color:var(--rule)] rounded-sm p-8 md:p-10 bg-[color:var(--paper-3)]/60">
-        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
-          Get started
-        </span>
-        <h3 className="mt-3  text-[26px] md:text-[30px] leading-[1.1] tracking-[-0.01em] text-[color:var(--ink)]">
-          Ready when you are. <em className="italic text-[color:var(--forest)]">Run your first search</em> above.
-        </h3>
-        <p className="mt-3  text-[14.5px] leading-[1.55] text-[color:var(--ink-2)] max-w-[600px]">
-          A search is one query. Describe who you&rsquo;re looking for in a
-          sentence. The dashboard will return a list with footnotes on every field.
-          Three searches are free.
-        </p>
+    <section>
+      <div className="rounded-xl border border-[color:var(--rule)] bg-[color:var(--paper-2)]/40 p-6 md:p-8 flex items-start gap-4">
+        <div className="shrink-0 w-9 h-9 rounded-lg bg-[color:var(--forest)]/10 border border-[color:var(--forest)]/30 flex items-center justify-center">
+          <ArrowEast className="w-3.5 h-3.5 text-[color:var(--forest-2)] -rotate-90" />
+        </div>
+        <div className="flex-1">
+          <h3 className="text-[15px] font-semibold text-[color:var(--ink)] leading-[1.3]">
+            Ready when you are
+          </h3>
+          <p className="mt-1 text-[13.5px] leading-[1.55] text-[color:var(--ink-2)] max-w-[560px]">
+            Type a sentence in the box above describing who you&rsquo;re looking for. The
+            agent returns a list of contacts with source links you can verify.
+          </p>
+        </div>
       </div>
+    </section>
+  );
+}
+
+/* ── Metrics strip — page signature ───────────────────────────
+ * Three live counters at the top of the page: jobs running now,
+ * leads delivered in the last 7 days, library docs in scope.
+ * Tabular-nums dominate; mono labels sit below in muted ink. The
+ * cells are anchored by hairline dividers, no individual cards —
+ * the strip reads as one continuous instrument panel.
+ * ─────────────────────────────────────────────────────────────── */
+function MetricsStrip({ jobs }: { jobs: ProspectingJob[] }) {
+  const { workspaceId } = useWorkspace();
+
+  // Live count of in-flight jobs (anything that isn't complete/failed/cancelled).
+  const liveCount = jobs.filter(
+    (j) => j.status !== 'complete' && j.status !== 'failed' && j.status !== 'cancelled',
+  ).length;
+
+  // Leads delivered in the last 7 days, summed across completed jobs.
+  // Cheap client-side rollup — we already have the recent jobs list.
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const leadsThisWeek = jobs
+    .filter((j) => j.status === 'complete' && new Date(j.createdAt).getTime() >= sevenDaysAgo)
+    .reduce((acc, j) => acc + (j.result?.totalLeadsFound ?? 0), 0);
+
+  // Library docs in scope — same query the Compose hook already runs.
+  // staleTime matches so React Query dedupes and we don't refetch.
+  const { data: libraryData } = useQuery({
+    queryKey: ['library-ready-count', workspaceId],
+    queryFn: () =>
+      apiFetch<{
+        success: true;
+        data: { data: Array<{ status: string }>; total: number };
+      }>(`/api/v1/workspaces/${workspaceId}/library?limit=100`),
+    enabled: !!workspaceId,
+    staleTime: 30_000,
+  });
+  const libraryReady = (libraryData?.data?.data ?? []).filter((d) => d.status === 'ready').length;
+
+  const cells: Array<{ label: string; value: number; href?: string; live?: boolean }> = [
+    { label: 'Running', value: liveCount, live: liveCount > 0 },
+    { label: 'Leads · 7d', value: leadsThisWeek, href: '/dashboard/leads' },
+    { label: 'Library', value: libraryReady, href: '/dashboard/library' },
+  ];
+
+  return (
+    <section
+      className="grid grid-cols-3 rounded-xl border border-[color:var(--rule)] bg-[color:var(--paper)] overflow-hidden"
+      aria-label="Workspace metrics"
+    >
+      {cells.map((c, i) => {
+        const inner = (
+          <div className="px-5 md:px-6 py-4 md:py-5 h-full flex flex-col gap-1.5">
+            <div className="flex items-center gap-1.5">
+              {c.live && (
+                <span className="relative inline-flex">
+                  <span className="relative inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)]" />
+                  <span className="absolute inset-0 inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)] opacity-60 animate-ping" />
+                </span>
+              )}
+              <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
+                {c.label}
+              </span>
+            </div>
+            <div className="font-mono text-[28px] md:text-[32px] leading-none tabular-nums text-[color:var(--ink)]">
+              {c.value}
+            </div>
+          </div>
+        );
+        const cellClasses = `${i > 0 ? 'border-l border-[color:var(--rule)]' : ''} ${c.href ? 'group hover:bg-[color:var(--paper-2)] transition-colors' : ''}`;
+        return c.href ? (
+          <Link key={c.label} href={c.href} className={cellClasses}>
+            {inner}
+          </Link>
+        ) : (
+          <div key={c.label} className={cellClasses}>
+            {inner}
+          </div>
+        );
+      })}
     </section>
   );
 }
@@ -1401,43 +1612,68 @@ export default function DashboardPage() {
   const composerDimmed = showClarification || showRefusal || showClarifyLoading;
 
   return (
-    <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-10 md:py-14 flex flex-col gap-16 md:gap-20">
-      <Compose
-        onSubmit={handleSubmit}
-        isSubmitting={isSubmitting || phase === 'clarifying'}
-        isDimmed={composerDimmed}
-        error={submitError && !composerDimmed ? submitError : null}
-        initialPrompt={initialPrompt}
+    <div className="relative">
+      {/* Subtle dot grid behind the page — barely-there texture that
+          gives the surface depth in dark mode and keeps light mode from
+          feeling sterile. Pure CSS, no asset, theme-aware via tokens. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.55] [background-image:radial-gradient(color-mix(in_srgb,var(--ink)_8%,transparent)_1px,transparent_1px)] [background-size:24px_24px]"
       />
-      {showClarifyLoading && (
-        <ClarifyLoadingPanel
-          query={inFlightQuery}
-          startedAt={clarifyStartedAt!}
-        />
-      )}
-      {showClarification && (
-        <ClarificationPanel
-          query={clarifyingQuery ?? ''}
-          questions={questions}
-          answers={answers}
-          onChange={setAnswers}
-          onSubmit={() => void handleConfirmClarify()}
-          onEditQuery={handleEditQuery}
-          isSubmitting={phase === 'submitting'}
-          error={submitError}
-        />
-      )}
-      {showRefusal && (
-        <RefusalPanel
-          query={clarifyingQuery ?? ''}
-          policy={refusal!}
-          onTryReframe={handleTryReframe}
-          onDismiss={handleDismissRefusal}
-        />
-      )}
-      {workspaceId && <WorkspaceUsageWidget workspaceId={workspaceId} />}
-      {activeJob ? <ActiveDispatch job={activeJob} /> : <EmptyState />}
-      <RecentDispatches jobs={recentJobs} />
+
+      <div className="max-w-[1180px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10 flex flex-col gap-8 md:gap-10">
+        {/* Stagger the page reveal — each block fades up shortly after
+            the previous one. animate-fade-up + stagger-N classes are
+            already declared in globals.css. Restrained on purpose. */}
+        <div className="animate-fade-up stagger-1">
+          <MetricsStrip jobs={jobs} />
+        </div>
+
+        <div className="animate-fade-up stagger-2">
+          <Compose
+            onSubmit={handleSubmit}
+            isSubmitting={isSubmitting || phase === 'clarifying'}
+            isDimmed={composerDimmed}
+            error={submitError && !composerDimmed ? submitError : null}
+            initialPrompt={initialPrompt}
+          />
+        </div>
+
+        {showClarifyLoading && (
+          <ClarifyLoadingPanel
+            query={inFlightQuery}
+            startedAt={clarifyStartedAt!}
+          />
+        )}
+        {showClarification && (
+          <ClarificationPanel
+            query={clarifyingQuery ?? ''}
+            questions={questions}
+            answers={answers}
+            onChange={setAnswers}
+            onSubmit={() => void handleConfirmClarify()}
+            onEditQuery={handleEditQuery}
+            isSubmitting={phase === 'submitting'}
+            error={submitError}
+          />
+        )}
+        {showRefusal && (
+          <RefusalPanel
+            query={clarifyingQuery ?? ''}
+            policy={refusal!}
+            onTryReframe={handleTryReframe}
+            onDismiss={handleDismissRefusal}
+          />
+        )}
+
+        <div className="animate-fade-up stagger-3">
+          {activeJob ? <ActiveDispatch job={activeJob} /> : <EmptyState />}
+        </div>
+
+        <div className="animate-fade-up stagger-4">
+          <RecentDispatches jobs={recentJobs} />
+        </div>
+      </div>
     </div>
   );
 }

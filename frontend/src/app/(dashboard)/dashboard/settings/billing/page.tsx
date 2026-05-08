@@ -1,7 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
+import { Suspense, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
 import { useAppStore } from '@/store/useAppStore';
 import { useCredits } from '@/hooks/useCredits';
@@ -40,15 +43,17 @@ function fmtDate(iso?: string): string {
 
 function txnLabel(reason: CreditTransaction['reason']): string {
   switch (reason) {
-    case 'dispatch':              return 'Dispatch';
-    case 'dispatch.refund':       return 'Refund — failed dispatch';
-    case 'topup.test':            return 'Top-up (test)';
-    case 'topup.stripe':          return 'Top-up';
-    case 'subscription.renewal':  return 'Monthly renewal';
-    case 'subscription.change':   return 'Plan change';
-    case 'adjustment':            return 'Adjustment';
-    case 'signup':                return 'Sign-up grant';
-    default:                      return reason;
+    case 'dispatch':                return 'Dispatch';
+    case 'dispatch.refund':         return 'Refund — failed dispatch';
+    case 'topup.test':              return 'Top-up (test)';
+    case 'topup.stripe':            return 'Top-up (Stripe)';
+    case 'topup.paystack':          return 'Top-up (Paystack)';
+    case 'subscription.renewal':    return 'Monthly renewal';
+    case 'subscription.change':     return 'Plan change';
+    case 'subscription.paystack':   return 'Subscription (Paystack)';
+    case 'adjustment':              return 'Adjustment';
+    case 'signup':                  return 'Sign-up grant';
+    default:                        return reason;
   }
 }
 
@@ -91,6 +96,39 @@ function BalanceCard({
   );
 }
 
+/**
+ * Reads payment-provider return params from the URL and shows the
+ * appropriate toast, then cleans the URL.
+ */
+function PaymentReturnHandler() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    const stripe = params.get('stripe');
+    const paystack = params.get('paystack');
+
+    if (stripe === 'subscribed' || paystack === 'subscribed') {
+      toast.success('Subscription activated. Your monthly credits will refresh shortly.');
+      void qc.invalidateQueries({ queryKey: ['credits'] });
+      void qc.invalidateQueries({ queryKey: ['credit-transactions'] });
+      router.replace('/dashboard/settings/billing');
+    } else if (stripe === 'topped_up' || paystack === 'topped_up') {
+      toast.success('Top-up complete. Credits have been added to your account.');
+      void qc.invalidateQueries({ queryKey: ['credits'] });
+      void qc.invalidateQueries({ queryKey: ['credit-transactions'] });
+      router.replace('/dashboard/settings/billing');
+    } else if (stripe === 'cancelled') {
+      toast.info('Checkout cancelled. No charge was made.');
+      router.replace('/dashboard/settings/billing');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return null;
+}
+
 export default function BillingSettingsPage() {
   const { openTopUp, openChangePlan } = useAppStore();
   const { data: credits, isLoading: creditsLoading } = useCredits();
@@ -116,6 +154,11 @@ export default function BillingSettingsPage() {
 
   return (
     <div className="flex flex-col gap-14">
+      {/* Handle payment provider return params */}
+      <Suspense fallback={null}>
+        <PaymentReturnHandler />
+      </Suspense>
+
       {/* Plan */}
       <section className="border-t border-[color:var(--rule)] pt-8">
         <SectionHead n="01" title="Subscription" />
@@ -228,9 +271,8 @@ export default function BillingSettingsPage() {
             />
           </div>
           <p className="mt-5  italic text-[12.5px] text-[color:var(--ink-2)] max-w-[620px]">
-            A search draws from the monthly allowance first; top-ups cover overage. Payments
-            aren&rsquo;t wired yet — the Top up and Change plan buttons credit your account
-            instantly for testing the ledger.
+            A search draws from the monthly allowance first; top-ups cover overage. Pay with Stripe
+            or Paystack — both redirect to a hosted checkout and return here on completion.
           </p>
         </div>
       </section>

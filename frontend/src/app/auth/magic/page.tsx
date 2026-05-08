@@ -64,7 +64,7 @@ function MagicLinkVerifyContent() {
   }, []);
 
   return (
-    <main className="min-h-screen w-full bg-white text-[#111827] flex items-center justify-center px-6">
+    <main className="min-h-screen w-full bg-[color:var(--paper)] text-[color:var(--ink)] flex items-center justify-center px-6">
       <div className="max-w-[440px] text-center">
         <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[#6b7280]">
           {state === 'working' ? 'Signing you in' : 'Something went wrong'}

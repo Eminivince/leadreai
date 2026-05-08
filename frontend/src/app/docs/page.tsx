@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import AltNav from '@/components/marketing/AltNav';
 import AltFooter from '@/components/marketing/AltFooter';
-import { altTokens } from '@/components/marketing/alt-tokens';
 
 /* ─────────────────────────────────────────────────────────────────
  * /docs — The Field Manual
@@ -553,16 +552,17 @@ function DocBody() {
                 confirmed it with a mail-server check. This is the most reliable.
               </>,
               <>
-                <InlineCode>Medium</InlineCode> — the email was inferred from the
-                company&rsquo;s known pattern (for example,{' '}
-                <InlineCode>firstname@company.com</InlineCode>) and then confirmed by a
-                mail-server handshake. Most of these work, but there is a small chance of
-                error.
+                <InlineCode>Medium</InlineCode> — we found the email in a public source
+                (a contact page, registry, or directory). It has not been technically
+                verified by a mail-server handshake. Most are reachable, but send a test
+                message before a large campaign.
               </>,
               <>
-                <InlineCode>Unverified</InlineCode> — we found the email address in a
-                public source but could not confirm it technically. Use these with caution —
-                send a test message before launching a full campaign.
+                <InlineCode>Inferred</InlineCode> — we did not find this address in
+                public — we guessed it from the company&rsquo;s likely email pattern (for
+                example, <InlineCode>firstname.lastname@company.com</InlineCode>). Treat
+                inferred addresses as a best guess; they are hidden by default and
+                should be verified before use.
               </>,
             ]}
           />
@@ -750,9 +750,9 @@ function DocBody() {
 
           <Callout>
             Prices shown in Naira are approximate and based on the current $/₦ exchange
-            rate at the time of billing. All payments are processed via{' '}
-            <strong className="text-[color:var(--alt-ink)]">Flutterwave</strong> in local
-            currency — no dollar card required.
+            rate at the time of billing. Billing is coming soon — contact{' '}
+            <strong className="text-[color:var(--alt-ink)]">hello@leadreai.com</strong> for
+            early access and custom pricing.
           </Callout>
         </DocSection>
 
@@ -889,8 +889,7 @@ function DocBody() {
 export default function DocsPage() {
   return (
     <main
-      className="bg-white text-[color:var(--alt-ink)] min-h-screen selection:bg-[color:var(--alt-amber-light)] selection:text-[color:var(--alt-amber-dark)]"
-      style={altTokens}
+      className="alt-tokens bg-[color:var(--paper)] text-[color:var(--alt-ink)] min-h-screen selection:bg-[color:var(--alt-amber-light)] selection:text-[color:var(--alt-amber-dark)]"
     >
       <AltNav />
       <Hero />

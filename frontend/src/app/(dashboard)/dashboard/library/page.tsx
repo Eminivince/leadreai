@@ -1,14 +1,16 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
 import { getAccessToken } from '@/lib/auth';
 import { useWorkspace } from '@/hooks/useWorkspace';
-import { ArrowEast, GhostButton } from '@/components/settings/primitives';
+import { PageHelp } from '@/components/ui/PageHelp';
+import { Pagination } from '@/components/shared/Pagination';
+
+const PAGE_SIZE = 20;
 
 /* ─────────────────────────────────────────────────────────────────
  * The Library — editorial stack of the user's own source material.
@@ -64,29 +66,65 @@ function relativeTime(iso: string): string {
   return `${Math.floor(hr / 24)}d ago`;
 }
 
-function statusTone(s: DocStatus): { label: string; className: string } {
+/**
+ * Status pill spec — same shape used across the dashboard for live
+ * state (running jobs, dispatched leads, library docs). Dot colour
+ * encodes status; label is lowercase mono. The "live" branch returns
+ * `pulse: true` so the row can render a ping animation alongside.
+ */
+function statusTone(s: DocStatus): {
+  label: string;
+  dotClass: string;
+  textClass: string;
+  pulse: boolean;
+} {
   switch (s) {
     case 'ready':
       return {
-        label: 'Filed',
-        className: 'text-[color:var(--forest)] border-[color:var(--forest)]/40',
+        label: 'ready',
+        dotClass: 'bg-[color:var(--forest)]',
+        textClass: 'text-[color:var(--forest-2)]',
+        pulse: false,
       };
     case 'failed':
       return {
-        label: 'Failed',
-        className: 'text-[color:var(--warn)] border-[color:var(--warn)]/40',
+        label: 'failed',
+        dotClass: 'bg-[color:var(--warn)]',
+        textClass: 'text-[color:var(--warn)]',
+        pulse: false,
       };
     case 'pending':
+      return {
+        label: 'queued',
+        dotClass: 'bg-[color:var(--ink-3)]',
+        textClass: 'text-[color:var(--ink-3)]',
+        pulse: true,
+      };
     case 'parsing':
+      return {
+        label: 'parsing',
+        dotClass: 'bg-[color:var(--ink-2)]',
+        textClass: 'text-[color:var(--ink-2)]',
+        pulse: true,
+      };
     case 'embedding':
       return {
-        label: s === 'pending' ? 'Queued' : s === 'parsing' ? 'Parsing' : 'Embedding',
-        className: 'text-[color:var(--ink-2)] border-[color:var(--rule)]',
+        label: 'indexing',
+        dotClass: 'bg-[color:var(--ink-2)]',
+        textClass: 'text-[color:var(--ink-2)]',
+        pulse: true,
       };
     default:
-      return { label: s, className: 'text-[color:var(--ink-3)] border-[color:var(--rule)]' };
+      return {
+        label: s,
+        dotClass: 'bg-[color:var(--ink-3)]',
+        textClass: 'text-[color:var(--ink-3)]',
+        pulse: false,
+      };
   }
 }
+
+/* ── Icons ─────────────────────────────────────────────────────── */
 
 function TrashIcon({ className = 'w-3.5 h-3.5' }: { className?: string }) {
   return (
@@ -116,6 +154,106 @@ function UploadIcon({ className = 'w-4 h-4' }: { className?: string }) {
   );
 }
 
+function CheckIcon({ className = 'w-3 h-3' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <polyline
+        points="20 6 9 17 4 12"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function CloseIcon({ className = 'w-3.5 h-3.5' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path
+        d="M18 6 6 18M6 6l12 12"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/* ── BulkBar ────────────────────────────────────────────────────── */
+
+interface BulkBarProps {
+  count: number;
+  onDelete: () => void;
+  onClear: () => void;
+  isDeleting: boolean;
+}
+
+function BulkBar({ count, onDelete, onClear, isDeleting }: BulkBarProps) {
+  const [confirming, setConfirming] = useState(false);
+
+  function handleDeleteClick() {
+    if (!confirming) {
+      setConfirming(true);
+      return;
+    }
+    setConfirming(false);
+    onDelete();
+  }
+
+  function handleClear() {
+    setConfirming(false);
+    onClear();
+  }
+
+  return (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-up">
+      <div className="flex items-center gap-3 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-3 rounded-xl shadow-2xl border border-[color:var(--paper)]/10">
+        <span className="text-[13px] font-semibold tabular-nums whitespace-nowrap">
+          {count} selected
+        </span>
+
+        <span className="w-px h-5 bg-[color:var(--paper)]/20 shrink-0" />
+
+        <button
+          onClick={handleDeleteClick}
+          disabled={isDeleting}
+          className={`flex items-center gap-1.5 text-[12.5px] font-medium transition-colors whitespace-nowrap disabled:opacity-50 ${
+            confirming
+              ? 'text-[color:var(--warn)] font-semibold'
+              : 'text-[color:var(--warn)] hover:opacity-80'
+          }`}
+        >
+          <TrashIcon className="w-3.5 h-3.5" />
+          {isDeleting ? 'Deleting…' : confirming ? 'Confirm delete' : 'Delete'}
+        </button>
+
+        {confirming && (
+          <button
+            onClick={() => setConfirming(false)}
+            className="text-[12px] text-[color:var(--paper)]/60 hover:text-[color:var(--paper)] transition-colors whitespace-nowrap"
+          >
+            Cancel
+          </button>
+        )}
+
+        <span className="w-px h-5 bg-[color:var(--paper)]/20 shrink-0" />
+
+        <button
+          onClick={handleClear}
+          className="p-1 text-[color:var(--paper)]/50 hover:text-[color:var(--paper)] transition-colors rounded"
+          aria-label="Clear selection"
+        >
+          <CloseIcon className="w-3 h-3" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Page ───────────────────────────────────────────────────────── */
+
 export default function LibraryPage() {
   const router = useRouter();
   const { workspaceId } = useWorkspace();
@@ -123,6 +261,11 @@ export default function LibraryPage() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  // Multi-select state
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [page, setPage] = useState(1);
 
   const { data, isLoading } = useQuery({
     queryKey: ['library', workspaceId],
@@ -173,6 +316,49 @@ export default function LibraryPage() {
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : 'Retry failed.'),
   });
+
+  /* ── Selection helpers ── */
+
+  const allSelected = docs.length > 0 && selected.size === docs.length;
+  const someSelected = selected.size > 0;
+
+  function toggleOne(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function selectAll() {
+    setSelected(new Set(docs.map((d) => d._id)));
+  }
+
+  function clearSelection() {
+    setSelected(new Set());
+  }
+
+  async function bulkDelete() {
+    if (!workspaceId || selected.size === 0) return;
+    setBulkDeleting(true);
+    try {
+      await Promise.all(
+        Array.from(selected).map((id) =>
+          apiFetch(`/api/v1/workspaces/${workspaceId}/library/${id}`, { method: 'DELETE' }),
+        ),
+      );
+      toast.success(`Removed ${selected.size} ${selected.size === 1 ? 'document' : 'documents'}.`);
+      void qc.invalidateQueries({ queryKey: ['library', workspaceId] });
+      clearSelection();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Bulk delete failed.');
+    } finally {
+      setBulkDeleting(false);
+    }
+  }
+
+  /* ── Upload helpers ── */
 
   async function uploadFile(file: File) {
     if (!workspaceId) return;
@@ -230,55 +416,53 @@ export default function LibraryPage() {
     await onFilesChosen(e.dataTransfer.files);
   }
 
+  const pagedDocs = docs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
-    <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-10 md:py-12">
-      {/* Hero */}
-      <section className="mb-10">
-        <div className="flex items-center gap-3 mb-5">
-          <span className="block w-8 h-px bg-[color:var(--ink)]" />
-          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
-            The library
+    <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10 animate-fade-up">
+      {/* Header — matches dashboard / leads / tables / files */}
+      <section className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-baseline gap-3">
+          <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)]">
+            Library
+          </h1>
+          <span className="font-mono text-[12px] tabular-nums text-[color:var(--ink-3)]">
+            {isLoading ? '...' : total}
           </span>
         </div>
-        <div className="flex items-end justify-between gap-6 flex-wrap">
-          <div className="max-w-[780px]">
-            <h1 className=" text-[44px] md:text-[60px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
-              Your documents.
-            </h1>
-            <p className="mt-4  text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
-              Drop in pitch decks, portfolio lists, ICP notes, case studies — anything that should inform a
-              search. We parse, chunk, and index each file so the agent can quote them back to you while
-              researching.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <GhostButton
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              disabled={uploading}
-            >
-              {uploading ? 'Uploading…' : 'Upload file'}
-            </GhostButton>
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors"
-            >
-              Back to dashboard <ArrowEast className="w-3 h-3" />
-            </Link>
-          </div>
+        <div className="flex items-center gap-2">
+          <PageHelp
+            title="Library"
+            body="Your uploaded documents — pitch decks, ICP notes, portfolio lists, case studies. The AI reads these when prospecting so your context shapes the results."
+            tips={[
+              'Upload PDF, DOCX, or TXT files. They are parsed and indexed automatically.',
+              'Select documents to delete them in bulk.',
+              'The more specific your documents, the more targeted your searches will be.',
+            ]}
+          />
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] transition-colors disabled:opacity-50"
+          >
+            <UploadIcon className="w-3.5 h-3.5" />
+            {uploading ? 'Uploading…' : 'Upload'}
+          </button>
         </div>
       </section>
 
-      {/* Drop zone */}
+      {/* Drop zone — same rounded-xl card pattern, soft amber accent
+          when dragging. No italic copy, no editorial framing. */}
       <section
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={(e) => void onDrop(e)}
         onClick={() => inputRef.current?.click()}
-        className={`mb-10 border-2 border-dashed rounded-sm transition-colors cursor-pointer text-center px-6 py-12 ${
+        className={`mb-6 border border-dashed rounded-xl transition-all cursor-pointer text-center px-6 py-9 ${
           isDragging
-            ? 'border-[color:var(--ink)] bg-[color:var(--paper-3)]'
-            : 'border-[color:var(--rule)] bg-[color:var(--paper-3)]/60 hover:border-[color:var(--ink-2)]'
+            ? 'border-[color:var(--forest)]/60 bg-[color:var(--forest)]/[0.04] shadow-[0_0_0_4px_color-mix(in_srgb,var(--forest)_8%,transparent)]'
+            : 'border-[color:var(--rule)] bg-[color:var(--paper-2)]/40 hover:border-[color:var(--ink-3)] hover:bg-[color:var(--paper-2)]'
         }`}
       >
         <input
@@ -289,123 +473,214 @@ export default function LibraryPage() {
           accept={ACCEPTED_EXTS.join(',')}
           onChange={(e) => void onFilesChosen(e.target.files)}
         />
-        <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[color:var(--paper)] border border-[color:var(--rule)] mb-3 text-[color:var(--ink-2)]">
+        <div className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-[color:var(--paper)] border border-[color:var(--rule)] mb-3 text-[color:var(--ink-2)]">
           <UploadIcon />
         </div>
-        <div className=" text-[22px] text-[color:var(--ink)]">
-          Drop files here <em className="italic text-[color:var(--forest)]">or click to browse</em>
+        <div className="text-[14px] font-medium text-[color:var(--ink)]">
+          Drop files here, or click to browse
         </div>
-        <p className="mt-2  italic text-[12.5px] text-[color:var(--ink-2)]">
-          Docs: PDF · DOCX · XLSX · CSV · TXT · MD · HTML — Audio: MP3 · M4A · WAV · MP4 · WebM — up to 25MB each
+        <p className="mt-1.5 font-mono text-[10.5px] tracking-[0.04em] text-[color:var(--ink-3)]">
+          PDF · DOCX · XLSX · CSV · TXT · MD · HTML · MP3 · M4A · WAV · MP4 · WebM
+          <span className="text-[color:var(--ink-3)]/60 ml-1.5">— up to 25MB</span>
         </p>
       </section>
 
-      {/* Summary strip */}
+      {/* Summary strip — only when there's data, mono tabular pills */}
       {(docs.length > 0 || isLoading) && (
-        <div className="flex items-center gap-6 pb-4 mb-6 border-b border-[color:var(--rule)] flex-wrap">
-          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] tabular-nums">
-            {total} {total === 1 ? 'file' : 'files'}
-          </span>
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          {summary.ready > 0 && (
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-[color:var(--forest)]/30 bg-[color:var(--forest)]/[0.06] px-2 h-6">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)]" aria-hidden />
+              <span className="font-mono text-[10.5px] tabular-nums text-[color:var(--forest-2)]">
+                {summary.ready} ready
+              </span>
+            </span>
+          )}
           {summary.inFlight > 0 && (
-            <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] tabular-nums">
-              {summary.inFlight} processing…
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-[color:var(--rule)] bg-[color:var(--paper)] px-2 h-6">
+              <span className="relative inline-flex">
+                <span className="relative inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ink-2)]" />
+                <span className="absolute inset-0 inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ink-2)] opacity-60 animate-ping" />
+              </span>
+              <span className="font-mono text-[10.5px] tabular-nums text-[color:var(--ink-2)]">
+                {summary.inFlight} processing
+              </span>
             </span>
           )}
           {summary.failed > 0 && (
-            <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--warn)] tabular-nums">
-              {summary.failed} failed
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-[color:var(--warn)]/30 bg-[color:var(--warn)]/[0.04] px-2 h-6">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--warn)]" aria-hidden />
+              <span className="font-mono text-[10.5px] tabular-nums text-[color:var(--warn)]">
+                {summary.failed} failed
+              </span>
             </span>
           )}
-          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--forest)] tabular-nums">
-            {summary.ready} searchable
-          </span>
         </div>
       )}
 
       {/* List */}
       {isLoading ? (
-        <div className="py-12 text-center  italic text-[14px] text-[color:var(--ink-2)]">
-          Loading the library…
+        <div className="py-12 text-center">
+          <span className="font-mono text-[12px] text-[color:var(--ink-3)]">Loading the library…</span>
         </div>
       ) : docs.length === 0 ? (
-        <div className="py-20 text-center">
-          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
-            No documents
-          </span>
-          <h3 className="mt-3  text-[28px] text-[color:var(--ink)]">
-            No documents yet.
-          </h3>
-          <p className="mt-2  italic text-[14px] text-[color:var(--ink-2)]">
-            Drop a pitch deck, portfolio list, or ICP doc above and the agent will start citing it.
+        <div className="border border-[color:var(--rule)] bg-[color:var(--paper-2)]/40 rounded-xl p-10 md:p-12 text-center">
+          <h3 className="text-[15px] font-semibold text-[color:var(--ink)]">No documents yet</h3>
+          <p className="mt-1.5 text-[13px] text-[color:var(--ink-2)] max-w-[420px] mx-auto leading-[1.55]">
+            Drop a pitch deck, portfolio list, or ICP doc into the zone above and the
+            agent will start citing it on every search.
           </p>
         </div>
       ) : (
-        <ul>
-          {docs.map((d, i) => {
-            const tone = statusTone(d.status);
-            const canRetry = d.status === 'failed';
-            return (
-              <li
-                key={d._id}
-                className="grid grid-cols-[40px_1fr_auto_auto_auto] gap-4 items-center py-3 border-b border-[color:var(--rule)]/70 hover:bg-[color:var(--paper-3)]/60 transition-colors"
+        <>
+          {/* Select-all row — same pattern as Tables / Files */}
+          <div className="flex items-center justify-between gap-3 mb-3 min-h-[24px]">
+            <button
+              onClick={allSelected ? clearSelection : selectAll}
+              className="flex items-center gap-2 text-[12px] text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition-colors"
+            >
+              <span
+                className={`w-4 h-4 rounded-[3px] border flex items-center justify-center transition-colors ${
+                  allSelected
+                    ? 'bg-[color:var(--ink)] border-[color:var(--ink)]'
+                    : someSelected
+                      ? 'bg-[color:var(--ink)]/20 border-[color:var(--ink)]'
+                      : 'border-[color:var(--rule)] bg-[color:var(--paper)]'
+                }`}
               >
-                <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] tabular-nums">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <button
-                  onClick={() => router.push(`/dashboard/library/${d._id}`)}
-                  className="min-w-0 text-left"
+                {(allSelected || someSelected) && (
+                  <CheckIcon className="w-2.5 h-2.5 text-[color:var(--paper)]" />
+                )}
+              </span>
+              <span>{allSelected ? 'Deselect all' : 'Select all'}</span>
+            </button>
+            {someSelected && (
+              <span className="font-mono text-[10.5px] tabular-nums text-[color:var(--ink-3)]">
+                {selected.size} / {docs.length}
+              </span>
+            )}
+          </div>
+
+          {/* List card */}
+          <ul className="rounded-xl border border-[color:var(--rule)] overflow-hidden bg-[color:var(--paper)]">
+            {pagedDocs.map((d) => {
+              const tone = statusTone(d.status);
+              const canRetry = d.status === 'failed';
+              const isSelected = selected.has(d._id);
+              return (
+                <li
+                  key={d._id}
+                  className={`group flex items-center gap-3 md:gap-4 px-4 md:px-5 py-3 border-b border-[color:var(--rule)] last:border-b-0 transition-colors ${
+                    isSelected
+                      ? 'bg-[color:var(--paper-2)]'
+                      : 'hover:bg-[color:var(--paper-2)]/60'
+                  }`}
                 >
-                  <div className=" text-[13.5px] text-[color:var(--ink)] truncate">
-                    {d.title ?? d.originalFilename}
-                  </div>
-                  <div className="font-mono text-[10.5px] text-[color:var(--ink-3)] truncate">
-                    {d.fileType.toUpperCase()} · {bytesLabel(d.bytes)}
-                    {d.pageCount ? ` · ${d.pageCount} pages` : ''}
-                    {d.chunkCount ? ` · ${d.chunkCount} chunks` : ''}
-                    {d.status === 'failed' && d.errorMessage
-                      ? ` · ${d.errorMessage.slice(0, 120)}`
-                      : ''}
-                  </div>
-                </button>
-                <span
-                  className={`font-mono text-[9.5px] tracking-[0.18em] uppercase px-2 py-0.5 border bg-[color:var(--paper-3)] ${tone.className}`}
-                >
-                  {tone.label}
-                </span>
-                <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)] tabular-nums whitespace-nowrap">
-                  {relativeTime(d.createdAt)}
-                </span>
-                <div className="flex items-center gap-1">
-                  {canRetry && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        retryMutation.mutate(d._id);
-                      }}
-                      disabled={retryMutation.isPending}
-                      title="Retry processing"
-                      className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--forest)] hover:text-[color:var(--ink)] transition disabled:opacity-60 px-1.5"
-                    >
-                      Retry
-                    </button>
-                  )}
+                  {/* Checkbox */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      deleteMutation.mutate(d._id);
+                      toggleOne(d._id);
                     }}
-                    disabled={deleteMutation.isPending}
-                    className="p-1.5 text-[color:var(--ink-3)] hover:text-[color:var(--warn)] transition disabled:opacity-60"
-                    title="Remove"
+                    className={`shrink-0 w-4 h-4 rounded-[3px] border flex items-center justify-center transition-all ${
+                      isSelected
+                        ? 'bg-[color:var(--ink)] border-[color:var(--ink)] opacity-100'
+                        : `border-[color:var(--rule)] bg-[color:var(--paper)] ${someSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`
+                    }`}
+                    aria-label={isSelected ? 'Deselect document' : 'Select document'}
                   >
-                    <TrashIcon />
+                    {isSelected && <CheckIcon className="w-2.5 h-2.5 text-[color:var(--paper)]" />}
                   </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+
+                  {/* Title + meta — clickable, takes the user to the doc detail */}
+                  <button
+                    onClick={() => router.push(`/dashboard/library/${d._id}`)}
+                    className="flex-1 min-w-0 text-left"
+                  >
+                    <div className="text-[13.5px] font-medium text-[color:var(--ink)] truncate group-hover:text-[color:var(--forest)] transition-colors">
+                      {d.title ?? d.originalFilename}
+                    </div>
+                    <div className="mt-0.5 font-mono text-[10.5px] tabular-nums text-[color:var(--ink-3)] truncate">
+                      {d.fileType.toUpperCase()} · {bytesLabel(d.bytes)}
+                      {d.pageCount ? ` · ${d.pageCount}p` : ''}
+                      {d.chunkCount ? ` · ${d.chunkCount} chunks` : ''}
+                      {d.status === 'failed' && d.errorMessage
+                        ? ` · ${d.errorMessage.slice(0, 100)}`
+                        : ''}
+                    </div>
+                  </button>
+
+                  {/* Status pill — dot + lowercase mono */}
+                  <span
+                    className={`hidden md:inline-flex items-center gap-1.5 shrink-0 ${tone.textClass}`}
+                  >
+                    {tone.pulse ? (
+                      <span className="relative inline-flex">
+                        <span className={`relative inline-block w-1.5 h-1.5 rounded-full ${tone.dotClass}`} />
+                        <span className={`absolute inset-0 inline-block w-1.5 h-1.5 rounded-full ${tone.dotClass} opacity-60 animate-ping`} />
+                      </span>
+                    ) : (
+                      <span className={`inline-block w-1.5 h-1.5 rounded-full ${tone.dotClass}`} />
+                    )}
+                    <span className="font-mono text-[10.5px]">{tone.label}</span>
+                  </span>
+
+                  {/* Relative time */}
+                  <span className="hidden sm:inline font-mono text-[10.5px] tabular-nums text-[color:var(--ink-3)] whitespace-nowrap shrink-0 w-14 text-right">
+                    {relativeTime(d.createdAt)}
+                  </span>
+
+                  {/* Actions — visible on hover */}
+                  <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {canRetry && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          retryMutation.mutate(d._id);
+                        }}
+                        disabled={retryMutation.isPending}
+                        title="Retry processing"
+                        className="text-[11.5px] font-medium text-[color:var(--forest-2)] hover:text-[color:var(--forest)] transition-colors disabled:opacity-60 px-2 h-7 rounded-md hover:bg-[color:var(--paper-3)]"
+                      >
+                        Retry
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteMutation.mutate(d._id);
+                      }}
+                      disabled={deleteMutation.isPending}
+                      className="p-1.5 rounded-md text-[color:var(--ink-3)] hover:text-[color:var(--warn)] hover:bg-[color:var(--paper-3)] transition-colors disabled:opacity-60"
+                      title="Remove"
+                    >
+                      <TrashIcon />
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+
+          {/* Pagination — auto-hides when ≤ 20 docs */}
+          <Pagination
+            page={page}
+            total={docs.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={setPage}
+            itemLabel={docs.length === 1 ? 'document' : 'documents'}
+          />
+        </>
+      )}
+
+      {/* Bulk action bar */}
+      {someSelected && (
+        <BulkBar
+          count={selected.size}
+          onDelete={() => void bulkDelete()}
+          onClear={clearSelection}
+          isDeleting={bulkDeleting}
+        />
       )}
     </div>
   );

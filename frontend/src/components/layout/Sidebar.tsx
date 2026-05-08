@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/useAppStore';
 import { useCredits } from '@/hooks/useCredits';
@@ -10,760 +11,518 @@ import { clearTokens } from '@/lib/auth';
 import { apiFetch } from '@/lib/api';
 import { planConfig } from '@leadreai/shared';
 
-/* ─────────────────────────────────────────────────────────────────
- * Sidebar — main navigation
- * ─────────────────────────────────────────────────────────────────
- * Narrow, typography-first. No icons inside glass pills. Active state
- * is a 2px forest rule on the left + ink-black label. Everything
- * else in ink-2 gray. Sections ("Workspace" / "Settings & More") are
- * labeled with monospace kickers. Bottom row holds credits + account
- * with a hairline divider to the work area.
- *
- * Parents with `children` get a chevron — clicking the chevron (or
- * the label if the parent has no href) toggles the branch. Navigation
- * to the parent route still works via its own label when href is set.
- * Expansion state is persisted to localStorage per parent key so
- * open branches survive route changes and reloads.
- * ───────────────────────────────────────────────────────────────── */
-
 interface NavItem {
-  key: string;
-  label: string;
-  href: string;
-  badge?: string | null;
-  soon?: boolean;
-  children?: NavItem[];
+ key: string;
+ label: string;
+ href: string;
+ badge?: string | null;
+ soon?: boolean;
+ children?: NavItem[];
 }
 
 const PRIMARY: NavItem[] = [
-  { key: 'home',      label: 'Dashboard',  href: '/dashboard' },
-  { key: 'leads',     label: 'Leads',      href: '/dashboard/leads' },
-  { key: 'tables',    label: 'Tables',     href: '/dashboard/tables' },
-  { key: 'workflows', label: 'Workflows',  href: '/dashboard/workflows' },
-  { key: 'files',     label: 'Files',      href: '/dashboard/files' },
-  { key: 'library',   label: 'Library',    href: '/dashboard/library' },
-  { key: 'camps',     label: 'Campaigns',  href: '/dashboard/campaigns' },
+ { key: 'home',   label: 'Dashboard', href: '/dashboard' },
+ { key: 'leads',   label: 'Leads',   href: '/dashboard/leads' },
+ { key: 'tables',  label: 'Tables',   href: '/dashboard/tables' },
+ { key: 'workflows', label: 'Workflows', href: '/dashboard/workflows' },
+ { key: 'files',   label: 'Files',   href: '/dashboard/files' },
+ { key: 'library',  label: 'Library',  href: '/dashboard/library' },
+ { key: 'camps',   label: 'Campaigns', href: '/dashboard/campaigns' },
 ];
 
 const SECONDARY: NavItem[] = [
-  { key: 'integrations', label: 'Integrations',  href: '/dashboard/integrations' },
-  { key: 'analytics',    label: 'Analytics',     href: '#', soon: true },
-  { key: 'automations',  label: 'Automations',   href: '#', soon: true },
-  {
-    key: 'settings',
-    label: 'Settings',
-    href: '/dashboard/settings',
-    children: [
-      { key: 'settings-account',    label: 'Account',          href: '/dashboard/settings/account' },
-      { key: 'settings-workspace',  label: 'Workspace',        href: '/dashboard/settings/workspace' },
-      { key: 'settings-team',       label: 'Team',             href: '/dashboard/settings/team' },
-      { key: 'settings-kb',         label: 'Knowledge base',   href: '/dashboard/settings/knowledge-base' },
-      { key: 'settings-suppress',   label: 'Suppression list', href: '/dashboard/settings/suppression' },
-      { key: 'settings-api',        label: 'API keys',         href: '/dashboard/settings/api-keys' },
-      { key: 'settings-billing',    label: 'Billing & usage',  href: '/dashboard/settings/billing' },
-    ],
-  },
+ { key: 'integrations', label: 'Integrations', href: '/dashboard/integrations' },
+ { key: 'analytics',  label: 'Analytics',   href: '#', soon: true },
+ {
+  key: 'settings',
+  label: 'Settings',
+  href: '/dashboard/settings',
+  children: [
+   { key: 'settings-account',  label: 'Account',     href: '/dashboard/settings/account' },
+   { key: 'settings-workspace', label: 'Workspace',    href: '/dashboard/settings/workspace' },
+   { key: 'settings-team',    label: 'Team',       href: '/dashboard/settings/team' },
+   { key: 'settings-email',   label: 'Email',      href: '/dashboard/settings/email' },
+   { key: 'settings-kb',     label: 'Knowledge base',  href: '/dashboard/settings/knowledge-base' },
+   { key: 'settings-suppress',  label: 'Suppression list', href: '/dashboard/settings/suppression' },
+   { key: 'settings-api',    label: 'API keys',     href: '/dashboard/settings/api-keys' },
+   { key: 'settings-billing',  label: 'Billing & usage', href: '/dashboard/settings/billing' },
+  ],
+ },
 ];
 
 const EXPANDED_STORAGE_KEY = 'sidebar.expanded';
 const COLLAPSED_STORAGE_KEY = 'sidebar.collapsed';
 
 function readCollapsed(): boolean {
-  if (typeof window === 'undefined') return false;
-  try {
-    return window.localStorage.getItem(COLLAPSED_STORAGE_KEY) === '1';
-  } catch {
-    return false;
-  }
+ if (typeof window === 'undefined') return false;
+ try { return window.localStorage.getItem(COLLAPSED_STORAGE_KEY) === '1'; } catch { return false; }
 }
-
 function writeCollapsed(v: boolean): void {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(COLLAPSED_STORAGE_KEY, v ? '1' : '0');
-  } catch {
-    /* storage disabled — ignore */
-  }
+ if (typeof window === 'undefined') return;
+ try { window.localStorage.setItem(COLLAPSED_STORAGE_KEY, v ? '1' : '0'); } catch { /* ignore */ }
 }
-
 function readExpanded(): Record<string, boolean> {
-  if (typeof window === 'undefined') return {};
-  try {
-    const raw = window.localStorage.getItem(EXPANDED_STORAGE_KEY);
-    if (!raw) return {};
-    const v = JSON.parse(raw);
-    return v && typeof v === 'object' ? v : {};
-  } catch {
-    return {};
-  }
+ if (typeof window === 'undefined') return {};
+ try {
+  const raw = window.localStorage.getItem(EXPANDED_STORAGE_KEY);
+  if (!raw) return {};
+  const v = JSON.parse(raw);
+  return v && typeof v === 'object' ? v : {};
+ } catch { return {}; }
 }
-
 function writeExpanded(v: Record<string, boolean>): void {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(EXPANDED_STORAGE_KEY, JSON.stringify(v));
-  } catch {
-    /* storage full / disabled — ignore */
-  }
+ if (typeof window === 'undefined') return;
+ try { window.localStorage.setItem(EXPANDED_STORAGE_KEY, JSON.stringify(v)); } catch { /* ignore */ }
 }
 
 function isChildActive(item: NavItem, pathname: string): boolean {
-  if (!item.children || item.children.length === 0) return false;
-  return item.children.some(
-    (c) => c.href !== '#' && (pathname === c.href || pathname.startsWith(c.href + '/')),
-  );
-}
-
-function Chevron({ open, className = 'w-3 h-3' }: { open: boolean; className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      fill="none"
-      className={cn(className, 'transition-transform', open ? 'rotate-90' : 'rotate-0')}
-      aria-hidden
-    >
-      <path
-        d="m6 4 4 4-4 4"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+ if (!item.children?.length) return false;
+ return item.children.some(c => c.href !== '#' && (pathname === c.href || pathname.startsWith(c.href + '/')));
 }
 
 function getInitials(firstName?: string, lastName?: string) {
-  return `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase() || '?';
+ return `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase() || '?';
 }
 
-function ArrowEast({ className = 'w-3 h-3' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" className={className}>
-      <path
-        d="M2 8h12M10 4l4 4-4 4"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+/* ── Nav Icons ───────────────────────────────────────────────── */
+function NavIcon({ k, size = 16 }: { k: string; size?: number }) {
+ const props = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+ switch (k) {
+  case 'home': return <svg {...props}><path d="M21 3 10.5 14M21 3l-7 18-4-8-8-4 19-6Z" /></svg>;
+  case 'leads': return <svg {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>;
+  case 'tables': return <svg {...props}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18" /></svg>;
+  case 'workflows': return <svg {...props}><path d="M3 12a9 9 0 0 1 15-6.7M21 4v5h-5M21 12a9 9 0 0 1-15 6.7M3 20v-5h5" /></svg>;
+  case 'files': return <svg {...props}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M9 13h6M9 17h6" /></svg>;
+  case 'library': return <svg {...props}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" /></svg>;
+  case 'camps': return <svg {...props}><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1ZM15 8a5 5 0 0 1 0 8M18 5a9 9 0 0 1 0 14" /></svg>;
+  case 'integrations': return <svg {...props}><path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0zM12 18v4" /></svg>;
+  case 'analytics': return <svg {...props}><path d="M3 21h18M7 17V9M12 17V5M17 17v-6" /></svg>;
+  case 'settings': return <svg {...props}><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33 1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" /></svg>;
+  default: return <svg {...props}><circle cx="12" cy="12" r="3" /></svg>;
+ }
 }
 
-function LogOutGlyph({ className = 'w-3.5 h-3.5' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={className}>
-      <path
-        d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-/* ── Nav icons (editorial stroke style, matches the rest of the app) ─
- * Kept as lightweight inline SVGs to avoid pulling in a full icon lib.
- * Each glyph uses stroke 1.5 to match ArrowEast / LogOutGlyph above. */
-
-function NavIcon({ keyName, className = 'w-4 h-4' }: { keyName: string; className?: string }) {
-  const common = { fill: 'none', viewBox: '0 0 24 24', className };
-  const strokeProps = {
-    stroke: 'currentColor',
-    strokeWidth: 1.5,
-    strokeLinecap: 'round' as const,
-    strokeLinejoin: 'round' as const,
-  };
-  switch (keyName) {
-    case 'home': // dashboard — paper plane
-      return (
-        <svg {...common}>
-          <path d="M21 3 10.5 14M21 3l-7 18-4-8-8-4 19-6Z" {...strokeProps} />
-        </svg>
-      );
-    case 'leads': // people
-      return (
-        <svg {...common}>
-          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" {...strokeProps} />
-        </svg>
-      );
-    case 'tables': // grid
-      return (
-        <svg {...common}>
-          <path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18" {...strokeProps} />
-        </svg>
-      );
-    case 'workflows': // replay / loop
-      return (
-        <svg {...common}>
-          <path d="M3 12a9 9 0 0 1 15-6.7M21 4v5h-5M21 12a9 9 0 0 1-15 6.7M3 20v-5h5" {...strokeProps} />
-        </svg>
-      );
-    case 'files': // document
-      return (
-        <svg {...common}>
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M9 13h6M9 17h6" {...strokeProps} />
-        </svg>
-      );
-    case 'library': // book
-      return (
-        <svg {...common}>
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" {...strokeProps} />
-        </svg>
-      );
-    case 'camps': // megaphone
-      return (
-        <svg {...common}>
-          <path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1ZM15 8a5 5 0 0 1 0 8M18 5a9 9 0 0 1 0 14" {...strokeProps} />
-        </svg>
-      );
-    case 'integrations': // plug
-      return (
-        <svg {...common}>
-          <path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0zM12 18v4" {...strokeProps} />
-        </svg>
-      );
-    case 'analytics': // bars
-      return (
-        <svg {...common}>
-          <path d="M3 21h18M7 17V9M12 17V5M17 17v-6" {...strokeProps} />
-        </svg>
-      );
-    case 'automations': // bolt
-      return (
-        <svg {...common}>
-          <path d="M13 2 4 14h8l-1 8 9-12h-8l1-8Z" {...strokeProps} />
-        </svg>
-      );
-    case 'settings': // gear
-      return (
-        <svg {...common}>
-          <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1v0Z" {...strokeProps} />
-        </svg>
-      );
-    default:
-      return (
-        <svg {...common}>
-          <circle cx="12" cy="12" r="3" {...strokeProps} />
-        </svg>
-      );
-  }
-}
-
-/* ── Collapsed rail row — icon-only link with active indicator ───── */
-
-function RailLink({
-  item,
-  active,
-  disabled,
-}: {
-  item: NavItem;
-  active: boolean;
-  disabled: boolean;
-}) {
-  const body = (
-    <>
-      {active && (
-        <span className="absolute left-0 top-1.5 bottom-1.5 w-[2px] bg-[color:var(--forest)]" aria-hidden />
-      )}
-      <NavIcon keyName={item.key} className="w-[18px] h-[18px]" />
-    </>
-  );
-  const classes = cn(
-    'group relative w-full h-10 flex items-center justify-center transition-colors',
-    active
-      ? 'text-[color:var(--ink)]'
-      : disabled
-        ? 'text-[color:var(--ink-3)]/50 cursor-default'
-        : 'text-[color:var(--ink-2)] hover:text-[color:var(--ink)]',
-  );
-
-  if (disabled) {
-    return (
-      <span className={classes} title={`${item.label} — soon`}>
-        {body}
-      </span>
-    );
-  }
-  return (
-    <Link href={item.href} className={classes} title={item.label} aria-label={item.label}>
-      {body}
-    </Link>
-  );
-}
-
+/* ── Single nav row ───────────────────────────────────────────── */
 function NavRow({
-  item,
-  pathname,
-  expanded,
-  onToggle,
+ item, pathname, expanded, onToggle, showLabels,
 }: {
-  item: NavItem;
-  pathname: string;
-  expanded: boolean;
-  onToggle: (key: string) => void;
+ item: NavItem; pathname: string; expanded: boolean; onToggle: (key: string) => void; showLabels: boolean;
 }) {
-  const hasChildren = !!item.children && item.children.length > 0;
-  const isDisabled = item.href === '#';
+ const hasChildren = !!item.children?.length;
+ const isDisabled = item.href === '#';
 
-  const isSelfActive =
-    item.key === 'home'
-      ? pathname === '/dashboard'
-      : item.href !== '#' && (pathname === item.href || pathname.startsWith(item.href + '/'));
+ const isSelfActive = item.key === 'home'
+  ? pathname === '/dashboard'
+  : item.href !== '#' && (pathname === item.href || pathname.startsWith(item.href + '/'));
+ const childActive = isChildActive(item, pathname);
+ const isActive = isSelfActive || (!isSelfActive && hasChildren && childActive);
 
-  // Parents highlight softly when a child route is active but the
-  // parent itself isn't the current page. Keeps the breadcrumb honest.
-  const childActive = isChildActive(item, pathname);
-  const parentShouldHighlight = hasChildren && !isSelfActive && childActive;
+ const rowBase = 'group relative flex items-center gap-2.5 h-9 px-3 mx-2 rounded-lg text-[13px] transition-all duration-150';
+ const rowState = isActive
+  ? 'bg-[color:var(--forest)]/10 text-[color:var(--forest-2)] font-semibold'
+  : isDisabled
+   ? 'text-[color:var(--ink-3)]/60 cursor-default'
+   : 'text-[color:var(--ink-3)] hover:bg-[color:var(--paper-3)] hover:text-[color:var(--ink)]';
 
-  const rowClasses = cn(
-    'group relative h-9 flex items-center gap-2.5 px-3 text-[13.5px] transition-colors',
-    isSelfActive
-      ? 'text-[color:var(--ink)]'
-      : isDisabled
-        ? 'text-[color:var(--ink-3)] cursor-default'
-        : parentShouldHighlight
-          ? 'text-[color:var(--ink)]'
-          : 'text-[color:var(--ink-2)] hover:text-[color:var(--ink)]',
-  );
+ const inner = (
+  <>
+   <span className="shrink-0 flex items-center justify-center w-[18px]">
+    <NavIcon k={item.key} size={16} />
+   </span>
 
-  const activeRule = isSelfActive && (
-    <span className="absolute left-0 top-2 bottom-2 w-[2px] bg-[color:var(--forest)]" />
-  );
+   <AnimatePresence initial={false}>
+    {showLabels && (
+     <motion.span
+      initial={{ opacity: 0, width: 0 }}
+      animate={{ opacity: 1, width: 'auto' }}
+      exit={{ opacity: 0, width: 0 }}
+      transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+      className="flex-1 truncate overflow-hidden whitespace-nowrap"
+     >
+      {item.label}
+     </motion.span>
+    )}
+   </AnimatePresence>
 
-  const label = (
-    <span className="flex-1 truncate">{item.label}</span>
-  );
-
-  const trailing = (
+   {showLabels && (
     <>
-      {item.soon && (
-        <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
-          soon
-        </span>
-      )}
-      {item.badge && (
-        <span className="font-mono text-[10px] tabular-nums text-[color:var(--ink-2)] bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-full px-1.5 py-0.5">
-          {item.badge}
-        </span>
-      )}
-      {hasChildren && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onToggle(item.key);
-          }}
-          aria-label={expanded ? `Collapse ${item.label}` : `Expand ${item.label}`}
-          aria-expanded={expanded}
-          className="shrink-0 p-1 -mr-1 text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
-        >
-          <Chevron open={expanded} />
-        </button>
-      )}
-    </>
-  );
-
-  const rowBody = (
-    <>
-      {activeRule}
-      {label}
-      {trailing}
-    </>
-  );
-
-  return (
-    <div className="flex flex-col">
-      {isDisabled ? (
-        <span className={rowClasses}>{rowBody}</span>
-      ) : (
-        <Link href={item.href} className={rowClasses}>
-          {rowBody}
-        </Link>
-      )}
-
-      {hasChildren && expanded && (
-        <ul className="ml-3 mb-1 border-l border-[color:var(--rule)]/70">
-          {item.children!.map((child) => {
-            const childIsActive =
-              child.href !== '#' && (pathname === child.href || pathname.startsWith(child.href + '/'));
-            const childDisabled = child.href === '#';
-            const childClasses = cn(
-              'group relative h-8 flex items-center gap-2 pl-4 pr-3 text-[12.5px] transition-colors',
-              childIsActive
-                ? 'text-[color:var(--ink)]'
-                : childDisabled
-                  ? 'text-[color:var(--ink-3)] cursor-default'
-                  : 'text-[color:var(--ink-2)] hover:text-[color:var(--ink)]',
-            );
-            return (
-              <li key={child.key}>
-                {childDisabled ? (
-                  <span className={childClasses}>
-                    <span className="flex-1 truncate">{child.label}</span>
-                  </span>
-                ) : (
-                  <Link href={child.href} className={childClasses}>
-                    {childIsActive && (
-                      <span className="absolute left-[-1px] top-[7px] bottom-[7px] w-[2px] bg-[color:var(--forest)]" />
-                    )}
-                    <span className="flex-1 truncate">{child.label}</span>
-                  </Link>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-function NavGroup({
-  kicker,
-  items,
-  pathname,
-  expandedMap,
-  onToggle,
-}: {
-  kicker: string;
-  items: NavItem[];
-  pathname: string;
-  expandedMap: Record<string, boolean>;
-  onToggle: (key: string) => void;
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] px-3 mb-1">
-        {kicker}
+     {item.soon && (
+      <span className="shrink-0 text-[9px] font-bold uppercase tracking-widest text-[color:var(--ink-3)]/60 bg-[color:var(--paper-3)] rounded px-1.5 py-0.5">
+       Soon
       </span>
-      {items.map((item) => {
-        // A branch is expanded if the user explicitly opened it OR a child
-        // route is currently active (auto-expand so the rail reflects state).
-        const forcedOpen = isChildActive(item, pathname);
-        const expanded = forcedOpen || !!expandedMap[item.key];
-        return (
-          <NavRow
-            key={item.key}
-            item={item}
-            pathname={pathname}
-            expanded={expanded}
-            onToggle={onToggle}
-          />
+     )}
+     {item.badge && (
+      <span className="shrink-0 text-[10px] font-semibold tabular-nums bg-[color:var(--rule)] text-[color:var(--ink-2)] rounded-full px-1.5 py-0.5">
+       {item.badge}
+      </span>
+     )}
+     {hasChildren && (
+      <button
+       type="button"
+       onClick={e => { e.preventDefault(); e.stopPropagation(); onToggle(item.key); }}
+       className="shrink-0 p-0.5 text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition-colors"
+       aria-label={expanded ? `Collapse ${item.label}` : `Expand ${item.label}`}
+      >
+       <motion.svg
+        animate={{ rotate: expanded ? 90 : 0 }}
+        transition={{ duration: 0.15 }}
+        width={12} height={12} viewBox="0 0 16 16" fill="none"
+       >
+        <path d="m6 4 4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+       </motion.svg>
+      </button>
+     )}
+    </>
+   )}
+  </>
+ );
+
+ return (
+  <div>
+   {isDisabled ? (
+    <span className={cn(rowBase, rowState)} title={item.label}>{inner}</span>
+   ) : (
+    <Link href={item.href} className={cn(rowBase, rowState)} title={showLabels ? undefined : item.label}>
+     {inner}
+    </Link>
+   )}
+
+   {hasChildren && showLabels && (
+    <AnimatePresence initial={false}>
+     {expanded && (
+      <motion.ul
+       initial={{ height: 0, opacity: 0 }}
+       animate={{ height: 'auto', opacity: 1 }}
+       exit={{ height: 0, opacity: 0 }}
+       transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+       className="overflow-hidden mx-4 mt-0.5 mb-1 border-l-2 border-[color:var(--rule)] pl-3 flex flex-col gap-0.5"
+      >
+       {item.children!.map(child => {
+        const childActive = child.href !== '#' && (pathname === child.href || pathname.startsWith(child.href + '/'));
+        const childDisabled = child.href === '#';
+        const childClass = cn(
+         'flex h-8 items-center px-2.5 rounded-md text-[12.5px] transition-all duration-150',
+         childActive
+          ? 'text-[color:var(--forest-2)] font-semibold bg-[color:var(--forest)]/10'
+          : childDisabled
+           ? 'text-[color:var(--ink-3)]/50 cursor-default'
+           : 'text-[color:var(--ink-3)] hover:text-[color:var(--ink)] hover:bg-[color:var(--paper-3)]',
         );
-      })}
-    </div>
-  );
+        return (
+         <li key={child.key}>
+          {childDisabled
+           ? <span className={childClass}>{child.label}</span>
+           : <Link href={child.href} className={childClass}>{child.label}</Link>
+          }
+         </li>
+        );
+       })}
+      </motion.ul>
+     )}
+    </AnimatePresence>
+   )}
+  </div>
+ );
 }
 
+/* ── Sidebar ─────────────────────────────────────────────────── */
 export function Sidebar() {
-  const pathname = usePathname();
-  const router = useRouter();
-  const { user, workspace, reset, openTopUp } = useAppStore();
-  const { data: credits } = useCredits();
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [collapsed, setCollapsed] = useState(false);
+ const pathname = usePathname();
+ const router = useRouter();
+ const { user, workspace, reset, openTopUp } = useAppStore();
+ const { data: credits } = useCredits();
+ const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+ const [collapsed, setCollapsed] = useState(false);
 
-  // Hydrate expansion + collapse state after mount to avoid an SSR
-  // mismatch — the server renders the default (nothing expanded, not
-  // collapsed), client then restores what the user had before.
-  useEffect(() => {
-    setExpanded(readExpanded());
-    setCollapsed(readCollapsed());
-  }, []);
+ useEffect(() => {
+  setExpanded(readExpanded());
+  setCollapsed(readCollapsed());
+ }, []);
 
-  const toggleCollapsed = useCallback(() => {
-    setCollapsed((prev) => {
-      const next = !prev;
-      writeCollapsed(next);
-      return next;
-    });
-  }, []);
+ const toggleCollapsed = useCallback(() => {
+  setCollapsed(prev => {
+   const next = !prev;
+   writeCollapsed(next);
+   return next;
+  });
+ }, []);
 
-  // Keyboard shortcut — Cmd/Ctrl + \ toggles the sidebar. Avoids
-  // conflicts with textarea typing ([ and ] are fair game otherwise)
-  // and matches Notion / Linear.
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
-        e.preventDefault();
-        toggleCollapsed();
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [toggleCollapsed]);
-
-  const toggleExpanded = (key: string) => {
-    setExpanded((prev) => {
-      const next = { ...prev, [key]: !prev[key] };
-      writeExpanded(next);
-      return next;
-    });
+ useEffect(() => {
+  const onKeyDown = (e: KeyboardEvent) => {
+   if ((e.metaKey || e.ctrlKey) && e.key === '\\') { e.preventDefault(); toggleCollapsed(); }
   };
+  window.addEventListener('keydown', onKeyDown);
+  return () => window.removeEventListener('keydown', onKeyDown);
+ }, [toggleCollapsed]);
 
-  async function handleLogout() {
-    try {
-      await apiFetch('/api/v1/auth/logout', { method: 'POST' });
-    } catch {
-      /* best-effort */
-    }
-    clearTokens();
-    reset();
-    router.push('/');
-  }
+ const toggleExpanded = (key: string) => {
+  setExpanded(prev => {
+   const next = { ...prev, [key]: !prev[key] };
+   writeExpanded(next);
+   return next;
+  });
+ };
 
-  const monthlyBalance = credits?.monthlyCreditsBalance ?? 0;
-  const topupBalance = credits?.creditsBalance ?? 0;
-  const totalBalance = credits?.totalCreditsBalance ?? monthlyBalance + topupBalance;
-  const plan = credits?.plan ?? 'free';
-  const allowance = planConfig(plan).monthlyCredits;
-  // Progress = how much of this month's allowance has been used so far.
-  // Top-ups extend the rail visually but don't shrink the used %.
-  const monthlyUsed = Math.max(0, allowance - monthlyBalance);
-  const monthlyPct = allowance > 0 ? Math.min(100, Math.round((monthlyUsed / allowance) * 100)) : 0;
+ async function handleLogout() {
+  try { await apiFetch('/api/v1/auth/logout', { method: 'POST' }); } catch { /* best-effort */ }
+  clearTokens();
+  reset();
+  router.push('/');
+ }
 
-  // Collapsed rail — icon-only navigation. Width is 52px, which fits an
-  // 18px glyph with comfortable tap targets and still leaves the main
-  // content area essentially full-width. Every route in PRIMARY and
-  // SECONDARY renders as a clickable icon link; disabled (soon) items
-  // render as static glyphs at reduced opacity. Parents with children
-  // (Settings) link to the parent route — children aren't exposed on the
-  // rail to keep it shallow. Expand to see nested routes.
-  if (collapsed) {
-    const activeFor = (item: NavItem): boolean => {
-      if (item.key === 'home') return pathname === '/dashboard';
-      if (item.href === '#') return false;
-      if (pathname === item.href || pathname.startsWith(item.href + '/')) return true;
-      return isChildActive(item, pathname);
-    };
-    const initials = getInitials(user?.firstName, user?.lastName);
+ const monthlyBalance = credits?.monthlyCreditsBalance ?? 0;
+ const topupBalance = credits?.creditsBalance ?? 0;
+ const totalBalance = credits?.totalCreditsBalance ?? monthlyBalance + topupBalance;
+ const plan = credits?.plan ?? 'free';
+ const allowance = planConfig(plan).monthlyCredits;
+ const monthlyUsed = Math.max(0, allowance - monthlyBalance);
+ const monthlyPct = allowance > 0 ? Math.min(100, Math.round((monthlyUsed / allowance) * 100)) : 0;
 
-    return (
-      <aside className="shrink-0 w-[52px] h-screen sticky top-0 flex flex-col bg-[color:var(--paper)] border-r border-[color:var(--rule)]">
-        {/* Expand button */}
+ const initials = getInitials(user?.firstName, user?.lastName);
+
+ const getForceExpanded = (item: NavItem) => isChildActive(item, pathname);
+
+ return (
+  <motion.aside
+   animate={{ width: collapsed ? 60 : 240 }}
+   transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+   className="shrink-0 h-screen sticky top-0 flex flex-col bg-[color:var(--paper)] border-r border-[color:var(--rule)] overflow-hidden z-30"
+   style={{ willChange: 'width' }}
+  >
+   {/* Logo + workspace */}
+   <div className="flex items-center gap-3 px-4 h-[60px] border-b border-[color:var(--rule)] shrink-0">
+    <Link
+     href="/"
+     className="shrink-0 w-8 h-8 rounded-lg bg-[color:var(--forest)] flex items-center justify-center"
+     title="Home"
+    >
+     <span className="font-extrabold text-[13px] text-white leading-none">L</span>
+    </Link>
+
+    <AnimatePresence initial={false}>
+     {!collapsed && (
+      <motion.div
+       initial={{ opacity: 0, x: -6 }}
+       animate={{ opacity: 1, x: 0 }}
+       exit={{ opacity: 0, x: -6 }}
+       transition={{ duration: 0.18 }}
+       className="flex-1 min-w-0 overflow-hidden"
+      >
+       <div className="flex items-baseline gap-0.5 whitespace-nowrap">
+        <span className="font-extrabold text-[15px] tracking-tight text-[color:var(--ink)]">Leadre</span>
+        <span className="font-extrabold text-[15px] text-[color:var(--forest)]">.</span>
+        <span className="font-extrabold text-[15px] tracking-tight text-[color:var(--ink)]">AI</span>
+       </div>
+       <div className="text-[10.5px] text-[color:var(--ink-3)] truncate -mt-0.5">
+        {workspace?.name ?? 'Workspace'}
+       </div>
+      </motion.div>
+     )}
+    </AnimatePresence>
+
+    <AnimatePresence initial={false}>
+     {!collapsed && (
+      <motion.button
+       initial={{ opacity: 0 }}
+       animate={{ opacity: 1 }}
+       exit={{ opacity: 0 }}
+       onClick={toggleCollapsed}
+       title="Collapse sidebar (⌘\\)"
+       className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md text-[color:var(--ink-3)] hover:text-[color:var(--ink)] hover:bg-[color:var(--paper-3)] transition-all"
+      >
+       <svg width={14} height={14} viewBox="0 0 16 16" fill="none">
+        <path d="m10 4-4 4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+       </svg>
+      </motion.button>
+     )}
+    </AnimatePresence>
+
+    {collapsed && (
+     <button
+      onClick={toggleCollapsed}
+      title="Expand sidebar (⌘\\)"
+      className="absolute inset-0 w-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+     />
+    )}
+   </div>
+
+   {/* Expand button when collapsed */}
+   {collapsed && (
+    <button
+     onClick={toggleCollapsed}
+     title="Expand sidebar (⌘\\)"
+     className="h-8 mx-2 mt-2 flex items-center justify-center rounded-lg text-[color:var(--ink-3)] hover:text-[color:var(--ink)] hover:bg-[color:var(--paper-3)] transition-all shrink-0"
+    >
+     <svg width={14} height={14} viewBox="0 0 16 16" fill="none">
+      <path d="m6 4 4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+     </svg>
+    </button>
+   )}
+
+   {/* Nav */}
+   <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 flex flex-col gap-5">
+    {/* Primary nav */}
+    <div className="flex flex-col gap-0.5">
+     <AnimatePresence initial={false}>
+      {!collapsed && (
+       <motion.span
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="px-5 mb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[color:var(--ink-3)]/70 whitespace-nowrap"
+       >
+        Workspace
+       </motion.span>
+      )}
+     </AnimatePresence>
+     {PRIMARY.map(item => {
+      const forceOpen = getForceExpanded(item);
+      const isExpanded = forceOpen || !!expanded[item.key];
+      return (
+       <NavRow
+        key={item.key}
+        item={item}
+        pathname={pathname}
+        expanded={isExpanded}
+        onToggle={toggleExpanded}
+        showLabels={!collapsed}
+       />
+      );
+     })}
+    </div>
+
+    {/* Secondary nav */}
+    <div className="flex flex-col gap-0.5">
+     <AnimatePresence initial={false}>
+      {!collapsed && (
+       <motion.span
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="px-5 mb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[color:var(--ink-3)]/70 whitespace-nowrap"
+       >
+        More
+       </motion.span>
+      )}
+     </AnimatePresence>
+     {SECONDARY.map(item => {
+      const forceOpen = getForceExpanded(item);
+      const isExpanded = forceOpen || !!expanded[item.key];
+      return (
+       <NavRow
+        key={item.key}
+        item={item}
+        pathname={pathname}
+        expanded={isExpanded}
+        onToggle={toggleExpanded}
+        showLabels={!collapsed}
+       />
+      );
+     })}
+    </div>
+   </nav>
+
+   {/* Footer: credits + user */}
+   <div className="border-t border-[color:var(--rule)] px-3 py-3 flex flex-col gap-3 shrink-0">
+    {/* Credits */}
+    <AnimatePresence initial={false}>
+     {!collapsed && (
+      <motion.div
+       initial={{ opacity: 0, height: 0 }}
+       animate={{ opacity: 1, height: 'auto' }}
+       exit={{ opacity: 0, height: 0 }}
+       transition={{ duration: 0.18 }}
+       className="overflow-hidden"
+      >
+       <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[10.5px] font-semibold text-[color:var(--ink-3)]">Credits</span>
         <button
-          onClick={toggleCollapsed}
-          title="Expand sidebar (Cmd+\\)"
-          className="w-full h-10 flex items-center justify-center text-[color:var(--ink-3)] hover:text-[color:var(--ink)] border-b border-[color:var(--rule)] transition-colors"
-          aria-label="Expand sidebar"
+         onClick={openTopUp}
+         className="text-[10.5px] font-semibold text-[color:var(--forest)] hover:text-[color:var(--forest-2)] transition-colors"
         >
-          <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden>
-            <path d="m6 4 4 4-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+         {totalBalance.toLocaleString()}
         </button>
-
-        {/* Logo */}
-        <Link
-          href="/"
-          className="h-12 flex items-center justify-center border-b border-[color:var(--rule)]/60"
-          title="Home"
-        >
-          <span className="font-extrabold text-[18px] leading-none text-[color:var(--forest)]">L</span>
-        </Link>
-
-        {/* Nav icons — PRIMARY, then a hairline, then SECONDARY */}
-        <nav className="flex-1 overflow-y-auto py-2 flex flex-col">
-          {PRIMARY.map((item) => (
-            <RailLink
-              key={item.key}
-              item={item}
-              active={activeFor(item)}
-              disabled={item.href === '#'}
-            />
-          ))}
-          <div className="mx-3 my-2 h-px bg-[color:var(--rule)]" aria-hidden />
-          {SECONDARY.map((item) => (
-            <RailLink
-              key={item.key}
-              item={item}
-              active={activeFor(item)}
-              disabled={item.href === '#'}
-            />
-          ))}
-        </nav>
-
-        {/* Footer — top-up + user avatar + logout. Keeps the same
-            affordances as the expanded footer at icon scale. */}
-        <div className="border-t border-[color:var(--rule)] py-2 flex flex-col items-center gap-1">
-          <button
-            onClick={openTopUp}
-            title={`Credits: ${totalBalance.toLocaleString()} — Top up`}
-            aria-label="Top up credits"
-            className="w-10 h-10 flex items-center justify-center text-[color:var(--ink-2)] hover:text-[color:var(--forest)] transition-colors"
-          >
-            <svg viewBox="0 0 24 24" fill="none" className="w-[18px] h-[18px]">
-              <path
-                d="M12 5v14M5 12h14"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
-            </svg>
-          </button>
-          <div
-            className="w-7 h-7 rounded-full bg-[color:var(--ink)] flex items-center justify-center"
-            title={`${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || user?.email || 'Account'}
-          >
-            <span className="text-[9.5px] font-medium text-[color:var(--paper)]">
-              {initials}
-            </span>
-          </div>
-          <button
-            onClick={handleLogout}
-            title="Sign out"
-            aria-label="Sign out"
-            className="w-10 h-8 flex items-center justify-center text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition-colors"
-          >
-            <LogOutGlyph className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </aside>
-    );
-  }
-
-  return (
-    <aside className="group/sidebar shrink-0 w-[232px] h-screen sticky top-0 flex flex-col bg-[color:var(--paper)]">
-      {/* Masthead */}
-      <div className="pt-5 pb-4 px-5 border-b border-[color:var(--rule)] relative">
-        <button
-          onClick={toggleCollapsed}
-          title="Collapse sidebar (Cmd+\\)"
-          aria-label="Collapse sidebar"
-          className="absolute top-3 right-2 w-6 h-6 flex items-center justify-center text-[color:var(--ink-3)] hover:text-[color:var(--ink)] opacity-40 hover:opacity-100 group-hover/sidebar:opacity-100 transition-opacity"
-        >
-          <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden>
-            <path d="m10 4-4 4 4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-        <Link href="/" className="flex items-baseline gap-px">
-          <span className="font-extrabold text-[16px] tracking-tight text-[color:var(--ink)]">Leadre</span>
-          <span className="font-extrabold text-[16px] text-[color:var(--forest)]">.</span>
-          <span className="font-extrabold text-[16px] tracking-tight text-[color:var(--ink)]">AI</span>
-        </Link>
-        <div className="mt-3 flex items-center gap-2 min-w-0">
-          <div className="w-6 h-6 rounded-sm bg-[color:var(--forest)] flex items-center justify-center shrink-0">
-            <span className="font-extrabold text-[11px] text-[color:var(--paper)]">
-              {workspace?.name?.[0]?.toUpperCase() ?? 'W'}
-            </span>
-          </div>
-          <div className="min-w-0 flex-1 leading-tight">
-            <div className="text-[12px] text-[color:var(--ink)] truncate">
-              {workspace?.name ?? 'Workspace'}
-            </div>
-            <div className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
-              Correspondent
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-5 flex flex-col gap-6">
-        <NavGroup
-          kicker="Workspace"
-          items={PRIMARY}
-          pathname={pathname}
-          expandedMap={expanded}
-          onToggle={toggleExpanded}
+       </div>
+       <div className="h-1.5 bg-[color:var(--paper-3)] rounded-full overflow-hidden">
+        <motion.div
+         initial={{ width: 0 }}
+         animate={{ width: `${monthlyPct}%` }}
+         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+         className={cn('h-full rounded-full', monthlyPct > 80 ? 'bg-red-400' : 'bg-[color:var(--forest)]')}
         />
-        <NavGroup
-          kicker="Settings & More"
-          items={SECONDARY}
-          pathname={pathname}
-          expandedMap={expanded}
-          onToggle={toggleExpanded}
-        />
-      </nav>
+       </div>
+       <div className="flex items-center justify-between mt-1">
+        <span className="text-[10px] text-[color:var(--ink-3)]">
+         {monthlyBalance.toLocaleString()} / {allowance.toLocaleString()} mo
+        </span>
+        {topupBalance > 0 && (
+         <span className="text-[10px] text-[color:var(--forest)] font-semibold">
+          +{topupBalance.toLocaleString()}
+         </span>
+        )}
+       </div>
+      </motion.div>
+     )}
+    </AnimatePresence>
 
-      {/* Credits + account */}
-      <div className="border-t border-[color:var(--rule)] px-4 pt-4 pb-4 flex flex-col gap-4">
-        {/* Credits */}
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
-              Credits
-            </span>
-            <span className="font-mono text-[11px] tabular-nums text-[color:var(--ink)]">
-              {totalBalance.toLocaleString()}
-            </span>
-          </div>
-          <div
-            className="h-[2px] bg-[color:var(--rule)]/40 overflow-hidden"
-            title={`${monthlyUsed} of ${allowance} plan credits used this cycle`}
-          >
-            <div
-              className={cn(
-                'h-full',
-                monthlyPct > 80 ? 'bg-[color:var(--rust)]' : 'bg-[color:var(--forest)]',
-              )}
-              style={{ width: `${monthlyPct}%` }}
-            />
-          </div>
-          <div className="mt-1.5 flex items-center justify-between gap-2">
-            <span
-              className="text-[10.5px] text-[color:var(--ink-3)] truncate"
-              title="Monthly plan allowance + top-up balance"
-            >
-              {monthlyBalance.toLocaleString()}
-              <span className="text-[color:var(--ink-3)]/80"> / {allowance.toLocaleString()} mo</span>
-              {topupBalance > 0 && (
-                <>
-                  {' · '}
-                  <span className="text-[color:var(--forest)]">+{topupBalance.toLocaleString()}</span>
-                </>
-              )}
-            </span>
-            <button
-              onClick={openTopUp}
-              className="text-[11px] text-[color:var(--ink)] hover:text-[color:var(--forest)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--forest)] transition shrink-0"
-            >
-              Top up
-            </button>
-          </div>
-        </div>
+    {/* User row */}
+    <div className="flex items-center gap-2.5">
+     <div
+      className="w-7 h-7 rounded-full bg-[color:var(--forest)] flex items-center justify-center shrink-0"
+      title={`${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || user?.email}
+     >
+      <span className="text-[10px] font-bold text-white">{initials}</span>
+     </div>
 
-        {/* User row */}
-        <div className="flex items-center gap-2.5 pt-3 border-t border-[color:var(--rule)]">
-          <div className="w-7 h-7 rounded-full bg-[color:var(--ink)] flex items-center justify-center shrink-0">
-            <span className="text-[10px] font-medium text-[color:var(--paper)]">
-              {getInitials(user?.firstName, user?.lastName)}
-            </span>
-          </div>
-          <div className="min-w-0 flex-1 leading-tight">
-            <div className="text-[12px] font-medium text-[color:var(--ink)] truncate">
-              {user?.firstName} {user?.lastName}
-            </div>
-            <div className="font-mono text-[9px] tracking-[0.16em] text-[color:var(--ink-3)] truncate">
-              {user?.email}
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            title="Sign out"
-            aria-label="Sign out"
-            className="p-1.5 text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition shrink-0"
-          >
-            <LogOutGlyph className="w-3.5 h-3.5" />
-          </button>
+     <AnimatePresence initial={false}>
+      {!collapsed && (
+       <motion.div
+        initial={{ opacity: 0, width: 0 }}
+        animate={{ opacity: 1, width: 'auto' }}
+        exit={{ opacity: 0, width: 0 }}
+        transition={{ duration: 0.15 }}
+        className="flex-1 min-w-0 overflow-hidden"
+       >
+        <div className="text-[12px] font-semibold text-[color:var(--ink)] truncate whitespace-nowrap">
+         {user?.firstName} {user?.lastName}
         </div>
+        <div className="text-[10px] text-[color:var(--ink-3)] truncate whitespace-nowrap">
+         {user?.email}
+        </div>
+       </motion.div>
+      )}
+     </AnimatePresence>
 
-        {/* Footer kicker */}
-        <div className="flex items-center justify-end pt-2 border-t border-[color:var(--rule)]/50">
-          <Link
-            href="/"
-            className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] inline-flex items-center gap-1"
-          >
-            Home
-            <ArrowEast className="w-2.5 h-2.5" />
-          </Link>
-        </div>
-      </div>
-    </aside>
-  );
+     <AnimatePresence initial={false}>
+      {!collapsed && (
+       <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={handleLogout}
+        title="Sign out"
+        className="shrink-0 w-7 h-7 flex items-center justify-center rounded-md text-[color:var(--ink-3)] hover:text-[color:var(--ink)] hover:bg-[color:var(--paper-3)] transition-all"
+       >
+        <svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+       </motion.button>
+      )}
+     </AnimatePresence>
+
+     {collapsed && (
+      <button
+       onClick={handleLogout}
+       title="Sign out"
+       className="w-7 h-7 flex items-center justify-center rounded-md text-[color:var(--ink-3)] hover:text-red-500 transition-colors"
+      >
+       <svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+       </svg>
+      </button>
+     )}
+    </div>
+   </div>
+  </motion.aside>
+ );
 }

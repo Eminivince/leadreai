@@ -9,23 +9,20 @@ import { useWorkspace } from '@/hooks/useWorkspace';
 import { apiFetch } from '@/lib/api';
 import { getAccessToken } from '@/lib/auth';
 import type { ApiResponse, Lead, LeadFileSummary, ProspectingJob, OutputSchemaColumn, FactValue } from '@leadreai/shared';
+import { PageHelp } from '@/components/ui/PageHelp';
+import { Pagination } from '@/components/shared/Pagination';
+
+const GROUPS_PAGE_SIZE = 20;
 
 /* ─────────────────────────────────────────────────────────────────
- * Leads — editorial dossier table.
+ * Leads page.
  *
  * Two modes:
- *   · /dashboard/leads            → the archive (all leads across jobs)
- *   · /dashboard/leads?jobId=X    → a single dossier with outputSchema columns
- *
- * Columns in dossier mode: Company, Contact, Email, Phone,
- * [dynamic schema columns reading lead.facts[key]], Score, Status.
- * Archive mode omits the dynamic columns (they don't generalize).
- *
- * Honest missing data: "—" for truly absent, loading state for streaming,
- * distinct from "rejected" per the honesty principle.
+ *   · /dashboard/leads            → archive, leads grouped by query
+ *   · /dashboard/leads?jobId=X    → single-job dossier with schema cols
  * ───────────────────────────────────────────────────────────────── */
 
-const SEARCH_PLACEHOLDER = 'Search company, email, phone, domain\u2026';
+const SEARCH_PLACEHOLDER = 'Search company, email, phone, domain…';
 
 /* ── Helpers ─────────────────────────────────────────────────── */
 function primaryEmail(lead: Lead): string | undefined {
@@ -63,7 +60,6 @@ function relativeTime(iso: string): string {
   return `${Math.floor(hr / 24)}d ago`;
 }
 
-/* Format a fact value by declared type. */
 function formatFact(val: FactValue, type: OutputSchemaColumn['type']): string {
   if (val.value === null || val.value === undefined || val.value === '') return '—';
   const v = val.value;
@@ -72,7 +68,6 @@ function formatFact(val: FactValue, type: OutputSchemaColumn['type']): string {
       const n = typeof v === 'number' ? v : parseFloat(String(v));
       if (!Number.isFinite(n)) return String(v);
       const unit = val.unit ?? 'USD';
-      // Compact: 1.2M, 55K, 10B
       const abs = Math.abs(n);
       let out: string;
       if (abs >= 1_000_000_000) out = `${(n / 1_000_000_000).toFixed(1)}B`;
@@ -130,6 +125,11 @@ const ExternalIcon = (p: { className?: string }) => (
     <path d="M7 17 17 7M7 7h10v10" />
   </Svg>
 );
+const ChevronIcon = ({ open, className = 'w-3.5 h-3.5' }: { open: boolean; className?: string }) => (
+  <svg viewBox="0 0 16 16" fill="none" className={`${className} transition-transform ${open ? 'rotate-90' : ''}`}>
+    <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
 function ArrowEast({ className = 'w-3 h-3' }: { className?: string }) {
   return (
@@ -165,74 +165,113 @@ function ScorePill({ v }: { v: number }) {
 /* ── Dossier header (when viewing ?jobId=X) ─────────────────── */
 function DossierHeader({ job }: { job: ProspectingJob }) {
   const schema = job.parsedIntent?.outputSchema ?? [];
+  const dossierId = job._id.slice(-4).toUpperCase();
+  const isLive = job.status !== 'complete' && job.status !== 'failed' && job.status !== 'cancelled';
+  const leadsValue =
+    job.status === 'complete'
+      ? (job.result?.totalLeadsFound ?? 0)
+      : (job.progress?.leadsFoundSoFar ?? 0);
   return (
-    <section className="mb-10">
-      <div className="flex items-center gap-3 mb-5">
+    <section className="mb-6">
+      {/* Breadcrumb — compact mono row, no editorial tracking */}
+      <div className="flex items-center gap-1.5 mb-3 font-mono text-[10.5px] text-[color:var(--ink-3)]">
         <Link
           href="/dashboard"
-          className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
+          className="hover:text-[color:var(--ink)] transition-colors"
         >
-          Searches
+          Dashboard
         </Link>
-        <span className="font-mono text-[10px] text-[color:var(--ink-3)]">/</span>
-        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
-          Search №.&nbsp;{job._id.slice(-4).toUpperCase()}
-        </span>
+        <span className="text-[color:var(--ink-3)]/60">/</span>
+        <Link
+          href="/dashboard/leads"
+          className="hover:text-[color:var(--ink)] transition-colors"
+        >
+          Leads
+        </Link>
+        <span className="text-[color:var(--ink-3)]/60">/</span>
+        <span className="text-[color:var(--ink-2)] tabular-nums">#{dossierId}</span>
       </div>
 
-      <div className="relative">
-        <div className="absolute inset-0 translate-x-1 translate-y-1 bg-[color:var(--rule)]/20 rounded-sm" aria-hidden />
-        <div className="relative bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-sm p-6 md:p-8">
-          <div className="flex items-start gap-4 md:gap-6">
-            <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-[color:var(--ink-2)] pt-[7px] shrink-0 w-14">
-              Subject
+      {/* Single calm card — no decorative paper-shadow, no italic
+          "Subject" quote, no dashed rule. The query reads as plain
+          medium-weight text; metric row mirrors the dashboard's
+          ActiveDispatch so the two surfaces feel like one product. */}
+      <div className="bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-xl overflow-hidden">
+        <div className="flex items-center justify-between gap-3 px-5 md:px-6 py-3 border-b border-[color:var(--rule)]">
+          <div className="flex items-center gap-2">
+            {isLive ? (
+              <span className="relative inline-flex">
+                <span className="relative inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)]" />
+                <span className="absolute inset-0 inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)] opacity-60 animate-ping" />
+              </span>
+            ) : (
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ink-3)]" />
+            )}
+            <span className="font-mono text-[10.5px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
+              {isLive ? 'Running' : 'Search'}
             </span>
-            <p className=" italic text-[22px] md:text-[28px] leading-[1.2] text-[color:var(--ink)]">
-              &ldquo;{job.rawQuery}&rdquo;
-            </p>
           </div>
-          <div className="mt-5 pt-5 border-t border-dashed border-[color:var(--rule)] grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-4">
+          <span className="font-mono text-[10.5px] tabular-nums text-[color:var(--ink-3)]">
+            Started {relativeTime(job.createdAt)}
+          </span>
+        </div>
+
+        <div className="px-5 md:px-6 py-5">
+          <p className="text-[15px] md:text-[16.5px] leading-[1.55] text-[color:var(--ink)] font-medium">
+            {job.rawQuery}
+          </p>
+
+          <div className="mt-5 grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-4 pt-5 border-t border-[color:var(--rule)]">
             <div>
-              <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">Filed</span>
-              <div className="mt-1  text-[13px] text-[color:var(--ink)]">
-                {relativeTime(job.createdAt)}
-              </div>
-            </div>
-            <div>
-              <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">Leads</span>
-              <div className="mt-1  text-[20px] leading-none tabular-nums text-[color:var(--ink)]">
-                {job.progress?.leadsFoundSoFar ?? 0}
-                <span className="font-mono text-[11px] text-[color:var(--ink-3)] ml-1">
+              <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--ink-3)]">
+                Leads
+              </span>
+              <div className="mt-1 font-mono text-[24px] leading-none tabular-nums text-[color:var(--ink)]">
+                {leadsValue}
+                <span className="text-[12px] text-[color:var(--ink-3)] ml-1">
                   / {job.parsedIntent?.targetCount ?? '—'}
                 </span>
               </div>
             </div>
             <div>
-              <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">Status</span>
-              <div className="mt-1  text-[13px] text-[color:var(--ink)] capitalize">
-                {job.status}
+              <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--ink-3)]">
+                Status
+              </span>
+              <div className="mt-1.5">
+                <StatusChip status={job.status} />
               </div>
             </div>
             <div>
-              <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--ink-3)]">Columns</span>
-              <div className="mt-1  text-[13px] text-[color:var(--ink)]">
+              <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--ink-3)]">
+                Started
+              </span>
+              <div className="mt-1.5 text-[13px] text-[color:var(--ink-2)]">
+                {relativeTime(job.createdAt)}
+              </div>
+            </div>
+            <div>
+              <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--ink-3)]">
+                Columns
+              </span>
+              <div className="mt-1.5 text-[13px] text-[color:var(--ink-2)]">
                 {schema.length > 0 ? `${schema.length} extra` : 'Standard'}
               </div>
             </div>
           </div>
+
           {schema.length > 0 && (
-            <div className="mt-5 pt-5 border-t border-[color:var(--rule)] flex flex-wrap gap-2">
+            <div className="mt-5 pt-5 border-t border-[color:var(--rule)] flex flex-wrap gap-1.5">
               {schema.map((c) => (
                 <span
                   key={c.key}
-                  className="inline-flex items-center gap-1.5  text-[11.5px] text-[color:var(--ink-2)] bg-[color:var(--paper)] border border-[color:var(--rule)] px-2 py-1"
+                  className="inline-flex items-center gap-1.5 text-[11.5px] text-[color:var(--ink-2)] bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-md px-2 py-1"
                 >
                   {c.label}
-                  <span className="font-mono text-[9px] tracking-[0.16em] uppercase text-[color:var(--ink-3)]">
-                    · {c.type}
+                  <span className="font-mono text-[10px] text-[color:var(--ink-3)]">
+                    {c.type}
                   </span>
                   {c.required && (
-                    <span className="font-mono text-[8.5px] text-[color:var(--rust)]">req</span>
+                    <span className="font-mono text-[10px] text-[color:var(--forest-2)]">·req</span>
                   )}
                 </span>
               ))}
@@ -427,7 +466,7 @@ function LeadDrawer({
             </div>
           )}
 
-          {/* Provenance (sources) */}
+          {/* Provenance */}
           {lead.sources?.length > 0 && (
             <div className="pt-5 border-t border-[color:var(--rule)]">
               <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
@@ -451,7 +490,7 @@ function LeadDrawer({
             </div>
           )}
 
-          {/* Score + scoring signal */}
+          {/* Score */}
           <div className="pt-5 border-t border-[color:var(--rule)] flex flex-col gap-2">
             <div className="flex items-center justify-between gap-3">
               <div className="flex flex-col">
@@ -472,13 +511,33 @@ function LeadDrawer({
             )}
           </div>
 
-          {/* Esc hint */}
           <div className="pt-2 font-mono text-[9.5px] tracking-[0.2em] uppercase text-[color:var(--ink-3)] text-center">
             Press Esc to close
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+/* ── Table header row ────────────────────────────────────────── */
+function LeadsTableHead({ schema, isJobScoped }: { schema: OutputSchemaColumn[]; isJobScoped: boolean }) {
+  return (
+    <thead className="bg-[color:var(--paper-2)] border-b border-[color:var(--rule)]">
+      <tr>
+        <th className="py-2.5 pl-4 pr-2 w-10" />
+        {['Company', 'Contact', 'Email', 'Phone', ...(isJobScoped ? schema.map((c) => c.label) : []), 'Score', 'Status', ''].map((h, i) => (
+          <th
+            key={`${h}-${i}`}
+            className={`py-2.5 px-3 font-mono text-[9.5px] tracking-[0.2em] uppercase text-[color:var(--ink-2)] ${
+              h === 'Score' ? 'text-right' : ''
+            }`}
+          >
+            {h}
+          </th>
+        ))}
+      </tr>
+    </thead>
   );
 }
 
@@ -510,11 +569,12 @@ function LeadRow({
         active ? 'bg-[color:var(--paper-3)]' : 'hover:bg-[color:var(--paper-3)]/60'
       }`}
     >
-      <td className="py-3 pl-4 pr-2 align-middle" onClick={(e) => { e.stopPropagation(); onToggle(lead._id); }}>
+      <td className="py-3 pl-4 pr-2 align-middle">
         <input
           type="checkbox"
           checked={selected}
           onChange={() => onToggle(lead._id)}
+          onClick={(e) => e.stopPropagation()}
           className="accent-[color:var(--ink)] cursor-pointer"
         />
       </td>
@@ -536,17 +596,13 @@ function LeadRow({
       <td className="py-3 px-3 align-middle">
         {contact?.fullName ? (
           <>
-            <div className=" text-[13px] text-[color:var(--ink)] truncate">
-              {contact.fullName}
-            </div>
+            <div className=" text-[13px] text-[color:var(--ink)] truncate">{contact.fullName}</div>
             <div className=" italic text-[12px] text-[color:var(--ink-2)] truncate leading-tight">
-              {contact.title || '\u2014'}
+              {contact.title || '—'}
             </div>
           </>
         ) : (
-          <span className=" italic text-[12.5px] text-[color:var(--ink-3)]">
-            —
-          </span>
+          <span className=" italic text-[12.5px] text-[color:var(--ink-3)]">—</span>
         )}
       </td>
       <td className="py-3 px-3 align-middle max-w-[220px]">
@@ -560,9 +616,7 @@ function LeadRow({
             )}
           </span>
         ) : (
-          <span className=" italic text-[12.5px] text-[color:var(--ink-3)]">
-            —
-          </span>
+          <span className=" italic text-[12.5px] text-[color:var(--ink-3)]">—</span>
         )}
       </td>
       <td className="py-3 px-3 align-middle max-w-[150px]">
@@ -571,29 +625,23 @@ function LeadRow({
             {primaryPhone(lead)}
           </span>
         ) : (
-          <span className=" italic text-[12.5px] text-[color:var(--ink-3)]">
-            —
-          </span>
+          <span className=" italic text-[12.5px] text-[color:var(--ink-3)]">—</span>
         )}
       </td>
 
-      {/* Dynamic schema columns */}
       {isJobScoped &&
         schema.map((c) => {
           const f = lead.facts?.[c.key];
           const formatted = f ? formatFact(f, c.type) : '—';
-          const hasSource = !!f?.sourceUrl;
           return (
             <td key={c.key} className="py-3 px-3 align-middle max-w-[160px]">
               {f && f.value !== null && f.value !== undefined ? (
                 <span className=" text-[13px] text-[color:var(--ink)] truncate block">
                   {formatted}
-                  {hasSource && <sup className="ml-0.5 text-[9px] text-[color:var(--forest)]">†</sup>}
+                  {f?.sourceUrl && <sup className="ml-0.5 text-[9px] text-[color:var(--forest)]">†</sup>}
                 </span>
               ) : (
-                <span className=" italic text-[12.5px] text-[color:var(--ink-3)]">
-                  —
-                </span>
+                <span className=" italic text-[12.5px] text-[color:var(--ink-3)]">—</span>
               )}
             </td>
           );
@@ -609,6 +657,133 @@ function LeadRow({
         <ArrowEast className="w-3 h-3 text-[color:var(--ink-3)] group-hover:text-[color:var(--ink)] group-hover:translate-x-0.5 transition-transform inline-block" />
       </td>
     </tr>
+  );
+}
+
+/* ── Query group (collapsible section) ───────────────────────── */
+function QueryGroup({
+  jobId,
+  query,
+  timestamp,
+  leads,
+  selected,
+  onToggle,
+  onOpen,
+  drawerId,
+  schema,
+  isJobScoped,
+  colCount,
+}: {
+  jobId: string | null;
+  query: string;
+  timestamp: string;
+  leads: Lead[];
+  selected: Set<string>;
+  onToggle: (id: string) => void;
+  onOpen: (id: string) => void;
+  drawerId: string | null;
+  schema: OutputSchemaColumn[];
+  isJobScoped: boolean;
+  colCount: number;
+}) {
+  const [open, setOpen] = useState(true);
+
+  // Naming chain — every group gets a useful label, never just
+  // "Ungrouped leads":
+  //   1. Original query (truncated) — best signal of what the search
+  //      was about, so the user can scan the page by purpose.
+  //   2. "Search · #ABCD" — when the job exists but its query isn't
+  //      in our 200-job window (older searches, very rare).
+  //   3. "Imported leads" — when there's no jobId at all (manual
+  //      adds, future CSV imports). Honest about the source.
+  // Subtitle is always relative time + dossier ID when available, so
+  // the user has additional context regardless of which label fired.
+  const dossierId = jobId ? jobId.slice(-4).toUpperCase() : null;
+  const titleText = query
+    ? (query.length > 96 ? query.slice(0, 94) + '…' : query)
+    : dossierId
+      ? `Search · #${dossierId}`
+      : 'Imported leads';
+  const titleIsQuery = Boolean(query);
+  const subtitleParts: string[] = [];
+  if (timestamp) subtitleParts.push(relativeTime(timestamp));
+  if (dossierId && titleIsQuery) subtitleParts.push(`#${dossierId}`);
+  if (!jobId && !timestamp) subtitleParts.push('No source job');
+
+  return (
+    <div className="border border-[color:var(--rule)] rounded-xl overflow-hidden bg-[color:var(--paper)] mb-4">
+      {/* Group header — chevron + title block + count + dossier link */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-3 px-4 md:px-5 py-3 bg-[color:var(--paper-2)]/60 border-b border-[color:var(--rule)] hover:bg-[color:var(--paper-2)] transition-colors text-left"
+      >
+        <ChevronIcon open={open} className="w-3.5 h-3.5 text-[color:var(--ink-3)] shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2">
+            <span
+              className={`text-[13.5px] leading-[1.4] truncate ${
+                titleIsQuery
+                  ? 'text-[color:var(--ink)] font-medium'
+                  : 'text-[color:var(--ink-2)]'
+              }`}
+            >
+              {titleText}
+            </span>
+          </div>
+          {subtitleParts.length > 0 && (
+            <div className="mt-0.5 flex items-center gap-2 font-mono text-[10.5px] tabular-nums text-[color:var(--ink-3)]">
+              {subtitleParts.map((part, i) => (
+                <span key={part} className="flex items-center gap-2">
+                  {i > 0 && <span className="text-[color:var(--ink-3)]/50">·</span>}
+                  {part}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <span className="font-mono text-[10.5px] tabular-nums text-[color:var(--ink-2)]">
+            {leads.length}
+            <span className="text-[color:var(--ink-3)] ml-1">
+              {leads.length === 1 ? 'lead' : 'leads'}
+            </span>
+          </span>
+          {jobId && (
+            <Link
+              href={`/dashboard/leads?jobId=${jobId}`}
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-1 text-[11.5px] font-medium text-[color:var(--ink-2)] hover:text-[color:var(--forest)] transition-colors"
+            >
+              Open
+              <ArrowEast className="w-3 h-3" />
+            </Link>
+          )}
+        </div>
+      </button>
+
+      {/* Leads table */}
+      {open && (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <LeadsTableHead schema={schema} isJobScoped={isJobScoped} />
+            <tbody>
+              {leads.map((lead) => (
+                <LeadRow
+                  key={lead._id}
+                  lead={lead}
+                  selected={selected.has(lead._id)}
+                  onToggle={onToggle}
+                  onOpen={onOpen}
+                  active={drawerId === lead._id}
+                  schema={schema}
+                  isJobScoped={isJobScoped}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -630,6 +805,11 @@ export default function LeadsPage() {
   const [filter, setFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [groupsPage, setGroupsPage] = useState(1);
+
+  // When the user changes filter/search, the visible group set
+  // shrinks — reset to page 1 so they don't land on an empty page.
+  useEffect(() => { setGroupsPage(1); }, [filter, search]);
   const [drawerId, setDrawerId] = useState<string | null>(null);
   const [saveMenuOpen, setSaveMenuOpen] = useState(false);
   const [newFileName, setNewFileName] = useState('');
@@ -688,8 +868,7 @@ export default function LeadsPage() {
 
   const { data: leadsData, isLoading } = useQuery({
     queryKey: ['leads-all', workspaceId, jobId ?? 'all'],
-    queryFn: () =>
-      apiFetch<ApiResponse<Lead[]> & { total: number }>(leadsPath),
+    queryFn: () => apiFetch<ApiResponse<Lead[]> & { total: number }>(leadsPath),
     enabled: !!workspaceId,
   });
 
@@ -700,11 +879,32 @@ export default function LeadsPage() {
     enabled: !!workspaceId && !!jobId,
   });
 
+  // Fetch all jobs so we can show the rawQuery label per group in archive mode
+  const { data: jobsData } = useQuery({
+    queryKey: ['jobs-list', workspaceId],
+    queryFn: () =>
+      apiFetch<ApiResponse<{ data: ProspectingJob[]; total: number }>>(
+        `/api/v1/workspaces/${workspaceId}/jobs?limit=200`,
+      ),
+    enabled: !!workspaceId && !jobId,
+  });
+
   const allLeads = leadsData?.data ?? [];
   const total = leadsData?.total ?? 0;
   const job = jobData?.data;
   const schema: OutputSchemaColumn[] = job?.parsedIntent?.outputSchema ?? [];
   const isJobScoped = !!jobId && !!job;
+
+  // Build a jobId → {query, createdAt} map for grouping labels.
+  // We also keep createdAt so each group can show "2 days ago" under
+  // the title without us needing a second fetch.
+  const jobQueryMap = useMemo(() => {
+    const map = new Map<string, { query: string; createdAt: string }>();
+    (jobsData?.data?.data ?? []).forEach((j) =>
+      map.set(j._id, { query: j.rawQuery, createdAt: j.createdAt }),
+    );
+    return map;
+  }, [jobsData]);
 
   const filtered = useMemo(() => {
     let L = allLeads;
@@ -730,6 +930,41 @@ export default function LeadsPage() {
     }
     return L;
   }, [allLeads, filter, search]);
+
+  // Group filtered leads by jobId (only in archive mode). For each
+  // group we attach (a) the original query when we know it, (b) the
+  // job's createdAt for "X days ago" subtitle, and (c) the latest
+  // lead.createdAt as a fallback when the job itself isn't in our
+  // 200-job window. Sorted newest-first so users see fresh searches
+  // at the top, with imported/orphaned leads sinking below.
+  const groups = useMemo(() => {
+    if (isJobScoped) return null;
+    const map = new Map<string, Lead[]>();
+    for (const lead of filtered) {
+      const key = lead.jobId ?? '__none__';
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(lead);
+    }
+    const items = Array.from(map.entries()).map(([key, leads]) => {
+      const jobId = key === '__none__' ? null : key;
+      const fromJob = jobId ? jobQueryMap.get(jobId) : undefined;
+      // Latest lead in the group, used as a fallback timestamp so even
+      // imported / no-job leads can show a "X days ago" anchor.
+      const latestLeadAt = leads.reduce<string>((acc, l) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const t = (l as any).createdAt as string | undefined;
+        return t && t > acc ? t : acc;
+      }, '');
+      return {
+        jobId,
+        query: fromJob?.query ?? '',
+        timestamp: fromJob?.createdAt ?? latestLeadAt,
+        leads,
+      };
+    });
+    items.sort((a, b) => (b.timestamp ?? '').localeCompare(a.timestamp ?? ''));
+    return items;
+  }, [filtered, isJobScoped, jobQueryMap]);
 
   const counts = useMemo(
     () => ({
@@ -778,49 +1013,57 @@ export default function LeadsPage() {
     URL.revokeObjectURL(url);
   }
 
+  const colCount = 7 + (isJobScoped ? schema.length : 0);
+
   return (
-    <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-10 md:py-12">
+    <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10">
       {/* Header */}
       {isJobScoped && job ? (
         <DossierHeader job={job} />
       ) : (
-        <section className="mb-10">
-          <div className="flex items-center gap-3 mb-5">
-            <span className="block w-8 h-px bg-[color:var(--ink)]" />
-            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
-              All leads
-            </span>
-          </div>
-          <div className="flex items-end justify-between gap-6 flex-wrap">
-            <div className="max-w-[720px]">
-              <h1 className=" text-[44px] md:text-[60px] leading-[0.95] tracking-[-0.015em] text-[color:var(--ink)]">
-                All leads <em className="italic text-[color:var(--forest)]">you&apos;ve collected</em>.
+        <section className="mb-6">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-baseline gap-3">
+              <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)]">
+                Leads
               </h1>
-              <p className="mt-4  text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
-                {isLoading ? 'Loading\u2026' : `${total} leads across all searches.`}
-              </p>
+              <span className="font-mono text-[12px] tabular-nums text-[color:var(--ink-3)]">
+                {isLoading ? '...' : total}
+              </span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <PageHelp
+                title="Leads"
+                body="All contacts your searches have found, grouped by the query that produced them. Click any row to open the full lead profile."
+                tips={[
+                  'Filter by status (New / Qualified / Rejected) to focus your review.',
+                  'Select leads using the checkboxes, then save them to a named file for campaigns.',
+                  'Click "Open" on a group header to see only that search.',
+                ]}
+              />
               <button
                 onClick={handleExport}
-                className="inline-flex items-center gap-1.5  text-[13px] text-[color:var(--ink)] border border-[color:var(--rule)] bg-[color:var(--paper-3)] hover:border-[color:var(--ink)] px-4 py-2.5 rounded-full transition"
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[12.5px] font-medium text-[color:var(--ink-2)] border border-[color:var(--rule)] bg-[color:var(--paper-2)] hover:border-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition-colors"
               >
                 Export CSV
               </button>
               <button
                 onClick={() => router.push('/dashboard/campaigns')}
-                className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors"
+                className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] transition-colors"
               >
-                Start a campaign <ArrowEast className="w-3 h-3" />
+                Start campaign
+                <ArrowEast className="w-3 h-3" />
               </button>
             </div>
           </div>
         </section>
       )}
 
-      {/* Filter bar */}
-      <div className="flex items-center justify-between gap-3 flex-wrap mb-6 pb-5 border-b border-[color:var(--rule)]">
-        <div className="inline-flex items-center gap-0 rounded-full border border-[color:var(--rule)] bg-[color:var(--paper-3)] p-1">
+      {/* Toolbar — segmented filter on the left, search on the right.
+          Matches the dashboard aesthetic: rounded-md (not full pills),
+          mono tabular counts, hairline borders. */}
+      <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+        <div className="inline-flex items-center rounded-md border border-[color:var(--rule)] bg-[color:var(--paper)] p-0.5">
           {FILTERS.map((f) => {
             const on = filter === f.k;
             const n = counts[f.k as keyof typeof counts];
@@ -828,14 +1071,14 @@ export default function LeadsPage() {
               <button
                 key={f.k}
                 onClick={() => setFilter(f.k)}
-                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full  text-[12.5px] transition-colors ${
+                className={`inline-flex items-center gap-1.5 h-7 px-3 rounded text-[12.5px] transition-colors ${
                   on
                     ? 'bg-[color:var(--ink)] text-[color:var(--paper)]'
-                    : 'text-[color:var(--ink-2)] hover:text-[color:var(--ink)]'
+                    : 'text-[color:var(--ink-2)] hover:text-[color:var(--ink)] hover:bg-[color:var(--paper-2)]'
                 }`}
               >
                 <span>{f.label}</span>
-                <span className={`font-mono text-[10px] tabular-nums ${on ? 'text-[color:var(--paper)]/65' : 'text-[color:var(--ink-3)]'}`}>
+                <span className={`font-mono text-[10.5px] tabular-nums ${on ? 'text-[color:var(--paper)]/65' : 'text-[color:var(--ink-3)]'}`}>
                   {n}
                 </span>
               </button>
@@ -843,208 +1086,238 @@ export default function LeadsPage() {
           })}
         </div>
 
-        <div className="flex items-center gap-2 px-3 py-2 border border-[color:var(--rule)] bg-[color:var(--paper-3)] rounded-full w-[260px] md:w-[320px]">
+        <div className="flex items-center gap-2 h-8 px-3 border border-[color:var(--rule)] bg-[color:var(--paper)] hover:border-[color:var(--ink-3)] focus-within:border-[color:var(--forest)]/60 focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--forest)_8%,transparent)] rounded-md w-[260px] md:w-[320px] transition-colors">
           <SearchIcon className="w-3.5 h-3.5 text-[color:var(--ink-3)] shrink-0" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={SEARCH_PLACEHOLDER}
-            className="bg-transparent outline-none flex-1  text-[13px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
+            className="bg-transparent outline-none flex-1 text-[12.5px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
           />
           {search && (
-            <button
-              onClick={() => setSearch('')}
-              className="text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
-            >
+            <button onClick={() => setSearch('')} className="text-[color:var(--ink-3)] hover:text-[color:var(--ink)]">
               <CloseIcon className="w-3 h-3" />
             </button>
           )}
         </div>
       </div>
 
-      {/* Bulk-action bar */}
+      {/* Floating bulk-action bar */}
       {selCount > 0 && (
-        <div className="mb-4 flex items-center gap-4 flex-wrap bg-[color:var(--paper-2)] border border-[color:var(--rule)] px-4 py-3 rounded-sm">
-          <span className=" text-[13px] text-[color:var(--ink)]">
-            <span className="font-medium tabular-nums">{selCount}</span> selected
-          </span>
-          <span className="h-3 w-px bg-[color:var(--rule)]" />
-          <div ref={saveMenuRef} className="relative">
-            <button
-              onClick={() => setSaveMenuOpen((v) => !v)}
-              className=" text-[12.5px] text-[color:var(--ink)] hover:text-[color:var(--forest)] font-medium"
-            >
-              Save to file ▾
-            </button>
-            {saveMenuOpen && (
-              <div className="absolute top-full left-0 mt-2 z-20 w-[320px] bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-sm shadow-xl">
-                <div className="px-3 py-2 border-b border-[color:var(--rule)]">
-                  <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
-                    Pick a file
-                  </span>
-                </div>
-                <div className="max-h-[240px] overflow-y-auto">
-                  {files.length === 0 ? (
-                    <div className="px-3 py-4  italic text-[12.5px] text-[color:var(--ink-2)]">
-                      No files yet. Create one below.
-                    </div>
-                  ) : (
-                    files
-                      .filter((f) => !f.archivedAt)
-                      .map((f) => (
-                        <button
-                          key={f._id}
-                          onClick={() =>
-                            addToFileMutation.mutate({
-                              fileId: f._id,
-                              leadIds: Array.from(selected),
-                            })
-                          }
-                          disabled={addToFileMutation.isPending}
-                          className="w-full flex items-center justify-between gap-3 px-3 py-2 text-left hover:bg-[color:var(--paper-3)]/60 transition disabled:opacity-60"
-                        >
-                          <span className="flex-1 min-w-0">
-                            <span className="block  text-[13px] text-[color:var(--ink)] truncate">
-                              {f.name}
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-up">
+          <div className="flex items-center gap-3 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-3 rounded-xl shadow-2xl border border-[color:var(--paper)]/10">
+            <span className="text-[13px] font-semibold tabular-nums whitespace-nowrap">
+              {selCount} selected
+            </span>
+            <div className="w-px h-5 bg-[color:var(--paper)]/20" />
+
+            <div ref={saveMenuRef} className="relative">
+              <button
+                onClick={() => setSaveMenuOpen((v) => !v)}
+                className="flex items-center gap-1.5 text-[12.5px] font-medium text-[color:var(--paper)]/80 hover:text-[color:var(--paper)] transition"
+              >
+                Save to file ▾
+              </button>
+              {saveMenuOpen && (
+                <div className="absolute bottom-full left-0 mb-2 z-20 w-[320px] bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-lg shadow-2xl overflow-hidden">
+                  <div className="px-3 py-2 border-b border-[color:var(--rule)]">
+                    <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--ink-3)]">
+                      Add to file
+                    </span>
+                  </div>
+                  <div className="max-h-[240px] overflow-y-auto">
+                    {files.length === 0 ? (
+                      <div className="px-3 py-4 text-[12.5px] text-[color:var(--ink-3)]">
+                        No files yet — create one below.
+                      </div>
+                    ) : (
+                      files
+                        .filter((f) => !f.archivedAt)
+                        .map((f) => (
+                          <button
+                            key={f._id}
+                            onClick={() => addToFileMutation.mutate({ fileId: f._id, leadIds: Array.from(selected) })}
+                            disabled={addToFileMutation.isPending}
+                            className="w-full flex items-center justify-between gap-3 px-3 py-2 text-left hover:bg-[color:var(--paper-2)] transition disabled:opacity-60"
+                          >
+                            <span className="flex-1 min-w-0">
+                              <span className="block text-[13px] text-[color:var(--ink)] truncate">{f.name}</span>
+                              <span className="block font-mono text-[10.5px] tabular-nums text-[color:var(--ink-3)]">
+                                {f.source === 'job' ? 'From search' : 'Curated'} · {f.leadCount}
+                              </span>
                             </span>
-                            <span className="block font-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
-                              {f.source === 'job' ? 'From search' : 'Curated'} · {f.leadCount}
-                            </span>
-                          </span>
-                        </button>
-                      ))
-                  )}
-                </div>
-                <div className="px-3 py-3 border-t border-[color:var(--rule)] bg-[color:var(--paper-3)]/60">
-                  <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] block mb-1.5">
-                    Or cut a new file
-                  </span>
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      const name = newFileName.trim();
-                      if (!name) return;
-                      createFileWithLeadsMutation.mutate({
-                        name,
-                        leadIds: Array.from(selected),
-                      });
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <input
-                      value={newFileName}
-                      onChange={(e) => setNewFileName(e.target.value)}
-                      placeholder="New file name"
-                      maxLength={200}
-                      className="flex-1 bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] outline-none py-1  text-[13px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!newFileName.trim() || createFileWithLeadsMutation.isPending}
-                      className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--forest)] hover:text-[color:var(--ink)] disabled:opacity-60"
+                          </button>
+                        ))
+                    )}
+                  </div>
+                  <div className="px-3 py-3 border-t border-[color:var(--rule)] bg-[color:var(--paper-2)]/60">
+                    <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--ink-3)] block mb-1.5">
+                      New file
+                    </span>
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const name = newFileName.trim();
+                        if (!name) return;
+                        createFileWithLeadsMutation.mutate({ name, leadIds: Array.from(selected) });
+                      }}
+                      className="flex items-center gap-2"
                     >
-                      {createFileWithLeadsMutation.isPending ? 'Opening…' : 'Open'}
-                    </button>
-                  </form>
+                      <input
+                        value={newFileName}
+                        onChange={(e) => setNewFileName(e.target.value)}
+                        placeholder="File name"
+                        maxLength={200}
+                        className="flex-1 bg-transparent border border-[color:var(--rule)] focus:border-[color:var(--forest)]/60 rounded-md outline-none px-2 py-1 text-[12.5px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] transition-colors"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!newFileName.trim() || createFileWithLeadsMutation.isPending}
+                        className="px-2.5 h-7 rounded-md text-[11.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] disabled:opacity-50 transition-colors"
+                      >
+                        {createFileWithLeadsMutation.isPending ? '…' : 'Create'}
+                      </button>
+                    </form>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-1.5 text-[12.5px] font-medium text-[color:var(--paper)]/80 hover:text-[color:var(--paper)] transition"
+            >
+              Export CSV
+            </button>
+
+            <div className="w-px h-5 bg-[color:var(--paper)]/20" />
+            <button
+              onClick={() => setSelected(new Set())}
+              className="p-1 text-[color:var(--paper)]/50 hover:text-[color:var(--paper)] transition rounded"
+              aria-label="Clear selection"
+            >
+              <CloseIcon className="w-3 h-3" />
+            </button>
           </div>
-          <button
-            onClick={handleExport}
-            className=" text-[12.5px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
-          >
-            Export CSV
-          </button>
-          <button
-            onClick={() => setSelected(new Set())}
-            className="ml-auto font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
-          >
-            Clear
-          </button>
         </div>
       )}
 
-      {/* Table */}
-      <div className="border border-[color:var(--rule)] rounded-sm overflow-hidden bg-[color:var(--paper)]">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-[color:var(--paper-2)] border-b border-[color:var(--rule)]">
-              <tr>
-                <th className="py-2.5 pl-4 pr-2 w-10">
-                  <input
-                    type="checkbox"
-                    checked={allSelectedOnPage}
-                    onChange={toggleAll}
-                    className="accent-[color:var(--ink)] cursor-pointer"
-                  />
-                </th>
-                {['Company', 'Contact', 'Email', 'Phone', ...schema.map((c) => c.label), 'Score', 'Status', ''].map((h, i) => (
-                  <th
-                    key={`${h}-${i}`}
-                    className={`py-2.5 px-3 font-mono text-[9.5px] tracking-[0.2em] uppercase text-[color:var(--ink-2)] ${
-                      h === 'Score' ? 'text-right' : ''
-                    }`}
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading && (
-                <tr>
-                  <td colSpan={7 + schema.length} className="py-16 text-center">
-                    <span className=" italic text-[14px] text-[color:var(--ink-2)]">
-                      Loading leads\u2026
-                    </span>
-                  </td>
-                </tr>
-              )}
-              {!isLoading &&
-                filtered.map((lead) => (
-                  <LeadRow
-                    key={lead._id}
-                    lead={lead}
-                    selected={selected.has(lead._id)}
-                    onToggle={toggleOne}
-                    onOpen={setDrawerId}
-                    active={drawerId === lead._id}
-                    schema={schema}
-                    isJobScoped={isJobScoped}
-                  />
-                ))}
-              {!isLoading && filtered.length === 0 && (
-                <tr>
-                  <td colSpan={7 + schema.length} className="py-20 text-center">
-                    <div className="max-w-[400px] mx-auto">
-                      <h3 className=" text-[22px] text-[color:var(--ink)]">
-                        Nothing matched those filters.
-                      </h3>
-                      <p className="mt-2  text-[13.5px] italic text-[color:var(--ink-2)]">
-                        Clear the search or try a different filter.
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="px-4 py-3 border-t border-[color:var(--rule)] flex items-center justify-between bg-[color:var(--paper-2)]">
-          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
-            Showing <span className="tabular-nums text-[color:var(--ink-2)]">{filtered.length}</span> of{' '}
-            <span className="tabular-nums text-[color:var(--ink-2)]">{total}</span>
-          </span>
-          {isJobScoped && schema.length > 0 && (
-            <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
-              <sup className="text-[color:var(--forest)] mr-1">†</sup>
-              Hover for source
-            </span>
+      {/* ── Grouped archive view ─────────────────────────────── */}
+      {!isJobScoped && (
+        <>
+          {isLoading && (
+            <div className="py-16 text-center">
+              <span className="font-mono text-[12px] text-[color:var(--ink-3)]">Loading leads…</span>
+            </div>
           )}
+          {!isLoading && filtered.length === 0 && (
+            <div className="border border-[color:var(--rule)] rounded-xl p-12 md:p-16 text-center bg-[color:var(--paper-2)]/40">
+              <h3 className="text-[15px] font-semibold text-[color:var(--ink)]">No leads match those filters</h3>
+              <p className="mt-1.5 text-[13px] text-[color:var(--ink-2)]">
+                Clear the search or try a different status filter.
+              </p>
+            </div>
+          )}
+          {!isLoading && groups && groups
+            .slice((groupsPage - 1) * GROUPS_PAGE_SIZE, groupsPage * GROUPS_PAGE_SIZE)
+            .map((g) => (
+              <QueryGroup
+                key={g.jobId ?? '__none__'}
+                jobId={g.jobId}
+                query={g.query}
+                timestamp={g.timestamp}
+                leads={g.leads}
+                selected={selected}
+                onToggle={toggleOne}
+                onOpen={setDrawerId}
+                drawerId={drawerId}
+                schema={schema}
+                isJobScoped={false}
+                colCount={colCount}
+              />
+            ))}
+          {!isLoading && groups && (
+            <Pagination
+              page={groupsPage}
+              total={groups.length}
+              pageSize={GROUPS_PAGE_SIZE}
+              onPageChange={setGroupsPage}
+              itemLabel={groups.length === 1 ? 'search' : 'searches'}
+            />
+          )}
+          {!isLoading && filtered.length > 0 && (
+            <div className="mt-3 flex items-center justify-between">
+              <span className="font-mono text-[10.5px] tabular-nums text-[color:var(--ink-3)]">
+                Showing <span className="text-[color:var(--ink-2)]">{filtered.length}</span> of{' '}
+                <span className="text-[color:var(--ink-2)]">{total}</span>
+              </span>
+              <button
+                onClick={toggleAll}
+                className="font-mono text-[10.5px] text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition-colors"
+              >
+                {allSelectedOnPage ? 'Deselect all' : 'Select all'}
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── Single-job dossier table ─────────────────────────── */}
+      {isJobScoped && (
+        <div className="border border-[color:var(--rule)] rounded-xl overflow-hidden bg-[color:var(--paper)]">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <LeadsTableHead schema={schema} isJobScoped={isJobScoped} />
+              <tbody>
+                {isLoading && (
+                  <tr>
+                    <td colSpan={colCount} className="py-16 text-center">
+                      <span className="font-mono text-[12px] text-[color:var(--ink-3)]">Loading leads…</span>
+                    </td>
+                  </tr>
+                )}
+                {!isLoading &&
+                  filtered.map((lead) => (
+                    <LeadRow
+                      key={lead._id}
+                      lead={lead}
+                      selected={selected.has(lead._id)}
+                      onToggle={toggleOne}
+                      onOpen={setDrawerId}
+                      active={drawerId === lead._id}
+                      schema={schema}
+                      isJobScoped={isJobScoped}
+                    />
+                  ))}
+                {!isLoading && filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={colCount} className="py-16 text-center">
+                      <div className="max-w-[400px] mx-auto">
+                        <h3 className="text-[15px] font-semibold text-[color:var(--ink)]">No leads match those filters</h3>
+                        <p className="mt-1.5 text-[13px] text-[color:var(--ink-2)]">
+                          Clear the search or try a different status filter.
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="px-4 py-3 border-t border-[color:var(--rule)] flex items-center justify-between bg-[color:var(--paper-2)]">
+            <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+              Showing <span className="tabular-nums text-[color:var(--ink-2)]">{filtered.length}</span> of{' '}
+              <span className="tabular-nums text-[color:var(--ink-2)]">{total}</span>
+            </span>
+            {isJobScoped && schema.length > 0 && (
+              <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+                <sup className="text-[color:var(--forest)] mr-1">†</sup>
+                Hover for source
+              </span>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <LeadDrawer lead={drawerLead} schema={schema} onClose={() => setDrawerId(null)} />
     </div>

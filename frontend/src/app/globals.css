@@ -42,42 +42,92 @@
     --radius: 0.75rem;
   }
 
-  /* ── Dark mode ───────────────────────────────────────────────
-   * Dark charcoal + amber accent. Clean modern SaaS night mode. */
-  html.dark {
-    --paper:    #111827;   /* gray-900 */
-    --paper-2:  #1f2937;   /* gray-800 */
-    --paper-3:  #374151;   /* gray-700 */
-    --ink:      #f9fafb;   /* gray-50 */
-    --ink-2:    #d1d5db;   /* gray-300 */
-    --ink-3:    #9ca3af;   /* gray-400 */
-    --rule:     #374151;   /* gray-700 */
-    --forest:   #fbbf24;   /* amber-400 (lighter for dark bg) */
-    --forest-2: #f59e0b;   /* amber-500 */
-    --rust:     #fde68a;   /* amber-200 (warning tint on dark) */
-    --warn:     #f87171;   /* red-400 */
-
-    --background: 221 39% 11%;
-    --foreground: 210 40% 98%;
-    --card: 215 28% 17%;
-    --card-foreground: 210 40% 98%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 38 92% 50%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 221 39% 11%;
-    --secondary: 215 28% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 215 28% 17%;
-    --muted-foreground: 218 11% 65%;
-    --accent: 38 79% 56%;
-    --accent-foreground: 221 39% 11%;
-    --destructive: 0 63% 70%;
-    --destructive-foreground: 221 39% 11%;
-    --radius: 0.75rem;
+  /* ── Marketing-page tokens (alt-* set) ──────────────────
+   * Used by /, /pricing, /docs, /althome via className="alt-tokens".
+   * Was previously inlined via a style object, but inline styles
+   * outrank `.dark` overrides, so the public pages couldn't
+   * follow the theme. Defining as a class scopes the tokens AND
+   * lets the dark variant override them. */
+  .alt-tokens {
+    --alt-amber:        #f59e0b;
+    --alt-amber-light:  #fef3c7;
+    --alt-amber-border: #fde68a;
+    --alt-amber-dark:   #92400e;
+    --alt-ink:          #111827;
+    --alt-ink-2:        #374151;
+    --alt-ink-3:        #6b7280;
+    --alt-ink-4:        #9ca3af;
+    --alt-rule:         #e5e7eb;
+    --alt-paper-2:      #f9fafb;
+    --alt-paper-3:      #f3f4f6;
+    --alt-green-bg:     #dcfce7;
+    --alt-green-text:   #166534;
+  }
+  .dark .alt-tokens {
+    /* Dark variant. Surface ladder mirrors the dashboard dark
+     * palette so the same toggle reads cleanly across both. The
+     * amber accent stays identical so brand colour is consistent. */
+    --alt-amber:        #f59e0b;
+    --alt-amber-light:  #422006;
+    --alt-amber-border: #78350f;
+    --alt-amber-dark:   #fcd34d;
+    --alt-ink:          #f3f4f6;
+    --alt-ink-2:        #d1d5db;
+    --alt-ink-3:        #9ca3af;
+    --alt-ink-4:        #6b7280;
+    --alt-rule:         #1f2937;
+    --alt-paper-2:      #11161f;
+    --alt-paper-3:      #1a212d;
+    --alt-green-bg:     #052e16;
+    --alt-green-text:   #86efac;
   }
 
-  * {
+  /* ── Dark palette ────────────────────────────────────────
+   * Activated by next-themes adding `.dark` on <html>. Mirror
+   * every light token here. Designed to share the same amber
+   * accent (--forest) so brand identity carries across themes,
+   * but invert paper/ink so the app reads cleanly on a near-
+   * black surface. Choose --paper slightly off-black (#0b0f17)
+   * rather than pure #000 because pure black amplifies OLED
+   * smearing on text and over-contrasts the amber accent.
+   * --paper-2 / --paper-3 step UP into the page rather than
+   * down (raised surfaces are LIGHTER than the page in dark
+   * mode — opposite of light mode), matching modern SaaS dark
+   * conventions (Linear, Vercel, GitHub). */
+  .dark {
+    --paper:    #0b0f17;   /* primary background — near-black, not pure */
+    --paper-2:  #11161f;   /* raised surface */
+    --paper-3:  #1a212d;   /* subtle panel tint */
+    --ink:      #f3f4f6;   /* primary text — off-white */
+    --ink-2:    #d1d5db;   /* secondary / body */
+    --ink-3:    #9ca3af;   /* tertiary / meta */
+    --rule:     #1f2937;   /* hairline */
+    --forest:   #f59e0b;   /* amber accent — same in both themes */
+    --forest-2: #fbbf24;   /* amber-400 (lighter for dark surface contrast) */
+    --rust:     #fcd34d;   /* amber-300 */
+    --warn:     #f87171;   /* red-400 (softer on dark) */
+
+    /* shadcn tokens — HSL form */
+    --background: 220 25% 7%;             /* --paper */
+    --foreground: 220 14% 96%;            /* --ink */
+    --card: 220 23% 9%;                   /* --paper-2 */
+    --card-foreground: 220 14% 96%;
+    --border: 220 13% 17%;                /* --rule */
+    --input: 220 13% 17%;
+    --ring: 38 92% 50%;                   /* amber */
+    --primary: 220 14% 96%;               /* ink (light on dark) */
+    --primary-foreground: 220 25% 7%;     /* paper (dark) */
+    --secondary: 220 22% 12%;             /* paper-3 */
+    --secondary-foreground: 220 14% 96%;
+    --muted: 220 22% 12%;
+    --muted-foreground: 220 9% 65%;       /* ink-3 */
+    --accent: 38 92% 50%;
+    --accent-foreground: 220 25% 7%;
+    --destructive: 0 84% 70%;
+    --destructive-foreground: 0 0% 100%;
+  }
+
+* {
     @apply border-border;
   }
 
@@ -92,6 +142,12 @@
     background-image: radial-gradient(circle, hsl(0 0% 100% / 0.08) 1px, transparent 1px);
     background-size: 32px 32px;
   }
+
+  /* ── Scrollbar styling — subtle, SaaS-grade ─────────────── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--ink-3); }
 }
 
 /* Cinematic footer (motion-footer) — theme tokens use hsl(var(--token)) for shadcn */
@@ -243,6 +299,49 @@
   border-color: rgba(255,255,255,0.55);
   background: rgba(255,255,255,0.07);
   box-shadow: 0 0 0 4px rgba(255,255,255,0.06);
+}
+
+/* ── B2B SaaS animation utilities ──────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.animate-fade-up   { animation: fadeUp   0.28s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-in   { animation: fadeIn   0.22s ease both; }
+.animate-scale-in  { animation: scaleIn  0.24s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-slide-right { animation: slideInRight 0.28s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Stagger delays for list items */
+.stagger-1  { animation-delay: 0.04s; }
+.stagger-2  { animation-delay: 0.08s; }
+.stagger-3  { animation-delay: 0.12s; }
+.stagger-4  { animation-delay: 0.16s; }
+.stagger-5  { animation-delay: 0.20s; }
+.stagger-6  { animation-delay: 0.24s; }
+
+/* Skeleton loading shimmer */
+@keyframes skeleton-wave {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--paper-3) 25%, var(--paper-2) 50%, var(--paper-3) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-wave 1.6s ease-in-out infinite;
+  border-radius: 6px;
 }
 
 @keyframes streamFade { 0%,100%{ opacity:.25 } 50%{ opacity:.9 } }
