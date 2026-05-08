@@ -447,7 +447,7 @@ export async function sendDraft(req: Request, res: Response): Promise<void> {
   }
 
   // Load workspace email config (select secret fields explicitly)
-  const workspace = await Workspace.findById(workspaceId).select('+emailConfig.apiKey +emailConfig.smtpPass');
+  const workspace = await Workspace.findById(workspaceId).select('+emailConfig.apiKey +emailConfig.smtpPass +emailConfig.gmail.accessToken +emailConfig.gmail.refreshToken');
   if (!workspace) throw ApiError.notFound('Workspace not found');
 
   if (!workspace.emailConfig?.provider || !workspace.emailConfig.fromEmail) {
@@ -477,6 +477,7 @@ export async function sendDraft(req: Request, res: Response): Promise<void> {
     subject,
     html: textToHtml(draft.body),
     text: draft.body,
+    workspaceId: workspaceId as string,
   });
 
   const sent = await OutreachDraft.findByIdAndUpdate(

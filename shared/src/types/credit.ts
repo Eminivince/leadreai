@@ -3,8 +3,10 @@ export const CREDIT_TXN_REASONS = [
   'dispatch.refund',
   'topup.test',
   'topup.stripe',
+  'topup.paystack',
   'subscription.renewal',
   'subscription.change',
+  'subscription.paystack',
   'adjustment',
   'signup',
 ] as const;

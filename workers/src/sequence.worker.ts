@@ -1,7 +1,7 @@
 import { Worker, type Job } from 'bullmq';
 import { Redis } from 'ioredis';
 import mongoose, { Schema } from 'mongoose';
-import { scryptSync, createDecipheriv } from 'crypto';
+import { scryptSync, createDecipheriv, createCipheriv, randomBytes } from 'crypto';
 import { Resend } from 'resend';
 import nodemailer from 'nodemailer';
 import jwt from 'jsonwebtoken';
@@ -20,7 +20,7 @@ export interface SequenceStepPayload {
 
 const QUEUE_PREFIX = `{bull}:leadreai:${env.NODE_ENV}`;
 
-// ─── Inline decrypt (mirrors backend/src/utils/encrypt.ts) ───────────────────
+// ─── Inline encrypt/decrypt (mirrors backend/src/utils/encrypt.ts) ───────────
 function decryptValue(ciphertext: string): string {
   const [ivHex, authTagHex, encryptedHex] = ciphertext.split(':');
   if (!ivHex || !authTagHex || !encryptedHex) throw new Error('Invalid ciphertext format');
@@ -28,6 +28,14 @@ function decryptValue(ciphertext: string): string {
   const decipher = createDecipheriv('aes-256-gcm', key, Buffer.from(ivHex, 'hex'));
   decipher.setAuthTag(Buffer.from(authTagHex, 'hex'));
   return decipher.update(Buffer.from(encryptedHex, 'hex')) + decipher.final('utf8');
+}
+
+function encryptValue(text: string): string {
+  const key = scryptSync(env.JWT_SECRET, 'leadreai-email-salt', 32);
+  const iv = randomBytes(16);
+  const cipher = createCipheriv('aes-256-gcm', key, iv);
+  const encrypted = Buffer.concat([cipher.update(text, 'utf8'), cipher.final()]);
+  return `${iv.toString('hex')}:${cipher.getAuthTag().toString('hex')}:${encrypted.toString('hex')}`;
 }
 
 // ─── Inline unsubscribe token generation ─────────────────────────────────────
@@ -52,6 +60,12 @@ const workspaceSchema = new Schema({
     smtpSecure: Boolean,
     smtpUser: String,
     smtpPass: { type: String, select: false },
+    gmail: {
+      accessToken: { type: String, select: false },
+      refreshToken: { type: String, select: false },
+      expiresAt: Date,
+      email: String,
+    },
   },
 }, { strict: false });
 
@@ -66,6 +80,11 @@ const leadSchema = new Schema({
   website: String,
   address: { city: String, country: String },
   emails: [{ address: String, type: String }],
+  jobId: Schema.Types.ObjectId,
+  qualificationReason: String,
+  agentReasoning: String,
+  socialProfiles: { linkedinUrl: String },
+  facts: { type: Schema.Types.Mixed },
 }, { strict: false });
 
 const LeadModel = mongoose.models['LEAD_SEQ'] as mongoose.Model<any> ??
@@ -123,6 +142,11 @@ const suppressionSchema = new Schema({ workspaceId: Schema.Types.ObjectId, email
 const SuppressionModel = mongoose.models['SUPPRESSION_SEQ'] as mongoose.Model<any> ??
   mongoose.model('SUPPRESSION_SEQ', suppressionSchema, 'suppressionentries');
 
+// ProspectingJob — read rawQuery to give the AI context about why this lead was found
+const prospectingJobSchema = new Schema({ rawQuery: String }, { strict: false });
+const ProspectingJobModel = mongoose.models['PROSJOB_SEQ'] as mongoose.Model<any> ??
+  mongoose.model('PROSJOB_SEQ', prospectingJobSchema, 'prospectingjobs');
+
 // Campaign — we read `schedule.dailySendCap` + `schedule.timezone` per-send
 // to enforce the per-workspace daily cap. Matched to a sequence via
 // `sequenceId`. Campaigns created before M1 won't have `schedule`; the
@@ -131,6 +155,7 @@ const campaignSchema = new Schema({
   workspaceId: Schema.Types.ObjectId,
   sequenceId: Schema.Types.ObjectId,
   name: String,
+  description: String,
   outreachConfig: { channel: String, tone: String, language: String },
   schedule: { timezone: String, startHour: Number, endHour: Number, allowedDays: [Number], dailySendCap: Number },
 }, { strict: false });
@@ -160,9 +185,86 @@ const outreachDraftSchema = new Schema({
 const OutreachDraftModel = mongoose.models['DRAFT_SEQ'] as mongoose.Model<any> ??
   mongoose.model('DRAFT_SEQ', outreachDraftSchema, 'outreachdrafts');
 
+// ─── Gmail send helper ────────────────────────────────────────────────────────
+async function refreshGmailToken(refreshToken: string): Promise<{ accessToken: string; expiresAt: Date }> {
+  const body = new URLSearchParams({
+    grant_type: 'refresh_token',
+    client_id: env.GOOGLE_OAUTH_CLIENT_ID ?? '',
+    client_secret: env.GOOGLE_OAUTH_CLIENT_SECRET ?? '',
+    refresh_token: refreshToken,
+  });
+  const resp = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body.toString(),
+  });
+  if (!resp.ok) throw new Error('Gmail token refresh failed');
+  const data = await resp.json() as { access_token: string; expires_in: number };
+  return { accessToken: data.access_token, expiresAt: new Date(Date.now() + data.expires_in * 1000) };
+}
+
+async function sendViaGmailWorker(
+  emailConfig: Record<string, any>,
+  workspaceId: string,
+  to: string,
+  subject: string,
+  htmlBody: string,
+): Promise<string> {
+  const gmail = emailConfig.gmail as { accessToken?: string; refreshToken?: string; expiresAt?: Date };
+  if (!gmail?.accessToken) throw new Error('Gmail not configured for this workspace');
+
+  let accessToken = decryptValue(gmail.accessToken);
+
+  if (gmail.refreshToken && gmail.expiresAt) {
+    const fiveMin = 5 * 60 * 1000;
+    if (new Date(gmail.expiresAt).getTime() - Date.now() < fiveMin) {
+      const refreshed = await refreshGmailToken(decryptValue(gmail.refreshToken));
+      accessToken = refreshed.accessToken;
+      await WorkspaceModel.findByIdAndUpdate(workspaceId, {
+        $set: {
+          'emailConfig.gmail.accessToken': encryptValue(refreshed.accessToken),
+          'emailConfig.gmail.expiresAt': refreshed.expiresAt,
+        },
+      }).catch(() => {/* non-critical: send still proceeds with fresh token in memory */});
+    }
+  }
+
+  const from = emailConfig.fromName
+    ? `${emailConfig.fromName as string} <${emailConfig.fromEmail as string}>`
+    : (emailConfig.fromEmail as string) ?? '';
+  const lines = [
+    `From: ${from}`,
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    ...(emailConfig.replyTo ? [`Reply-To: ${emailConfig.replyTo as string}`] : []),
+    'MIME-Version: 1.0',
+    'Content-Type: text/html; charset=UTF-8',
+    '',
+    htmlBody,
+  ];
+  const raw = Buffer.from(lines.join('\r\n'))
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+
+  const sendResp = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ raw }),
+  });
+  if (!sendResp.ok) {
+    const errBody = await sendResp.text();
+    throw new Error(`Gmail send failed (${sendResp.status}): ${errBody}`);
+  }
+  const result = await sendResp.json() as { id: string };
+  return result.id;
+}
+
 // ─── Email send helper ────────────────────────────────────────────────────────
 async function sendEmail(
   emailConfig: Record<string, any>,
+  workspaceId: string,
   to: string,
   subject: string,
   body: string,
@@ -173,6 +275,10 @@ async function sendEmail(
   const htmlBody = `<div style="font-family:sans-serif;font-size:14px;line-height:1.6;color:#333">${body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</div>${footerHtml}`;
   const textBody = body + footerText;
   const headers = { 'List-Unsubscribe': `<${unsubscribeUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' };
+
+  if (emailConfig.provider === 'gmail') {
+    return sendViaGmailWorker(emailConfig, workspaceId, to, subject, htmlBody);
+  }
 
   if (emailConfig.provider === 'resend') {
     const apiKey = decryptValue(emailConfig.apiKey);
@@ -231,7 +337,7 @@ async function processSequenceStep(job: Job<SequenceStepPayload>, redis: Redis):
   const lead = await LeadModel.findById(enrollment.leadId);
   if (!lead) { logger.warn(`${tag} lead not found`); return; }
 
-  const toEmail = (lead.emails as any[])[0]?.address as string | undefined;
+  const toEmail = (lead.emails as any)?.[0]?.address as string | undefined;
   if (!toEmail) { logger.warn(`${tag} lead has no email`); return; }
 
   // Check suppression
@@ -260,7 +366,7 @@ async function processSequenceStep(job: Job<SequenceStepPayload>, redis: Redis):
   }
 
   // Load workspace for email config
-  const workspace = await WorkspaceModel.findById(enrollment.workspaceId).select('+emailConfig.apiKey +emailConfig.smtpPass');
+  const workspace = await WorkspaceModel.findById(enrollment.workspaceId).select('+emailConfig.apiKey +emailConfig.smtpPass +emailConfig.gmail.accessToken +emailConfig.gmail.refreshToken');
   if (!workspace?.emailConfig) {
     logger.error(`${tag} workspace has no email config`);
     return;
@@ -325,14 +431,31 @@ async function processSequenceStep(job: Job<SequenceStepPayload>, redis: Redis):
 
   if (step.useAI) {
     try {
+      // Resolve the original prospecting query that found this lead
+      const prospectingJob = lead.jobId
+        ? await ProspectingJobModel.findById(lead.jobId).select('rawQuery').lean()
+        : null;
+
+      const leadFacts = lead.facts as Record<string, { value: unknown }> | undefined;
+
       aiResult = await generateOutreachDraft(
         {
-          companyName: lead.companyName as string | undefined,
-          companyDomain: lead.companyDomain as string | undefined,
-          website: lead.website as string | undefined,
-          industry: lead.industry as string | undefined,
-          address: lead.address as { city?: string; country?: string; state?: string } | undefined,
-          socialProfiles: lead.socialProfiles as { linkedinUrl?: string } | undefined,
+          companyName:         lead.companyName as string | undefined,
+          companyDomain:       lead.companyDomain as string | undefined,
+          website:             lead.website as string | undefined,
+          industry:            lead.industry as string | undefined,
+          address:             lead.address as { city?: string; country?: string; state?: string } | undefined,
+          socialProfiles:      lead.socialProfiles as { linkedinUrl?: string } | undefined,
+          qualificationReason: lead.qualificationReason as string | undefined,
+          agentReasoning:      lead.agentReasoning as string | undefined,
+          prospectingQuery:    prospectingJob?.rawQuery as string | undefined,
+          dynamicFields:       leadFacts
+            ? Object.fromEntries(
+                Object.entries(leadFacts)
+                  .filter(([, v]) => v?.value != null)
+                  .map(([k, v]) => [k, v.value]),
+              )
+            : undefined,
         },
         {
           name: (campaign?.name as string | undefined) ?? 'Workspace',
@@ -345,13 +468,14 @@ async function processSequenceStep(job: Job<SequenceStepPayload>, redis: Redis):
         },
         {
           name: (campaign?.name as string | undefined) ?? 'Campaign',
+          goal: (campaign?.description as string | undefined),
           outreachConfig: {
             channel: (step.channel as string | undefined) ?? 'email',
             tone: (step.tone as string | undefined) ?? (campaign?.outreachConfig?.tone as string | undefined) ?? 'direct',
             language: (campaign?.outreachConfig?.language as string | undefined) ?? 'English',
           },
         },
-        [],
+        (lead.rawSnippets as string[] | undefined) ?? [],
       );
       if (aiResult?.subject && aiResult?.body) {
         subject = aiResult.subject;
@@ -377,7 +501,7 @@ async function processSequenceStep(job: Job<SequenceStepPayload>, redis: Redis):
   let errorMessage: string | undefined;
 
   try {
-    messageId = await sendEmail(workspace.emailConfig, toEmail, subject, body, unsubscribeUrl);
+    messageId = await sendEmail(workspace.emailConfig, enrollment.workspaceId.toString(), toEmail, subject, body, unsubscribeUrl);
     logger.info(`${tag} sent successfully`, { messageId, to: toEmail });
   } catch (err) {
     errorMessage = err instanceof Error ? err.message : String(err);

@@ -47,6 +47,10 @@ const envSchema = z.object({
   OPENROUTER_API_KEY: z.string().optional(),
   OPENROUTER_MODEL: z.string().default('nvidia/nemotron-3-super-120b-a12b:free'),
   OPENROUTER_BASE_URL: z.string().default('https://openrouter.ai/api/v1'),
+  // Override the LLM model for discovery + clarification calls (both use the same
+  // model so questions are generated with the same domain context as company discovery).
+  // Falls back to OPENROUTER_MODEL when unset.
+  DISCOVERY_LLM_MODEL: z.string().optional(),
   LOCAL_LLM_BASE_URL: z.string().default('http://localhost:4400'),
   LOCAL_LLM_API_KEY: z.string().optional(),
   LOCAL_LLM_MODEL: z.string().default('qwen3.5'),
@@ -91,6 +95,26 @@ const envSchema = z.object({
   UNSUBSCRIBE_BASE_URL: z.string().url().default('http://localhost:4000/unsubscribe'),
   UNSUBSCRIBE_TOKEN_SECRET: z.string().min(16).optional(),
   SEQUENCE_MAX_SENDS_PER_MINUTE: z.coerce.number().int().min(1).default(50),
+  // Stripe
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_PRICE_ID_GROWTH: z.string().optional(),
+  // Paystack — secret key is used for both API calls and webhook HMAC (no separate webhook secret)
+  // Optional fast model override for clarifying-question generation.
+  // Clarifications don't need discovery-quality reasoning — use a fast model
+  // (e.g. deepseek/deepseek-chat, meta-llama/llama-3.3-70b-instruct:free)
+  // to cut first-token latency from ~8s to ~1-2s. Falls back to DISCOVERY_LLM_MODEL.
+  CLARIFY_LLM_MODEL: z.string().optional(),
+  // Strong judgment model — used for the intent parser (one call per job
+  // where misreads cascade into the entire pipeline running on the wrong
+  // target). Falls back to OPENROUTER_MODEL when unset. Mirrors the same
+  // env var the workers use for the critic + lead qualifier.
+  JUDGMENT_LLM_MODEL: z.string().optional(),
+  PAYSTACK_SECRET_KEY: z.string().optional(),
+  PAYSTACK_PUBLIC_KEY: z.string().optional(),
+  PAYSTACK_PLAN_CODE_GROWTH: z.string().optional(),
+  PAYSTACK_CURRENCY: z.string().default('ngn'),
+  PAYSTACK_NGN_RATE: z.coerce.number().default(1600),
 });
 
 const parsed = envSchema.safeParse(process.env);

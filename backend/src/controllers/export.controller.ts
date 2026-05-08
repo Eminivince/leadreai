@@ -8,7 +8,7 @@ export async function exportLeads(req: Request, res: Response): Promise<void> {
   const { workspaceId } = req.params;
   const { format = 'csv', jobId } = req.query as { format?: string; jobId?: string };
 
-  if (!['csv', 'xlsx'].includes(format)) throw ApiError.badRequest('format must be csv or xlsx');
+  if (!['csv', 'xlsx', 'json'].includes(format)) throw ApiError.badRequest('format must be csv, xlsx, or json');
 
   const filter: Record<string, unknown> = { workspaceId, isDuplicate: false };
   if (jobId) filter.jobId = jobId;
@@ -20,6 +20,11 @@ export async function exportLeads(req: Request, res: Response): Promise<void> {
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="leads-${workspaceId}.xlsx"`);
     res.send(buffer);
+    return;
+  }
+
+  if (format === 'json') {
+    res.json({ success: true, data: leads });
     return;
   }
 

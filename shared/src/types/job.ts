@@ -43,6 +43,10 @@ export interface ParsedIntent {
   namedEntities: string[] | null;
   /** Extra columns the user asked for. Empty array for queries that only ask for the standard contact fields. */
   outputSchema?: import('../schemas/zod/job.schemas.js').OutputSchemaColumn[];
+  /** What the app's user is selling or offering (e.g. "corporate travel booking services for SMEs").
+   *  Extracted by the query parser when present; used by the hybrid discovery prompt to generate
+   *  concrete fit-reasons per candidate. Null when the query gives no indication. */
+  userOffering?: string | null;
 }
 
 export interface JobProgress {

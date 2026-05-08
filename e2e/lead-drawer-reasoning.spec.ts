@@ -13,7 +13,7 @@
 
 import { test, expect } from '@playwright/test';
 
-const BASE = 'http://localhost:3001';
+const BASE = 'http://localhost:3000';
 
 const REASONING_TEXT =
   'Lagos-based commercial law firm with active contact page and verified Nigerian Bar registration.';
@@ -89,11 +89,29 @@ test.describe('Lead drawer — agentReasoning', () => {
       )
     );
 
+    // Specific job — registered after beforeEach so LIFO gives it priority over
+    // the blanket /jobs** mock, preventing the array-vs-object crash at job._id.slice(-4)
+    await page.route('**/api/v1/workspaces/ws1/jobs/job1', (r) =>
+      r.fulfill(ok({
+        success: true,
+        data: {
+          _id: 'job1',
+          rawQuery: 'Eko Legal test',
+          status: 'complete',
+          progress: { percentage: 100, leadsFoundSoFar: 1 },
+          parsedIntent: { outputSchema: [], targetCount: 5 },
+          createdAt: new Date().toISOString(),
+        },
+      }))
+    );
+
     // Inject workspace selection before navigating (useWorkspace reads localStorage)
     await page.goto(BASE);
     await page.evaluate(() => localStorage.setItem('activeWorkspaceId', 'ws1'));
 
-    await page.goto(`${BASE}/dashboard/leads`);
+    // Navigate directly to job-scoped view — avoids the grouped-by-job table
+    // where leads are hidden inside collapsed rows by default.
+    await page.goto(`${BASE}/dashboard/leads?jobId=job1`);
 
     // Row should appear
     await expect(page.getByText('Eko Legal Partners')).toBeVisible({ timeout: 12_000 });
@@ -121,9 +139,25 @@ test.describe('Lead drawer — agentReasoning', () => {
       )
     );
 
+    // Same LIFO trick — specific job route takes priority over blanket /jobs** mock
+    await page.route('**/api/v1/workspaces/ws1/jobs/job1', (r) =>
+      r.fulfill(ok({
+        success: true,
+        data: {
+          _id: 'job1',
+          rawQuery: 'Eko Legal test',
+          status: 'complete',
+          progress: { percentage: 100, leadsFoundSoFar: 1 },
+          parsedIntent: { outputSchema: [], targetCount: 5 },
+          createdAt: new Date().toISOString(),
+        },
+      }))
+    );
+
     await page.goto(BASE);
     await page.evaluate(() => localStorage.setItem('activeWorkspaceId', 'ws1'));
-    await page.goto(`${BASE}/dashboard/leads`);
+
+    await page.goto(`${BASE}/dashboard/leads?jobId=job1`);
 
     await expect(page.getByText('Eko Legal Partners')).toBeVisible({ timeout: 12_000 });
     await page.getByText('Eko Legal Partners').first().click();

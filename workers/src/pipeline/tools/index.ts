@@ -107,6 +107,7 @@ const DISPATCHER_TOOL_NAMES = new Set([
 ]);
 
 const SUBAGENT_TOOL_NAMES = new Set([
+  'search_web',        // enrichment queries only: "{company} CEO linkedin", "@domain", etc.
   'fetch_url',
   'fetch_file',
   'get_file_chunk',

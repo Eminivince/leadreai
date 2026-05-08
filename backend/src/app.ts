@@ -17,6 +17,9 @@ import adminRouter from './routes/admin.routes.js';
 import enrollmentsRouter from './routes/enrollments.routes.js';
 import { contactsRouter, leadContactsRouter } from './routes/contacts.routes.js';
 import crmRouter, { crmLeadsRouter } from './routes/crm.routes.js';
+import { hubspotCallback } from './controllers/crm.controller.js';
+import gmailRouter from './routes/gmail.routes.js';
+import { gmailCallback } from './controllers/gmail.controller.js';
 import suppressionRouter from './routes/suppression.routes.js';
 import filesRouter from './routes/files.routes.js';
 import notificationsRouter from './routes/notifications.routes.js';
@@ -30,6 +33,7 @@ import invocationsRouter from './routes/invocations.routes.js';
 import dataTablesRouter from './routes/dataTables.routes.js';
 import workflowsRouter from './routes/workflows.routes.js';
 import { costsJobRouter, costsUsageRouter } from './routes/costs.routes.js';
+import chatRouter from './routes/chat.routes.js';
 import { authenticate } from './middleware/authenticate.js';
 import { asyncHandler } from './utils/asyncHandler.js';
 import { handleUnsubscribe } from './controllers/webhooks.controller.js';
@@ -57,6 +61,10 @@ export function createApp(): Express {
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
+
+  // OAuth callbacks must be top-level (no auth middleware, fixed URL for provider registration)
+  app.get('/api/v1/oauth/hubspot/callback', asyncHandler(hubspotCallback));
+  app.get('/api/v1/oauth/gmail/callback', asyncHandler(gmailCallback));
 
   // Validate workspaceId param is a valid ObjectId before any workspace-scoped handler runs
   app.param('workspaceId', (_req, res, next, val) => {
@@ -91,6 +99,7 @@ export function createApp(): Express {
   app.use('/api/v1/workspaces/:workspaceId/leads', leadContactsRouter);
   app.use('/api/v1/workspaces/:workspaceId/leads', crmLeadsRouter);
   app.use('/api/v1/workspaces/:workspaceId/crm', crmRouter);
+  app.use('/api/v1/workspaces/:workspaceId/email-sender', gmailRouter);
   app.use('/api/v1/workspaces/:workspaceId/suppression', suppressionRouter);
   app.use('/api/v1/workspaces/:workspaceId/files', filesRouter);
   app.use('/api/v1/workspaces/:workspaceId/notifications', notificationsRouter);
@@ -103,6 +112,7 @@ export function createApp(): Express {
   );
   app.use('/api/v1/workspaces/:workspaceId/sequences', sequencesRouter);
   app.use('/api/v1/workspaces/:workspaceId/enrollments', enrollmentsRouter);
+  app.use('/api/v1/workspaces/:workspaceId/chat', chatRouter);
 
   app.use('/admin/queues', adminRouter);
 

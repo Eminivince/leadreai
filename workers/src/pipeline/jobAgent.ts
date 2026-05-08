@@ -16,6 +16,8 @@ import type { ProspectingSubagentJobData } from './jobSubagent.js';
 import { env } from '../config/env.js';
 import { writeLeads } from './leadWriter.js';
 import { rankLeads } from './ranker.js';
+import { runSmartDiscovery } from './smartDiscovery.js';
+import { runHybridDiscovery } from '../discovery/hybridDiscovery.js';
 
 export interface JobAgentInput {
   jobId: string;
@@ -42,6 +44,9 @@ export interface JobAgentResult {
   fanOutComplete?: boolean;
   /** Actual leads found — set by fan-out path. Serial path uses ranked.length. */
   leadsFound?: number;
+  /** When true, runJobAgent should retry with the next pipeline (fan-out).
+   *  Set by hybrid discovery when the LLM returns 0 usable candidates. */
+  fallbackToOld?: boolean;
 }
 
 // Step budget scales linearly with target count (min 100, max 300) — large
@@ -289,7 +294,16 @@ Decide:
     },
   ];
   try {
-    const raw = await callLLM(criticHistory);
+    // The critic is a genuine judgment call — use JUDGMENT_LLM_MODEL when set
+    // (typically v4-pro). Tool dispatch and per-step calls keep the fast model.
+    const raw = await callLlm({
+      messages: criticHistory,
+      max_tokens: 1200,
+      temperature: 0,
+      response_format: { type: 'json_object' },
+      timeoutMs: LLM_TIMEOUT_MS,
+      ...(env.JUDGMENT_LLM_MODEL ? { model: env.JUDGMENT_LLM_MODEL } : {}),
+    });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const parsed = JSON.parse(raw) as any;
     logger.info('[jobAgent][critic]', { decision: parsed?.decision, reasoning: parsed?.reasoning });
@@ -304,11 +318,69 @@ Decide:
 }
 
 export async function runJobAgent(input: JobAgentInput): Promise<JobAgentResult> {
+  // DISCOVERY_MODE is the primary routing control.
+  // Legacy boolean flags (AGENT_SMART_DISCOVERY, AGENT_FAN_OUT_ENABLED) are
+  // still honoured within the 'old' branch for backward compatibility.
+  if (env.DISCOVERY_MODE === 'hybrid') {
+    const hybridResult = await runHybridDiscovery(input);
+    if (hybridResult.fallbackToOld) {
+      logger.warn('[jobAgent] hybrid returned no candidates — falling back to dispatcher', { jobId: input.jobId });
+      return runFanOutJobAgent(input);
+    }
+    return hybridResult;
+  }
+
+  if (env.DISCOVERY_MODE === 'smart' && input.rawQuery) {
+    return runSmartJobAgent(input);
+  }
+
+  // 'old' path — dispatcher agent loop + fan-out subagents
   const targetCount = input.parsedIntent.targetCount ?? 10;
   if (env.AGENT_FAN_OUT_ENABLED && targetCount >= env.FAN_OUT_MIN_TARGET) {
     return runFanOutJobAgent(input);
   }
   return runSerialJobAgent(input);
+}
+
+async function runSmartJobAgent(input: JobAgentInput): Promise<JobAgentResult> {
+  const { jobId, workspaceId, parsedIntent, publisher, rawQuery, clarifications } = input;
+  logger.info('[jobAgent/smart] starting', { jobId, targetCount: parsedIntent.targetCount });
+
+  await jobActivity(jobId, publisher, 'tool_call', 'Searching the web and extracting leads…', {});
+
+  try {
+    const leads = await runSmartDiscovery({
+      jobId,
+      workspaceId,
+      parsedIntent,
+      rawQuery: rawQuery ?? '',
+      clarifications,
+    });
+
+    logger.info('[jobAgent/smart] discovery complete', { jobId, leads: leads.length });
+
+    if (leads.length === 0) {
+      logger.warn('[jobAgent/smart] no leads found, falling back to serial agent', { jobId });
+      return runSerialJobAgent(input);
+    }
+
+    const ranked = rankLeads(leads, parsedIntent.desiredFields);
+    await writeLeads(ranked, jobId, workspaceId, publisher);
+
+    return {
+      leads: ranked,
+      stepsUsed: 3, // search + LLM extraction + email verification
+      stopReason: 'agent_done',
+      transcript: [`Smart discovery: ${leads.length} leads found`],
+      fanOutComplete: true,
+      leadsFound: ranked.length,
+    };
+  } catch (err) {
+    logger.error('[jobAgent/smart] failed, falling back to serial', {
+      jobId, err: err instanceof Error ? err.message : String(err),
+    });
+    return runSerialJobAgent(input);
+  }
 }
 
 async function runFanOutJobAgent(input: JobAgentInput): Promise<JobAgentResult> {

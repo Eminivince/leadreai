@@ -215,7 +215,15 @@ leadSchema.index({ rankScore: -1 });
 leadSchema.index({ industry: 1 });
 leadSchema.index({ 'address.country': 1 });
 leadSchema.index({ companyName: 'text', description: 'text' });
-leadSchema.index({ workspaceId: 1, companyDomain: 1 }, { unique: true, sparse: true });
+// Unique on (workspaceId, companyDomain) but only for non-empty domains.
+// Sparse indexes don't actually help here — they include null and empty
+// strings in the unique check, which conflicts when multiple domain-less
+// leads (small SMEs / bukkas) need to coexist in the same workspace.
+// The partial filter excludes both empty strings and missing values.
+leadSchema.index(
+  { workspaceId: 1, companyDomain: 1 },
+  { unique: true, partialFilterExpression: { companyDomain: { $type: 'string', $gt: '' } } },
+);
 leadSchema.index({ workspaceId: 1, isDuplicate: 1, rankScore: -1 });
 leadSchema.index({ workspaceId: 1, qualificationStatus: 1 });
 

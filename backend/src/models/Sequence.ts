@@ -51,7 +51,7 @@ export interface ISequenceDoc extends mongoose.Document {
 
 const sendWindowSchema = new Schema({
   startHour: { type: Number, min: 0, max: 23, required: true },
-  endHour: { type: Number, min: 0, max: 23, required: true },
+  endHour: { type: Number, min: 0, max: 24, required: true },
   timezone: { type: String, required: true },
   allowedDays: [{ type: Number, min: 0, max: 6 }],
 }, { _id: false });

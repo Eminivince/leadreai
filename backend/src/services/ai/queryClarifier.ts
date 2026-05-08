@@ -5,6 +5,7 @@ import {
 } from '@leadreai/shared';
 import { generateText, type AiMessage } from './aiProvider.js';
 import { ApiError } from '../../utils/ApiError.js';
+import { env } from '../../config/env.js';
 
 /**
  * The LLM only emits `{questions: [...]}`. The shared
@@ -33,10 +34,12 @@ const LlmClarifyOutputSchema = z.object({
  * filling the screen.
  */
 
-export const CLARIFIER_SYSTEM_PROMPT = `You are a research-briefing assistant. You receive a user's natural-language prospecting query and you generate a clarifying-question checklist whose purpose is to make it NEAR-IMPOSSIBLE for the downstream research agent to produce an irrelevant lead.
+export const CLARIFIER_SYSTEM_PROMPT = `You are a research-briefing assistant. You receive a user's natural-language prospecting query and decide whether clarifying questions are needed before research begins.
 
-COST FRAMING (read this first — it governs every decision below):
-A dispatch the agent runs against a vague brief burns hundreds of tool calls, LLM turns, scraping, and real credits, and still produces leads the user discards. Clarifying questions cost the user seconds. Asking is ALWAYS cheaper than re-running. The goal of the checklist is to make it near-impossible for the downstream agent to produce an irrelevant lead once the user answers.
+DECISION RULE — ask yourself first:
+"Does this query already give the research agent enough to return a relevant list without guessing?"
+If YES → return { "questions": [] }. Do NOT manufacture questions just to look thorough.
+If NO → ask only the questions whose answers would materially change which companies or people are returned.
 
 CRITICAL OUTPUT RULES:
 - Output ONLY a JSON object. First character MUST be "{". Last character MUST be "}".
@@ -44,136 +47,116 @@ CRITICAL OUTPUT RULES:
 
 Schema: {"questions": [{id, question, type, options?, required, placeholder?, rationale}]}
 
-Question-count policy — you decide:
-- Use your own judgment. Ask as many questions as you genuinely need, and no more. Redundant questions are as harmful as missing ones.
-- The hard upper bound is 8 (schema cap). Fewer is fine when the raw query is already sharp.
-- ZERO questions is valid ONLY when the query is a contact_lookup for a specific named entity ("phone number of Aluko & Oyebode", "email for Jane Doe at Acme"). Every other shape of query should get at least enough questions to cover the axes below that the raw query didn't pin.
-- The bar for each question: "If the user answers this, does it measurably reduce the chance of an irrelevant lead?" If yes, ask. If no, drop it.
+Question-count policy:
+- ZERO questions is the right answer whenever the query is already specific enough to research. Examples: a named entity lookup, a query that already pins industry + geography + role, a request that names specific companies.
+- Ask questions ONLY when an axis is genuinely ambiguous AND the ambiguity would cause the agent to return irrelevant results. "Nice to know" is not enough — the answer must change the search.
+- Hard upper bound: 8. Aim for 1–4 on genuinely vague queries. Never pad.
+- The bar for each question: "If the user skips this, would the agent likely return wrong results?" If no → drop it.
 
-The six ICP axes — ask about any axis the query has NOT explicitly pinned:
-  1. PERSONA — decision-maker role + seniority (e.g. "VP Engineering at the target", "founding partner", "ops lead"). Without this, the agent finds the right companies but the wrong humans.
-  2. PRODUCT — what the target company actually sells (e.g. "B2B SaaS", "card-issuing API", "lending-as-a-service"). "Fintech" alone is useless; "fintech" covers 40+ sub-products.
-  3. CUSTOMER — who the target sells to (e.g. "enterprise financial institutions", "SMB retailers", "individual consumers"). B2B vs. B2C vs. B2B2C flips the entire candidate set.
-  4. GEOGRAPHY — narrower than country when country alone was given (state/region/city). "African fintechs" is 54 countries.
-  5. SIZE / STAGE — employees, funding round, revenue bracket, or "established vs. startup". Directly controls which registries and directories the agent queries first.
-  6. DISQUALIFIERS — what makes a lead unmistakably WRONG. Agencies, incumbents, specific competitors, wrong business model, etc. This is the single highest-leverage axis — without it, relevance grading is guesswork.
+WHAT MAKES A QUERY AMBIGUOUS — common patterns to watch for, NOT a checklist to fill:
+- The persona is unclear (e.g. "leads at fintechs" — leads = which role? founder? sales? procurement?).
+- The product/category covers many sub-types (e.g. "fintech" → payments / lending / wealth / insurtech are different worlds).
+- The buyer-segment of the target company is unclear (B2B vs. B2C; SMB vs. enterprise — flips the candidate set).
+- The geography is broader than the searcher likely intends (e.g. "African" when they probably mean Lagos).
+- Size or stage is undefined and changes which sources we'd search.
+- "What WOULDN'T work" is unstated (disqualifiers are the highest-leverage signal).
+- An exemplar — name a real perfect-fit — would dramatically anchor a vague brief.
 
-Two high-leverage anchoring questions — include at least ONE unless the query is already crystal-specific:
-  7. EXEMPLAR ANCHOR — free-text asking for 1–3 real company/person names that would be a perfect fit. Nothing pins an ICP like a named example. Placeholder: "e.g. Paystack, Flutterwave, Chipper Cash".
-  8. REJECTION ANCHOR — free-text asking for a one-sentence description of a lead that would clearly be a BAD fit. Catches disqualifiers the user didn't think to list.
+Use these as POSSIBILITIES, not slots to fill. If the query already pins persona, don't ask about persona. If geography is named precisely, don't ask about geography. Some queries are already specific in 4 of the 7 dimensions and only need 1-2 questions; others are genuinely vague and need 4-5. NEVER ask about dimensions the query has already answered.
 
 Hard rules on question craft:
-- Prefer \`type: "single"\` or \`type: "multi"\` when a short enumerable answer set exists. Use \`type: "text"\` for truly open answers (exemplar list, rejection anchor, custom excludes).
-- Every \`single\` / \`multi\` question: 3–8 sharp, non-overlapping \`options\`. Always include a neutral escape ("Any", "No preference", "Open to all").
-- Mark \`required: true\` when proceeding without an answer would almost certainly produce mis-targeted leads — typically persona/product/customer when the query is ambiguous on that axis. Aim for 1–2 required questions per brief, not zero and not everything.
-- Every question needs a one-sentence \`rationale\` — what the answer changes about the research (which tool, which registry, which filter).
-- \`id\`: lowercase_snake_case stable slug (persona_seniority, product_category, customer_segment, geo_subregion, company_stage, disqualifiers, exemplar_companies, rejection_description).
+- Match the user's vernacular. If they wrote "businesses I can sell aviation services to," your question should sound like "What kind of aviation services?" — not consultant-speak like "What is the target ICP product category?". Read the query, mirror its register.
+- Prefer \`type: "single"\` or \`type: "multi"\` when a short enumerable answer set exists. Use \`type: "text"\` for truly open answers (exemplar list, rejection notes, custom constraints).
+- Every \`single\` / \`multi\` question: 3-8 sharp, non-overlapping \`options\`. Always include a neutral escape ("Any", "No preference", "Open to all"). Options should reflect the SPECIFIC query's domain, not generic SaaS-speak.
+- Mark \`required: true\` only when proceeding without an answer would almost certainly produce mis-targeted leads. Aim for 0-2 required questions per brief, not everything.
+- Every question needs a one-sentence \`rationale\` — what the answer changes about the research (which tool, which filter, which set of companies).
+- \`id\`: lowercase_snake_case slug derived from the QUESTION's content. Pick something natural like \`aviation_service_type\`, \`wedding_budget_tier\`, \`retail_subsector\`. Do NOT default to a fixed schema — let the slug emerge from the question being asked.
 
-Anti-patterns — NEVER ask:
-- Confirmation of something already in the query ("you said Nigeria — confirm Nigeria?").
-- Output field names (that's the parser's job — email vs. phone vs. funding column).
-- "Why do you want these leads?" (belongs to the outreach layer, not research).
-- Preferences that have no operational effect on the search (favorite color, tone of outreach).
+Anti-patterns — NEVER:
+- Confirm something already in the query ("you said Nigeria — confirm Nigeria?").
+- Re-ask for things the user can specify in a structured query parameter ("how many leads?" — that's a number field, not a clarification).
+- Use generic SaaS-speak when the query is about a non-SaaS domain (don't ask about "ARR" for a wedding planner search).
+- Pad the question list to look thorough. 0-2 sharp questions beats 5 weak ones.
+- Ask about output formatting (CSV vs JSON, which columns) — the parser handles that.
 
-Examples (these reflect the new default — more questions, sharper anchoring):
+EXAMPLES — note how each query produces a DIFFERENT shape of question set, in the user's own register, with slugs derived from the question content. Do NOT copy these slugs/options into other queries; they're illustrative.
 
-Query: "Top 20 fintech companies in Nigeria with funding info — CEO name and work email"
-Reasonable output:
-{
-  "questions": [
-    {
-      "id": "product_category",
-      "question": "Which fintech sub-sector?",
-      "type": "multi",
-      "options": ["Payments / PSP", "Lending / credit", "Neobank / digital bank", "Wealthtech / investing", "Insurtech", "Crypto / stablecoin", "B2B infrastructure", "No preference"],
-      "required": true,
-      "rationale": "'Fintech' spans 40+ product categories with almost no overlap in candidate lists — pinning this is the single biggest filter."
-    },
-    {
-      "id": "customer_segment",
-      "question": "Who does the target serve?",
-      "type": "single",
-      "options": ["B2B — financial institutions", "B2B — SMB / enterprise", "B2C — consumers", "B2B2C — both", "Any"],
-      "required": true,
-      "rationale": "B2B vs. B2C flips the entire candidate set and controls which aggregator directories we prioritize."
-    },
-    {
-      "id": "company_stage",
-      "question": "What stage of fintech?",
-      "type": "multi",
-      "options": ["Pre-seed / seed", "Series A–B", "Series C+ / growth", "Bootstrapped / profitable", "Any stage"],
-      "required": false,
-      "rationale": "Stage changes which registries and press sources the agent searches first."
-    },
-    {
-      "id": "exemplar_companies",
-      "question": "Name 1–3 companies that would be a perfect fit.",
-      "type": "text",
-      "required": false,
-      "placeholder": "e.g. Paystack, Flutterwave, Moniepoint",
-      "rationale": "Named exemplars are the highest-signal anchor — the agent uses them to look-alike the candidate set."
-    },
-    {
-      "id": "disqualifiers",
-      "question": "What kind of lead would be clearly WRONG?",
-      "type": "text",
-      "required": false,
-      "placeholder": "e.g. 'agencies or consultancies', 'pure crypto/stablecoin plays', 'pre-product startups'",
-      "rationale": "Explicit disqualifiers become hard filters in list_companies and the agent's relevance grader."
-    }
-  ]
-}
+---
 
 Query: "phone number of Aluko and Oyebode"
-Reasonable output (contact_lookup for a named entity — genuinely nothing to clarify):
+Reasonable output (named entity lookup — nothing to clarify):
 { "questions": [] }
 
-Query: "managing partners at mid-tier Nigerian law firms, excluding the big five"
-Reasonable output:
+---
+
+Query: "I need 5 businesses I can sell my aviation services to. I help them book flights and hotels for their staff. Strictly Nigeria. Not household names — small upcoming companies. I need email and phone."
+Reasonable output (the brief has geography, size, and disqualifier — only the buyer industry is wide open):
 {
   "questions": [
     {
-      "id": "practice_area",
-      "question": "Any preferred practice area(s)?",
+      "id": "buyer_industry",
+      "question": "Which kinds of Nigerian companies are likely to need aviation/travel services?",
       "type": "multi",
-      "options": ["Corporate / M&A", "Tax", "Energy / Oil & Gas", "Banking & Finance", "Litigation", "IP", "Dispute resolution", "No preference"],
-      "required": false,
-      "rationale": "Practice area flips the search between specialized directories and general bar listings."
-    },
-    {
-      "id": "mid_tier_definition",
-      "question": "How do you define mid-tier?",
-      "type": "single",
-      "options": ["10–50 lawyers", "50–150 lawyers", "Regional / single-state only", "No preference"],
+      "options": ["Oil & gas / energy", "Mining & construction", "Consulting & professional services", "NGOs & development orgs", "Multinational subsidiaries", "Logistics & shipping", "I'm not sure — cast a wide net"],
       "required": true,
-      "rationale": "'Mid-tier' has no canonical definition; pinning it prevents drift to boutiques or second-big-five firms."
+      "rationale": "Aviation-heavy Nigerian SMEs cluster in a few sectors. Pinning this filters the candidate pool by 5-10x."
     },
     {
-      "id": "geo_subregion",
-      "question": "Which part of Nigeria?",
-      "type": "multi",
-      "options": ["Lagos only", "Abuja only", "Port Harcourt / South-South", "Across all regions", "No preference"],
+      "id": "company_role_to_contact",
+      "question": "Who at these companies should we look for?",
+      "type": "single",
+      "options": ["The owner / managing director", "Operations or admin manager (handles travel)", "HR (handles staff travel)", "Whoever — just give me a real human to reach"],
       "required": false,
-      "rationale": "Firm location affects which bar directories and LinkedIn city filters apply."
-    },
-    {
-      "id": "exemplar_companies",
-      "question": "Name 1–3 firms that would be a perfect example of mid-tier for you.",
-      "type": "text",
-      "required": false,
-      "placeholder": "e.g. Punuka Attorneys, SimmonsCooper Partners",
-      "rationale": "Named exemplars anchor the 'mid-tier' definition to real-world firms."
-    },
-    {
-      "id": "disqualifiers",
-      "question": "Anything else to exclude beyond the big five?",
-      "type": "text",
-      "required": false,
-      "placeholder": "e.g. 'firms without a website', 'single-practitioner shops'",
-      "rationale": "Custom exclusions become filters in list_companies and the relevance grader."
+      "rationale": "Travel buying decisions sit with different roles depending on company size. Picking the role steers our SERP queries."
     }
   ]
 }
+
+---
+
+Query: "wedding planners in Lagos who handle Igbo weddings"
+Reasonable output (audience and geography are pinned; budget tier is the open variable):
+{
+  "questions": [
+    {
+      "id": "wedding_budget_tier",
+      "question": "Budget tier of weddings you want to focus on?",
+      "type": "single",
+      "options": ["Lower-mid (₦5-15M)", "Mid (₦15-50M)", "High-end (₦50M+)", "Any"],
+      "required": false,
+      "rationale": "Planner candidates differ sharply by budget tier — the high-end roster doesn't overlap with the mid market."
+    },
+    {
+      "id": "planner_type",
+      "question": "Solo / boutique planners or full-service firms?",
+      "type": "single",
+      "options": ["Solo / boutique (1-3 people)", "Mid firm (4-15)", "Full-service (15+)", "No preference"],
+      "required": false,
+      "rationale": "Solos are on Instagram; firms have proper websites — different sources to search."
+    }
+  ]
+}
+
+---
+
+Query: "Heads of HR at Nigerian banks with more than 500 employees"
+Reasonable output (every dimension already pinned — only an exemplar adds value):
+{
+  "questions": [
+    {
+      "id": "exemplar_targets",
+      "question": "Any specific banks you'd point to as ideal targets?",
+      "type": "text",
+      "required": false,
+      "placeholder": "e.g. GTBank, Access Bank, Zenith",
+      "rationale": "Named exemplars anchor the candidate set when 'Nigerian banks > 500 staff' is otherwise just a long list."
+    }
+  ]
+}
+
+---
+
+Notice how each example asks DIFFERENT questions in DIFFERENT registers, with slugs derived from THIS query's content (\`buyer_industry\`, \`wedding_budget_tier\`, \`planner_type\`, \`exemplar_targets\`) — not from a fixed schema. Match the register of the user's writing. The aviation user wrote informally; the banking user wrote precisely; respond in kind.
 
 REMINDER: Output must be a single valid JSON object. Start with "{". End with "}".`;
 
@@ -206,103 +189,38 @@ function extractFirstJsonObject(text: string): string | null {
 }
 
 /**
- * Heuristic: does this query look like a contact_lookup for a specific
- * named entity? That's the ONE case where returning zero clarifying
- * questions is legitimate. Everything else — named_entity_list, generic
- * demographic filters — should get clarifications by default, even if
- * the LLM decides the query "looks specific enough".
- *
- * Signals for contact_lookup (any one triggers a match):
- *   - Explicit intent verbs: "phone number of", "email for", "contact
- *     details of", "reach out to", "who is", etc.
- *   - Query ≤ 12 words AND contains a capitalized multi-word proper
- *     noun that isn't a country / region / generic job title.
- *   - Direct "X at Y" pattern where Y is a proper noun.
- *
- * This intentionally errs on the side of saying "not a contact lookup"
- * — false negatives here mean we ask some clarifications on a genuinely
- * specific query (30s user cost); false positives mean we skip
- * clarification on a vague query (100× agent cost). Asymmetric risk,
- * asymmetric tolerance.
- */
-function looksLikeContactLookup(rawQuery: string): boolean {
-  const q = rawQuery.trim().toLowerCase();
-  const wordCount = q.split(/\s+/).length;
-
-  const lookupVerbs = [
-    /\bphone (number|#) (of|for)\b/,
-    /\bemail (address )?(of|for)\b/,
-    /\bcontact (info|details|information) (of|for)\b/,
-    /\bhow (can|do) i (contact|reach)\b/,
-    /\bwho is\b.*\bat\b/,
-    /\banyone at\b/,
-    /\breach out to\b/,
-    /\bmailing address (of|for)\b/,
-  ];
-  if (lookupVerbs.some((re) => re.test(q))) return true;
-
-  // Short queries (≤ 12 words) that look like bare entity lookups:
-  // "contact for Paystack", "Aluko and Oyebode partners", etc.
-  if (wordCount <= 12) {
-    // Look for capitalized multi-word proper noun in the ORIGINAL casing.
-    // At least two adjacent capitalized words, not starting the sentence.
-    const properNoun = /(?:^|[^A-Z])([A-Z][a-z]+(?:\s+(?:[A-Z][a-z]+|&|and|of|the|la|le|du|de)){1,})/;
-    if (properNoun.test(rawQuery)) return true;
-  }
-
-  return false;
-}
-
-/**
- * Second-chance prompt for when the model violated the "must ask unless
- * it's a contact_lookup" rule. Sent as a follow-up user message when
- * the first response returned zero questions on a non-contact_lookup
- * query. Keeps pushing toward the six ICP axes defined in the system
- * prompt.
- */
-const NONZERO_ENFORCEMENT_MESSAGE = `You returned zero questions, but this query is NOT a contact_lookup for a specific named entity — it's a broader research brief. Per your rules, you MUST return at least 3 questions covering whichever of the six ICP axes the raw query left ambiguous (persona, product, customer, geography, size/stage, disqualifiers). Include at least one anchoring question (exemplar companies OR rejection description). Respond again with valid JSON only.`;
-
-/**
- * Generates the clarification checklist. Default posture: always ask
- * questions. Zero is allowed only when the query is a contact_lookup
- * for a specific named entity; every other query gets at least 3
- * questions (enforced server-side — the LLM is coached but not
- * trusted).
- *
- * Every failure path (no-JSON, invalid JSON, schema mismatch, zero
- * questions on a non-lookup query) converges on `fallbackQuestions()`
- * when the query isn't a contact lookup — we never silently skip
- * clarification on an underspecified brief. Contact lookups can
- * legitimately return `[]`.
- *
- * Up to 3 total attempts with progressive correction feedback.
+ * Generates the clarification checklist. The model decides whether questions
+ * are needed — zero is a valid answer for already-specific queries.
+ * Up to 2 attempts: initial call + one schema-fix retry if JSON is malformed.
  */
 export async function generateClarifications(rawQuery: string): Promise<ClarificationQuestion[]> {
   if (!rawQuery.trim()) {
     throw ApiError.badRequest('rawQuery must not be empty');
   }
 
-  const allowZero = looksLikeContactLookup(rawQuery);
-
-  // Helper: every non-success exit path runs through this. It hands
-  // back fallback questions when we must not skip clarification, and
-  // an empty list only when the query is genuinely a contact lookup.
+  // On technical failure (no JSON / schema mismatch), proceed without questions
+  // rather than injecting generic fallbacks — a bad model response shouldn't
+  // block the job or mislead the user with irrelevant questions.
   const bail = (reason: string, meta?: Record<string, unknown>): ClarificationQuestion[] => {
     console.warn(`[queryClarifier] ${reason}`, meta ?? {});
-    return allowZero ? [] : fallbackQuestions();
+    return [];
   };
 
   const conversation: AiMessage[] = [{ role: 'user', content: rawQuery }];
-  // Three attempts: (1) initial, (2) zero-question retry if needed,
-  // (3) schema-fix retry if needed.
-  const MAX_ATTEMPTS = 3;
-  let enforcedZeroRetry = false;
+  // Up to 2 attempts: (1) initial call, (2) schema-fix retry if JSON is malformed.
+  // Zero questions is a valid model decision — no enforcement retry.
+  const MAX_ATTEMPTS = 2;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const response = await generateText(conversation, {
       systemPrompt: CLARIFIER_SYSTEM_PROMPT,
       cacheSystem: true,
       maxTokens: 1536,
+      // Use CLARIFY_LLM_MODEL if set (prefer a fast model — clarifications
+      // don't need discovery-quality reasoning). Fall back to DISCOVERY_LLM_MODEL.
+      ...(env.USE_OPENROUTER && (env.CLARIFY_LLM_MODEL ?? env.DISCOVERY_LLM_MODEL)
+        ? { model: env.CLARIFY_LLM_MODEL ?? env.DISCOVERY_LLM_MODEL }
+        : {}),
     });
 
     const extracted = extractFirstJsonObject(response.text);
@@ -337,32 +255,7 @@ export async function generateClarifications(rawQuery: string): Promise<Clarific
 
     const result = LlmClarifyOutputSchema.safeParse(parsed);
     if (result.success) {
-      const questions = result.data.questions;
-
-      // Zero-question enforcement. If the model returned zero AND this
-      // query isn't a contact lookup, kick it back ONCE with a
-      // stronger instruction before falling back. Guard with
-      // `enforcedZeroRetry` so we don't loop forever.
-      if (questions.length === 0 && !allowZero && !enforcedZeroRetry && attempt < MAX_ATTEMPTS) {
-        enforcedZeroRetry = true;
-        console.warn(
-          '[queryClarifier] zero questions returned on non-lookup query — retrying with enforcement',
-          { rawQuery: rawQuery.slice(0, 120) },
-        );
-        conversation.push(
-          { role: 'assistant', content: response.text },
-          { role: 'user', content: NONZERO_ENFORCEMENT_MESSAGE },
-        );
-        continue;
-      }
-
-      if (questions.length === 0 && !allowZero) {
-        return bail('zero questions after enforcement retry — using fallback', {
-          rawQuery: rawQuery.slice(0, 120),
-        });
-      }
-
-      return questions;
+      return result.data.questions;
     }
 
     if (attempt === MAX_ATTEMPTS) {
@@ -389,43 +282,3 @@ export async function generateClarifications(rawQuery: string): Promise<Clarific
   return bail('loop fell through (unreachable)');
 }
 
-/**
- * Last-resort questions injected when the LLM refuses to generate any
- * for a query that clearly isn't a contact_lookup. Hits the three
- * highest-leverage axes from the six-axis rubric:
- *   - Persona seniority (who the buyer is)
- *   - Disqualifiers (what's a wrong-fit lead)
- *   - Exemplars (concrete reference companies)
- *
- * Deliberately generic so they work on any query — specificity suffers
- * vs. a tailored clarifier but "one generic confirmation step" still
- * catches 80% of "wrong target" dispatches.
- */
-function fallbackQuestions(): ClarificationQuestion[] {
-  return [
-    {
-      id: 'persona_seniority',
-      question: 'What seniority of decision-maker are you targeting?',
-      type: 'multi',
-      options: ['Founder / Owner', 'C-suite / VP', 'Director / Head of', 'Manager / IC', 'No preference'],
-      required: true,
-      rationale: 'Seniority controls which contact-enrichment strategies the agent prioritizes.',
-    },
-    {
-      id: 'exemplar_companies',
-      question: 'Name 1–3 organizations that would be a perfect fit.',
-      type: 'text',
-      required: false,
-      placeholder: 'e.g. EAA, AOPA, NBAA',
-      rationale: 'Named exemplars anchor the candidate set to real-world matches the agent can look-alike.',
-    },
-    {
-      id: 'disqualifiers',
-      question: 'What kind of lead would be clearly WRONG for this?',
-      type: 'text',
-      required: false,
-      placeholder: 'e.g. defunct clubs, single-chapter local groups, government regulators',
-      rationale: 'Explicit disqualifiers become hard filters in the relevance grader.',
-    },
-  ];
-}

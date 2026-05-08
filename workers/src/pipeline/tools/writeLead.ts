@@ -101,26 +101,77 @@ function identityDomain(rawDomain: string, companyName: string): string {
 
 export const writeLeadTool: ToolDef = {
   name: 'write_lead',
-  description: 'Commit a lead to the job results. Deduplicates on companyDomain + primary email within this job. Call this ONLY for leads you are confident in (ideally after score_lead returns isVerified:true). Pass `facts` to fill in the query-specific columns the user asked for (see outputSchema in the initial prompt).',
+  description: 'Commit a lead to the job results. Call this as soon as you have a companyName + companyDomain — an email is a bonus, not a requirement. Call it a second time to UPGRADE the same domain record when you find a named contact or verified email. Pass `facts` for query-specific columns (see outputSchema).',
   parametersSchema: '{"companyName": string, "companyDomain": string, "website"?: string, "emails": [{address,type?,confidence,name?,title?,department?,source?}], "phones": [{raw,normalized?,source?}], "topContact"?: {fullName,title?,seniority?}, "rankScore"?: number, "sources"?: [{url,type?}], "facts"?: {[key]: {value, unit?, sourceUrl?, confidence?, raw?}}, "reasoning"?: string}',
   handler: async (args, ctx) => {
     const companyName = String(args?.companyName ?? '').trim();
-    const rawDomain = String(args?.companyDomain ?? '').trim().toLowerCase().replace(/^www\./, '');
-    if (!companyName || !rawDomain) return { ok: false, output: 'companyName and companyDomain required' };
+    const rawDomainRaw = String(args?.companyDomain ?? '').trim().toLowerCase().replace(/^www\./, '');
+    if (!companyName) return { ok: false, output: 'companyName required' };
+
+    // Reject placeholder domains the agent sometimes invents when it
+    // can't find a real one. Carrying these through corrupts downstream
+    // enrichment — Hunter will return data for whoever owns "unknown.com"
+    // and attach it to the wrong company. An empty string is fine
+    // (downstream knows to search for a real footprint), but a
+    // misleading placeholder is not.
+    const PLACEHOLDER_DOMAINS = new Set([
+      'unknown.com', 'unknown.net', 'unknown.org',
+      'example.com', 'example.org', 'example.net',
+      'tbd.com', 'placeholder.com', 'none.com', 'na.com',
+      'company.com', 'business.com', 'domain.com',
+      'noemail.com', 'nowebsite.com',
+    ]);
+    // Reject webmail providers as company domains. The LLM-recall
+    // sometimes proposes "gmail.com" as a company's domain when the
+    // only contact it found was a free-tier @gmail address (typical
+    // for solo Nigerian operators). Storing gmail.com as the
+    // companyDomain would (a) collapse every gmail-only lead in a
+    // workspace into one row via the unique-on-(workspace,domain)
+    // index, (b) confuse the user reading the lead. Treat as
+    // domain-less; the email itself is still preserved in lead.emails.
+    const WEBMAIL_PROVIDERS = new Set([
+      'gmail.com', 'googlemail.com',
+      'yahoo.com', 'yahoo.co.uk', 'ymail.com', 'rocketmail.com',
+      'hotmail.com', 'hotmail.co.uk', 'live.com', 'outlook.com', 'msn.com',
+      'aol.com', 'aim.com',
+      'icloud.com', 'me.com', 'mac.com',
+      'protonmail.com', 'proton.me',
+      'gmx.com', 'gmx.net', 'mail.com',
+      'zoho.com',
+      'yandex.com', 'yandex.ru',
+    ]);
+    const isJunkDomain = PLACEHOLDER_DOMAINS.has(rawDomainRaw) || WEBMAIL_PROVIDERS.has(rawDomainRaw);
+    const rawDomain = isJunkDomain ? '' : rawDomainRaw;
 
     // Disambiguate social-platform leads so two influencers on
-    // instagram.com don't collapse into one row.
-    const companyDomain = identityDomain(rawDomain, companyName);
+    // instagram.com don't collapse into one row. Empty domain → skip
+    // identityDomain (no host to slug); use companyName as the dedup key.
+    const companyDomain = rawDomain ? identityDomain(rawDomain, companyName) : '';
 
     // Same-domain handling — we support UPGRADES: a second write_lead on the same
     // domain can replace the prior record if the new one has strictly better data
     // (e.g. named topContact where previous was generic-only). This lets the agent
     // write baseline first and enrich later without fear of losing the baseline.
-    const existingIdx = ctx.leadsSoFar.findIndex((l) => l.companyDomain === companyDomain);
+    // For domain-less leads, dedupe by companyName instead (case-insensitive).
+    const existingIdx = companyDomain
+      ? ctx.leadsSoFar.findIndex((l) => l.companyDomain === companyDomain)
+      : ctx.leadsSoFar.findIndex((l) => !l.companyDomain && l.companyName.toLowerCase() === companyName.toLowerCase());
     const incomingHasNamedContact = !!(args?.topContact?.fullName && String(args.topContact.fullName).trim());
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const emails = Array.isArray(args?.emails) ? args.emails.map((e: any) => ({
+    const rawEmailArgs: any[] = Array.isArray(args?.emails) ? args.emails : [];
+    // Some models output email as facts.businessEmail (string) instead of emails[].
+    // Rescue those before they get dropped by the facts schema filter.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const facts_raw = (args?.facts && typeof args.facts === 'object') ? args.facts as Record<string, any> : {};
+    const rescuedEmail = facts_raw['businessEmail'];
+    if (typeof rescuedEmail === 'string' && rescuedEmail.includes('@')) {
+      rawEmailArgs.push({ address: rescuedEmail, type: 'business', confidence: 0.7, source: 'agent_extracted' });
+    } else if (rescuedEmail && typeof rescuedEmail === 'object' && typeof rescuedEmail.value === 'string' && rescuedEmail.value.includes('@')) {
+      rawEmailArgs.push({ address: rescuedEmail.value, type: 'business', confidence: 0.7, source: 'agent_extracted' });
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const emails = rawEmailArgs.map((e: any) => ({
       address: String(e.address ?? '').toLowerCase().trim(),
       type: (e.type ?? (e.name ? 'business' : 'generic')) as 'business' | 'generic',
       confidence: clampToFiniteNumber(e.confidence, 0.6, 0, 1),
@@ -128,7 +179,7 @@ export const writeLeadTool: ToolDef = {
       name: e.name ? String(e.name) : undefined,
       title: e.title ? String(e.title) : undefined,
       department: e.department ? String(e.department) : undefined,
-    })).filter((e: { address: string }) => e.address.includes('@')) : [];
+    })).filter((e: { address: string }) => e.address.includes('@'));
 
     // Normalize phones through libphonenumber-js so downstream consumers get E.164 +
     // type classification (office/mobile/fax). Country hint comes from parsed intent
@@ -137,6 +188,12 @@ export const writeLeadTool: ToolDef = {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ? args.phones.map((p: any) => String(p?.raw ?? p ?? '').trim()).filter(Boolean)
       : [];
+    // Rescue officePhone from facts if model used wrong key
+    const rescuedPhone = facts_raw['officePhone'];
+    const rescuedPhoneStr = typeof rescuedPhone === 'string'
+      ? rescuedPhone
+      : (rescuedPhone && typeof rescuedPhone === 'object' && typeof rescuedPhone.value === 'string' ? rescuedPhone.value : '');
+    if (rescuedPhoneStr) rawPhoneStrings.push(rescuedPhoneStr);
     const countryHint = countryNameToCode(ctx.parsedIntent.geography?.country);
     const normalized = normalizePhones(rawPhoneStrings, countryHint);
     const phones = normalized.map((p) => ({
@@ -152,8 +209,6 @@ export const writeLeadTool: ToolDef = {
     // don't leak into Mongo. Each value is clamped: `value` is preserved,
     // `confidence` forced to [0,1] finite, `sourceUrl` truncated to a sane size.
     const schemaKeys = new Set((ctx.parsedIntent.outputSchema ?? []).map((c) => c.key));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rawFacts = (args?.facts && typeof args.facts === 'object') ? args.facts as Record<string, any> : {};
     const facts: Record<string, {
       value: string | number | boolean | string[] | null;
       unit?: string;
@@ -161,9 +216,11 @@ export const writeLeadTool: ToolDef = {
       confidence?: number;
       raw?: string;
     }> = {};
-    for (const [k, v] of Object.entries(rawFacts)) {
+    for (const [k, v] of Object.entries(facts_raw)) {
       if (!schemaKeys.has(k)) {
-        logger.warn('[writeLead] fact key not in outputSchema — dropping', { companyName, key: k });
+        if (k !== 'businessEmail' && k !== 'officePhone') {
+          logger.warn('[writeLead] fact key not in outputSchema — dropping', { companyName, key: k });
+        }
         continue;
       }
       if (!v || typeof v !== 'object') continue;

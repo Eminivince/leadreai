@@ -3,7 +3,12 @@ import { Redis } from 'ioredis';
 import mongoose, { Schema } from 'mongoose';
 import { logger } from './utils/logger.js';
 import { env } from './config/env.js';
-import { runSubagent, type ProspectingSubagentJobData } from './pipeline/jobSubagent.js';
+import {
+  runSubagent,
+  enrichKnownCompany,
+  type ProspectingSubagentJobData,
+  type HybridCandidate,
+} from './pipeline/jobSubagent.js';
 import { runWithCostContext } from './services/costTracker.js';
 import { writeSubagentLeads } from './pipeline/leadWriter.js';
 
@@ -36,11 +41,18 @@ export function createSubagentProspectingWorker(
     async (job: Job) => {
       const data = job.data as ProspectingSubagentJobData;
       const { parentJobId, workspaceId, candidate } = data;
-      logger.info('[subagentWorker] received', { parentJobId, company: candidate.companyName });
+      const isHybrid = data.mode === 'hybrid' && data.hybridCandidate != null;
+      const companyLabel = isHybrid ? data.hybridCandidate!.name : candidate.companyName;
+      logger.info('[subagentWorker] received', { parentJobId, company: companyLabel, mode: data.mode ?? 'standard' });
 
       try {
         const result = await runWithCostContext({ workspaceId, jobId: parentJobId }, () =>
-          runSubagent(data, publisher),
+          isHybrid
+            ? enrichKnownCompany(
+                data as ProspectingSubagentJobData & { hybridCandidate: HybridCandidate },
+                publisher,
+              )
+            : runSubagent(data, publisher),
         );
 
         await writeSubagentLeads(result.leads, parentJobId, workspaceId);
@@ -52,13 +64,13 @@ export function createSubagentProspectingWorker(
 
         logger.info('[subagentWorker] done', {
           parentJobId,
-          company: candidate.companyName,
+          company: companyLabel,
           leads: result.leads.length,
         });
       } catch (err) {
         logger.error('[subagentWorker] failed', {
           parentJobId,
-          company: candidate.companyName,
+          company: companyLabel,
           err: err instanceof Error ? err.message : String(err),
         });
         await ProspectingJobModel.findByIdAndUpdate(parentJobId, {

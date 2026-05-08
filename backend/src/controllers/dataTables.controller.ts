@@ -434,28 +434,210 @@ export async function projectTableToFile(req: Request, res: Response): Promise<v
   const table = await DataTable.findOne({ _id: tableId, workspaceId });
   if (!table) throw ApiError.notFound('Table not found');
 
-  // Pull all non-hidden rows with a leadId. We don't paginate — a campaign
-  // audience is a bounded set and 10k-ish rows from one table is the
-  // upper bound for any realistic workflow. Project only the field we
-  // need to keep this cheap.
-  const rows = await DataTableRow.find(
-    {
-      tableId: table._id,
-      hidden: { $ne: true },
-      leadId: { $exists: true, $ne: null },
-    },
-    { leadId: 1 },
+  // Pull all non-hidden rows, both linked and unlinked.
+  const allRows = await DataTableRow.find(
+    { tableId: table._id, hidden: { $ne: true } },
+    { leadId: 1, cells: 1 },
   ).lean();
 
   // Dedupe — same Lead might have been added twice manually.
   const leadIdSet = new Set<string>();
-  for (const r of rows) {
-    if (r.leadId) leadIdSet.add(String(r.leadId));
+  const unlinkedRows: (typeof allRows[number])[] = [];
+  const linkedRows: (typeof allRows[number])[] = [];
+  for (const r of allRows) {
+    if (r.leadId) {
+      leadIdSet.add(String(r.leadId));
+      linkedRows.push(r);
+    } else {
+      unlinkedRows.push(r);
+    }
+  }
+
+  // Shared email column key — looked up once, used in both passes below.
+  // Primary: column with type === 'email'. Fallback: column whose key matches /email/i.
+  const emailColKey =
+    table.columns.find((c) => c.type === 'email')?.key ??
+    table.columns.find((c) => /email/i.test(c.key))?.key;
+
+  // Helper: extract the first email-like address from a row's cells.
+  function extractEmailFromCells(
+    emailRaw: Map<string, { value?: unknown }> | Record<string, { value?: unknown }>,
+  ): string | null {
+    // 1. Try the known email column
+    if (emailColKey) {
+      const cell = emailRaw instanceof Map ? emailRaw.get(emailColKey) : emailRaw[emailColKey];
+      if (typeof cell?.value === 'string' && cell.value.includes('@')) {
+        return cell.value.trim().toLowerCase();
+      }
+    }
+    // 2. Try any column whose key suggests email
+    for (const col of table!.columns) {
+      if (col.key === emailColKey) continue;
+      if (!/email/i.test(col.key)) continue;
+      const cell = emailRaw instanceof Map ? emailRaw.get(col.key) : emailRaw[col.key];
+      if (typeof cell?.value === 'string' && cell.value.includes('@')) {
+        return cell.value.trim().toLowerCase();
+      }
+    }
+    // 3. Last resort: scan all cells for an email-like value
+    const allCells = emailRaw instanceof Map
+      ? Array.from(emailRaw.values())
+      : Object.values(emailRaw as Record<string, { value?: unknown }>);
+    for (const c of allCells) {
+      if (typeof c?.value === 'string' && c.value.includes('@') && c.value.includes('.')) {
+        return c.value.trim().toLowerCase();
+      }
+    }
+    return null;
+  }
+
+  // For manually-crafted rows without a leadId, try to resolve them:
+  //   1. Extract an email from the row's cells (typed column → key hint → cell scan).
+  //   2. For each unlinked row with an email, look up an existing Lead or create a stub.
+  //   3. Persist the resolved leadId back onto the row so future projections skip this.
+  if (unlinkedRows.length > 0) {
+    {
+      const { default: Lead } = await import('../models/Lead.js');
+      const { default: ProspectingJob } = await import('../models/ProspectingJob.js');
+
+      // Find-or-create one stub "table-import" job for the workspace so all
+      // manually-resolved leads have a valid jobId reference without polluting
+      // the real jobs list (the rawQuery sentinel keeps it identifiable).
+      const existingStubJob = await ProspectingJob.findOne({
+        workspaceId,
+        rawQuery: '[table-import]',
+        status: 'complete',
+      }).select('_id').lean();
+
+      const stubJobId: mongoose.Types.ObjectId = existingStubJob
+        ? existingStubJob._id
+        : (await ProspectingJob.create({
+            workspaceId,
+            createdBy: req.user._id,
+            rawQuery: '[table-import]',
+            status: 'complete',
+            progress: { percentage: 100, currentStage: '', stagesComplete: [], leadsFoundSoFar: 0 },
+            creditsCharged: 0,
+          }))._id;
+
+      const bulkOps: Array<{ updateOne: { filter: object; update: object } }> = [];
+
+      for (const row of unlinkedRows) {
+        const emailRaw = row.cells as Map<string, { value?: unknown }> | Record<string, { value?: unknown }>;
+        const emailAddr = extractEmailFromCells(emailRaw);
+        if (!emailAddr) continue;
+
+        // Try to match to an existing lead by email
+        const existingLead = await Lead.findOne({
+          workspaceId,
+          'emails.address': emailAddr,
+        }).select('_id').lean();
+
+        let resolvedLeadId: mongoose.Types.ObjectId;
+
+        if (existingLead) {
+          resolvedLeadId = existingLead._id;
+        } else {
+          // Derive a display name from other cells: try 'name', 'company', 'company_name'
+          const nameCell = (emailRaw instanceof Map ? emailRaw.get('name') : emailRaw['name'])?.value;
+          const compCell =
+            (emailRaw instanceof Map ? emailRaw.get('company') : emailRaw['company'])?.value ??
+            (emailRaw instanceof Map ? emailRaw.get('company_name') : emailRaw['company_name'])?.value;
+          const companyName =
+            typeof compCell === 'string' && compCell.trim()
+              ? compCell.trim()
+              : typeof nameCell === 'string' && nameCell.trim()
+                ? nameCell.trim()
+                : emailAddr;
+
+          const newLead = await Lead.create({
+            workspaceId,
+            jobId: stubJobId,
+            companyName,
+            emails: [{ address: emailAddr, type: 'business', confidence: 1, verified: false, source: 'manual' }],
+            sources: [],
+            rawSnippets: [],
+            rankScore: 0,
+            completenessScore: 0,
+            isVerified: false,
+            isDuplicate: false,
+            outreachStatus: 'not_contacted',
+            qualificationStatus: 'pending',
+            tags: [],
+            contactIds: [],
+            crmRefs: [],
+          });
+          resolvedLeadId = newLead._id;
+        }
+
+        leadIdSet.add(String(resolvedLeadId));
+        bulkOps.push({
+          updateOne: {
+            filter: { _id: row._id },
+            update: { $set: { leadId: resolvedLeadId } },
+          },
+        });
+      }
+
+      if (bulkOps.length > 0) {
+        await DataTableRow.bulkWrite(bulkOps);
+      }
+    }
+  }
+
+  // Backfill emails onto linked leads that were created without one.
+  // Uses the email-typed column first; falls back to any column whose key
+  // suggests email, then to any cell value that looks like an email address.
+  if (linkedRows.length > 0) {
+    const { default: Lead } = await import('../models/Lead.js');
+    const leadsWithEmail = await Lead.find(
+      { _id: { $in: Array.from(leadIdSet).map((id) => new mongoose.Types.ObjectId(id)) }, 'emails.0': { $exists: true } },
+      { _id: 1 },
+    ).lean();
+    const alreadyHasEmail = new Set(leadsWithEmail.map((l) => String(l._id)));
+
+    // Candidate column keys ordered by preference.
+    const emailCandidateKeys = [
+      emailColKey,
+      ...table.columns
+        .filter((c) => c.key !== emailColKey && /email/i.test(c.key))
+        .map((c) => c.key),
+    ].filter(Boolean) as string[];
+
+    for (const row of linkedRows) {
+      const leadIdStr = String(row.leadId);
+      if (alreadyHasEmail.has(leadIdStr)) continue;
+      const emailRaw = row.cells as Map<string, { value?: unknown }> | Record<string, { value?: unknown }>;
+      const getCell = (key: string) =>
+        emailRaw instanceof Map ? emailRaw.get(key) : (emailRaw as Record<string, { value?: unknown }>)[key];
+
+      let emailAddr: string | null = null;
+      for (const key of emailCandidateKeys) {
+        const val = getCell(key)?.value;
+        if (typeof val === 'string' && val.includes('@')) { emailAddr = val.trim().toLowerCase(); break; }
+      }
+      // Last resort: scan all cells for an email-like value
+      if (!emailAddr) {
+        const allCells = emailRaw instanceof Map
+          ? Array.from(emailRaw.values())
+          : Object.values(emailRaw as Record<string, { value?: unknown }>);
+        for (const c of allCells) {
+          if (typeof c?.value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.value.trim())) {
+            emailAddr = c.value.trim().toLowerCase(); break;
+          }
+        }
+      }
+      if (!emailAddr) continue;
+      await Lead.updateOne(
+        { _id: row.leadId, 'emails.0': { $exists: false } },
+        { $set: { emails: [{ address: emailAddr, type: 'business', confidence: 1, verified: false, source: 'manual' }] } },
+      );
+    }
   }
 
   if (leadIdSet.size === 0) {
     throw ApiError.badRequest(
-      'Table has no rows linked to leads. Seed the table from a dispatch first, or use the files page to curate a file manually.',
+      'Table has no rows with email addresses. Add an email column with values to use this table as a campaign audience.',
     );
   }
 

@@ -99,13 +99,17 @@ export async function clarifyQuery(req: Request, res: Response): Promise<void> {
     throw ApiError.badRequest('rawQuery must be at least 10 characters');
   }
 
-  const policy = await checkQueryPolicy(rawQuery);
+  // Run in parallel — they're independent reads of the same query.
+  const [policy, questions] = await Promise.all([
+    checkQueryPolicy(rawQuery),
+    generateClarifications(rawQuery),
+  ]);
+
   if (policy.decision === 'refuse') {
     res.json({ success: true, data: { policy, questions: [] } });
     return;
   }
 
-  const questions = await generateClarifications(rawQuery);
   res.json({ success: true, data: { policy, questions } });
 }
 

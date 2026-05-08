@@ -32,6 +32,7 @@ export interface LlmResponse {
   ok: boolean;
   status: number;
   content: string;
+  rateLimitReset?: string; // Unix ms timestamp from X-RateLimit-Reset header (429 only)
 }
 
 // Bumped from 25s: OpenRouter occasionally takes 25-40s on complex prompts
@@ -104,11 +105,14 @@ export async function callLlmOnce(req: LlmRequest): Promise<LlmResponse> {
 
     if (!res.ok) {
       const errBody = await res.text().catch(() => '');
+      // Capture X-RateLimit-Reset so callLlm can wait the exact right amount
+      const rateLimitReset = res.headers.get('X-RateLimit-Reset');
       logger.warn('[llmClient] non-200', {
         provider: ep.provider, status: res.status, model,
         errBody: errBody.slice(0, 500),
+        rateLimitReset,
       });
-      return { ok: false, status: res.status, content: '' };
+      return { ok: false, status: res.status, content: '', rateLimitReset: rateLimitReset ?? undefined };
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const json = await res.json() as any;
@@ -166,7 +170,17 @@ export async function callLlm(req: LlmRequest): Promise<string> {
     // Retry on: 429 (rate limit), 0 (abort/network), 5xx (server errors).
     const isRetryable = result.status === 429 || result.status === 0 || (result.status >= 500 && result.status < 600);
     if (isRetryable && attempt < backoffs.length) {
-      const waitMs = backoffs[attempt]!;
+      let waitMs = backoffs[attempt]!;
+      // On 429, prefer the exact reset time from the header over a fixed guess.
+      // X-RateLimit-Reset is a Unix timestamp in milliseconds.
+      if (result.status === 429 && result.rateLimitReset) {
+        const resetAt = parseInt(result.rateLimitReset, 10);
+        if (!isNaN(resetAt)) {
+          const untilReset = resetAt - Date.now();
+          // Add 500ms buffer so we don't re-request right as the window flips.
+          waitMs = Math.max(waitMs, Math.min(untilReset + 500, 65_000));
+        }
+      }
       logger.info('[llmClient] retryable error — backing off', { attempt: attempt + 1, status: result.status, waitMs });
       await new Promise((resolve) => setTimeout(resolve, waitMs));
       continue;

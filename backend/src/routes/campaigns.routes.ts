@@ -23,5 +23,6 @@ router.post('/:campaignId/activate', asyncHandler(campaignsController.activateCa
 router.get('/:campaignId/stats', asyncHandler(campaignsController.campaignStats));
 router.post('/:campaignId/pause', asyncHandler(campaignsController.pauseCampaignHandler));
 router.post('/:campaignId/resume', asyncHandler(campaignsController.resumeCampaignHandler));
+router.post('/:campaignId/archive', asyncHandler(campaignsController.archiveCampaignHandler));
 
 export default router;

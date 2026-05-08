@@ -4,7 +4,7 @@ import type { LeadRecord } from '../deduplicator.js';
 
 export const scoreLeadTool: ToolDef = {
   name: 'score_lead',
-  description: 'Score a lead candidate against the user query (AI relevance check). Returns {score 0-1, isVerified, reason}. Use before write_lead to filter noise.',
+  description: 'Score a lead candidate against the user query. Returns {score 0-1, reason}. Optional — use to rank or explain relevance, but do NOT use as a gate to block write_lead. Always write the lead even if score is low.',
   parametersSchema: '{"companyName": string, "companyDomain": string, "emails": [{address,type,confidence}], "phones": [{raw}], "topContactName"?: string, "topContactTitle"?: string}',
   handler: async (args, ctx) => {
     const stub: LeadRecord = {

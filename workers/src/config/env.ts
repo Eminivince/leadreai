@@ -51,8 +51,25 @@ const envSchema = z.object({
   OPENCORPORATES_API_KEY: z.string().optional(),
   REACHER_URL: z.string().url().optional(),
   EMAIL_VERIFIER_PROVIDER: z.enum(['mx_only', 'reacher']).default('mx_only'),
+  // Hunter.io Domain Search — primary email source for contact enrichment.
+  // When unset, the system falls back to web-scrape-only extraction (the
+  // historical default). Free tier: 25 searches / 50 verifications per month.
+  HUNTER_API_KEY: z.string().optional(),
+  // Google Maps Places API — primary candidate source for businesses with
+  // physical presence (restaurants, retail, services, SMEs). Single most
+  // impactful unlock for the long-tail Nigerian-SME market: Maps indexes
+  // every business that's ever been geo-tagged, including bukkas / mama
+  // puts that have no web presence at all.
+  // Get a key at: console.cloud.google.com → Places API → Enable.
+  GOOGLE_MAPS_API_KEY: z.string().optional(),
+  // Mandatory verification: when true, every email passes through verifyEmail()
+  // at write time. Emails with verdict=undeliverable/invalid_domain are dropped;
+  // verdict=likely_valid sets verified=true on the email entry.
+  EMAIL_VERIFICATION_AT_WRITE: booleanFlag.default(true),
   WEBHOOK_TIMEOUT_MS: z.coerce.number().default(5000),
   JWT_SECRET: z.string().min(32),
+  GOOGLE_OAUTH_CLIENT_ID: z.string().optional(),
+  GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional(),
   UNSUBSCRIBE_BASE_URL: z.string().url().default('http://localhost:4000/unsubscribe'),
   UNSUBSCRIBE_TOKEN_SECRET: z.string().optional(),
   SEQUENCE_SCHEDULER_INTERVAL_MS: z.coerce.number().int().min(10000).default(60000),
@@ -75,8 +92,32 @@ const envSchema = z.object({
   // the job you thought you killed. MUST stay false in prod — turning it
   // on there would wipe live jobs on every deploy.
   CLEAR_QUEUES_ON_BOOT: booleanFlag.default(false),
+  // Pipeline mode selector. Three values:
+  //   'old'    — dispatcher agent loop → parallel subagents (current prod default)
+  //   'smart'  — Smart Discovery: parallel SERP → regex parse → one LLM contact call
+  //   'hybrid' — single LLM discovery call → DNS/HTTP validation → parallel subagents
+  // Keep AGENT_SMART_DISCOVERY and AGENT_FAN_OUT_ENABLED for backward-compat reads
+  // in older code paths; routing now controlled solely by DISCOVERY_MODE.
+  DISCOVERY_MODE: z.enum(['old', 'smart', 'hybrid']).default('hybrid'),
+  // Override the LLM model for the hybrid discovery call only.
+  // Falls back to OPENROUTER_MODEL when unset.
+  // The discovery step needs a model that reliably outputs structured JSON;
+  // the default nemotron model is broken for this use case.
+  // Recommended: google/gemini-2.0-flash-exp:free or meta-llama/llama-3.3-70b-instruct:free
+  DISCOVERY_LLM_MODEL: z.string().optional(),
+  // Judgment model — used for the critic (replan/continue/stop decisions in the
+  // agent loop) and lead qualification (qualified/dust/score/reason). These are
+  // genuine reasoning tasks where v4-pro's hidden chain-of-thought earns its
+  // latency cost. The high-volume mechanical calls (tool dispatch, JSON
+  // extraction, per-company enrichment) keep using the fast OPENROUTER_MODEL.
+  // Falls back to OPENROUTER_MODEL when unset.
+  JUDGMENT_LLM_MODEL: z.string().optional(),
+  AGENT_SMART_DISCOVERY: booleanFlag.default(false),
   AGENT_FAN_OUT_ENABLED: booleanFlag.default(true),
-  SUBAGENT_CONCURRENCY: z.coerce.number().int().min(1).max(20).default(5),
+  // Keep low (2-3) when using free-tier OpenRouter models — they have a 20 req/min
+  // rate limit that 5 concurrent subagents exhaust immediately, causing constant
+  // 429 backoff that makes each subagent take 3-4x longer.
+  SUBAGENT_CONCURRENCY: z.coerce.number().int().min(1).max(20).default(2),
   FAN_OUT_MIN_TARGET: z.coerce.number().int().min(1).max(50).default(5),
   // Code sandbox — Python executor for agent data-processing tasks.
   // Requires Docker installed and the sandbox image built:

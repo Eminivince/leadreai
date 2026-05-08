@@ -10,6 +10,7 @@ import { env } from './config/env.js';
 // queries it.
 import './services/data-sources/sources/index.js';
 import { startTableEnrichmentWorker, stopTableEnrichmentWorker } from './services/data-tables/worker.js';
+import { startSequenceWorker, stopSequenceWorker } from './services/sequenceWorker.js';
 
 async function bootstrap() {
   await connectDatabase();
@@ -22,6 +23,9 @@ async function bootstrap() {
   startTableEnrichmentWorker();
   logger.info('Table enrichment worker started');
 
+  startSequenceWorker();
+  logger.info('Sequence worker started');
+
   const server = app.listen(env.PORT, () => {
     logger.info(`Backend listening on port ${env.PORT}`);
   });
@@ -29,6 +33,7 @@ async function bootstrap() {
   async function shutdown(signal: string): Promise<void> {
     logger.info(`Received ${signal}, shutting down`);
     server.close(async () => {
+      stopSequenceWorker();
       await stopTableEnrichmentWorker();
       await mongoose.connection.close();
       await getRedis().quit();

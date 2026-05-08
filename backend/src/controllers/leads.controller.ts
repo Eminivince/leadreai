@@ -52,11 +52,20 @@ export async function getLead(req: Request, res: Response): Promise<void> {
 
 export async function updateLead(req: Request, res: Response): Promise<void> {
   const { workspaceId, leadId } = req.params;
+  const body = req.body as Record<string, unknown>;
 
   const allowed = ['tags', 'notes', 'outreachStatus'];
-  const update = Object.fromEntries(
-    Object.entries(req.body as Record<string, unknown>).filter(([k]) => allowed.includes(k))
+  const update: Record<string, unknown> = Object.fromEntries(
+    Object.entries(body).filter(([k]) => allowed.includes(k))
   );
+
+  // Allow patching the primary email address
+  if (typeof body.primaryEmail === 'string') {
+    const addr = body.primaryEmail.trim().toLowerCase();
+    if (addr && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr)) {
+      update['emails.0'] = { address: addr, type: 'business', confidence: 1, verified: false, source: 'manual' };
+    }
+  }
 
   const lead = await Lead.findOneAndUpdate(
     { _id: leadId, workspaceId },

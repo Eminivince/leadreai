@@ -33,6 +33,10 @@ export interface IUser extends mongoose.Document {
     workspaceId: mongoose.Types.ObjectId;
     role: (typeof WORKSPACE_ROLES)[number];
   }>;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  paystackCustomerCode?: string;
+  billingProvider?: 'stripe' | 'paystack';
   isEmailVerified: boolean;
   lastLoginAt?: Date;
   createdAt: Date;
@@ -66,6 +70,10 @@ const userSchema = new Schema<IUser>(
       role: { type: String, enum: WORKSPACE_ROLES },
       _id: false,
     }],
+    stripeCustomerId: { type: String },
+    stripeSubscriptionId: { type: String },
+    paystackCustomerCode: { type: String },
+    billingProvider: { type: String, enum: ['stripe', 'paystack'] },
     isEmailVerified: { type: Boolean, default: false },
     lastLoginAt: { type: Date },
   },

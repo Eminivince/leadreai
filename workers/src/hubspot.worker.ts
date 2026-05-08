@@ -123,6 +123,205 @@ async function maybeRefreshHubSpotToken(tokens: {
 }
 
 // ---------------------------------------------------------------------------
+// Industry normalisation — HubSpot requires an exact enum key.
+// Map common free-text values (lowercase) → HubSpot enum. Unrecognised
+// values are dropped rather than rejected by the API.
+// ---------------------------------------------------------------------------
+const INDUSTRY_MAP: Record<string, string> = {
+  accounting: 'ACCOUNTING',
+  airlines: 'AIRLINES_AVIATION',
+  'airlines & aviation': 'AIRLINES_AVIATION',
+  'airlines_aviation': 'AIRLINES_AVIATION',
+  aviation: 'AVIATION_AEROSPACE',
+  aerospace: 'AVIATION_AEROSPACE',
+  'aviation & aerospace': 'AVIATION_AEROSPACE',
+  'aviation_aerospace': 'AVIATION_AEROSPACE',
+  'alternative dispute resolution': 'ALTERNATIVE_DISPUTE_RESOLUTION',
+  'alternative medicine': 'ALTERNATIVE_MEDICINE',
+  animation: 'ANIMATION',
+  apparel: 'APPAREL_FASHION',
+  fashion: 'APPAREL_FASHION',
+  'apparel & fashion': 'APPAREL_FASHION',
+  architecture: 'ARCHITECTURE_PLANNING',
+  planning: 'ARCHITECTURE_PLANNING',
+  'arts and crafts': 'ARTS_AND_CRAFTS',
+  automotive: 'AUTOMOTIVE',
+  banking: 'BANKING',
+  biotechnology: 'BIOTECHNOLOGY',
+  'broadcast media': 'BROADCAST_MEDIA',
+  'building materials': 'BUILDING_MATERIALS',
+  'capital markets': 'CAPITAL_MARKETS',
+  chemicals: 'CHEMICALS',
+  'civic & social organization': 'CIVIC_SOCIAL_ORGANIZATION',
+  'civil engineering': 'CIVIL_ENGINEERING',
+  'commercial real estate': 'COMMERCIAL_REAL_ESTATE',
+  'computer & network security': 'COMPUTER_NETWORK_SECURITY',
+  'computer games': 'COMPUTER_GAMES',
+  'computer hardware': 'COMPUTER_HARDWARE',
+  'computer networking': 'COMPUTER_NETWORKING',
+  'computer software': 'COMPUTER_SOFTWARE',
+  software: 'COMPUTER_SOFTWARE',
+  internet: 'INTERNET',
+  construction: 'CONSTRUCTION',
+  'consumer electronics': 'CONSUMER_ELECTRONICS',
+  'consumer goods': 'CONSUMER_GOODS',
+  'consumer services': 'CONSUMER_SERVICES',
+  cosmetics: 'COSMETICS',
+  dairy: 'DAIRY',
+  'defense & space': 'DEFENSE_SPACE',
+  design: 'DESIGN',
+  'education management': 'EDUCATION_MANAGEMENT',
+  education: 'EDUCATION_MANAGEMENT',
+  'e-learning': 'E_LEARNING',
+  elearning: 'E_LEARNING',
+  'electrical & electronic manufacturing': 'ELECTRICAL_ELECTRONIC_MANUFACTURING',
+  electronics: 'ELECTRICAL_ELECTRONIC_MANUFACTURING',
+  entertainment: 'ENTERTAINMENT',
+  'environmental services': 'ENVIRONMENTAL_SERVICES',
+  'events services': 'EVENTS_SERVICES',
+  events: 'EVENTS_SERVICES',
+  'facilities services': 'FACILITIES_SERVICES',
+  farming: 'FARMING',
+  agriculture: 'FARMING',
+  'financial services': 'FINANCIAL_SERVICES',
+  finance: 'FINANCIAL_SERVICES',
+  fintech: 'FINANCIAL_SERVICES',
+  'fine art': 'FINE_ART',
+  fishery: 'FISHERY',
+  'food & beverages': 'FOOD_BEVERAGES',
+  'food and beverage': 'FOOD_BEVERAGES',
+  'food production': 'FOOD_PRODUCTION',
+  fundraising: 'FUND_RAISING',
+  furniture: 'FURNITURE',
+  'gambling & casinos': 'GAMBLING_CASINOS',
+  'government administration': 'GOVERNMENT_ADMINISTRATION',
+  government: 'GOVERNMENT_ADMINISTRATION',
+  'government relations': 'GOVERNMENT_RELATIONS',
+  'graphic design': 'GRAPHIC_DESIGN',
+  'health wellness and fitness': 'HEALTH_WELLNESS_AND_FITNESS',
+  health: 'HEALTH_WELLNESS_AND_FITNESS',
+  fitness: 'HEALTH_WELLNESS_AND_FITNESS',
+  wellness: 'HEALTH_WELLNESS_AND_FITNESS',
+  'higher education': 'HIGHER_EDUCATION',
+  university: 'HIGHER_EDUCATION',
+  'hospital & health care': 'HOSPITAL_HEALTH_CARE',
+  healthcare: 'HOSPITAL_HEALTH_CARE',
+  'health care': 'HOSPITAL_HEALTH_CARE',
+  hospitality: 'HOSPITALITY',
+  'human resources': 'HUMAN_RESOURCES',
+  hr: 'HUMAN_RESOURCES',
+  'import and export': 'IMPORT_AND_EXPORT',
+  'industrial automation': 'INDUSTRIAL_AUTOMATION',
+  'information services': 'INFORMATION_SERVICES',
+  'information technology and services': 'INFORMATION_TECHNOLOGY_AND_SERVICES',
+  'information technology': 'INFORMATION_TECHNOLOGY_AND_SERVICES',
+  'it services': 'INFORMATION_TECHNOLOGY_AND_SERVICES',
+  it: 'INFORMATION_TECHNOLOGY_AND_SERVICES',
+  tech: 'INFORMATION_TECHNOLOGY_AND_SERVICES',
+  technology: 'INFORMATION_TECHNOLOGY_AND_SERVICES',
+  insurance: 'INSURANCE',
+  'investment banking': 'INVESTMENT_BANKING',
+  'investment management': 'INVESTMENT_MANAGEMENT',
+  'law practice': 'LAW_PRACTICE',
+  'legal services': 'LEGAL_SERVICES',
+  legal: 'LEGAL_SERVICES',
+  'leisure travel & tourism': 'LEISURE_TRAVEL_TOURISM',
+  travel: 'LEISURE_TRAVEL_TOURISM',
+  tourism: 'LEISURE_TRAVEL_TOURISM',
+  'logistics and supply chain': 'LOGISTICS_AND_SUPPLY_CHAIN',
+  logistics: 'LOGISTICS_AND_SUPPLY_CHAIN',
+  'luxury goods & jewelry': 'LUXURY_GOODS_JEWELRY',
+  luxury: 'LUXURY_GOODS_JEWELRY',
+  machinery: 'MACHINERY',
+  'management consulting': 'MANAGEMENT_CONSULTING',
+  consulting: 'MANAGEMENT_CONSULTING',
+  maritime: 'MARITIME',
+  'market research': 'MARKET_RESEARCH',
+  'marketing and advertising': 'MARKETING_AND_ADVERTISING',
+  marketing: 'MARKETING_AND_ADVERTISING',
+  advertising: 'MARKETING_AND_ADVERTISING',
+  'mechanical or industrial engineering': 'MECHANICAL_OR_INDUSTRIAL_ENGINEERING',
+  engineering: 'MECHANICAL_OR_INDUSTRIAL_ENGINEERING',
+  'media production': 'MEDIA_PRODUCTION',
+  media: 'MEDIA_PRODUCTION',
+  'medical devices': 'MEDICAL_DEVICES',
+  'medical practice': 'MEDICAL_PRACTICE',
+  'mental health care': 'MENTAL_HEALTH_CARE',
+  military: 'MILITARY',
+  'mining & metals': 'MINING_METALS',
+  mining: 'MINING_METALS',
+  'motion pictures and film': 'MOTION_PICTURES_AND_FILM',
+  film: 'MOTION_PICTURES_AND_FILM',
+  music: 'MUSIC',
+  nanotechnology: 'NANOTECHNOLOGY',
+  newspapers: 'NEWSPAPERS',
+  'non-profit': 'NON_PROFIT_ORGANIZATION_MANAGEMENT',
+  nonprofit: 'NON_PROFIT_ORGANIZATION_MANAGEMENT',
+  'oil & energy': 'OIL_ENERGY',
+  oil: 'OIL_ENERGY',
+  energy: 'OIL_ENERGY',
+  'online media': 'ONLINE_MEDIA',
+  'outsourcing/offshoring': 'OUTSOURCING_OFFSHORING',
+  outsourcing: 'OUTSOURCING_OFFSHORING',
+  pharmaceuticals: 'PHARMACEUTICALS',
+  pharma: 'PHARMACEUTICALS',
+  photography: 'PHOTOGRAPHY',
+  'political organization': 'POLITICAL_ORGANIZATION',
+  'primary/secondary education': 'PRIMARY_SECONDARY_EDUCATION',
+  'primary secondary education': 'PRIMARY_SECONDARY_EDUCATION',
+  printing: 'PRINTING',
+  'professional training & coaching': 'PROFESSIONAL_TRAINING_COACHING',
+  'public relations': 'PUBLIC_RELATIONS_AND_COMMUNICATIONS',
+  pr: 'PUBLIC_RELATIONS_AND_COMMUNICATIONS',
+  'public safety': 'PUBLIC_SAFETY',
+  publishing: 'PUBLISHING',
+  'real estate': 'REAL_ESTATE',
+  'renewables & environment': 'RENEWABLES_ENVIRONMENT',
+  renewables: 'RENEWABLES_ENVIRONMENT',
+  research: 'RESEARCH',
+  restaurants: 'RESTAURANTS',
+  'food service': 'RESTAURANTS',
+  retail: 'RETAIL',
+  'security and investigations': 'SECURITY_AND_INVESTIGATIONS',
+  security: 'SECURITY_AND_INVESTIGATIONS',
+  semiconductors: 'SEMICONDUCTORS',
+  'sporting goods': 'SPORTING_GOODS',
+  sports: 'SPORTS',
+  'staffing and recruiting': 'STAFFING_AND_RECRUITING',
+  staffing: 'STAFFING_AND_RECRUITING',
+  recruiting: 'STAFFING_AND_RECRUITING',
+  telecommunications: 'TELECOMMUNICATIONS',
+  telecom: 'TELECOMMUNICATIONS',
+  textiles: 'TEXTILES',
+  tobacco: 'TOBACCO',
+  utilities: 'UTILITIES',
+  'venture capital': 'VENTURE_CAPITAL_PRIVATE_EQUITY',
+  'venture capital & private equity': 'VENTURE_CAPITAL_PRIVATE_EQUITY',
+  'private equity': 'VENTURE_CAPITAL_PRIVATE_EQUITY',
+  veterinary: 'VETERINARY',
+  warehousing: 'WAREHOUSING',
+  wholesale: 'WHOLESALE',
+  'wine and spirits': 'WINE_AND_SPIRITS',
+  wireless: 'WIRELESS',
+  'writing and editing': 'WRITING_AND_EDITING',
+  'mobile games': 'MOBILE_GAMES',
+  gaming: 'COMPUTER_GAMES',
+  'saas': 'COMPUTER_SOFTWARE',
+  'e-commerce': 'INTERNET',
+  ecommerce: 'INTERNET',
+  'supply chain': 'LOGISTICS_AND_SUPPLY_CHAIN',
+  transportation: 'TRANSPORTATION_TRUCKING_RAILROAD',
+  trucking: 'TRANSPORTATION_TRUCKING_RAILROAD',
+  railroad: 'TRANSPORTATION_TRUCKING_RAILROAD',
+};
+
+function normaliseIndustry(raw: string | undefined): string | undefined {
+  if (!raw) return undefined;
+  const key = raw.trim().toLowerCase();
+  return INDUSTRY_MAP[key] ?? undefined;
+}
+
+// ---------------------------------------------------------------------------
 // Inlined HubSpot API helpers (workers cannot import from backend)
 // ---------------------------------------------------------------------------
 async function hubspotRequest(
@@ -152,39 +351,49 @@ async function upsertCompany(accessToken: string, company: {
   industry?: string;
   city?: string;
   country?: string;
+  phone?: string;
 }): Promise<{ id: string; status: 'created' | 'existing' }> {
-  let input: Record<string, unknown>;
-  if (company.domain) {
-    input = {
-      idProperty: 'domain',
-      id: company.domain,
-      properties: {
-        name: company.name,
-        domain: company.domain,
-        industry: company.industry,
-        city: company.city,
-        country: company.country,
-      },
-    };
-  } else {
-    input = {
-      properties: {
-        name: company.name,
-        industry: company.industry,
-        city: company.city,
-        country: company.country,
-      },
-    };
+  const properties: Record<string, string | undefined> = {
+    name: company.name,
+    domain: company.domain,
+    industry: normaliseIndustry(company.industry),
+    city: company.city,
+    country: company.country,
+    phone: company.phone,
+  };
+  // Remove undefined values — HubSpot rejects null/undefined properties
+  for (const k of Object.keys(properties)) {
+    if (properties[k] === undefined) delete properties[k];
   }
-  const result = await hubspotRequest(
+
+  // Search for existing company by domain (avoids needing domain as a unique prop)
+  if (company.domain) {
+    const searchResult = await hubspotRequest(
+      accessToken,
+      'POST',
+      'https://api.hubapi.com/crm/v3/objects/companies/search',
+      {
+        filterGroups: [{ filters: [{ propertyName: 'domain', operator: 'EQ', value: company.domain }] }],
+        properties: ['domain', 'name'],
+        limit: 1,
+      }
+    ) as { results: Array<{ id: string }> };
+
+    if (searchResult.results.length > 0) {
+      const id = searchResult.results[0]!.id;
+      await hubspotRequest(accessToken, 'PATCH', `https://api.hubapi.com/crm/v3/objects/companies/${id}`, { properties });
+      return { id, status: 'existing' };
+    }
+  }
+
+  // Not found — create
+  const created = await hubspotRequest(
     accessToken,
     'POST',
-    'https://api.hubapi.com/crm/v3/objects/companies/batch/upsert',
-    { inputs: [input] }
-  ) as { results: Array<{ id: string; status: string }> };
-  const first = result.results[0];
-  if (!first) throw new Error('HubSpot returned empty results for company upsert');
-  return { id: first.id, status: first.status === 'CREATED' ? 'created' : 'existing' };
+    'https://api.hubapi.com/crm/v3/objects/companies',
+    { properties }
+  ) as { id: string };
+  return { id: created.id, status: 'created' };
 }
 
 async function upsertContact(accessToken: string, contact: {
@@ -192,6 +401,7 @@ async function upsertContact(accessToken: string, contact: {
   lastName?: string;
   email?: string;
   jobTitle?: string;
+  phone?: string;
 }): Promise<{ id: string; status: 'created' | 'existing' }> {
   let input: Record<string, unknown>;
   if (contact.email) {
@@ -203,6 +413,7 @@ async function upsertContact(accessToken: string, contact: {
         lastname: contact.lastName,
         email: contact.email,
         jobtitle: contact.jobTitle,
+        ...(contact.phone ? { phone: contact.phone } : {}),
       },
     };
   } else {
@@ -211,6 +422,7 @@ async function upsertContact(accessToken: string, contact: {
         firstname: contact.firstName,
         lastname: contact.lastName,
         jobtitle: contact.jobTitle,
+        ...(contact.phone ? { phone: contact.phone } : {}),
       },
     };
   }
@@ -232,7 +444,7 @@ async function associateContactToCompany(
 ): Promise<void> {
   await hubspotRequest(
     accessToken,
-    'PUT',
+    'POST',
     'https://api.hubapi.com/crm/v4/associations/contacts/companies/batch/create',
     {
       inputs: [
@@ -321,6 +533,7 @@ async function processHubspotSync(job: Job<HubSpotSyncPayload>): Promise<void> {
         industry: lead.industry,
         city: lead.address?.city,
         country: lead.address?.country,
+        phone: lead.phones?.[0]?.normalized,
       });
       companiesSynced++;
 
@@ -355,11 +568,14 @@ async function processHubspotSync(job: Job<HubSpotSyncPayload>): Promise<void> {
           // Skip contacts with no email and no name
           if (!contact.fullName && !primaryEmail) continue;
 
+          const primaryPhone = (contact.phones?.[0]?.normalized) as string | undefined;
+
           const contactResult = await upsertContact(accessToken, {
             firstName: contact.firstName,
             lastName: contact.lastName,
             email: primaryEmail,
             jobTitle: contact.title,
+            phone: primaryPhone,
           });
           contactsSynced++;
 

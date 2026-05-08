@@ -12,6 +12,14 @@ export interface LeadForOutreach {
   industry?: string;
   address?: { city?: string; country?: string; state?: string };
   socialProfiles?: { linkedinUrl?: string };
+  /** Why the prospecting agent selected this lead */
+  qualificationReason?: string;
+  /** Free-form notes the prospecting agent wrote about this lead */
+  agentReasoning?: string;
+  /** The original natural-language query that found this lead */
+  prospectingQuery?: string;
+  /** Query-specific fields (e.g. "pain_point", "recent_news") saved during prospecting */
+  dynamicFields?: Record<string, unknown>;
 }
 
 export interface WorkspaceForOutreach {
@@ -22,6 +30,7 @@ export interface WorkspaceForOutreach {
 
 export interface CampaignForOutreach {
   name?: string;
+  goal?: string;
   outreachConfig?: { tone?: string; language?: string; channel?: string };
 }
 
@@ -45,16 +54,23 @@ function buildSystemPrompt(workspace: WorkspaceForOutreach, campaign: CampaignFo
     .join('\n\n');
 
   const aboutSender = kbEntries.length > 0 ? kbEntries : '(No knowledge base entries provided.)';
+  const campaignGoal = campaign.goal
+    ? `CAMPAIGN GOAL: ${campaign.goal}`
+    : '';
 
   return `You are a cold outreach personalization agent.
 
 RULES:
-- First line must be under 25 words, conversational, anchored to a concrete verifiable detail about this specific company
+- Write as if you personally researched this lead — because you have context proving you did
+- First line must be under 25 words, conversational, anchored to a concrete verifiable detail about this specific lead or company
 - Never use generic flattery ("I loved your work on...", "I was impressed by...")
+- Use the PROSPECTING CONTEXT section to understand why this lead was selected and what is relevant to them — this is the most important input
+- If a qualification reason or agent notes are provided, reference the specific detail that makes this lead relevant
 - Each email must be unique — prove it wasn't mass-generated
 - Channel: email
 - Tone: ${tone}
 - Language: ${language}
+${campaignGoal}
 
 ABOUT THE SENDER:
 ${aboutSender}
@@ -81,6 +97,29 @@ function buildUserMessage(lead: LeadForOutreach, snippets: string[]): string {
   const website = lead.website ?? 'N/A';
   const linkedinUrl = lead.socialProfiles?.linkedinUrl ?? 'N/A';
 
+  // Prospecting context — the most valuable signal for personalisation
+  const prospectingLines: string[] = [];
+  if (lead.prospectingQuery) {
+    prospectingLines.push(`Search query that found this lead: "${lead.prospectingQuery}"`);
+  }
+  if (lead.qualificationReason) {
+    prospectingLines.push(`Why this lead was selected: ${lead.qualificationReason}`);
+  }
+  if (lead.agentReasoning) {
+    prospectingLines.push(`Agent notes: ${lead.agentReasoning}`);
+  }
+  if (lead.dynamicFields && Object.keys(lead.dynamicFields).length > 0) {
+    for (const [key, value] of Object.entries(lead.dynamicFields)) {
+      if (value != null && value !== '') {
+        prospectingLines.push(`${key}: ${String(value)}`);
+      }
+    }
+  }
+  const prospectingSection =
+    prospectingLines.length > 0
+      ? prospectingLines.join('\n')
+      : 'No prospecting context available.';
+
   const researchSection =
     snippets.length > 0
       ? snippets.map((s) => `- ${s}`).join('\n')
@@ -93,6 +132,9 @@ Industry: ${industry}
 Location: ${city}, ${country}
 Website: ${website}
 LinkedIn: ${linkedinUrl}
+
+PROSPECTING CONTEXT (why this lead was found — use this to personalise the email):
+${prospectingSection}
 
 RECENT RESEARCH (if available):
 ${researchSection}
@@ -132,7 +174,7 @@ export async function generateOutreachDraft(
       },
       body: JSON.stringify({
         model: env.OPENROUTER_MODEL,
-        max_tokens: 1000,
+        max_tokens: 1500,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userMessage },

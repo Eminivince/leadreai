@@ -19,8 +19,8 @@ export const ClarificationQuestionSchema = z.object({
   type: ClarificationQuestionTypeSchema,
   options: z.array(z.string().min(1).max(200)).max(12).optional(),
   required: z.boolean().default(false),
-  placeholder: z.string().max(200).optional(),
-  rationale: z.string().max(300).optional(),
+  placeholder: z.string().max(200).nullish(),
+  rationale: z.string().max(300).nullish(),
 });
 
 export const ClarificationAnswerSchema = z.object({
@@ -159,6 +159,30 @@ export const ParsedIntentSchema = z.object({
    * standard fields. Agent fills in `Lead.facts[key]` when it finds values.
    */
   outputSchema: z.array(OutputSchemaColumnSchema).default([]),
+  userOffering: z.string().nullish(),
+  /**
+   * Industries / sectors that would BUY the user's offering. Populated
+   * by the parser when `userOffering` is set, derived from "what kinds
+   * of businesses need this service?". Discovery query builders read
+   * this instead of `keywords` (which describe the user's offering, not
+   * the target buyers) so we don't search for the user's competitors.
+   *
+   * Example: userOffering="travel agency services for staff bookings"
+   * → targetBuyerIndustries = ["oil & gas", "consulting", "NGOs",
+   *   "manufacturing", "construction", "education", "multinationals"]
+   *
+   * Null when no offering is stated or buyer-industries can't be inferred.
+   */
+  targetBuyerIndustries: z.array(z.string()).nullable().default(null),
+  /**
+   * When true, discovery actively filters out well-known / household-name
+   * companies. Set by the parser when the brief uses cues like "small",
+   * "not big", "not popular", "household names", "lesser-known", "upcoming",
+   * "under-the-radar". Maps discovery filters by review-count threshold;
+   * the LLM-recall prompt has a separate retrieval-bias rule that triggers
+   * regardless of this flag.
+   */
+  excludeWellKnown: z.boolean().default(false),
 });
 
 /** A single fact value attached to a lead, keyed under Lead.facts. */

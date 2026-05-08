@@ -47,11 +47,16 @@ export async function autoCreateFileFromJob(
   workspaceId: string,
 ): Promise<void> {
   try {
+    // Match the same filter writeLeads uses for result.totalLeadsFound so
+    // file leadCount and the displayed total agree. isDuplicate=false leads
+    // are the ones the user actually sees in the leads table; the file
+    // should contain the same set.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const leadDocs = (await Lead.find(
       {
         workspaceId: new mongoose.Types.ObjectId(workspaceId),
         jobId: new mongoose.Types.ObjectId(jobId),
+        isDuplicate: { $ne: true },
       },
       { _id: 1 },
     ).lean()) as Array<{ _id: mongoose.Types.ObjectId }>;

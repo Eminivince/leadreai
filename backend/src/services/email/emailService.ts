@@ -10,6 +10,8 @@ export interface SendEmailOptions {
   html: string;
   text?: string;
   unsubscribeUrl?: string;
+  /** Required for Gmail token refresh to persist the new access token. */
+  workspaceId?: string;
 }
 
 export interface SendEmailResult {
@@ -79,6 +81,25 @@ export async function sendEmailForWorkspace(
       ...(Object.keys(headers).length > 0 ? { headers } : {}),
     });
     return { messageId: String(info.messageId) };
+  }
+
+  if (config.provider === 'gmail') {
+    const { sendViaGmail } = await import('../../controllers/gmail.controller.js');
+    const gmailCfg = (config as any).gmail as { accessToken?: string; refreshToken?: string; expiresAt?: Date } | undefined;
+    if (!gmailCfg?.accessToken) throw new Error('Gmail not configured for this workspace');
+    const messageId = await sendViaGmail(
+      { accessToken: gmailCfg.accessToken, refreshToken: gmailCfg.refreshToken, expiresAt: gmailCfg.expiresAt },
+      {
+        workspaceId: opts.workspaceId ?? '',
+        to: opts.to,
+        subject: opts.subject,
+        html: enrichedOpts.html,
+        fromEmail: config.fromEmail,
+        fromName: config.fromName,
+        replyTo: config.replyTo,
+      },
+    );
+    return { messageId };
   }
 
   if (config.provider === 'smtp') {

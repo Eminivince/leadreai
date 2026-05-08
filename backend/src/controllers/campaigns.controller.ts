@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Campaign from '../models/Campaign.js';
 import Sequence from '../models/Sequence.js';
+import SequenceEnrollment from '../models/SequenceEnrollment.js';
 import OutreachDraft from '../models/OutreachDraft.js';
 import Lead from '../models/Lead.js';
 import File from '../models/File.js';
@@ -486,4 +487,41 @@ export async function resumeCampaignHandler(req: Request, res: Response): Promis
   });
 
   res.json({ success: true, data: result });
+}
+
+// ---------------------------------------------------------------------------
+// archiveCampaignHandler  POST /api/v1/workspaces/:workspaceId/campaigns/:campaignId/archive
+// ---------------------------------------------------------------------------
+
+export async function archiveCampaignHandler(req: Request, res: Response): Promise<void> {
+  const { workspaceId, campaignId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(campaignId!)) throw ApiError.badRequest('Invalid campaignId');
+
+  const campaign = await Campaign.findOne({ _id: campaignId, workspaceId });
+  if (!campaign) throw ApiError.notFound('Campaign not found');
+  if (campaign.status === 'archived') {
+    res.json({ success: true });
+    return;
+  }
+
+  if (campaign.sequenceId) {
+    await SequenceEnrollment.updateMany(
+      { workspaceId, sequenceId: campaign.sequenceId, status: 'active' },
+      { $set: { status: 'paused', stopReason: 'campaign_archived' } },
+    );
+  }
+
+  campaign.status = 'archived';
+  await campaign.save();
+
+  logAudit({
+    req,
+    workspaceId: workspaceId!,
+    action: 'campaign.archive',
+    resourceType: 'campaign',
+    resourceId: campaign._id,
+    metadata: { name: campaign.name },
+  });
+
+  res.json({ success: true });
 }

@@ -1,7 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 import { WORKSPACE_ROLES, KNOWLEDGE_BASE_ENTRY_TYPES, KnowledgeBaseEntryType } from '@leadreai/shared';
 
-export type EmailProvider = 'smtp' | 'resend' | 'sendgrid';
+export type EmailProvider = 'smtp' | 'resend' | 'sendgrid' | 'gmail';
 
 export interface IEmailConfig {
   provider: EmailProvider;
@@ -17,6 +17,13 @@ export interface IEmailConfig {
   smtpUser?: string;
   smtpPass?: string; // stored encrypted
   verifiedAt?: Date;
+  // Gmail OAuth
+  gmail?: {
+    accessToken?: string;  // encrypted
+    refreshToken?: string; // encrypted
+    expiresAt?: Date;
+    email?: string;
+  };
 }
 
 export interface IWorkspace extends mongoose.Document {
@@ -94,7 +101,7 @@ const workspaceSchema = new Schema<IWorkspace>(
       },
     ],
     emailConfig: {
-      provider: { type: String, enum: ['smtp', 'resend', 'sendgrid'] },
+      provider: { type: String, enum: ['smtp', 'resend', 'sendgrid', 'gmail'] },
       fromEmail: { type: String },
       fromName: { type: String },
       replyTo: { type: String },
@@ -105,6 +112,12 @@ const workspaceSchema = new Schema<IWorkspace>(
       smtpUser: { type: String },
       smtpPass: { type: String, select: false },    // encrypted
       verifiedAt: { type: Date },
+      gmail: {
+        accessToken: { type: String, select: false },
+        refreshToken: { type: String, select: false },
+        expiresAt: { type: Date },
+        email: { type: String },
+      },
     },
     settings: {
       defaultExportFormat: { type: String, enum: ['csv', 'xlsx'], default: 'csv' },

@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { Redis } from 'ioredis';
 import { logger } from '../utils/logger.js';
 import { callLlmOnce, isLlmConfigured } from '../utils/llmClient.js';
+import { env } from '../config/env.js';
 import type { ParsedIntent } from '@leadreai/shared';
 
 // ---------------------------------------------------------------------------
@@ -100,6 +101,9 @@ async function qualifyBatch(rawQuery: string, parsedIntent: ParsedIntent | null 
       { role: 'user', content: buildUserMessage(rawQuery, parsedIntent, leads) },
     ],
     max_tokens: 1500,
+    // Lead qualification is a judgment task — use the strong model.
+    // Falls back to OPENROUTER_MODEL when JUDGMENT_LLM_MODEL is unset.
+    ...(env.JUDGMENT_LLM_MODEL ? { model: env.JUDGMENT_LLM_MODEL } : {}),
   }).catch((err) => {
     logger.warn('[leadQualifier] LLM fetch failed — defaulting batch to qualified', {
       err: err instanceof Error ? err.message : String(err),
