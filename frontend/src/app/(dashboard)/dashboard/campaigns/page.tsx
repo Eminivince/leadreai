@@ -304,8 +304,9 @@ function EmptyState({
       <p className="mt-1.5 text-[13px] text-[color:var(--ink-2)] max-w-[480px] mx-auto leading-[1.55]">
         {isFirstTime ? (
           <>
-            A campaign sends a sequence of emails to a lead file. Pick an audience,
-            write your steps, set a schedule, and the agent handles the rest.
+            A campaign sends a sequence of emails to your audience.
+            Pick leads from your workspace, write the steps, set a
+            schedule — the agent handles the rest.
           </>
         ) : (
           <>Switch the filter above to see campaigns in other states.</>

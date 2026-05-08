@@ -1622,6 +1622,36 @@ export default function DashboardPage() {
       />
 
       <div className="max-w-[1180px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10 flex flex-col gap-8 md:gap-10">
+        {/* Welcome strip — only when the workspace has truly never
+            run a search. Disappears the moment a job exists, so
+            returning users never see it. Calmly tells the user that
+            this page is the entry point and the example chips below
+            are real prompts they can click. We use jobsData itself
+            as the loaded-marker (the query has no isLoading binding
+            in this scope) so we don't flash the welcome strip while
+            the initial fetch is in flight. */}
+        {jobsData !== undefined && jobs.length === 0 && (
+          <div className="animate-fade-up flex items-start gap-3 rounded-xl border border-[color:var(--forest)]/30 bg-[color:var(--forest)]/[0.04] px-4 py-3">
+            <span className="mt-1 inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)] shrink-0" aria-hidden />
+            <div className="flex-1 min-w-0">
+              <p className="text-[13.5px] font-medium text-[color:var(--ink)] leading-tight">
+                Welcome — let&rsquo;s find you some prospects.
+              </p>
+              <p className="mt-1 text-[12.5px] text-[color:var(--ink-2)] leading-[1.5]">
+                Describe who you&rsquo;re looking for in the box below — try one of the
+                example briefs to see how it works. Results land on{' '}
+                <Link
+                  href="/dashboard/leads"
+                  className="text-[color:var(--ink)] hover:text-[color:var(--forest)] underline underline-offset-2 decoration-[color:var(--rule)] hover:decoration-[color:var(--forest)] transition-colors"
+                >
+                  Leads
+                </Link>
+                .
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Stagger the page reveal — each block fades up shortly after
             the previous one. animate-fade-up + stagger-N classes are
             already declared in globals.css. Restrained on purpose. */}

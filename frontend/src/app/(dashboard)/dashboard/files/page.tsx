@@ -630,18 +630,26 @@ export default function FilesPage() {
      <h3 className="text-[15px] font-semibold text-[color:var(--ink)]">
       {tab === 'archived' ? 'Nothing archived' : 'No files yet'}
      </h3>
-     <p className="mt-1.5 text-[13px] text-[color:var(--ink-2)] max-w-[420px] mx-auto leading-[1.55]">
+     <p className="mt-1.5 text-[13px] text-[color:var(--ink-2)] max-w-[480px] mx-auto leading-[1.55]">
       {tab === 'archived'
        ? "Archive a file from its detail page when it's run its course."
-       : 'Run a search, or create a new file to group leads by hand.'}
+       : 'A file is a named group of leads — the audience for a campaign. Open All leads, select the rows you want, and use Save to file. Or start a blank file here.'}
      </p>
      {tab !== 'archived' && (
-      <button
-       onClick={() => setDrawerOpen(true)}
-       className="mt-5 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] transition-colors"
-      >
-       New file
-      </button>
+      <div className="mt-5 inline-flex items-center gap-2">
+       <Link
+        href="/dashboard/leads"
+        className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] transition-colors"
+       >
+        Browse leads
+       </Link>
+       <button
+        onClick={() => setDrawerOpen(true)}
+        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[12.5px] font-medium text-[color:var(--ink-2)] border border-[color:var(--rule)] bg-[color:var(--paper-2)] hover:border-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition-colors"
+       >
+        New file
+       </button>
+      </div>
      )}
     </div>
    ) : (

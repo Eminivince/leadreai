@@ -1222,9 +1222,38 @@ export default function LeadsPage() {
               <span className="font-mono text-[12px] text-[color:var(--ink-3)]">Loading leads…</span>
             </div>
           )}
-          {!isLoading && filtered.length === 0 && (
-            <div className="border border-[color:var(--rule)] rounded-xl p-12 md:p-16 text-center bg-[color:var(--paper-2)]/40">
-              <h3 className="text-[15px] font-semibold text-[color:var(--ink)]">No leads match those filters</h3>
+          {!isLoading && filtered.length === 0 && total === 0 && (
+            // True zero-state: workspace has no leads yet. Point the
+            // user at the dashboard's compose box, which is where
+            // leads come from. Distinct from the filter-mismatch case
+            // below — that one shouldn't lecture about running a
+            // search, the user already has plenty.
+            <div className="border border-[color:var(--rule)] rounded-xl p-10 md:p-14 text-center bg-[color:var(--paper-2)]/40">
+              <h3 className="text-[15px] font-semibold text-[color:var(--ink)]">
+                No leads yet
+              </h3>
+              <p className="mt-1.5 text-[13px] text-[color:var(--ink-2)] max-w-[460px] mx-auto leading-[1.55]">
+                Run a search on the dashboard — describe who you&rsquo;re looking for in
+                a sentence, and the agent returns contacts with source links.
+              </p>
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="mt-5 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] transition-colors"
+              >
+                Run a search
+                <ArrowEast className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+          {!isLoading && filtered.length === 0 && total > 0 && (
+            // Filter mismatch: there ARE leads in the workspace, the
+            // current filter combo just doesn't match any. Don't push
+            // a "run a search" CTA here — the leads exist, the filter
+            // is the wrong shape.
+            <div className="border border-[color:var(--rule)] rounded-xl p-10 md:p-14 text-center bg-[color:var(--paper-2)]/40">
+              <h3 className="text-[15px] font-semibold text-[color:var(--ink)]">
+                No leads match those filters
+              </h3>
               <p className="mt-1.5 text-[13px] text-[color:var(--ink-2)]">
                 Clear the search or try a different status filter.
               </p>
