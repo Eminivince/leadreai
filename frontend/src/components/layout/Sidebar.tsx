@@ -17,6 +17,7 @@ interface NavItem {
  href: string;
  badge?: string | null;
  soon?: boolean;
+ external?: boolean;
  children?: NavItem[];
 }
 
@@ -33,6 +34,7 @@ const PRIMARY: NavItem[] = [
 const SECONDARY: NavItem[] = [
  { key: 'integrations', label: 'Integrations', href: '/dashboard/integrations' },
  { key: 'analytics',  label: 'Analytics',   href: '#', soon: true },
+ { key: 'docs',     label: 'Docs',      href: '/docs', external: true },
  {
   key: 'settings',
   label: 'Settings',
@@ -97,6 +99,7 @@ function NavIcon({ k, size = 16 }: { k: string; size?: number }) {
   case 'camps': return <svg {...props}><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1ZM15 8a5 5 0 0 1 0 8M18 5a9 9 0 0 1 0 14" /></svg>;
   case 'integrations': return <svg {...props}><path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 0 1-12 0zM12 18v4" /></svg>;
   case 'analytics': return <svg {...props}><path d="M3 21h18M7 17V9M12 17V5M17 17v-6" /></svg>;
+  case 'docs': return <svg {...props}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14ZM8 7h8M8 11h8M8 15h5" /></svg>;
   case 'settings': return <svg {...props}><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33 1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" /></svg>;
   default: return <svg {...props}><circle cx="12" cy="12" r="3" /></svg>;
  }
@@ -181,6 +184,16 @@ function NavRow({
   <div>
    {isDisabled ? (
     <span className={cn(rowBase, rowState)} title={item.label}>{inner}</span>
+   ) : item.external ? (
+    <a
+     href={item.href}
+     target="_blank"
+     rel="noreferrer"
+     className={cn(rowBase, rowState)}
+     title={showLabels ? undefined : item.label}
+    >
+     {inner}
+    </a>
    ) : (
     <Link href={item.href} className={cn(rowBase, rowState)} title={showLabels ? undefined : item.label}>
      {inner}
