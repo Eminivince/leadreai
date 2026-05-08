@@ -9,6 +9,7 @@ import { apiFetch } from '@/lib/api';
 import type { ApiResponse, LeadFileSummary } from '@leadreai/shared';
 import { PageHelp } from '@/components/ui/PageHelp';
 import { Pagination } from '@/components/shared/Pagination';
+import { SectionTabs } from '@/components/shared/SectionTabs';
 
 const PAGE_SIZE = 20;
 
@@ -513,15 +514,25 @@ export default function FilesPage() {
 
  return (
   <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10 animate-fade-up">
-   {/* Header — inline pattern matching the rest of the redesigned surfaces */}
+   {/* Header — Files is a sub-view of Leads now, so the title block
+       reads "Leads" with the Files tab active. Same shape as the
+       Leads page so users feel they're inside one section, not on
+       a separate top-level surface. */}
    <section className="mb-6 flex items-center justify-between gap-4 flex-wrap">
     <div className="flex items-baseline gap-3">
      <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)]">
-      Files
+      Leads
      </h1>
      <span className="font-mono text-[12px] tabular-nums text-[color:var(--ink-3)]">
       {isLoading ? '...' : counts.all}
      </span>
+     <SectionTabs
+      tabs={[
+       { key: 'leads', label: 'All', href: '/dashboard/leads' },
+       { key: 'files', label: 'Files', href: '/dashboard/files' },
+      ]}
+      className="ml-2"
+     />
     </div>
     <div className="flex items-center gap-2">
      <PageHelp

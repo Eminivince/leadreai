@@ -79,18 +79,38 @@ function EmailIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
  );
 }
 
-type EntryIcon = 'account' | 'workspace' | 'team' | 'knowledge' | 'suppression' | 'api-keys' | 'billing' | 'email';
+function ContextIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
+ return (
+  <svg viewBox="0 0 24 24" fill="none" className={className}>
+   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+   <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+ );
+}
+
+function IntegrationsIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
+ return (
+  <svg viewBox="0 0 24 24" fill="none" className={className}>
+   <path d="M9 2v6m6-6v6M5 12h14m-9 4v6m4-6v6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+   <rect x="5" y="8" width="14" height="8" rx="2" stroke="currentColor" strokeWidth="1.6" />
+  </svg>
+ );
+}
+
+type EntryIcon = 'account' | 'workspace' | 'team' | 'knowledge' | 'suppression' | 'api-keys' | 'billing' | 'email' | 'context' | 'integrations';
 
 function EntryIconComponent({ icon, className }: { icon: EntryIcon; className?: string }) {
  switch (icon) {
-  case 'account':     return <UserIcon className={className} />;
-  case 'workspace':   return <WorkspaceIcon className={className} />;
-  case 'team':        return <TeamIcon className={className} />;
-  case 'knowledge':   return <KnowledgeIcon className={className} />;
-  case 'suppression': return <SuppressionIcon className={className} />;
-  case 'api-keys':    return <KeyIcon className={className} />;
-  case 'billing':     return <BillingIcon className={className} />;
-  case 'email':       return <EmailIcon className={className} />;
+  case 'account':      return <UserIcon className={className} />;
+  case 'workspace':    return <WorkspaceIcon className={className} />;
+  case 'team':         return <TeamIcon className={className} />;
+  case 'knowledge':    return <KnowledgeIcon className={className} />;
+  case 'suppression':  return <SuppressionIcon className={className} />;
+  case 'api-keys':     return <KeyIcon className={className} />;
+  case 'billing':      return <BillingIcon className={className} />;
+  case 'email':        return <EmailIcon className={className} />;
+  case 'context':      return <ContextIcon className={className} />;
+  case 'integrations': return <IntegrationsIcon className={className} />;
  }
 }
 
@@ -112,6 +132,24 @@ const ENTRIES: Array<{ href: string; label: string; description: string; icon: E
   label: 'Team',
   description: 'Who sits on this desk. Roles and seats. Invitations forthcoming.',
   icon: 'team',
+ },
+ {
+  href: '/dashboard/library',
+  label: 'Context',
+  description: 'Documents the agent reads on every search — pitch decks, ICP notes, case studies. Upload once; every dispatch uses them.',
+  icon: 'context',
+ },
+ {
+  href: '/dashboard/integrations',
+  label: 'Integrations',
+  description: 'CRM, email senders, and outbound webhooks. Connect HubSpot, Gmail, Zapier, or any HTTP endpoint.',
+  icon: 'integrations',
+ },
+ {
+  href: '/dashboard/settings/email',
+  label: 'Email & replies',
+  description: 'Connect your sending domain so prospect replies land in the campaign dashboard automatically.',
+  icon: 'email',
  },
  {
   href: '/dashboard/settings/knowledge-base',
@@ -136,12 +174,6 @@ const ENTRIES: Array<{ href: string; label: string; description: string; icon: E
   label: 'Billing & usage',
   description: 'Plan, credits balance, and the ledger. Manage subscription and seat count.',
   icon: 'billing',
- },
- {
-  href: '/dashboard/settings/email',
-  label: 'Email & replies',
-  description: 'Connect your sending domain so prospect replies land in the campaign dashboard automatically.',
-  icon: 'email',
  },
 ];
 
@@ -172,17 +204,6 @@ export default function SettingsIndexPage() {
      <ChevronRight />
     </Link>
    ))}
-
-   <p className="mt-4 text-[12.5px] text-[color:var(--ink-3)]">
-    Looking for provider connections? HubSpot, email senders, and webhooks live on{' '}
-    <Link
-     href="/dashboard/integrations"
-     className="text-[color:var(--forest)] underline underline-offset-2"
-    >
-     the Integrations page
-    </Link>
-    .
-   </p>
   </div>
  );
 }

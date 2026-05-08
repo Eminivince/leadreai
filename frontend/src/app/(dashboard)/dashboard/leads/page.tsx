@@ -11,6 +11,7 @@ import { getAccessToken } from '@/lib/auth';
 import type { ApiResponse, Lead, LeadFileSummary, ProspectingJob, OutputSchemaColumn, FactValue } from '@leadreai/shared';
 import { PageHelp } from '@/components/ui/PageHelp';
 import { Pagination } from '@/components/shared/Pagination';
+import { SectionTabs } from '@/components/shared/SectionTabs';
 
 const GROUPS_PAGE_SIZE = 20;
 
@@ -1030,6 +1031,17 @@ export default function LeadsPage() {
               <span className="font-mono text-[12px] tabular-nums text-[color:var(--ink-3)]">
                 {isLoading ? '...' : total}
               </span>
+              {/* SectionTabs sits next to the count so the user sees
+                  Leads + Files belong together. /files keeps working
+                  as a deep link for the campaign builder + anyone
+                  who already has the URL. */}
+              <SectionTabs
+                tabs={[
+                  { key: 'leads', label: 'All', href: '/dashboard/leads' },
+                  { key: 'files', label: 'Files', href: '/dashboard/files' },
+                ]}
+                className="ml-2"
+              />
             </div>
             <div className="flex items-center gap-2">
               <PageHelp

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -420,20 +421,37 @@ export default function LibraryPage() {
 
   return (
     <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10 animate-fade-up">
-      {/* Header — matches dashboard / leads / tables / files */}
+      {/* Settings → Context breadcrumb. Library is now framed as
+          configuration (the agent's reading list); users reach it
+          from Settings rather than the primary nav. */}
+      <div className="flex items-center gap-1.5 mb-3 font-mono text-[10.5px] text-[color:var(--ink-3)]">
+        <Link
+          href="/dashboard/settings"
+          className="hover:text-[color:var(--ink)] transition-colors"
+        >
+          Settings
+        </Link>
+        <span className="text-[color:var(--ink-3)]/60">/</span>
+        <span className="text-[color:var(--ink-2)]">Context</span>
+      </div>
       <section className="mb-6 flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-baseline gap-3">
-          <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)]">
-            Library
-          </h1>
-          <span className="font-mono text-[12px] tabular-nums text-[color:var(--ink-3)]">
-            {isLoading ? '...' : total}
-          </span>
+        <div>
+          <div className="flex items-baseline gap-3">
+            <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)]">
+              Context
+            </h1>
+            <span className="font-mono text-[12px] tabular-nums text-[color:var(--ink-3)]">
+              {isLoading ? '...' : total}
+            </span>
+          </div>
+          <p className="mt-0.5 text-[12.5px] text-[color:var(--ink-3)]">
+            Documents the agent reads on every search.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <PageHelp
-            title="Library"
-            body="Your uploaded documents — pitch decks, ICP notes, portfolio lists, case studies. The AI reads these when prospecting so your context shapes the results."
+            title="Context"
+            body="Documents the agent reads on every search — pitch decks, ICP notes, portfolio lists, case studies. Upload them once; they shape the results of every dispatch from then on."
             tips={[
               'Upload PDF, DOCX, or TXT files. They are parsed and indexed automatically.',
               'Select documents to delete them in bulk.',

@@ -20,32 +20,35 @@ interface NavItem {
  children?: NavItem[];
 }
 
+// PRIMARY = the find → email flow. Four items, in order of use:
+// Dashboard (compose) → Leads (output) → Campaigns (outreach) →
+// Tables (separate research workflow). Files moved INTO Leads
+// as a tab. Workflows moved INTO Tables as a tab. Library +
+// Integrations moved into Settings as configuration.
 const PRIMARY: NavItem[] = [
  { key: 'home',   label: 'Dashboard', href: '/dashboard' },
  { key: 'leads',   label: 'Leads',   href: '/dashboard/leads' },
- { key: 'tables',  label: 'Tables',   href: '/dashboard/tables' },
- { key: 'workflows', label: 'Workflows', href: '/dashboard/workflows' },
- { key: 'files',   label: 'Files',   href: '/dashboard/files' },
- { key: 'library',  label: 'Library',  href: '/dashboard/library' },
  { key: 'camps',   label: 'Campaigns', href: '/dashboard/campaigns' },
+ { key: 'tables',  label: 'Tables',   href: '/dashboard/tables' },
 ];
 
 const SECONDARY: NavItem[] = [
- { key: 'integrations', label: 'Integrations', href: '/dashboard/integrations' },
  { key: 'analytics',  label: 'Analytics',   href: '#', soon: true },
  {
   key: 'settings',
   label: 'Settings',
   href: '/dashboard/settings',
   children: [
-   { key: 'settings-account',  label: 'Account',     href: '/dashboard/settings/account' },
-   { key: 'settings-workspace', label: 'Workspace',    href: '/dashboard/settings/workspace' },
-   { key: 'settings-team',    label: 'Team',       href: '/dashboard/settings/team' },
-   { key: 'settings-email',   label: 'Email',      href: '/dashboard/settings/email' },
-   { key: 'settings-kb',     label: 'Knowledge base',  href: '/dashboard/settings/knowledge-base' },
-   { key: 'settings-suppress',  label: 'Suppression list', href: '/dashboard/settings/suppression' },
-   { key: 'settings-api',    label: 'API keys',     href: '/dashboard/settings/api-keys' },
-   { key: 'settings-billing',  label: 'Billing & usage', href: '/dashboard/settings/billing' },
+   { key: 'settings-account',     label: 'Account',          href: '/dashboard/settings/account' },
+   { key: 'settings-workspace',   label: 'Workspace',        href: '/dashboard/settings/workspace' },
+   { key: 'settings-team',        label: 'Team',             href: '/dashboard/settings/team' },
+   { key: 'settings-email',       label: 'Email',            href: '/dashboard/settings/email' },
+   { key: 'settings-integrations',label: 'Integrations',     href: '/dashboard/integrations' },
+   { key: 'settings-context',     label: 'Context',          href: '/dashboard/library' },
+   { key: 'settings-kb',          label: 'Knowledge base',   href: '/dashboard/settings/knowledge-base' },
+   { key: 'settings-suppress',    label: 'Suppression list', href: '/dashboard/settings/suppression' },
+   { key: 'settings-api',         label: 'API keys',         href: '/dashboard/settings/api-keys' },
+   { key: 'settings-billing',     label: 'Billing & usage',  href: '/dashboard/settings/billing' },
   ],
  },
 ];

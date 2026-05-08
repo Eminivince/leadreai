@@ -9,6 +9,7 @@ import { apiFetch } from '@/lib/api';
 import type { ApiResponse, DataTable, RowType } from '@leadreai/shared';
 import { PageHelp } from '@/components/ui/PageHelp';
 import { Pagination } from '@/components/shared/Pagination';
+import { SectionTabs } from '@/components/shared/SectionTabs';
 
 const PAGE_SIZE = 20;
 
@@ -493,7 +494,8 @@ export default function TablesIndexPage() {
 
   return (
     <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10">
-      {/* Header — matches dashboard/leads */}
+      {/* Header — matches dashboard/leads. Tables/Workflows live
+          under the same Tables section now; tabs surface both. */}
       <section className="mb-6 flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-baseline gap-3">
           <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)]">
@@ -502,6 +504,13 @@ export default function TablesIndexPage() {
           <span className="font-mono text-[12px] tabular-nums text-[color:var(--ink-3)]">
             {isLoading ? '...' : activeTables.length}
           </span>
+          <SectionTabs
+            tabs={[
+              { key: 'tables',    label: 'Tables',    href: '/dashboard/tables' },
+              { key: 'workflows', label: 'Workflows', href: '/dashboard/workflows' },
+            ]}
+            className="ml-2"
+          />
         </div>
         <div className="flex items-center gap-2">
           <PageHelp

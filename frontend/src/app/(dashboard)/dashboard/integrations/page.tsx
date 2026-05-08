@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -175,15 +176,26 @@ export default function IntegrationsPage() {
    animate={{ opacity: 1, y: 0 }}
    transition={{ duration: 0.28 }}
   >
-   {/* Page header */}
-   <div className="bg-[color:var(--paper)] border-b border-[color:var(--rule)] px-8 py-6">
-    <div className="max-w-5xl mx-auto flex items-center justify-between gap-6 flex-wrap">
+   {/* Page header — framed as a Settings sub-page */}
+   <div className="px-8 py-6">
+    <div className="max-w-[1280px] mx-auto">
+     <div className="flex items-center gap-1.5 mb-3 font-mono text-[10.5px] text-[color:var(--ink-3)]">
+      <Link
+       href="/dashboard/settings"
+       className="hover:text-[color:var(--ink)] transition-colors"
+      >
+       Settings
+      </Link>
+      <span className="text-[color:var(--ink-3)]/60">/</span>
+      <span className="text-[color:var(--ink-2)]">Integrations</span>
+     </div>
+     <div className="flex items-center justify-between gap-6 flex-wrap">
      <div>
-      <h1 className="text-[24px] font-bold tracking-tight text-[color:var(--ink)]">
+      <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)]">
        Integrations
       </h1>
-      <p className="text-[13.5px] text-[color:var(--ink-3)] mt-0.5">
-       Connect your CRM, email sender, and webhooks to LeadreAI.
+      <p className="text-[12.5px] text-[color:var(--ink-3)] mt-0.5">
+       Connect your CRM, email sender, and webhooks.
       </p>
      </div>
      <div className="flex items-center gap-3">
@@ -201,6 +213,7 @@ export default function IntegrationsPage() {
        {liveConnected}
        <span className="font-normal text-[color:var(--ink-3)] ml-1">/ {totalLive}</span>
       </span>
+     </div>
      </div>
     </div>
    </div>
