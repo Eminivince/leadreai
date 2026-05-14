@@ -17,6 +17,7 @@
     "@bull-board/express": "^7.0.0",
     "@google/generative-ai": "^0.15.0",
     "@leadreai/shared": "workspace:*",
+    "@node-saml/node-saml": "^5.1.0",
     "@sentry/node": "^10.53.1",
     "bcryptjs": "^2.4.3",
     "bullmq": "^5.7.0",

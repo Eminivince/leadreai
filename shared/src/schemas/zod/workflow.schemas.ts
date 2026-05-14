@@ -45,11 +45,32 @@ export type WorkflowTableTemplate = z.infer<typeof WorkflowTableTemplateSchema>;
 
 // ── Workflow doc ─────────────────────────────────────────────────────
 
-export const WorkflowOriginSchema = z.literal('local');
+/** Phase 11 M1 v1 = `local`. M2 adds `installed` for the share-token flow. */
+export const WORKFLOW_ORIGINS = ['local', 'installed'] as const;
+export const WorkflowOriginSchema = z.enum(WORKFLOW_ORIGINS);
 
 export const WorkflowStatsSchema = z.object({
   timesRun: z.number().int().nonnegative().default(0),
   lastRunAt: z.string().optional(),
+});
+
+/** Counters for the publish surface (Phase 11 M2). Only populated when
+ *  the workflow has ever been published. */
+export const WorkflowPublishStatsSchema = z.object({
+  installs: z.number().int().nonnegative().default(0),
+  lastInstalledAt: z.string().optional(),
+});
+
+/** Provenance pointer set on installed copies. Stores the share-token
+ *  used + the source workflow + the user who published. Lets the
+ *  installing workspace show "from <agency>" badges and trace updates
+ *  back upstream if/when live-link semantics ever land. */
+export const WorkflowInstalledFromSchema = z.object({
+  shareToken: z.string(),
+  sourceWorkflowId: z.string(),
+  sourceWorkspaceId: z.string(),
+  publishedBy: z.string(),
+  installedAt: z.string(),
 });
 
 export const WorkflowSchema = z.object({
@@ -63,6 +84,12 @@ export const WorkflowSchema = z.object({
   seed: WorkflowSeedSchema.optional(),
   origin: WorkflowOriginSchema,
   stats: WorkflowStatsSchema,
+  /** Set by /publish; cleared by /unpublish. URL-safe random 32-char token. */
+  shareToken: z.string().optional(),
+  publishedAt: z.string().optional(),
+  publishStats: WorkflowPublishStatsSchema.optional(),
+  /** Only present when origin === 'installed'. */
+  installedFrom: WorkflowInstalledFromSchema.optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -119,3 +146,30 @@ export const RunWorkflowResponseSchema = z.object({
   jobId: z.string().optional(),
 });
 export type RunWorkflowResponse = z.infer<typeof RunWorkflowResponseSchema>;
+
+// ── Publish / install (Phase 11 M2) ──────────────────────────────────
+
+/** Public-facing preview of a published workflow. The actual `Workflow`
+ *  shape leaks workspaceId + createdBy, which we redact for unauth'd
+ *  preview reads. */
+export const WorkflowPublicPreviewSchema = z.object({
+  name: z.string(),
+  description: z.string().optional(),
+  tags: z.array(z.string()),
+  tableTemplate: WorkflowTableTemplateSchema,
+  hasSeed: z.boolean(),
+  seedParameters: z.array(WorkflowSeedParamSchema).optional(),
+  publishedAt: z.string(),
+  publishStats: WorkflowPublishStatsSchema,
+});
+export type WorkflowPublicPreview = z.infer<typeof WorkflowPublicPreviewSchema>;
+
+export const InstallWorkflowSchema = z.object({
+  /** Target workspace the install should land in. Caller must be a
+   *  member; backend enforces. */
+  targetWorkspaceId: z.string(),
+  /** Optional rename so the user can drop conflicts in their own space
+   *  without editing post-install. */
+  name: z.string().min(1).max(200).optional(),
+});
+export type InstallWorkflowInput = z.infer<typeof InstallWorkflowSchema>;

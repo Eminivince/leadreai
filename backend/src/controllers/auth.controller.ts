@@ -226,3 +226,68 @@ export async function getCredits(req: Request, res: Response): Promise<void> {
     },
   });
 }
+
+/* ── Onboarding wizard (Task #19) ────────────────────────────────── */
+
+const ONBOARDING_STEPS = ['market', 'sender', 'knowledge', 'first-search'] as const;
+type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
+
+export async function getOnboardingState(req: Request, res: Response): Promise<void> {
+  if (!req.user) throw ApiError.unauthorized();
+  const user = await User.findById(req.user._id).select('onboardingState createdAt');
+  if (!user) throw ApiError.notFound('User not found');
+  const state = user.onboardingState ?? { completedSteps: [] };
+  res.json({
+    success: true,
+    data: {
+      steps: ONBOARDING_STEPS,
+      completedSteps: state.completedSteps ?? [],
+      dismissedAt: state.dismissedAt,
+      completedAt: state.completedAt,
+      // Hint for the frontend: hide the wizard unless the account was
+      // created in the last 30 days. Avoids re-surfacing onboarding
+      // for long-time users when the feature ships.
+      isNewAccount: Date.now() - user.createdAt.getTime() < 30 * 24 * 3600 * 1000,
+    },
+  });
+}
+
+export async function completeOnboardingStep(req: Request, res: Response): Promise<void> {
+  if (!req.user) throw ApiError.unauthorized();
+  const { step } = req.body as { step?: string };
+  if (!step || !(ONBOARDING_STEPS as readonly string[]).includes(step)) {
+    throw ApiError.badRequest(`step must be one of: ${ONBOARDING_STEPS.join(', ')}`);
+  }
+  const stepName = step as OnboardingStep;
+
+  const updated = await User.findByIdAndUpdate(
+    req.user._id,
+    { $addToSet: { 'onboardingState.completedSteps': stepName } },
+    { new: true, projection: { onboardingState: 1 } },
+  );
+  if (!updated) throw ApiError.notFound('User not found');
+
+  // If every step is now done, stamp completedAt so the strip can hide
+  // gracefully on the next render rather than waiting for the user to
+  // dismiss it.
+  const completed = updated.onboardingState?.completedSteps ?? [];
+  if (
+    completed.length === ONBOARDING_STEPS.length &&
+    !updated.onboardingState?.completedAt
+  ) {
+    await User.updateOne(
+      { _id: req.user._id },
+      { $set: { 'onboardingState.completedAt': new Date() } },
+    );
+  }
+  res.json({ success: true, data: updated.onboardingState });
+}
+
+export async function dismissOnboarding(req: Request, res: Response): Promise<void> {
+  if (!req.user) throw ApiError.unauthorized();
+  await User.updateOne(
+    { _id: req.user._id },
+    { $set: { 'onboardingState.dismissedAt': new Date() } },
+  );
+  res.json({ success: true, data: { dismissed: true } });
+}

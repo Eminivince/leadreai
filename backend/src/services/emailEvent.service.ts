@@ -158,21 +158,27 @@ async function handleReplyForEnrollment(
   await applyStopRules(enrollment, 'replied');
 }
 
-function normalizeMessageIdRef(raw: string, provider: 'resend' | 'sendgrid'): string {
+function normalizeMessageIdRef(raw: string, provider: 'resend' | 'sendgrid' | 'gmail'): string {
   // Strip angle brackets: "<re_abc@resend.dev>" → "re_abc@resend.dev"
   // Then strip domain part.
   // SendGrid SMTP IDs have a ".filterXXX" suffix; strip it to match stored values.
   // Resend IDs are opaque tokens — do not truncate.
+  // Gmail Message-IDs look like "<CABc123@mail.gmail.com>" — same handling as Resend.
   const stripped = raw.trim().replace(/^<|>$/g, '');
   const atIdx = stripped.indexOf('@');
   const local = atIdx >= 0 ? stripped.slice(0, atIdx) : stripped;
   return provider === 'sendgrid' ? (local.split('.')[0] ?? local) : local;
 }
 
-function extractInReplyTo(provider: 'resend' | 'sendgrid', payload: Record<string, unknown>): string | null {
-  if (provider === 'resend') {
+function extractInReplyTo(provider: 'resend' | 'sendgrid' | 'gmail', payload: Record<string, unknown>): string | null {
+  if (provider === 'resend' || provider === 'gmail') {
+    // Both pass headers as an array of {name, value}. Gmail's poller
+    // reshapes the Gmail API payload into the same shape for reuse.
     const data = payload['data'] as Record<string, unknown> | undefined;
-    const headers = (data?.['headers'] as Array<{ name: string; value: string }> | undefined) ?? [];
+    const headers =
+      (data?.['headers'] as Array<{ name: string; value: string }> | undefined) ??
+      (payload['headers'] as Array<{ name: string; value: string }> | undefined) ??
+      [];
     const h = headers.find(hdr => hdr.name.toLowerCase() === 'in-reply-to');
     if (!h?.value) return null;
     const m = h.value.match(/<([^>]+)>/);
@@ -333,8 +339,49 @@ export async function processEmailEvent(
   }
 }
 
+/**
+ * Pull the fields the reply classifier needs out of a provider payload.
+ * Each provider stuffs them in different places; this collapses them
+ * into a single shape so the classifier itself stays provider-agnostic.
+ */
+function extractClassifierFields(provider: 'resend' | 'sendgrid' | 'gmail', payload: Record<string, unknown>): {
+  from?: string; subject?: string; bodyText?: string; headers: Record<string, string>;
+} {
+  if (provider === 'sendgrid') {
+    const headersText = (payload['headers'] as string | undefined) ?? '';
+    const headers: Record<string, string> = {};
+    for (const line of headersText.split(/\r?\n/)) {
+      const idx = line.indexOf(':');
+      if (idx > 0) headers[line.slice(0, idx).trim().toLowerCase()] = line.slice(idx + 1).trim();
+    }
+    return {
+      from: payload['from'] as string | undefined,
+      subject: payload['subject'] as string | undefined,
+      bodyText: (payload['text'] as string | undefined) ?? (payload['plain'] as string | undefined),
+      headers,
+    };
+  }
+  // Resend + Gmail both shape headers as [{name, value}].
+  const data = payload['data'] as Record<string, unknown> | undefined;
+  const arr =
+    (data?.['headers'] as Array<{ name: string; value: string }> | undefined) ??
+    (payload['headers'] as Array<{ name: string; value: string }> | undefined) ??
+    [];
+  const headers: Record<string, string> = {};
+  for (const h of arr) headers[h.name.toLowerCase()] = h.value;
+  return {
+    from: (data?.['from'] as string | undefined) ?? headers['from'],
+    subject: (data?.['subject'] as string | undefined) ?? headers['subject'],
+    bodyText:
+      (data?.['text'] as string | undefined) ??
+      (payload['snippet'] as string | undefined) ?? // Gmail API snippet — short but enough for classifier
+      undefined,
+    headers,
+  };
+}
+
 export async function processInboundEmail(
-  provider: 'resend' | 'sendgrid',
+  provider: 'resend' | 'sendgrid' | 'gmail',
   payload: Record<string, unknown>,
 ): Promise<void> {
   const rawRef = extractInReplyTo(provider, payload);
@@ -350,6 +397,12 @@ export async function processInboundEmail(
   }
 
   const occurredAt = new Date();
+  // Reply classification (Task #16). Runs unconditionally so the
+  // `unknown` bucket carries real volume — that's how we judge the
+  // classifier's calibration over time.
+  const { classifyReply } = await import('./replyClassifier.js');
+  const classifierFields = extractClassifierFields(provider, payload);
+  const classification = classifyReply(classifierFields);
 
   // Primary: sequence enrollment path
   const enrollment = await SequenceEnrollment.findOne({
@@ -363,6 +416,7 @@ export async function processInboundEmail(
       messageId,
       event: 'replied',
       provider,
+      classification,
       raw: payload,
       occurredAt,
     });
@@ -387,6 +441,7 @@ export async function processInboundEmail(
     messageId,
     event: 'replied',
     provider,
+    classification,
     raw: payload,
     occurredAt,
   });

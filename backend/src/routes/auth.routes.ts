@@ -17,6 +17,17 @@ router.post('/refresh', asyncHandler(authController.refresh));
 router.get('/me', authenticate, asyncHandler(authController.me));
 router.get('/me/credits', authenticate, asyncHandler(authController.getCredits));
 router.patch('/me', authenticate, asyncHandler(authController.updateMe));
+router.get('/me/onboarding', authenticate, asyncHandler(authController.getOnboardingState));
+router.post('/me/onboarding/complete-step', authenticate, asyncHandler(authController.completeOnboardingStep));
+router.post('/me/onboarding/dismiss', authenticate, asyncHandler(authController.dismissOnboarding));
+
+// SAML SSO (Task #20). Login + ACS are unauthenticated (the IdP is
+// the auth source); config endpoints sit under /workspaces/:id/sso to
+// inherit the membership check.
+import * as ssoController from '../controllers/sso.controller.js';
+router.get('/saml/discover', asyncHandler(ssoController.ssoDiscover));
+router.get('/saml/:workspaceId/login', asyncHandler(ssoController.ssoLogin));
+router.post('/saml/:workspaceId/acs', asyncHandler(ssoController.ssoAssertionConsumer));
 
 // Social — Google
 router.get('/google', asyncHandler(oauthController.startGoogleAuth));

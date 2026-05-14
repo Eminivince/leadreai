@@ -47,11 +47,24 @@ export interface WorkspaceMemberDetail {
   joinedAt: string;
 }
 
+export interface WorkspaceBranding {
+  displayName?: string;
+  logoUrl?: string;
+  contactEmail?: string;
+  reportTitle?: string;
+}
+
 export interface Workspace {
   _id: string;
   name: string;
   slug: string;
   ownerId: string;
+  /** Multi-client agency mode — when set, this is a client sub-workspace
+   *  owned by the parent agency workspace. */
+  parentWorkspaceId?: string;
+  isClient?: boolean;
+  clientLabel?: string;
+  branding?: WorkspaceBranding;
   members: WorkspaceMemberDetail[];
   settings: WorkspaceSettings;
   knowledgeBase: KnowledgeBaseEntry[];

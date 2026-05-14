@@ -270,6 +270,16 @@ export interface CampaignStatsResult {
     replied: number;
     bounced: number;
   };
+  /** Reply classification breakdown (Task #16/26 frontend). Counts
+   *  EmailEvent rows for this campaign's enrollments. Sums may differ
+   *  from `enrollments.replied` because one enrollment can have
+   *  multiple inbound events (follow-up replies). */
+  replyClassification: {
+    positive: number;
+    ooo: number;
+    bounce: number;
+    unknown: number;
+  };
 }
 
 /**
@@ -336,6 +346,33 @@ export async function computeCampaignStats(params: {
     perStepMap.set(row._id, entry);
   }
 
+  // Reply classification breakdown — aggregate from EmailEvent for
+  // this campaign's enrollment set. One Mongo aggregation, no extra
+  // round-trips per enrollment.
+  const { default: EmailEvent } = await import('../models/EmailEvent.js');
+  const replyClass: { positive: number; ooo: number; bounce: number; unknown: number } = {
+    positive: 0, ooo: 0, bounce: 0, unknown: 0,
+  };
+  try {
+    const enrollmentIds = await SequenceEnrollment.find({
+      workspaceId,
+      sequenceId: sequence._id,
+    }).distinct('_id');
+    if (enrollmentIds.length > 0) {
+      const rows = await EmailEvent.aggregate<{ _id: string | null; count: number }>([
+        { $match: { workspaceId, enrollmentId: { $in: enrollmentIds }, event: 'replied' } },
+        { $group: { _id: '$classification', count: { $sum: 1 } } },
+      ]);
+      for (const row of rows) {
+        const key = row._id as keyof typeof replyClass | null;
+        if (key && key in replyClass) replyClass[key] = row.count;
+        else replyClass.unknown += row.count;
+      }
+    }
+  } catch {
+    // Classification is opportunistic — never fail the stats call.
+  }
+
   return {
     enrollments,
     perStep: Array.from(perStepMap.values()).sort((a, b) => a.stepNumber - b.stepNumber),
@@ -347,6 +384,7 @@ export async function computeCampaignStats(params: {
       replied: campaign.stats.replied,
       bounced: campaign.stats.bounced,
     },
+    replyClassification: replyClass,
   };
 }
 

@@ -50,6 +50,17 @@ export async function updateWorkspace(req: Request, res: Response): Promise<void
   const body = req.body as {
     name?: string;
     description?: string;
+    clientLabel?: string;
+    branding?: {
+      displayName?: string;
+      logoUrl?: string;
+      contactEmail?: string;
+      reportTitle?: string;
+    };
+    budget?: {
+      monthlyCapUSD?: number | null;
+      alertThresholdPct?: number;
+    };
     settings?: {
       cheapMode?: boolean;
       defaultExportFormat?: 'csv' | 'xlsx';
@@ -68,6 +79,64 @@ export async function updateWorkspace(req: Request, res: Response): Promise<void
 
   if (body.description !== undefined) {
     setFields['description'] = body.description;
+  }
+
+  if (body.clientLabel !== undefined) {
+    if (typeof body.clientLabel !== 'string') {
+      throw ApiError.badRequest('clientLabel must be a string');
+    }
+    setFields['clientLabel'] = body.clientLabel.trim().slice(0, 200);
+  }
+
+  if (body.branding !== undefined) {
+    // Whole-block replacement — the frontend always sends a complete
+    // branding object so partial-update merging isn't needed.
+    setFields['branding'] = {
+      displayName: body.branding.displayName?.slice(0, 200),
+      logoUrl: body.branding.logoUrl?.slice(0, 1024),
+      contactEmail: body.branding.contactEmail?.slice(0, 320),
+      reportTitle: body.branding.reportTitle?.slice(0, 240),
+    };
+  }
+
+  // Audit retention (Task #21). 0 means "keep forever"; otherwise we
+  // accept 1–3650 (10 years). The audit writer caches this per
+  // workspace for 5 minutes so changes propagate quickly.
+  const bodyWithRetention = body as typeof body & { auditRetentionDays?: number | null };
+  if (bodyWithRetention.auditRetentionDays !== undefined) {
+    if (bodyWithRetention.auditRetentionDays === null) {
+      setFields['auditRetentionDays'] = undefined;
+    } else if (typeof bodyWithRetention.auditRetentionDays === 'number') {
+      const days = bodyWithRetention.auditRetentionDays;
+      if (days < 0 || days > 3650 || !Number.isInteger(days)) {
+        throw ApiError.badRequest('auditRetentionDays must be an integer 0–3650');
+      }
+      setFields['auditRetentionDays'] = days;
+    }
+  }
+
+  if (body.budget !== undefined) {
+    // Cap setter (Task #15). Passing monthlyCapUSD: null clears the
+    // budget; passing a number sets it. alertedAt is cleared on any
+    // setter so a re-armed budget gets a fresh first-fire.
+    if (body.budget.monthlyCapUSD === null) {
+      setFields['budget'] = undefined;
+    } else if (typeof body.budget.monthlyCapUSD === 'number') {
+      if (body.budget.monthlyCapUSD < 0) {
+        throw ApiError.badRequest('budget.monthlyCapUSD must be >= 0');
+      }
+      const threshold = body.budget.alertThresholdPct ?? 80;
+      if (threshold < 1 || threshold > 100) {
+        throw ApiError.badRequest('budget.alertThresholdPct must be 1–100');
+      }
+      setFields['budget'] = {
+        monthlyCapUSD: body.budget.monthlyCapUSD,
+        alertThresholdPct: threshold,
+      };
+    } else if (body.budget.alertThresholdPct !== undefined) {
+      // Threshold-only update preserves the cap.
+      setFields['budget.alertThresholdPct'] = body.budget.alertThresholdPct;
+    }
   }
 
   if (body.settings !== undefined) {
@@ -112,6 +181,74 @@ export async function updateWorkspace(req: Request, res: Response): Promise<void
 
 export async function deleteWorkspace(_req: Request, res: Response): Promise<void> {
   res.status(501).json({ success: false, error: { code: 'NOT_IMPLEMENTED', message: 'Not implemented' } });
+}
+
+/* ── Multi-client agency mode (Task #11) ─────────────────────────── */
+
+/**
+ * List client sub-workspaces under a parent. Only the parent's owner /
+ * admin can see this list — clients show in their own listWorkspaces
+ * response too (because membership inherits), but agency dashboards
+ * want a single "your clients" surface.
+ */
+export async function listClientWorkspaces(req: Request, res: Response): Promise<void> {
+  const { workspaceId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(workspaceId!)) {
+    throw ApiError.badRequest('Invalid workspaceId');
+  }
+  const clients = await Workspace.find({
+    parentWorkspaceId: workspaceId,
+    isClient: true,
+  })
+    .select('-settings.webhookUrl -usageStats')
+    .sort({ createdAt: -1 });
+  res.json({ success: true, data: clients });
+}
+
+/**
+ * Create a client sub-workspace under the current workspace. The caller
+ * (owner/admin of the parent) automatically becomes the new workspace's
+ * owner — but the agency owner-inheritance rule in `authorize` means
+ * other parent admins also retain access without being explicit members.
+ */
+export async function createClientWorkspace(req: Request, res: Response): Promise<void> {
+  if (!req.user) throw ApiError.unauthorized();
+  const { workspaceId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(workspaceId!)) {
+    throw ApiError.badRequest('Invalid workspaceId');
+  }
+
+  const parent = await Workspace.findById(workspaceId).select('isClient');
+  if (!parent) throw ApiError.notFound('Parent workspace not found');
+  // A client workspace can't have its own clients — keeps the tree
+  // flat so RBAC + billing logic stays comprehensible.
+  if (parent.isClient) {
+    throw ApiError.badRequest('Cannot nest a client workspace under another client');
+  }
+
+  const body = req.body as { name?: string; clientLabel?: string };
+  const name = body.name?.trim();
+  if (!name) throw ApiError.badRequest('name is required');
+
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + randomBytes(4).toString('hex');
+
+  try {
+    const client = await Workspace.create({
+      name,
+      slug,
+      ownerId: req.user._id,
+      parentWorkspaceId: workspaceId,
+      isClient: true,
+      clientLabel: body.clientLabel?.trim().slice(0, 200),
+      members: [{ userId: req.user._id, role: 'owner', joinedAt: new Date() }],
+    });
+    res.status(201).json({ success: true, data: client });
+  } catch (err: unknown) {
+    if (err instanceof Error && 'code' in err && (err as { code: number }).code === 11000) {
+      throw ApiError.conflict('Workspace name already in use');
+    }
+    throw err;
+  }
 }
 
 export async function listKnowledgeBase(req: Request, res: Response): Promise<void> {

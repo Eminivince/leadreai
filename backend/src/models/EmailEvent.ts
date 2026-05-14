@@ -1,6 +1,13 @@
 import mongoose, { Schema } from 'mongoose';
 import { EMAIL_EVENT_TYPES, EMAIL_PROVIDERS, type EmailEventType, type EmailProvider } from '@leadreai/shared';
 
+/** Reply classification (Task #16). Computed on inbound emails only —
+ *  outbound events stay null. `positive` is a soft signal (keyword
+ *  match), not a guarantee — the agent surfaces it as a hint, the human
+ *  decides. */
+export const REPLY_CLASSIFICATIONS = ['positive', 'ooo', 'bounce', 'unknown'] as const;
+export type ReplyClassification = (typeof REPLY_CLASSIFICATIONS)[number];
+
 export interface IEmailEventDoc extends mongoose.Document {
   workspaceId: mongoose.Types.ObjectId;
   enrollmentId?: mongoose.Types.ObjectId;
@@ -8,6 +15,8 @@ export interface IEmailEventDoc extends mongoose.Document {
   event: EmailEventType;
   provider: EmailProvider;
   bounceType?: 'hard' | 'soft';
+  /** Set only when event === 'replied'. */
+  classification?: ReplyClassification;
   raw: Record<string, unknown>;
   occurredAt: Date;
   processedAt: Date;
@@ -21,6 +30,7 @@ const emailEventSchema = new Schema<IEmailEventDoc>(
     event: { type: String, enum: EMAIL_EVENT_TYPES, required: true },
     provider: { type: String, enum: EMAIL_PROVIDERS, required: true },
     bounceType: { type: String, enum: ['hard', 'soft'] },
+    classification: { type: String, enum: REPLY_CLASSIFICATIONS },
     raw: { type: Schema.Types.Mixed, default: {} },
     occurredAt: { type: Date, required: true },
     processedAt: { type: Date, default: Date.now },

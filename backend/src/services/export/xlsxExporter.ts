@@ -1,18 +1,41 @@
 import ExcelJS from 'exceljs';
 import type { ILead } from '../../models/Lead.js';
+import type { ExportBranding } from './csvExporter.js';
 
 /**
  * XLSX exporter with full evidence preservation.
  *
- * Sheet 1 ("Leads") — the flat lead row a Sales person actually opens.
- * Sheet 2 ("Evidence") — one row per source per lead, so an auditor can
- * follow "this email came from THIS scrape on THIS date" without parsing
- * any JSON. This is the agency / regulated-buyer requirement from
- * goal.md §11: "When a client asks where did this lead come from, the
- * user can click once and answer."
+ * Sheet 1 ("Cover") — white-label cover page (Task #12). Carries the
+ *   producing agency's displayName + contact + report title + the
+ *   client this report was prepared for (when set). Omitted entirely
+ *   when no branding is passed so the legacy default look is preserved.
+ * Sheet 2 ("Leads") — the flat lead row a Sales person actually opens.
+ * Sheet 3 ("Evidence") — one row per source per lead, so an auditor can
+ *   follow "this email came from THIS scrape on THIS date" without
+ *   parsing any JSON. This is the agency / regulated-buyer requirement
+ *   from goal.md §11.
+ * Sheet 4 ("Facts") — per-cell provenance (sourceUrl + confidence per
+ *   fact) for workspaces that use Phase 15D column enrichment.
  */
-export async function leadsToXlsx(leads: ILead[]): Promise<Buffer> {
+export async function leadsToXlsx(leads: ILead[], branding?: ExportBranding): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
+
+  if (branding) {
+    const cover = workbook.addWorksheet('Cover');
+    cover.columns = [{ width: 22 }, { width: 60 }];
+    cover.addRow([]);
+    const titleRow = cover.addRow(['', branding.reportTitle ?? 'Lead research export']);
+    titleRow.font = { bold: true, size: 22, color: { argb: 'FF1F2937' } };
+    cover.addRow([]);
+    if (branding.displayName) cover.addRow(['Produced by', branding.displayName]);
+    if (branding.clientLabel) cover.addRow(['Prepared for', branding.clientLabel]);
+    if (branding.contactEmail) cover.addRow(['Contact', branding.contactEmail]);
+    cover.addRow(['Generated', new Date().toISOString()]);
+    cover.addRow(['Lead count', leads.length]);
+    // Highlight the "label" column so it reads like a key-value sheet.
+    cover.getColumn(1).font = { bold: true, color: { argb: 'FF4B5563' } };
+  }
+
   const sheet = workbook.addWorksheet('Leads');
 
   sheet.columns = [

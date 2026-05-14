@@ -15,6 +15,31 @@ router.get('/:workspaceId', authorize(['owner', 'admin', 'member']), asyncHandle
 router.patch('/:workspaceId', authorize(['owner', 'admin']), asyncHandler(workspaceController.updateWorkspace));
 router.delete('/:workspaceId', authorize(['owner']), asyncHandler(workspaceController.deleteWorkspace));
 
+// Agency-mode client sub-workspaces (Task #11). Owner/admin only.
+router.get(
+  '/:workspaceId/clients',
+  authorize(['owner', 'admin']),
+  asyncHandler(workspaceController.listClientWorkspaces),
+);
+router.post(
+  '/:workspaceId/clients',
+  authorize(['owner', 'admin']),
+  asyncHandler(workspaceController.createClientWorkspace),
+);
+
+// SSO config (Task #20). Owner-only — these are security-relevant.
+import * as ssoCtrl from '../controllers/sso.controller.js';
+router.get(
+  '/:workspaceId/sso',
+  authorize(['owner']),
+  asyncHandler(ssoCtrl.getSsoConfig),
+);
+router.put(
+  '/:workspaceId/sso',
+  authorize(['owner']),
+  asyncHandler(ssoCtrl.updateSsoConfig),
+);
+
 router.get(
   '/:workspaceId/knowledge-base',
   authorize(['owner', 'admin']),

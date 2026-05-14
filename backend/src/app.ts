@@ -35,6 +35,7 @@ import dataSourcesRouter from './routes/dataSources.routes.js';
 import invocationsRouter from './routes/invocations.routes.js';
 import dataTablesRouter from './routes/dataTables.routes.js';
 import workflowsRouter from './routes/workflows.routes.js';
+import workflowsInstallRouter from './routes/workflowsInstall.routes.js';
 import { costsJobRouter, costsUsageRouter } from './routes/costs.routes.js';
 import chatRouter from './routes/chat.routes.js';
 import { authenticate } from './middleware/authenticate.js';
@@ -126,6 +127,10 @@ export function createApp(): Express {
   app.use('/api/v1/workspaces/:workspaceId/invocations', invocationsRouter);
   app.use('/api/v1/workspaces/:workspaceId/tables', dataTablesRouter);
   app.use('/api/v1/workspaces/:workspaceId/workflows', workflowsRouter);
+  // Cross-workspace install surface (Phase 11 M2). Outside :workspaceId
+  // scope because the share token IS the lookup key — the public preview
+  // doesn't know which workspace published.
+  app.use('/api/v1/workflows/install', workflowsInstallRouter);
   app.use('/api/v1/workspaces/:workspaceId/jobs', costsJobRouter);
   app.use('/api/v1/workspaces/:workspaceId/usage', costsUsageRouter);
   app.use('/api/v1/workspaces/:workspaceId', outreachRouter);
