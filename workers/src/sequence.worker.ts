@@ -12,6 +12,18 @@ import { isWithinSendWindow, nextSendTime, type SendWindow } from './services/se
 import { reserveSend } from './services/sendQuota.js';
 import { generateOutreachDraft } from './services/outreachGenerator.js';
 import { runWithCostContext } from './services/costTracker.js';
+import type {
+  IWorkspaceSeq,
+  ILeadSeq,
+  IContactSeq,
+  IEnrollmentSeq,
+  ISequenceSeq,
+  ISuppressionSeq,
+  IProspectingJobSeq,
+  ICampaignSeq,
+  IOutreachDraftSeq,
+  EmailConfig,
+} from './types/sequenceModels.js';
 
 export interface SequenceStepPayload {
   enrollmentId: string;
@@ -69,8 +81,9 @@ const workspaceSchema = new Schema({
   },
 }, { strict: false });
 
-const WorkspaceModel = mongoose.models['WS_SEQ'] as mongoose.Model<any> ??
-  mongoose.model('WS_SEQ', workspaceSchema, 'workspaces');
+const WorkspaceModel =
+  (mongoose.models['WS_SEQ'] as mongoose.Model<IWorkspaceSeq> | undefined) ??
+  mongoose.model<IWorkspaceSeq>('WS_SEQ', workspaceSchema, 'workspaces');
 
 // Lead — companyName, industry, address, website, companyDomain, emails
 const leadSchema = new Schema({
@@ -87,8 +100,9 @@ const leadSchema = new Schema({
   facts: { type: Schema.Types.Mixed },
 }, { strict: false });
 
-const LeadModel = mongoose.models['LEAD_SEQ'] as mongoose.Model<any> ??
-  mongoose.model('LEAD_SEQ', leadSchema, 'leads');
+const LeadModel =
+  (mongoose.models['LEAD_SEQ'] as mongoose.Model<ILeadSeq> | undefined) ??
+  mongoose.model<ILeadSeq>('LEAD_SEQ', leadSchema, 'leads');
 
 // Contact — firstName, lastName, fullName, title
 const contactSchema = new Schema({
@@ -98,8 +112,9 @@ const contactSchema = new Schema({
   title: String,
 }, { strict: false });
 
-const ContactModel = mongoose.models['CONTACT_SEQ'] as mongoose.Model<any> ??
-  mongoose.model('CONTACT_SEQ', contactSchema, 'contacts');
+const ContactModel =
+  (mongoose.models['CONTACT_SEQ'] as mongoose.Model<IContactSeq> | undefined) ??
+  mongoose.model<IContactSeq>('CONTACT_SEQ', contactSchema, 'contacts');
 
 // SequenceEnrollment — full shape needed for state machine updates
 const enrollmentSchema = new Schema({
@@ -123,8 +138,9 @@ const enrollmentSchema = new Schema({
   }],
 }, { strict: false, timestamps: true });
 
-const EnrollmentModel = mongoose.models['ENROLLMENT_SEQ'] as mongoose.Model<any> ??
-  mongoose.model('ENROLLMENT_SEQ', enrollmentSchema, 'sequenceenrollments');
+const EnrollmentModel =
+  (mongoose.models['ENROLLMENT_SEQ'] as mongoose.Model<IEnrollmentSeq> | undefined) ??
+  mongoose.model<IEnrollmentSeq>('ENROLLMENT_SEQ', enrollmentSchema, 'sequenceenrollments');
 
 // Sequence — steps and stopRules
 const sequenceSchema = new Schema({
@@ -134,18 +150,21 @@ const sequenceSchema = new Schema({
   stopRules: [{ trigger: String, action: String, _id: false }],
 }, { strict: false });
 
-const SequenceModel = mongoose.models['SEQ_MODEL'] as mongoose.Model<any> ??
-  mongoose.model('SEQ_MODEL', sequenceSchema, 'sequences');
+const SequenceModel =
+  (mongoose.models['SEQ_MODEL'] as mongoose.Model<ISequenceSeq> | undefined) ??
+  mongoose.model<ISequenceSeq>('SEQ_MODEL', sequenceSchema, 'sequences');
 
 // SuppressionEntry — email + domain
 const suppressionSchema = new Schema({ workspaceId: Schema.Types.ObjectId, email: String, domain: String }, { strict: false });
-const SuppressionModel = mongoose.models['SUPPRESSION_SEQ'] as mongoose.Model<any> ??
-  mongoose.model('SUPPRESSION_SEQ', suppressionSchema, 'suppressionentries');
+const SuppressionModel =
+  (mongoose.models['SUPPRESSION_SEQ'] as mongoose.Model<ISuppressionSeq> | undefined) ??
+  mongoose.model<ISuppressionSeq>('SUPPRESSION_SEQ', suppressionSchema, 'suppressionentries');
 
 // ProspectingJob — read rawQuery to give the AI context about why this lead was found
 const prospectingJobSchema = new Schema({ rawQuery: String }, { strict: false });
-const ProspectingJobModel = mongoose.models['PROSJOB_SEQ'] as mongoose.Model<any> ??
-  mongoose.model('PROSJOB_SEQ', prospectingJobSchema, 'prospectingjobs');
+const ProspectingJobModel =
+  (mongoose.models['PROSJOB_SEQ'] as mongoose.Model<IProspectingJobSeq> | undefined) ??
+  mongoose.model<IProspectingJobSeq>('PROSJOB_SEQ', prospectingJobSchema, 'prospectingjobs');
 
 // Campaign — we read `schedule.dailySendCap` + `schedule.timezone` per-send
 // to enforce the per-workspace daily cap. Matched to a sequence via
@@ -159,8 +178,9 @@ const campaignSchema = new Schema({
   outreachConfig: { channel: String, tone: String, language: String },
   schedule: { timezone: String, startHour: Number, endHour: Number, allowedDays: [Number], dailySendCap: Number },
 }, { strict: false });
-const CampaignModel = mongoose.models['CAMPAIGN_SEQ'] as mongoose.Model<any> ??
-  mongoose.model('CAMPAIGN_SEQ', campaignSchema, 'campaigns');
+const CampaignModel =
+  (mongoose.models['CAMPAIGN_SEQ'] as mongoose.Model<ICampaignSeq> | undefined) ??
+  mongoose.model<ICampaignSeq>('CAMPAIGN_SEQ', campaignSchema, 'campaigns');
 
 // OutreachDraft — persisted for every AI-personalized send so the audit
 // trail contains the exact subject/body the model produced. Drafts from
@@ -182,8 +202,9 @@ const outreachDraftSchema = new Schema({
   sentAt: Date,
   deliveryMetadata: { provider: String, messageId: String },
 }, { strict: false, timestamps: true });
-const OutreachDraftModel = mongoose.models['DRAFT_SEQ'] as mongoose.Model<any> ??
-  mongoose.model('DRAFT_SEQ', outreachDraftSchema, 'outreachdrafts');
+const OutreachDraftModel =
+  (mongoose.models['DRAFT_SEQ'] as mongoose.Model<IOutreachDraftSeq> | undefined) ??
+  mongoose.model<IOutreachDraftSeq>('DRAFT_SEQ', outreachDraftSchema, 'outreachdrafts');
 
 // ─── Gmail send helper ────────────────────────────────────────────────────────
 async function refreshGmailToken(refreshToken: string): Promise<{ accessToken: string; expiresAt: Date }> {
@@ -204,13 +225,13 @@ async function refreshGmailToken(refreshToken: string): Promise<{ accessToken: s
 }
 
 async function sendViaGmailWorker(
-  emailConfig: Record<string, any>,
+  emailConfig: EmailConfig,
   workspaceId: string,
   to: string,
   subject: string,
   htmlBody: string,
 ): Promise<string> {
-  const gmail = emailConfig.gmail as { accessToken?: string; refreshToken?: string; expiresAt?: Date };
+  const gmail = emailConfig.gmail;
   if (!gmail?.accessToken) throw new Error('Gmail not configured for this workspace');
 
   let accessToken = decryptValue(gmail.accessToken);
@@ -230,13 +251,13 @@ async function sendViaGmailWorker(
   }
 
   const from = emailConfig.fromName
-    ? `${emailConfig.fromName as string} <${emailConfig.fromEmail as string}>`
-    : (emailConfig.fromEmail as string) ?? '';
+    ? `${emailConfig.fromName} <${emailConfig.fromEmail ?? ''}>`
+    : emailConfig.fromEmail ?? '';
   const lines = [
     `From: ${from}`,
     `To: ${to}`,
     `Subject: ${subject}`,
-    ...(emailConfig.replyTo ? [`Reply-To: ${emailConfig.replyTo as string}`] : []),
+    ...(emailConfig.replyTo ? [`Reply-To: ${emailConfig.replyTo}`] : []),
     'MIME-Version: 1.0',
     'Content-Type: text/html; charset=UTF-8',
     '',
@@ -263,45 +284,63 @@ async function sendViaGmailWorker(
 
 // ─── Email send helper ────────────────────────────────────────────────────────
 async function sendEmail(
-  emailConfig: Record<string, any>,
+  emailConfig: EmailConfig,
   workspaceId: string,
   to: string,
   subject: string,
   body: string,
   unsubscribeUrl: string,
+  // Idempotency key — provider-side dedup so a BullMQ retry after a
+  // partial-success response doesn't double-send. Built upstream from
+  // `{enrollmentId, stepNumber}` so the same step always reuses the key.
+  idempotencyKey?: string,
 ): Promise<string> {
   const footerHtml = `<br><br><hr style="border:none;border-top:1px solid #eee;margin:24px 0"><p style="font-size:11px;color:#999;font-family:sans-serif">To unsubscribe: <a href="${unsubscribeUrl}">${unsubscribeUrl}</a></p>`;
   const footerText = `\n\n---\nTo unsubscribe: ${unsubscribeUrl}`;
   const htmlBody = `<div style="font-family:sans-serif;font-size:14px;line-height:1.6;color:#333">${body.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}</div>${footerHtml}`;
   const textBody = body + footerText;
-  const headers = { 'List-Unsubscribe': `<${unsubscribeUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' };
+  const headers: Record<string, string> = {
+    'List-Unsubscribe': `<${unsubscribeUrl}>`,
+    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+  };
+  // Gmail send dedups internally by a SMTP Message-ID. Resend supports an
+  // explicit `Idempotency-Key` request header per their docs; setting it
+  // here lets a retry collapse to the original send rather than a fresh
+  // delivery.
+  if (idempotencyKey) {
+    headers['Idempotency-Key'] = idempotencyKey;
+  }
 
   if (emailConfig.provider === 'gmail') {
     return sendViaGmailWorker(emailConfig, workspaceId, to, subject, htmlBody);
   }
 
   if (emailConfig.provider === 'resend') {
+    if (!emailConfig.apiKey) throw new Error('Resend API key not configured for this workspace');
     const apiKey = decryptValue(emailConfig.apiKey);
     const resend = new Resend(apiKey);
-    const from = `${emailConfig.fromName as string} <${emailConfig.fromEmail as string}>`;
+    const from = `${emailConfig.fromName ?? ''} <${emailConfig.fromEmail ?? ''}>`;
     const { data, error } = await resend.emails.send({ from, to, subject, html: htmlBody, text: textBody, headers });
     if (error || !data) throw new Error(error?.message ?? 'Resend send failed');
     return data.id;
   }
 
+  if (emailConfig.provider === 'sendgrid' && !emailConfig.apiKey) {
+    throw new Error('SendGrid API key not configured for this workspace');
+  }
   const smtpConfig =
     emailConfig.provider === 'sendgrid'
-      ? { host: 'smtp.sendgrid.net', port: 587, auth: { user: 'apikey', pass: decryptValue(emailConfig.apiKey) } }
+      ? { host: 'smtp.sendgrid.net', port: 587, auth: { user: 'apikey', pass: decryptValue(emailConfig.apiKey ?? '') } }
       : {
-          host: emailConfig.smtpHost as string,
-          port: (emailConfig.smtpPort as number) ?? 587,
-          secure: (emailConfig.smtpSecure as boolean) ?? false,
-          auth: emailConfig.smtpUser ? { user: emailConfig.smtpUser as string, pass: decryptValue(emailConfig.smtpPass) } : undefined,
+          host: emailConfig.smtpHost ?? '',
+          port: emailConfig.smtpPort ?? 587,
+          secure: emailConfig.smtpSecure ?? false,
+          auth: emailConfig.smtpUser ? { user: emailConfig.smtpUser, pass: decryptValue(emailConfig.smtpPass ?? '') } : undefined,
         };
 
   const transporter = nodemailer.createTransport(smtpConfig);
   const info = await transporter.sendMail({
-    from: `"${emailConfig.fromName as string}" <${emailConfig.fromEmail as string}>`,
+    from: `"${emailConfig.fromName ?? ''}" <${emailConfig.fromEmail ?? ''}>`,
     to,
     subject,
     html: htmlBody,
@@ -324,7 +363,7 @@ async function processSequenceStep(job: Job<SequenceStepPayload>, redis: Redis):
   const sequence = await SequenceModel.findById(enrollment.sequenceId);
   if (!sequence || sequence.status === 'archived') { logger.warn(`${tag} sequence not found or archived`); return; }
 
-  const step = (sequence.steps as any[]).find((s: any) => s.stepNumber === stepNumber);
+  const step = sequence.steps.find((s) => s.stepNumber === stepNumber);
   if (!step) { logger.warn(`${tag} step definition not found`); return; }
 
   // Only email steps supported in this implementation
@@ -337,7 +376,7 @@ async function processSequenceStep(job: Job<SequenceStepPayload>, redis: Redis):
   const lead = await LeadModel.findById(enrollment.leadId);
   if (!lead) { logger.warn(`${tag} lead not found`); return; }
 
-  const toEmail = (lead.emails as any)?.[0]?.address as string | undefined;
+  const toEmail = lead.emails?.[0]?.address;
   if (!toEmail) { logger.warn(`${tag} lead has no email`); return; }
 
   // Check suppression
@@ -376,12 +415,13 @@ async function processSequenceStep(job: Job<SequenceStepPayload>, redis: Redis):
   // Campaigns created before M1 won't have a schedule; skip the check in
   // that case. When the cap is hit, defer nextStepAt to the start of the
   // next send window (tomorrow) and don't advance the step.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const campaign = await (CampaignModel.findOne({ sequenceId: enrollment.sequenceId, workspaceId: enrollment.workspaceId })
-    .select('schedule')
-    .lean() as Promise<any>);
-  const cap = campaign?.schedule?.dailySendCap as number | undefined;
-  const tz = (campaign?.schedule?.timezone as string | undefined) ?? (step.sendWindow?.timezone as string | undefined);
+  const campaign = await CampaignModel.findOne({
+    sequenceId: enrollment.sequenceId,
+    workspaceId: enrollment.workspaceId,
+  }).select('schedule').lean();
+  const cap = campaign?.schedule?.dailySendCap;
+  const stepSw = step.sendWindow as { timezone?: string } | undefined;
+  const tz = campaign?.schedule?.timezone ?? stepSw?.timezone;
   if (cap && tz) {
     const quota = await reserveSend({
       redis,
@@ -395,10 +435,18 @@ async function processSequenceStep(job: Job<SequenceStepPayload>, redis: Redis):
       // nextSendTime jump forward to the workspace-local startHour.
       const deferBase = new Date(Date.now() + 24 * 3_600_000);
       const cs = campaign?.schedule;
+      // Construct a SendWindow from either the step's own definition or the
+      // campaign schedule. Null defaults are only safe when none of the
+      // hours/timezone are set; otherwise we coerce to sensible defaults.
       const sw: SendWindow | null = step.sendWindow
         ? (step.sendWindow as SendWindow)
-        : cs
-          ? { startHour: cs.startHour, endHour: cs.endHour, timezone: tz, allowedDays: cs.allowedDays ?? [] }
+        : cs && tz
+          ? {
+              startHour: cs.startHour ?? 9,
+              endHour: cs.endHour ?? 17,
+              timezone: tz,
+              allowedDays: cs.allowedDays ?? [],
+            }
           : null;
       const nextTime = sw ? nextSendTime(sw, deferBase) : deferBase;
       logger.info(`${tag} daily cap hit (${quota.used}/${quota.cap}), deferring to ${nextTime.toISOString()}`);
@@ -426,14 +474,17 @@ async function processSequenceStep(job: Job<SequenceStepPayload>, redis: Redis):
   // sequence.
   let subject = templateSubject;
   let body = templateBody;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let aiResult: any = null;
+  // Shape returned by `generateOutreachDraft` — kept loose because the
+  // body is conditional on the LLM-provider response shape and may grow.
+  let aiResult: { firstLine?: string; subject?: string; body?: string; reasoning?: string } | null = null;
 
   if (step.useAI) {
     try {
       // Resolve the original prospecting query that found this lead
       const prospectingJob = lead.jobId
-        ? await ProspectingJobModel.findById(lead.jobId).select('rawQuery').lean()
+        ? ((await ProspectingJobModel.findById(lead.jobId)
+            .select('rawQuery')
+            .lean()) as { rawQuery?: string } | null)
         : null;
 
       const leadFacts = lead.facts as Record<string, { value: unknown }> | undefined;
@@ -501,8 +552,21 @@ async function processSequenceStep(job: Job<SequenceStepPayload>, redis: Redis):
   let errorMessage: string | undefined;
 
   try {
-    messageId = await sendEmail(workspace.emailConfig, enrollment.workspaceId.toString(), toEmail, subject, body, unsubscribeUrl);
-    logger.info(`${tag} sent successfully`, { messageId, to: toEmail });
+    // Idempotency key: (enrollmentId, stepNumber) uniquely identifies this
+    // send. A BullMQ retry of the same job re-uses this key so the provider
+    // collapses the second delivery to the first message — preventing
+    // double-send + double credit-charge on partial-success retries.
+    const idempotencyKey = `seq:${String(enrollment._id)}:${stepNumber}`;
+    messageId = await sendEmail(
+      workspace.emailConfig,
+      enrollment.workspaceId.toString(),
+      toEmail,
+      subject,
+      body,
+      unsubscribeUrl,
+      idempotencyKey,
+    );
+    logger.info(`${tag} sent successfully`, { messageId, to: toEmail, idempotencyKey });
   } catch (err) {
     errorMessage = err instanceof Error ? err.message : String(err);
     logger.error(`${tag} send failed`, { err });
@@ -564,14 +628,14 @@ async function processSequenceStep(job: Job<SequenceStepPayload>, redis: Redis):
 }
 
 async function advanceOrComplete(
-  enrollment: any,
-  sequence: any,
-  currentStep: any,
+  enrollment: { _id: mongoose.Types.ObjectId },
+  sequence: { steps: Array<{ stepNumber: number; delayDays?: number }> },
+  currentStep: { stepNumber: number },
   sentAt: Date | null,
-  messageId: string | null,
+  _messageId: string | null,
 ): Promise<void> {
-  const steps = sequence.steps as any[];
-  const nextStep = steps.find((s: any) => s.stepNumber === currentStep.stepNumber + 1);
+  const steps = sequence.steps;
+  const nextStep = steps.find((s) => s.stepNumber === currentStep.stepNumber + 1);
 
   if (!nextStep) {
     await EnrollmentModel.updateOne(
@@ -582,7 +646,7 @@ async function advanceOrComplete(
   }
 
   const base = sentAt ?? new Date();
-  const nextStepAt = new Date(base.getTime() + nextStep.delayDays * 86_400_000);
+  const nextStepAt = new Date(base.getTime() + (nextStep.delayDays ?? 0) * 86_400_000);
 
   await EnrollmentModel.updateOne(
     { _id: enrollment._id },
@@ -609,8 +673,9 @@ export function createSequenceWorker(connection: Redis, redis: Redis): Worker {
       // Load just enough to establish the cost scope before the heavy path.
       // A missing enrollment is non-fatal — processSequenceStep re-checks and
       // returns early; we just fall through without a scope in that case.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const enrollment: any = await EnrollmentModel.findById(job.data.enrollmentId).select('workspaceId').lean();
+      const enrollment = await EnrollmentModel.findById(job.data.enrollmentId)
+        .select('workspaceId sequenceId')
+        .lean();
       if (!enrollment?.workspaceId) {
         await processSequenceStep(job, redis);
         return;
@@ -618,7 +683,7 @@ export function createSequenceWorker(connection: Redis, redis: Redis): Worker {
       // Campaign lookup for campaignId on the cost scope — strictly optional;
       // processSequenceStep does its own lookup later.
       const campaign = await CampaignModel.findOne({ sequenceId: enrollment.sequenceId ?? undefined })
-        .select('_id').lean() as { _id?: unknown } | null;
+        .select('_id').lean();
       const campaignId = campaign?._id ? String(campaign._id) : undefined;
 
       await runWithCostContext(

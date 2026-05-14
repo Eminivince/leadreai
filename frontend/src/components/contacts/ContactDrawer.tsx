@@ -18,11 +18,16 @@ export function ContactDrawer({ contact, onClose, onSave }: ContactDrawerProps) 
  const [notes, setNotes] = useState(contact?.notes ?? '');
  const [buyingRole, setBuyingRole] = useState(contact?.buyingRole ?? 'unknown');
 
+ // Reset form state when the drawer's contact identity changes. We
+ // intentionally key on `contact?._id` rather than the full `contact`
+ // object so a re-fetch (same id, mutated reference) doesn't clobber
+ // the user's in-progress edits in the drawer fields.
  useEffect(() => {
   if (contact) {
    setNotes(contact.notes ?? '');
    setBuyingRole(contact.buyingRole ?? 'unknown');
   }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
  }, [contact?._id]);
 
  if (!contact) return null;

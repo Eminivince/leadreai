@@ -72,7 +72,7 @@ export default function DataSourcesPage() {
   enabled: Boolean(workspaceId),
  });
 
- const sources = data?.data ?? [];
+ const sources = useMemo(() => data?.data ?? [], [data]);
 
  // Count credentials per source — single batched fetch would be nicer;
  // for v1 we fetch lazily when the drawer opens. Here we just show

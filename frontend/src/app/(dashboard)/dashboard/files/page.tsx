@@ -36,21 +36,6 @@ function CloseIcon({ className = 'w-3 h-3' }: { className?: string }) {
  );
 }
 
-function FileIcon({ className = 'w-5 h-5' }: { className?: string }) {
- return (
-  <svg viewBox="0 0 24 24" fill="none" className={className}>
-   <path
-    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"
-    stroke="currentColor"
-    strokeWidth="1.6"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-   />
-   <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
- );
-}
-
 function CheckIcon({ className = 'w-3.5 h-3.5' }: { className?: string }) {
  return (
   <svg viewBox="0 0 16 16" fill="none" className={className}>
@@ -416,7 +401,10 @@ export default function FilesPage() {
   enabled: !!workspaceId,
  });
 
- const allFiles = data?.data?.data ?? [];
+ // Stable reference via useMemo so the downstream `filtered` + `counts`
+ // memos don't recompute on every render just because `data` is a fresh
+ // React Query object reference.
+ const allFiles = useMemo(() => data?.data?.data ?? [], [data]);
 
  const filtered = useMemo(() => {
   const q = search.trim().toLowerCase();

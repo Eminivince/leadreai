@@ -331,6 +331,7 @@ function LeadDrawer({
               onClick={onClose}
               className="p-1.5 text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition"
               title="Close (Esc)"
+              aria-label="Close lead details"
             >
               <CloseIcon className="w-4 h-4" />
             </button>
@@ -673,7 +674,7 @@ function QueryGroup({
   drawerId,
   schema,
   isJobScoped,
-  colCount,
+  colCount: _colCount,
 }: {
   jobId: string | null;
   query: string;
@@ -890,7 +891,7 @@ export default function LeadsPage() {
     enabled: !!workspaceId && !jobId,
   });
 
-  const allLeads = leadsData?.data ?? [];
+  const allLeads = useMemo(() => leadsData?.data ?? [], [leadsData]);
   const total = leadsData?.total ?? 0;
   const job = jobData?.data;
   const schema: OutputSchemaColumn[] = job?.parsedIntent?.outputSchema ?? [];

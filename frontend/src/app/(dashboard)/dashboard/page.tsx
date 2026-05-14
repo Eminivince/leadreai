@@ -899,8 +899,10 @@ function AuditTrail({ job }: { job: ProspectingJob }) {
     isActive ? workspaceId : null,
     isActive ? job._id : null,
   );
-  const entries: JobActivityLogEntry[] =
-    isActive && liveLog.length > 0 ? liveLog : (job.activityLog ?? []);
+  const entries: JobActivityLogEntry[] = useMemo(
+    () => (isActive && liveLog.length > 0 ? liveLog : (job.activityLog ?? [])),
+    [isActive, liveLog, job.activityLog],
+  );
 
   const [open, setOpen] = useState(isActive);
   const [autoScroll, setAutoScroll] = useState(true);
@@ -1440,7 +1442,7 @@ export default function DashboardPage() {
     refetchInterval: 6_000, // poll while the page is open so live jobs animate
   });
 
-  const jobs = jobsData?.data ?? [];
+  const jobs = useMemo(() => jobsData?.data ?? [], [jobsData]);
 
   // Split: active = most recent job that isn't terminal-old, recents = older
   const { activeJob, recentJobs } = useMemo(() => {

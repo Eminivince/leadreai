@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -284,7 +284,7 @@ export default function LibraryPage() {
     },
   });
 
-  const docs = data?.data?.data ?? [];
+  const docs = useMemo(() => data?.data?.data ?? [], [data]);
   const total = data?.data?.total ?? 0;
 
   const summary = useMemo(() => {

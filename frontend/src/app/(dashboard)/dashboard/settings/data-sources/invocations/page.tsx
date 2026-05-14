@@ -37,7 +37,7 @@ export default function InvocationsPage() {
   ),
   enabled: Boolean(workspaceId),
  });
- const sources = sourcesResp?.data ?? [];
+ const sources = useMemo(() => sourcesResp?.data ?? [], [sourcesResp]);
  const sourceById = useMemo(
   () => Object.fromEntries(sources.map((s) => [s.id, s])),
   [sources],
