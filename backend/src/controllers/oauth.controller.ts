@@ -297,7 +297,7 @@ export async function googleCallback(req: Request, res: Response): Promise<void>
     return;
   }
 
-  const refreshToken = signRefreshToken(String(user._id));
+  const refreshToken = signRefreshToken(String(user._id), user.tokenVersion ?? 0);
   res.cookie('refresh_token', refreshToken, REFRESH_COOKIE_OPTIONS);
 
   logger.info('[oauth/google] authenticated', {

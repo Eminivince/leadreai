@@ -140,8 +140,8 @@ export async function verifyLink(req: Request, res: Response): Promise<void> {
   if (!user.isEmailVerified) user.isEmailVerified = true;
   await user.save();
 
-  const accessToken = signAccessToken({ sub: String(user._id), email: user.email });
-  const refreshToken = signRefreshToken(String(user._id));
+  const accessToken = signAccessToken({ sub: String(user._id), email: user.email, tv: user.tokenVersion ?? 0 });
+  const refreshToken = signRefreshToken(String(user._id), user.tokenVersion ?? 0);
   res.cookie('refresh_token', refreshToken, REFRESH_COOKIE_OPTIONS);
 
   logger.info('[magicLink] authenticated', {

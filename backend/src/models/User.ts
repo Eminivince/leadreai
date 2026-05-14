@@ -39,6 +39,14 @@ export interface IUser extends mongoose.Document {
   billingProvider?: 'stripe' | 'paystack';
   isEmailVerified: boolean;
   lastLoginAt?: Date;
+  /**
+   * Session epoch — bumped on logout / forced sign-out. Embedded in every
+   * issued JWT (access + refresh) as the `tv` claim; the authenticate and
+   * refresh paths reject any token whose `tv` doesn't match the current
+   * value. A stolen cookie loses validity the moment the legitimate user
+   * logs out (or admin force-rotates them) without us needing a denylist.
+   */
+  tokenVersion: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -76,6 +84,7 @@ const userSchema = new Schema<IUser>(
     billingProvider: { type: String, enum: ['stripe', 'paystack'] },
     isEmailVerified: { type: Boolean, default: false },
     lastLoginAt: { type: Date },
+    tokenVersion: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

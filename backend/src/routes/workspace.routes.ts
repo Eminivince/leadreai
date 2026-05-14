@@ -10,9 +10,10 @@ router.use(authenticate);
 
 router.get('/', asyncHandler(workspaceController.listWorkspaces));
 router.post('/', asyncHandler(workspaceController.createWorkspace));
-router.get('/:workspaceId', asyncHandler(workspaceController.getWorkspace));
+// IDOR fix: GET requires workspace membership; DELETE requires owner role.
+router.get('/:workspaceId', authorize(['owner', 'admin', 'member']), asyncHandler(workspaceController.getWorkspace));
 router.patch('/:workspaceId', authorize(['owner', 'admin']), asyncHandler(workspaceController.updateWorkspace));
-router.delete('/:workspaceId', asyncHandler(workspaceController.deleteWorkspace));
+router.delete('/:workspaceId', authorize(['owner']), asyncHandler(workspaceController.deleteWorkspace));
 
 router.get(
   '/:workspaceId/knowledge-base',
