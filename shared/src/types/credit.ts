@@ -9,6 +9,11 @@ export const CREDIT_TXN_REASONS = [
   'subscription.paystack',
   'adjustment',
   'signup',
+  // Reversals — fired when a Stripe charge is refunded or a chargeback /
+  // dispute is opened by the bank. Negative-delta debit on `topup` so the
+  // ledger preserves the original grant alongside its reversal.
+  'dispute.reversal',
+  'refund.reversal',
 ] as const;
 
 export type CreditTransactionReason = (typeof CREDIT_TXN_REASONS)[number];

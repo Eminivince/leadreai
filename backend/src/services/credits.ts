@@ -19,6 +19,10 @@ interface LedgerNote {
   reason: CreditTransactionReason;
   description?: string;
   metadata?: Record<string, unknown>;
+  // Optional currency tag — recorded so cross-provider reconciliation
+  // (USD via Stripe + NGN via Paystack) can be audited. Falls back to USD
+  // when omitted to preserve backward compatibility.
+  currency?: string;
 }
 
 interface ChargeInput extends LedgerNote {
@@ -59,9 +63,13 @@ async function writeLedger(
   kind: 'debit' | 'credit',
   delta: number,
   balanceAfter: number,
+  session?: mongoose.ClientSession,
 ): Promise<string> {
-  try {
-    const txn = await CreditTransaction.create({
+  // Ledger writes inside a transaction MUST NOT silently swallow failures —
+  // the surrounding withTransaction() will roll back the balance change if
+  // we throw. The legacy fire-and-forget catch is intentionally removed.
+  const docs = await CreditTransaction.create(
+    [{
       userId: base.userId,
       workspaceId: base.workspaceId,
       kind,
@@ -70,42 +78,38 @@ async function writeLedger(
       delta,
       balanceAfter,
       description: base.description,
-      metadata: base.metadata,
-    });
-    return String(txn._id);
-  } catch (err) {
-    logger.warn('[credits] ledger write failed (balance already moved)', {
-      userId: String(base.userId),
-      reason: base.reason,
-      bucket,
-      err: err instanceof Error ? err.message : String(err),
-    });
-    return '';
-  }
+      metadata: { ...(base.metadata ?? {}), currency: base.currency ?? 'usd' },
+    }],
+    session ? { session } : undefined,
+  );
+  const doc = docs[0];
+  if (!doc) throw new Error('[credits] ledger write returned empty result');
+  return String(doc._id);
 }
 
 /**
  * Charge a user's combined credit balance.
  *
+ * Invariants (CLAUDE.md high-risk protocol):
+ *   - Combined balance can never go negative (enforced by $gte guards).
+ *   - Every balance mutation has a matching CreditTransaction row (enforced
+ *     by Mongoose transaction; if the ledger write fails the balance change
+ *     rolls back).
+ *   - A failed charge leaves zero side effects — no partial deduct, no
+ *     orphan ledger rows.
+ *
  * Consumption order: monthly first (subscription allowance — use it or
  * lose it), then top-up. A charge that spans both buckets emits two
  * ledger rows so the split is visible.
- *
- * Each bucket deduct is an atomic `findOneAndUpdate` with `$gte` guard,
- * so concurrent dispatches can't both succeed when the combined balance
- * is below the required amount. If the monthly bucket doesn't cover it,
- * we pay out what's there and keep going on the top-up bucket. If neither
- * does, we throw — no half-charges leave the system.
  */
 export async function chargeCredits(input: ChargeInput): Promise<ChargeResult> {
   if (input.amount < 0) {
     throw new Error('chargeCredits amount must be non-negative');
   }
 
-  const user = await User.findById(input.userId).select(`${MONTHLY_FIELD} ${TOPUP_FIELD}`);
-  if (!user) throw ApiError.notFound('User not found');
-
   if (input.amount === 0) {
+    const user = await User.findById(input.userId).select(`${MONTHLY_FIELD} ${TOPUP_FIELD}`);
+    if (!user) throw ApiError.notFound('User not found');
     return {
       totalAfter: user.monthlyCreditsBalance + user.creditsBalance,
       monthlyAfter: user.monthlyCreditsBalance,
@@ -114,81 +118,84 @@ export async function chargeCredits(input: ChargeInput): Promise<ChargeResult> {
     };
   }
 
-  const combined = user.monthlyCreditsBalance + user.creditsBalance;
-  if (combined < input.amount) {
-    throw ApiError.badRequest(
-      `Insufficient credits. This action requires ${input.amount} credit${
-        input.amount === 1 ? '' : 's'
-      }. You have ${combined}.`,
-    );
-  }
+  const session = await mongoose.startSession();
+  try {
+    let result: ChargeResult = { totalAfter: 0, monthlyAfter: 0, topupAfter: 0, entries: [] };
+    await session.withTransaction(async () => {
+      const user = await User.findById(input.userId)
+        .select(`${MONTHLY_FIELD} ${TOPUP_FIELD}`)
+        .session(session);
+      if (!user) throw ApiError.notFound('User not found');
 
-  const fromMonthly = Math.min(input.amount, user.monthlyCreditsBalance);
-  const fromTopup = input.amount - fromMonthly;
-  const entries: LedgerEntry[] = [];
-
-  let monthlyAfter = user.monthlyCreditsBalance;
-  let topupAfter = user.creditsBalance;
-
-  if (fromMonthly > 0) {
-    const updated = await User.findOneAndUpdate(
-      { _id: input.userId, [MONTHLY_FIELD]: { $gte: fromMonthly } },
-      { $inc: { [MONTHLY_FIELD]: -fromMonthly } },
-      { new: true, projection: { [MONTHLY_FIELD]: 1 } },
-    );
-    if (!updated) {
-      // Monthly shrank between read and write (concurrent charge). Abort —
-      // no partial state; caller can retry and we'll rebalance.
-      throw ApiError.badRequest('Credit balance changed during charge; please retry.');
-    }
-    monthlyAfter = updated.monthlyCreditsBalance;
-    const txnId = await writeLedger(input, 'monthly', 'debit', -fromMonthly, monthlyAfter);
-    entries.push({
-      transactionId: txnId,
-      bucket: 'monthly',
-      delta: -fromMonthly,
-      balanceAfter: monthlyAfter,
-    });
-  }
-
-  if (fromTopup > 0) {
-    const updated = await User.findOneAndUpdate(
-      { _id: input.userId, [TOPUP_FIELD]: { $gte: fromTopup } },
-      { $inc: { [TOPUP_FIELD]: -fromTopup } },
-      { new: true, projection: { [TOPUP_FIELD]: 1 } },
-    );
-    if (!updated) {
-      // Top-up shrank mid-charge. Refund the monthly portion we already took
-      // so the user isn't stranded with a half-charge.
-      if (fromMonthly > 0) {
-        await User.updateOne(
-          { _id: input.userId },
-          { $inc: { [MONTHLY_FIELD]: fromMonthly } },
-        ).catch(() => {});
+      const combined = user.monthlyCreditsBalance + user.creditsBalance;
+      if (combined < input.amount) {
+        throw ApiError.badRequest(
+          `Insufficient credits. This action requires ${input.amount} credit${
+            input.amount === 1 ? '' : 's'
+          }. You have ${combined}.`,
+        );
       }
-      throw ApiError.badRequest('Credit balance changed during charge; please retry.');
-    }
-    topupAfter = updated.creditsBalance;
-    const txnId = await writeLedger(input, 'topup', 'debit', -fromTopup, topupAfter);
-    entries.push({
-      transactionId: txnId,
-      bucket: 'topup',
-      delta: -fromTopup,
-      balanceAfter: topupAfter,
-    });
-  }
 
-  return {
-    totalAfter: monthlyAfter + topupAfter,
-    monthlyAfter,
-    topupAfter,
-    entries,
-  };
+      const fromMonthly = Math.min(input.amount, user.monthlyCreditsBalance);
+      const fromTopup = input.amount - fromMonthly;
+      const entries: LedgerEntry[] = [];
+
+      let monthlyAfter = user.monthlyCreditsBalance;
+      let topupAfter = user.creditsBalance;
+
+      if (fromMonthly > 0) {
+        const updated = await User.findOneAndUpdate(
+          { _id: input.userId, [MONTHLY_FIELD]: { $gte: fromMonthly } },
+          { $inc: { [MONTHLY_FIELD]: -fromMonthly } },
+          { new: true, projection: { [MONTHLY_FIELD]: 1 }, session },
+        );
+        if (!updated) {
+          throw ApiError.badRequest('Credit balance changed during charge; please retry.');
+        }
+        monthlyAfter = updated.monthlyCreditsBalance;
+        const txnId = await writeLedger(input, 'monthly', 'debit', -fromMonthly, monthlyAfter, session);
+        entries.push({ transactionId: txnId, bucket: 'monthly', delta: -fromMonthly, balanceAfter: monthlyAfter });
+      }
+
+      if (fromTopup > 0) {
+        const updated = await User.findOneAndUpdate(
+          { _id: input.userId, [TOPUP_FIELD]: { $gte: fromTopup } },
+          { $inc: { [TOPUP_FIELD]: -fromTopup } },
+          { new: true, projection: { [TOPUP_FIELD]: 1 }, session },
+        );
+        if (!updated) {
+          // Transaction will roll back the monthly portion automatically;
+          // no manual refund needed (the previous hand-rolled compensation
+          // is now obsolete).
+          throw ApiError.badRequest('Credit balance changed during charge; please retry.');
+        }
+        topupAfter = updated.creditsBalance;
+        const txnId = await writeLedger(input, 'topup', 'debit', -fromTopup, topupAfter, session);
+        entries.push({ transactionId: txnId, bucket: 'topup', delta: -fromTopup, balanceAfter: topupAfter });
+      }
+
+      result = { totalAfter: monthlyAfter + topupAfter, monthlyAfter, topupAfter, entries };
+    });
+    logger.info('[credits] charge succeeded', {
+      userId: String(input.userId),
+      reason: input.reason,
+      amount: input.amount,
+      totalAfter: result.totalAfter,
+    });
+    return result;
+  } finally {
+    await session.endSession();
+  }
 }
 
 /**
  * Credit a specific bucket. Used for refunds, top-ups, and subscription
  * renewals. The caller decides which wallet to fund.
+ *
+ * Transactional: the User balance update and the matching CreditTransaction
+ * row are written in a single Mongoose transaction. A ledger failure rolls
+ * back the balance change so we never have credits added without a record,
+ * or a record without a balance change.
  */
 export async function grantCredits(input: GrantInput): Promise<GrantResult> {
   if (input.amount <= 0) {
@@ -196,24 +203,40 @@ export async function grantCredits(input: GrantInput): Promise<GrantResult> {
   }
 
   const field = fieldFor(input.bucket);
-  const updated = await User.findByIdAndUpdate(
-    input.userId,
-    { $inc: { [field]: input.amount } },
-    { new: true, projection: { [field]: 1 } },
-  );
-  if (!updated) throw ApiError.notFound('User not found');
+  const session = await mongoose.startSession();
+  try {
+    let result: GrantResult = { balanceAfter: 0, transactionId: '', bucket: input.bucket };
+    await session.withTransaction(async () => {
+      const updated = await User.findByIdAndUpdate(
+        input.userId,
+        { $inc: { [field]: input.amount } },
+        { new: true, projection: { [field]: 1 }, session },
+      );
+      if (!updated) throw ApiError.notFound('User not found');
 
-  const balanceAfter =
-    input.bucket === 'monthly' ? updated.monthlyCreditsBalance : updated.creditsBalance;
-  const transactionId = await writeLedger(
-    input,
-    input.bucket,
-    'credit',
-    input.amount,
-    balanceAfter,
-  );
-
-  return { balanceAfter, transactionId, bucket: input.bucket };
+      const balanceAfter =
+        input.bucket === 'monthly' ? updated.monthlyCreditsBalance : updated.creditsBalance;
+      const transactionId = await writeLedger(
+        input,
+        input.bucket,
+        'credit',
+        input.amount,
+        balanceAfter,
+        session,
+      );
+      result = { balanceAfter, transactionId, bucket: input.bucket };
+    });
+    logger.info('[credits] grant succeeded', {
+      userId: String(input.userId),
+      reason: input.reason,
+      bucket: input.bucket,
+      amount: input.amount,
+      balanceAfter: result.balanceAfter,
+    });
+    return result;
+  } finally {
+    await session.endSession();
+  }
 }
 
 /**
@@ -240,81 +263,58 @@ export async function renewSubscriptionIfDue(
   const now = new Date();
   const dueAt = user.subscriptionRenewsAt;
 
-  // If there's no renewal timestamp yet (new user, or plan never set),
-  // seed one now so the next read has a deadline to compare against.
-  if (!dueAt) {
-    const plan = planConfig(user.plan as PlanTier);
-    const next = new Date(now.getTime() + MONTH_MS);
-    // Atomic upgrade: set the monthly balance up to the allowance only
-    // if it's less, never clobbering a higher manual grant.
-    const updated = await User.findByIdAndUpdate(
-      userId,
-      {
-        $max: { monthlyCreditsBalance: plan.monthlyCredits },
-        $set: { subscriptionRenewsAt: next },
-      },
-      { new: true, projection: { monthlyCreditsBalance: 1, subscriptionRenewsAt: 1 } },
-    );
-    if (!updated) throw ApiError.notFound('User not found');
-    if (plan.monthlyCredits > 0) {
-      await writeLedger(
-        {
-          userId,
-          reason: 'subscription.renewal',
-          description: `Seeded ${plan.label} allowance (${plan.monthlyCredits}/mo)`,
-        },
-        'monthly',
-        'credit',
-        plan.monthlyCredits,
-        updated.monthlyCreditsBalance,
-      ).catch(() => {});
-    }
-    return {
-      renewed: true,
-      monthlyAfter: updated.monthlyCreditsBalance,
-      renewsAt: updated.subscriptionRenewsAt,
-    };
-  }
-
-  if (now < dueAt) {
+  if (dueAt && now < dueAt) {
     return { renewed: false, monthlyAfter: user.monthlyCreditsBalance, renewsAt: dueAt };
   }
 
-  // Renewal due. Reset monthly bucket to allowance (not $inc — this is
-  // use-it-or-lose-it) and advance the renewsAt.
   const plan = planConfig(user.plan as PlanTier);
   const next = new Date(now.getTime() + MONTH_MS);
-  const updated = await User.findByIdAndUpdate(
-    userId,
-    {
-      $set: {
-        [MONTHLY_FIELD]: plan.monthlyCredits,
-        subscriptionRenewsAt: next,
-      },
-    },
-    { new: true, projection: { monthlyCreditsBalance: 1, subscriptionRenewsAt: 1 } },
-  );
-  if (!updated) throw ApiError.notFound('User not found');
+  const seeding = !dueAt;
 
-  if (plan.monthlyCredits > 0) {
-    await writeLedger(
-      {
-        userId,
-        reason: 'subscription.renewal',
-        description: `Monthly renewal — ${plan.label} (${plan.monthlyCredits}/mo)`,
-      },
-      'monthly',
-      'credit',
-      plan.monthlyCredits,
-      updated.monthlyCreditsBalance,
-    ).catch(() => {});
+  const session = await mongoose.startSession();
+  try {
+    let monthlyAfter = user.monthlyCreditsBalance;
+    let renewsAt: Date | undefined;
+    await session.withTransaction(async () => {
+      const update = seeding
+        ? {
+            $max: { monthlyCreditsBalance: plan.monthlyCredits },
+            $set: { subscriptionRenewsAt: next },
+          }
+        : {
+            // Renewal — reset bucket (use-it-or-lose-it), advance renewsAt.
+            $set: { [MONTHLY_FIELD]: plan.monthlyCredits, subscriptionRenewsAt: next },
+          };
+      const updated = await User.findByIdAndUpdate(userId, update, {
+        new: true,
+        projection: { monthlyCreditsBalance: 1, subscriptionRenewsAt: 1 },
+        session,
+      });
+      if (!updated) throw ApiError.notFound('User not found');
+      monthlyAfter = updated.monthlyCreditsBalance;
+      renewsAt = updated.subscriptionRenewsAt;
+
+      if (plan.monthlyCredits > 0) {
+        await writeLedger(
+          {
+            userId,
+            reason: 'subscription.renewal',
+            description: seeding
+              ? `Seeded ${plan.label} allowance (${plan.monthlyCredits}/mo)`
+              : `Monthly renewal — ${plan.label} (${plan.monthlyCredits}/mo)`,
+          },
+          'monthly',
+          'credit',
+          plan.monthlyCredits,
+          updated.monthlyCreditsBalance,
+          session,
+        );
+      }
+    });
+    return { renewed: true, monthlyAfter, renewsAt };
+  } finally {
+    await session.endSession();
   }
-
-  return {
-    renewed: true,
-    monthlyAfter: updated.monthlyCreditsBalance,
-    renewsAt: updated.subscriptionRenewsAt,
-  };
 }
 
 /**
@@ -330,32 +330,44 @@ export async function subscribeToPlan(
   const now = new Date();
   const next = new Date(now.getTime() + MONTH_MS);
 
-  const updated = await User.findByIdAndUpdate(
-    userId,
-    {
-      $set: {
-        plan,
-        [MONTHLY_FIELD]: cfg.monthlyCredits,
-        subscriptionRenewsAt: next,
-        planExpiresAt: cfg.priceUsd === 0 ? undefined : next,
-      },
-    },
-    { new: true, projection: { monthlyCreditsBalance: 1, subscriptionRenewsAt: 1 } },
-  );
-  if (!updated) throw ApiError.notFound('User not found');
+  const session = await mongoose.startSession();
+  try {
+    let monthlyAfter = 0;
+    await session.withTransaction(async () => {
+      const updated = await User.findByIdAndUpdate(
+        userId,
+        {
+          $set: {
+            plan,
+            [MONTHLY_FIELD]: cfg.monthlyCredits,
+            subscriptionRenewsAt: next,
+            planExpiresAt: cfg.priceUsd === 0 ? undefined : next,
+          },
+        },
+        { new: true, projection: { monthlyCreditsBalance: 1, subscriptionRenewsAt: 1 }, session },
+      );
+      if (!updated) throw ApiError.notFound('User not found');
+      monthlyAfter = updated.monthlyCreditsBalance;
 
-  await writeLedger(
-    {
-      userId,
-      reason: 'subscription.change',
-      description: `Subscribed to ${cfg.label} — ${cfg.monthlyCredits}/mo`,
-      metadata: { plan, monthlyCredits: cfg.monthlyCredits },
-    },
-    'monthly',
-    'credit',
-    cfg.monthlyCredits,
-    updated.monthlyCreditsBalance,
-  ).catch(() => {});
-
-  return { monthlyAfter: updated.monthlyCreditsBalance, renewsAt: next };
+      if (cfg.monthlyCredits > 0) {
+        await writeLedger(
+          {
+            userId,
+            reason: 'subscription.change',
+            description: `Subscribed to ${cfg.label} — ${cfg.monthlyCredits}/mo`,
+            metadata: { plan, monthlyCredits: cfg.monthlyCredits },
+          },
+          'monthly',
+          'credit',
+          cfg.monthlyCredits,
+          updated.monthlyCreditsBalance,
+          session,
+        );
+      }
+    });
+    logger.info('[credits] plan change applied', { userId: String(userId), plan, monthlyAfter });
+    return { monthlyAfter, renewsAt: next };
+  } finally {
+    await session.endSession();
+  }
 }
