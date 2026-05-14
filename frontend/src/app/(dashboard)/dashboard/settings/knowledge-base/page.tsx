@@ -15,6 +15,7 @@ import {
   PrimaryButton,
   GhostButton,
 } from '@/components/settings/primitives';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 /* ─────────────────────────────────────────────────────────────────
  * Knowledge base — house style.
@@ -125,9 +126,15 @@ export default function KnowledgeBaseSettingsPage() {
     onSuccess: () => {
       toast.success('Entry removed.');
       qc.invalidateQueries({ queryKey: ['knowledge-base', workspaceId] });
+      setDeleteTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to delete.'),
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete.');
+      setDeleteTarget(null);
+    },
   });
+
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   function openAdd() {
     setEditing(null);
@@ -215,10 +222,11 @@ export default function KnowledgeBaseSettingsPage() {
                       <EditGlyph />
                     </button>
                     <button
-                      onClick={() => deleteMutation.mutate(entry._id)}
+                      onClick={() => setDeleteTarget({ id: entry._id, name: entry.title })}
                       disabled={deleteMutation.isPending}
                       className="p-2 text-[color:var(--ink-3)] hover:text-[color:var(--warn)] transition disabled:opacity-60"
                       title="Delete"
+                      aria-label={`Delete knowledge-base entry ${entry.title}`}
                     >
                       <TrashGlyph />
                     </button>
@@ -332,6 +340,16 @@ export default function KnowledgeBaseSettingsPage() {
           </div>
         </>
       )}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(next) => { if (!next) setDeleteTarget(null); }}
+        title="Delete this entry?"
+        description="The agent will lose this context on its next run. This cannot be undone."
+        itemName={deleteTarget?.name}
+        confirmLabel="Delete entry"
+        loading={deleteMutation.isPending}
+        onConfirm={() => { if (deleteTarget) deleteMutation.mutate(deleteTarget.id); }}
+      />
     </div>
   );
 }

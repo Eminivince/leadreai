@@ -11,6 +11,7 @@ import {
   SectionHead,
   PrimaryButton,
 } from '@/components/settings/primitives';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 /**
  * API keys — press credentials.
@@ -80,9 +81,17 @@ export default function ApiKeysSettingsPage() {
     onSuccess: () => {
       toast.success('Credential revoked.');
       qc.invalidateQueries({ queryKey: ['api-keys', workspaceId] });
+      setRevokeTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to revoke.'),
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to revoke.');
+      setRevokeTarget(null);
+    },
   });
+
+  // Target row for the revoke-confirmation modal. Holds id+name so the modal
+  // can show which key is about to die.
+  const [revokeTarget, setRevokeTarget] = useState<{ id: string; name: string } | null>(null);
 
   return (
     <div className="flex flex-col gap-14">
@@ -194,10 +203,11 @@ export default function ApiKeysSettingsPage() {
                     {k.lastUsedAt ? `used ${new Date(k.lastUsedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : 'never used'}
                   </span>
                   <button
-                    onClick={() => revokeMutation.mutate(k._id)}
+                    onClick={() => setRevokeTarget({ id: k._id, name: k.name })}
                     disabled={revokeMutation.isPending}
                     className="p-2 text-[color:var(--ink-3)] hover:text-[color:var(--warn)] transition disabled:opacity-60"
                     title="Revoke"
+                    aria-label={`Revoke API key ${k.name}`}
                   >
                     <TrashGlyph />
                   </button>
@@ -207,6 +217,16 @@ export default function ApiKeysSettingsPage() {
           )}
         </div>
       </section>
+      <ConfirmDialog
+        open={revokeTarget !== null}
+        onOpenChange={(next) => { if (!next) setRevokeTarget(null); }}
+        title="Revoke this API key?"
+        description="Any service still using this key will stop working immediately. This cannot be undone."
+        itemName={revokeTarget?.name}
+        confirmLabel="Revoke key"
+        loading={revokeMutation.isPending}
+        onConfirm={() => { if (revokeTarget) revokeMutation.mutate(revokeTarget.id); }}
+      />
     </div>
   );
 }

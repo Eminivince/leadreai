@@ -12,6 +12,7 @@ import {
   SectionHead,
   PrimaryButton,
 } from '@/components/settings/primitives';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 /**
  * Suppression list — emails and domains the engine must never contact.
@@ -99,9 +100,15 @@ export default function SuppressionSettingsPage() {
     onSuccess: () => {
       toast.success('Removed.');
       qc.invalidateQueries({ queryKey: ['suppression', workspaceId] });
+      setRemoveTarget(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to remove.'),
+    onError: (err) => {
+      toast.error(err instanceof Error ? err.message : 'Failed to remove.');
+      setRemoveTarget(null);
+    },
   });
+
+  const [removeTarget, setRemoveTarget] = useState<{ id: string; name: string } | null>(null);
 
   return (
     <div className="flex flex-col gap-14">
@@ -209,10 +216,11 @@ export default function SuppressionSettingsPage() {
                     })}
                   </span>
                   <button
-                    onClick={() => removeMutation.mutate(entry._id)}
+                    onClick={() => setRemoveTarget({ id: entry._id, name: entry.email ?? entry.domain ?? entry._id })}
                     disabled={removeMutation.isPending}
                     className="p-2 text-[color:var(--ink-3)] hover:text-[color:var(--warn)] transition disabled:opacity-60"
                     title="Remove"
+                    aria-label={`Remove suppression entry ${entry.email ?? entry.domain ?? ''}`}
                   >
                     <TrashGlyph />
                   </button>
@@ -222,6 +230,16 @@ export default function SuppressionSettingsPage() {
           )}
         </div>
       </section>
+      <ConfirmDialog
+        open={removeTarget !== null}
+        onOpenChange={(next) => { if (!next) setRemoveTarget(null); }}
+        title="Remove from suppression list?"
+        description="This address/domain will become contactable again. Add it back if outreach was paused for a reason."
+        itemName={removeTarget?.name}
+        confirmLabel="Remove"
+        loading={removeMutation.isPending}
+        onConfirm={() => { if (removeTarget) removeMutation.mutate(removeTarget.id); }}
+      />
     </div>
   );
 }
