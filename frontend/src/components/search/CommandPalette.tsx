@@ -65,6 +65,19 @@ type Row = {
  section: 'jump' | 'leads' | 'jobs' | 'files' | 'campaigns';
 };
 
+import { SETTINGS_SECTIONS } from '@/components/settings/sections';
+
+const SETTINGS_JUMPS: Array<{ label: string; href: string; keywords: string[] }> =
+ SETTINGS_SECTIONS.map((s) => ({
+  label: `Settings — ${s.label}`,
+  href: s.href,
+  keywords: [
+   ...s.label.toLowerCase().split(/\s+/),
+   s.group,
+   'settings',
+  ],
+ }));
+
 const JUMP_ITEMS: Array<{ label: string; href: string; keywords: string[] }> = [
  { label: 'The desk (dispatches)',   href: '/dashboard',               keywords: ['home', 'dispatches', 'desk', 'dashboard'] },
  { label: 'Leads archive',       href: '/dashboard/leads',            keywords: ['leads', 'archive'] },
@@ -72,13 +85,7 @@ const JUMP_ITEMS: Array<{ label: string; href: string; keywords: string[] }> = [
  { label: 'Library',          href: '/dashboard/library',           keywords: ['library', 'documents', 'pdf', 'upload', 'rag'] },
  { label: 'Campaigns',         href: '/dashboard/campaigns',          keywords: ['campaigns', 'outreach', 'sequences'] },
  { label: 'Integrations (The Wire)',  href: '/dashboard/integrations',         keywords: ['integrations', 'wire', 'hubspot', 'slack', 'crm'] },
- { label: 'Settings — Account',     href: '/dashboard/settings/account',       keywords: ['account', 'profile', 'settings'] },
- { label: 'Settings — Workspace',    href: '/dashboard/settings/workspace',      keywords: ['workspace', 'desk', 'settings'] },
- { label: 'Settings — Team',      href: '/dashboard/settings/team',        keywords: ['team', 'members', 'masthead'] },
- { label: 'Settings — Knowledge base', href: '/dashboard/settings/knowledge-base',   keywords: ['knowledge', 'base', 'house', 'style'] },
- { label: 'Settings — Suppression',   href: '/dashboard/settings/suppression',     keywords: ['suppression', 'blocklist', 'block'] },
- { label: 'Settings — API keys',    href: '/dashboard/settings/api-keys',      keywords: ['api', 'keys', 'press', 'credentials'] },
- { label: 'Settings — Billing & usage', href: '/dashboard/settings/billing',       keywords: ['billing', 'credits', 'plan', 'subscription'] },
+ ...SETTINGS_JUMPS,
  { label: 'Pricing page',        href: '/pricing',                keywords: ['pricing', 'plans'] },
 ];
 

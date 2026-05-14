@@ -1,209 +1,99 @@
 'use client';
 
 import Link from 'next/link';
+import {
+ SETTINGS_GROUPS,
+ sectionsByGroup,
+ planBadgeStyle,
+} from '@/components/settings/sections';
 
 /* ─────────────────────────────────────────────────────────────────
- * Settings index — the table of contents.
+ * Settings index — grouped overview.
+ *
+ * Reads from the same canonical registry the sidebar uses. Renders
+ * each group as a card with its sections as compact rows. No more
+ * 14 flat siblings; no more drift between layout and index.
  * ───────────────────────────────────────────────────────────────── */
 
-function UserIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
+function Chevron() {
  return (
-  <svg viewBox="0 0 24 24" fill="none" className={className}>
-   <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-   <path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
- );
-}
-
-function WorkspaceIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
- return (
-  <svg viewBox="0 0 24 24" fill="none" className={className}>
-   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-   <path d="M9 22V12h6v10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
- );
-}
-
-function TeamIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
- return (
-  <svg viewBox="0 0 24 24" fill="none" className={className}>
-   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-   <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-   <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
- );
-}
-
-function KnowledgeIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
- return (
-  <svg viewBox="0 0 24 24" fill="none" className={className}>
-   <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
- );
-}
-
-function SuppressionIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
- return (
-  <svg viewBox="0 0 24 24" fill="none" className={className}>
-   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-   <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
- );
-}
-
-function KeyIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
- return (
-  <svg viewBox="0 0 24 24" fill="none" className={className}>
-   <circle cx="7.5" cy="15.5" r="4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-   <path d="M21 2l-9.6 9.6M15.5 7.5 19 11l2.5-2.5L18 5l3-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
- );
-}
-
-function BillingIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
- return (
-  <svg viewBox="0 0 24 24" fill="none" className={className}>
-   <rect x="1" y="4" width="22" height="16" rx="2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-   <path d="M1 10h22" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
- );
-}
-
-function EmailIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
- return (
-  <svg viewBox="0 0 24 24" fill="none" className={className}>
-   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-   <path d="M22 6l-10 7L2 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
- );
-}
-
-function ContextIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
- return (
-  <svg viewBox="0 0 24 24" fill="none" className={className}>
-   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-   <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
- );
-}
-
-function IntegrationsIcon({ className = 'w-4.5 h-4.5' }: { className?: string }) {
- return (
-  <svg viewBox="0 0 24 24" fill="none" className={className}>
-   <path d="M9 2v6m6-6v6M5 12h14m-9 4v6m4-6v6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-   <rect x="5" y="8" width="14" height="8" rx="2" stroke="currentColor" strokeWidth="1.6" />
-  </svg>
- );
-}
-
-type EntryIcon = 'account' | 'workspace' | 'team' | 'knowledge' | 'suppression' | 'api-keys' | 'billing' | 'email' | 'context' | 'integrations';
-
-function EntryIconComponent({ icon, className }: { icon: EntryIcon; className?: string }) {
- switch (icon) {
-  case 'account':      return <UserIcon className={className} />;
-  case 'workspace':    return <WorkspaceIcon className={className} />;
-  case 'team':         return <TeamIcon className={className} />;
-  case 'knowledge':    return <KnowledgeIcon className={className} />;
-  case 'suppression':  return <SuppressionIcon className={className} />;
-  case 'api-keys':     return <KeyIcon className={className} />;
-  case 'billing':      return <BillingIcon className={className} />;
-  case 'email':        return <EmailIcon className={className} />;
-  case 'context':      return <ContextIcon className={className} />;
-  case 'integrations': return <IntegrationsIcon className={className} />;
- }
-}
-
-const ENTRIES: Array<{ href: string; label: string; description: string; icon: EntryIcon }> = [
- {
-  href: '/dashboard/settings/account',
-  label: 'Account',
-  description: 'Your profile — name shown on searches and outreach drafts. Password and session controls.',
-  icon: 'account',
- },
- {
-  href: '/dashboard/settings/workspace',
-  label: 'Workspace',
-  description: 'Rename the workspace. Toggle defaults: notification on complete, export format, thrift mode.',
-  icon: 'workspace',
- },
- {
-  href: '/dashboard/settings/team',
-  label: 'Team',
-  description: 'Who sits on this desk. Roles and seats. Invitations forthcoming.',
-  icon: 'team',
- },
- {
-  href: '/dashboard/library',
-  label: 'Context',
-  description: 'Documents the agent reads on every search — pitch decks, ICP notes, case studies. Upload once; every dispatch uses them.',
-  icon: 'context',
- },
- {
-  href: '/dashboard/integrations',
-  label: 'Integrations',
-  description: 'CRM, email senders, and outbound webhooks. Connect HubSpot, Gmail, Zapier, or any HTTP endpoint.',
-  icon: 'integrations',
- },
- {
-  href: '/dashboard/settings/email',
-  label: 'Email & replies',
-  description: 'Connect your sending domain so prospect replies land in the campaign dashboard automatically.',
-  icon: 'email',
- },
- {
-  href: '/dashboard/settings/knowledge-base',
-  label: 'Knowledge base',
-  description: 'Teach the agent about your company, value proposition, tone — it writes better drafts.',
-  icon: 'knowledge',
- },
- {
-  href: '/dashboard/settings/suppression',
-  label: 'Suppression list',
-  description: 'Emails and domains the engine must never contact. Add competitors, unsubscribes, and sensitive accounts.',
-  icon: 'suppression',
- },
- {
-  href: '/dashboard/settings/api-keys',
-  label: 'API keys',
-  description: 'Credentials for programmatic access. Generate, copy once, revoke any time.',
-  icon: 'api-keys',
- },
- {
-  href: '/dashboard/settings/billing',
-  label: 'Billing & usage',
-  description: 'Plan, credits balance, and the ledger. Manage subscription and seat count.',
-  icon: 'billing',
- },
-];
-
-function ChevronRight() {
- return (
-  <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 text-[color:var(--ink-3)]">
-   <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5 text-[color:var(--ink-3)]">
+   <path
+    d="M6 4l4 4-4 4"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+   />
   </svg>
  );
 }
 
 export default function SettingsIndexPage() {
+ const byGroup = sectionsByGroup();
+
  return (
-  <div className="flex flex-col gap-3">
-   {ENTRIES.map((e) => (
-    <Link
-     key={e.href}
-     href={e.href}
-     className="group bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-xl p-4 flex items-center gap-4 hover:border-[color:var(--forest)]/40 hover:shadow-sm transition-all"
-    >
-     <div className="w-10 h-10 rounded-xl bg-[color:var(--paper-3)] border border-[color:var(--rule)] flex items-center justify-center shrink-0 text-[color:var(--ink-2)] group-hover:text-[color:var(--ink)] transition-colors">
-      <EntryIconComponent icon={e.icon} className="w-[18px] h-[18px]" />
-     </div>
-     <div className="flex-1 min-w-0">
-      <div className="text-[14px] font-semibold text-[color:var(--ink)]">{e.label}</div>
-      <div className="text-[12.5px] text-[color:var(--ink-3)] mt-0.5 truncate">{e.description}</div>
-     </div>
-     <ChevronRight />
-    </Link>
-   ))}
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+   {SETTINGS_GROUPS.map((g) => {
+    const items = byGroup.get(g.key) ?? [];
+    if (items.length === 0) return null;
+    return (
+     <section
+      key={g.key}
+      className="bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-xl overflow-hidden flex flex-col"
+     >
+      {/* Group header */}
+      <header className="px-5 pt-4 pb-3 border-b border-[color:var(--rule)]">
+       <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+        {g.label}
+       </div>
+       <p className="mt-1 text-[12.5px] text-[color:var(--ink-2)] leading-snug">
+        {g.lede}
+       </p>
+      </header>
+
+      {/* Sections list */}
+      <ul className="divide-y divide-[color:var(--rule)]">
+       {items.map((s) => {
+        const badge = planBadgeStyle(s.badge ?? null);
+        const Icon = s.icon;
+        return (
+         <li key={s.href}>
+          <Link
+           href={s.href}
+           className="group flex items-start gap-3 px-5 py-3 transition-colors hover:bg-[color:var(--paper-2)]"
+          >
+           <span className="mt-0.5 w-7 h-7 rounded-md bg-[color:var(--paper-2)] border border-[color:var(--rule)] flex items-center justify-center shrink-0 text-[color:var(--ink-2)] group-hover:text-[color:var(--ink)] transition-colors">
+            <Icon className="w-[15px] h-[15px]" />
+           </span>
+           <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+             <span className="text-[13.5px] font-semibold text-[color:var(--ink)]">
+              {s.label}
+             </span>
+             {badge && (
+              <span
+               className={`shrink-0 inline-flex items-center px-1.5 h-[16px] rounded border text-[9.5px] tracking-[0.04em] font-medium uppercase ${badge.cls}`}
+              >
+               {badge.label}
+              </span>
+             )}
+            </div>
+            <div className="text-[12px] text-[color:var(--ink-3)] mt-0.5 leading-snug">
+             {s.lede}
+            </div>
+           </div>
+           <span className="mt-1 opacity-60 group-hover:opacity-100 transition-opacity">
+            <Chevron />
+           </span>
+          </Link>
+         </li>
+        );
+       })}
+      </ul>
+     </section>
+    );
+   })}
   </div>
  );
 }

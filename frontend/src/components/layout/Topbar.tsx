@@ -6,6 +6,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { NotificationDropdown } from './NotificationDropdown';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { CreditsChip } from '@/components/shared/CreditsChip';
+import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 
 const ROUTE_MAP: Record<string, string> = {
  '/dashboard':       'Dashboard',
@@ -67,6 +68,10 @@ export function Topbar() {
      {title}
     </span>
    )}
+
+   {/* Workspace switcher (Task #25) — sits next to the title so the
+       active workspace identity is always visible without a click. */}
+   <WorkspaceSwitcher />
 
    {/* Date — subtle */}
    <span className="hidden md:block ml-auto text-[12.5px] text-[color:var(--ink-3)]">

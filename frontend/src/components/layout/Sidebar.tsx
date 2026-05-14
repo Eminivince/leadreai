@@ -10,6 +10,7 @@ import { useCredits } from '@/hooks/useCredits';
 import { clearTokens } from '@/lib/auth';
 import { apiFetch } from '@/lib/api';
 import { planConfig } from '@leadreai/shared';
+import { SETTINGS_SECTIONS } from '@/components/settings/sections';
 
 interface NavItem {
  key: string;
@@ -22,9 +23,8 @@ interface NavItem {
 
 // PRIMARY = the find → email flow. Four items, in order of use:
 // Dashboard (compose) → Leads (output) → Campaigns (outreach) →
-// Tables (separate research workflow). Files moved INTO Leads
-// as a tab. Workflows moved INTO Tables as a tab. Library +
-// Integrations moved into Settings as configuration.
+// Tables (separate research workflow). Files lives under Leads as
+// a tab; Workflows lives under Tables as a tab.
 const PRIMARY: NavItem[] = [
  { key: 'home',   label: 'Dashboard', href: '/dashboard' },
  { key: 'leads',   label: 'Leads',   href: '/dashboard/leads' },
@@ -32,24 +32,26 @@ const PRIMARY: NavItem[] = [
  { key: 'tables',  label: 'Tables',   href: '/dashboard/tables' },
 ];
 
+// Settings children mirror the canonical registry — no drift.
+const SETTINGS_NAV_CHILDREN: NavItem[] = SETTINGS_SECTIONS.map((s) => ({
+ key: `settings-${s.href.split('/').pop() ?? s.label.toLowerCase()}`,
+ label: s.label,
+ href: s.href,
+}));
+
+// SECONDARY = supporting surfaces. Library (Context docs) and
+// Integrations (HubSpot/Slack/webhooks) are first-class features
+// — not settings — so they sit as their own entries here rather
+// than nested under Settings.
 const SECONDARY: NavItem[] = [
- { key: 'analytics',  label: 'Analytics',   href: '#', soon: true },
+ { key: 'library',     label: 'Library',     href: '/dashboard/library' },
+ { key: 'integrations', label: 'Integrations', href: '/dashboard/integrations' },
+ { key: 'analytics',   label: 'Analytics',   href: '#', soon: true },
  {
   key: 'settings',
   label: 'Settings',
   href: '/dashboard/settings',
-  children: [
-   { key: 'settings-account',     label: 'Account',          href: '/dashboard/settings/account' },
-   { key: 'settings-workspace',   label: 'Workspace',        href: '/dashboard/settings/workspace' },
-   { key: 'settings-team',        label: 'Team',             href: '/dashboard/settings/team' },
-   { key: 'settings-email',       label: 'Email',            href: '/dashboard/settings/email' },
-   { key: 'settings-integrations',label: 'Integrations',     href: '/dashboard/integrations' },
-   { key: 'settings-context',     label: 'Context',          href: '/dashboard/library' },
-   { key: 'settings-kb',          label: 'Knowledge base',   href: '/dashboard/settings/knowledge-base' },
-   { key: 'settings-suppress',    label: 'Suppression list', href: '/dashboard/settings/suppression' },
-   { key: 'settings-api',         label: 'API keys',         href: '/dashboard/settings/api-keys' },
-   { key: 'settings-billing',     label: 'Billing & usage',  href: '/dashboard/settings/billing' },
-  ],
+  children: SETTINGS_NAV_CHILDREN,
  },
 ];
 

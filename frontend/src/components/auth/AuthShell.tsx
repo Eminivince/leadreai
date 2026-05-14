@@ -269,6 +269,128 @@ function MagicLinkAction({ prefillEmail }: { prefillEmail: string }) {
  );
 }
 
+/* ── SSO discovery action ───────────────────────────────────
+ * Mirrors MagicLinkAction's state machine. Inline link expands
+ * into an email field, posts to /auth/saml/discover, then redirects
+ * the browser to the workspace's IdP entrypoint. A 404 from the API
+ * means "no SSO configured for this domain" — we surface that as a
+ * friendly nudge back to password / Google sign-in.
+ * ────────────────────────────────────────────────────────────── */
+function SsoAction({ prefillEmail }: { prefillEmail: string }) {
+ const [stage, setStage] = useState<'link' | 'form' | 'redirecting' | 'error'>('link');
+ const [email, setEmail] = useState('');
+ const [working, setWorking] = useState(false);
+ const [message, setMessage] = useState<string | null>(null);
+
+ useEffect(() => {
+  if (stage === 'link' && prefillEmail && prefillEmail !== email) {
+   setEmail(prefillEmail);
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [prefillEmail, stage]);
+
+ async function discover() {
+  if (!email.trim() || working) return;
+  setWorking(true);
+  setMessage(null);
+  try {
+   const url = `${API_BASE}/api/v1/auth/saml/discover?email=${encodeURIComponent(email.trim())}`;
+   const res = await fetch(url, { credentials: 'include' });
+   if (res.status === 404) {
+    setMessage('No SSO is configured for this email. Try password or Google sign-in.');
+    setStage('error');
+    return;
+   }
+   if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as
+     | { error?: { message?: string } }
+     | null;
+    throw new Error(body?.error?.message ?? 'Could not start SSO.');
+   }
+   const json = (await res.json()) as { data?: { loginUrl?: string } };
+   const loginUrl = json.data?.loginUrl;
+   if (!loginUrl) throw new Error('Discovery returned no login URL.');
+   setStage('redirecting');
+   window.location.href = `${API_BASE}${loginUrl}`;
+  } catch (err) {
+   setMessage(err instanceof Error ? err.message : 'Could not start SSO.');
+   setStage('error');
+  } finally {
+   setWorking(false);
+  }
+ }
+
+ if (stage === 'redirecting') {
+  return (
+   <span className="text-[12px] text-[#6b7280]">Redirecting to your IdP&hellip;</span>
+  );
+ }
+
+ if (stage === 'error') {
+  return (
+   <div className="flex-1 min-w-[240px] text-right">
+    <p className="text-[12.5px] text-[#dc2626] leading-[1.5]">
+     {message ?? 'Could not start SSO.'}
+    </p>
+    <button
+     type="button"
+     onClick={() => setStage('form')}
+     className="mt-1 text-[12px] text-[#111827] underline underline-offset-[4px]"
+    >
+     Try a different email
+    </button>
+   </div>
+  );
+ }
+
+ if (stage === 'form') {
+  return (
+   <div className="flex items-center gap-2 flex-1 min-w-[280px] justify-end">
+    <input
+     type="email"
+     value={email}
+     onChange={(e) => setEmail(e.target.value)}
+     onKeyDown={(e) => {
+      if (e.key === 'Enter') {
+       e.preventDefault();
+       void discover();
+      }
+     }}
+     placeholder="you@company.com"
+     autoFocus
+     className="flex-1 bg-[color:var(--paper)] border border-[#e5e7eb] rounded-lg px-3 py-1.5 text-[13px] text-[#111827] placeholder:text-[#9ca3af] outline-none focus:border-[#f59e0b] focus:ring-2 focus:ring-[#f59e0b]/10 transition-all"
+    />
+    <button
+     type="button"
+     onClick={() => void discover()}
+     disabled={working || !email.trim()}
+     className="text-[12px] font-semibold text-[#f59e0b] hover:text-[#d97706] disabled:opacity-60 shrink-0"
+    >
+     {working ? 'Checking…' : 'Continue'}
+    </button>
+    <button
+     type="button"
+     onClick={() => setStage('link')}
+     className="text-[12px] text-[#6b7280] hover:text-[#111827] shrink-0"
+     aria-label="Cancel"
+    >
+     ✕
+    </button>
+   </div>
+  );
+ }
+
+ return (
+  <button
+   type="button"
+   onClick={() => setStage('form')}
+   className="text-[12px] text-[#9ca3af] hover:text-[#6b7280] transition-colors"
+  >
+   SSO / SAML →
+  </button>
+ );
+}
+
 /* ── Password strength ──────────────────────────────────────── */
 function strengthOf(pw: string): number {
  let s = 0;
@@ -754,12 +876,7 @@ export function AuthShell({
       {/* Secondary paths */}
       <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
        <MagicLinkAction prefillEmail={email} />
-       <a
-        href="#"
-        className="text-[12px] text-[#9ca3af] hover:text-[#6b7280] transition-colors"
-       >
-        SSO / SAML →
-       </a>
+       <SsoAction prefillEmail={email} />
       </div>
      </form>
     </div>

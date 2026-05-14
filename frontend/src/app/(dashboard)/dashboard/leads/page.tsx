@@ -10,6 +10,7 @@ import { apiFetch } from '@/lib/api';
 import { getAccessToken } from '@/lib/auth';
 import type { ApiResponse, Lead, LeadFileSummary, ProspectingJob, OutputSchemaColumn, FactValue } from '@leadreai/shared';
 import { PageHelp } from '@/components/ui/PageHelp';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Pagination } from '@/components/shared/Pagination';
 import { SectionTabs } from '@/components/shared/SectionTabs';
 
@@ -864,6 +865,27 @@ export default function LeadsPage() {
     onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to create file.'),
   });
 
+  // Bulk suppression (Task #27). Mode picker lets the agency pick
+  // email-only (target individual reachout), domain-only (blanket the
+  // whole org), or both.
+  const [suppressOpen, setSuppressOpen] = useState(false);
+  const [suppressMode, setSuppressMode] = useState<'email' | 'domain' | 'both'>('email');
+
+  const bulkSuppressMutation = useMutation({
+    mutationFn: async ({ leadIds, mode }: { leadIds: string[]; mode: 'email' | 'domain' | 'both' }) =>
+      apiFetch<ApiResponse<{ suppressed: number }>>(
+        `/api/v1/workspaces/${workspaceId}/leads/bulk-suppress`,
+        { method: 'POST', body: JSON.stringify({ leadIds, mode }) },
+      ),
+    onSuccess: (res) => {
+      toast.success(`Suppressed ${res.data.suppressed} entr${res.data.suppressed === 1 ? 'y' : 'ies'}.`);
+      setSuppressOpen(false);
+      setSelected(new Set());
+      void qc.invalidateQueries({ queryKey: ['suppression', workspaceId] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to suppress.'),
+  });
+
   const leadsPath = jobId
     ? `/api/v1/workspaces/${workspaceId}/leads?limit=200&isDuplicate=false&jobId=${jobId}`
     : `/api/v1/workspaces/${workspaceId}/leads?limit=200&isDuplicate=false`;
@@ -1203,6 +1225,18 @@ export default function LeadsPage() {
               Export CSV
             </button>
 
+            {/* Bulk suppress (Task #27) — adds every selected lead's
+                primary email + domain to the workspace suppression
+                list. Behind a confirm because it's effectively
+                irreversible: removing from suppression doesn't
+                automatically re-engage a paused sequence. */}
+            <button
+              onClick={() => setSuppressOpen(true)}
+              className="flex items-center gap-1.5 text-[12.5px] font-medium text-[color:var(--paper)]/80 hover:text-[color:var(--paper)] transition"
+            >
+              Suppress
+            </button>
+
             <div className="w-px h-5 bg-[color:var(--paper)]/20" />
             <button
               onClick={() => setSelected(new Set())}
@@ -1362,6 +1396,23 @@ export default function LeadsPage() {
       )}
 
       <LeadDrawer lead={drawerLead} schema={schema} onClose={() => setDrawerId(null)} />
+
+      {/* Bulk suppress confirm (Task #27) */}
+      <ConfirmDialog
+        open={suppressOpen}
+        onOpenChange={setSuppressOpen}
+        title={`Suppress ${selCount} lead${selCount === 1 ? '' : 's'}?`}
+        description="Adds the primary email and/or domain of each selected lead to your suppression list. Suppressed addresses are skipped on every send — including in-flight sequences. Removing from suppression later does not auto-resume."
+        itemName={`Mode: ${suppressMode}`}
+        confirmLabel="Suppress"
+        loading={bulkSuppressMutation.isPending}
+        onConfirm={() =>
+          bulkSuppressMutation.mutate({
+            leadIds: Array.from(selected),
+            mode: suppressMode,
+          })
+        }
+      />
     </div>
   );
 }

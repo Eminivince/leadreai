@@ -37,6 +37,12 @@ interface StatsResponse {
     totalLeads: number; draftsCreated: number; sent: number;
     opened: number; replied: number; bounced: number;
   };
+  replyClassification?: {
+    positive: number;
+    ooo: number;
+    bounce: number;
+    unknown: number;
+  };
 }
 
 function ArrowEast({ className = 'w-3 h-3' }: { className?: string }) {
@@ -189,7 +195,7 @@ export default function CampaignDetailPage() {
     );
   }
 
-  const { campaign, sequence, enrollments, perStep, campaignStats } = data.data;
+  const { campaign, sequence, enrollments, perStep, campaignStats, replyClassification } = data.data;
 
   return (
     <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10 animate-fade-up">
@@ -277,6 +283,22 @@ export default function CampaignDetailPage() {
           {enrollments.stopped > 0 ? `${enrollments.stopped} stopped · ` : ''}
           {enrollments.total === 0 && 'Not activated yet — enroll leads from the campaigns index.'}
         </p>
+
+        {replyClassification &&
+        (replyClassification.positive +
+          replyClassification.ooo +
+          replyClassification.bounce +
+          replyClassification.unknown) > 0 ? (
+          <div className="mt-4 flex items-center gap-2 flex-wrap">
+            <span className="font-mono text-[10.5px] tracking-[0.06em] text-[color:var(--ink-3)]">
+              replies by class:
+            </span>
+            <ClassChip label="positive" count={replyClassification.positive} tone="positive" />
+            <ClassChip label="OOO" count={replyClassification.ooo} tone="neutral" />
+            <ClassChip label="bounce" count={replyClassification.bounce} tone="warn" />
+            <ClassChip label="unknown" count={replyClassification.unknown} tone="neutral" />
+          </div>
+        ) : null}
       </Section>
 
       {/* Per-step sequence */}
@@ -366,5 +388,37 @@ function StepCount({ label, n, tone = 'muted' }: { label: string; n: number; ton
         {label}
       </div>
     </div>
+  );
+}
+
+/**
+ * Reply classification chip (Task #26). Three tones so the eye picks
+ * positives apart from bounces at a glance — but no semantic colour
+ * for OOO/unknown since those are reads-needed-by-human bins.
+ */
+function ClassChip({
+  label,
+  count,
+  tone,
+}: {
+  label: string;
+  count: number;
+  tone: 'positive' | 'warn' | 'neutral';
+}) {
+  const map = {
+    positive:
+      'border-[color:var(--forest)]/40 bg-[color:var(--forest)]/[0.08] text-[color:var(--forest-2,#3b6e44)]',
+    warn:
+      'border-[color:var(--warn)]/40 bg-[color:var(--warn)]/[0.06] text-[color:var(--warn)]',
+    neutral:
+      'border-[color:var(--rule)] bg-[color:var(--paper-2)] text-[color:var(--ink-2)]',
+  } as const;
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 font-mono text-[10.5px] tracking-[0.04em] tabular-nums ${map[tone]}`}
+    >
+      <span>{label}</span>
+      <span className="font-semibold">{count}</span>
+    </span>
   );
 }
