@@ -22,7 +22,10 @@ WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@9 --activate
 
-# System libs required for Chromium on Alpine
+# System libs required for Chromium on Alpine. We do NOT install curl
+# because workers don't expose an HTTP surface for HEALTHCHECK — the
+# orchestrator should rely on liveness via process exit code (which our
+# uncaughtException/unhandledRejection handlers preserve).
 RUN apk add --no-cache \
   chromium \
   nss \
@@ -31,19 +34,26 @@ RUN apk add --no-cache \
   ca-certificates \
   ttf-freefont
 
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
-COPY shared/package.json ./shared/
-COPY workers/package.json ./workers/
-COPY tsconfig.base.json ./
+RUN chown -R node:node /app
 
+COPY --chown=node:node pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY --chown=node:node shared/package.json ./shared/
+COPY --chown=node:node workers/package.json ./workers/
+COPY --chown=node:node tsconfig.base.json ./
+
+# --prod drops the build toolchain from the runtime image. Playwright +
+# tsc + eslint are devDependencies; the actual workers only need
+# bullmq/ioredis/mongoose/etc at runtime.
 RUN pnpm install --frozen-lockfile --prod
 
-COPY --from=builder /app/shared/dist ./shared/dist
-COPY --from=builder /app/workers/dist ./workers/dist
+COPY --from=builder --chown=node:node /app/shared/dist ./shared/dist
+COPY --from=builder --chown=node:node /app/workers/dist ./workers/dist
 
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 RUN chromium-browser --version || chromium --version
+
+USER node
 
 CMD ["node", "workers/dist/index.js"]

@@ -20,18 +20,36 @@ RUN pnpm --filter @leadreai/backend build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+# curl is used by HEALTHCHECK below; deliberately install before user
+# switch so the runtime user can't add packages.
+RUN apk add --no-cache curl
+
 RUN corepack enable && corepack prepare pnpm@9 --activate
 
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
-COPY shared/package.json ./shared/
-COPY backend/package.json ./backend/
-COPY tsconfig.base.json ./
+# Non-root runtime user. Node's default 'node' user (uid 1000) already
+# exists on this base image; reuse it for ownership of /app.
+RUN chown -R node:node /app
 
+COPY --chown=node:node pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY --chown=node:node shared/package.json ./shared/
+COPY --chown=node:node backend/package.json ./backend/
+COPY --chown=node:node tsconfig.base.json ./
+
+# Production-only install — drops devDependencies (tsc, eslint, prettier,
+# vitest, etc.) and ~halves the image footprint.
 RUN pnpm install --frozen-lockfile --prod
 
-COPY --from=builder /app/shared/dist ./shared/dist
-COPY --from=builder /app/backend/dist ./backend/dist
+COPY --from=builder --chown=node:node /app/shared/dist ./shared/dist
+COPY --from=builder --chown=node:node /app/backend/dist ./backend/dist
+
+USER node
 
 EXPOSE 4000
+
+# Orchestrator-agnostic healthcheck — k8s + ECS + Docker Swarm all read
+# HEALTHCHECK directives. Hits /ready (not /health) so a Mongo or Redis
+# outage flips the container to unhealthy and the LB removes it.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD curl -fsS http://localhost:4000/ready || exit 1
 
 CMD ["node", "backend/dist/index.js"]
