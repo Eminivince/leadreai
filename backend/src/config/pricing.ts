@@ -46,6 +46,14 @@ export interface EmbeddingPricing {
   per1MTokens: number;
 }
 
+export interface EmailSendPricing {
+  /** Per-message provider fee — amortized across Resend / SendGrid / Gmail.
+   *  Gmail OAuth is technically free for app-level sends but we still emit
+   *  an event so daily-cap analytics + send-rate dashboards work regardless
+   *  of provider mix. */
+  perSend: number;
+}
+
 /**
  * LLM models we route through. Match the canonical `provider/model` slug
  * the caller passes to `callLlm`. Unknown models fall back to
@@ -89,6 +97,14 @@ export const SCRAPE_PRICING: ScrapePricing = {
 export const EMBEDDING_PRICING: EmbeddingPricing = {
   per1MTokens: 0.02, // text-embedding-3-small rate
 };
+
+export const EMAIL_SEND_PRICING: Record<string, EmailSendPricing> = {
+  resend:   { perSend: 0.0004 }, // ~$0.40 / 1k transactional (Resend pay-as-you-go)
+  sendgrid: { perSend: 0.0008 }, // SendGrid Essentials tier amortized
+  gmail:    { perSend: 0.0000 }, // user's own Google Workspace quota — no per-send fee
+  smtp:     { perSend: 0.0000 }, // self-hosted; cost rolled into infra
+};
+export const UNKNOWN_EMAIL_PRICING: EmailSendPricing = { perSend: 0.0010 };
 
 /**
  * Compute LLM cost from token counts. Returns `{ totalUSD, priceSnapshot }`
@@ -136,4 +152,9 @@ export function computeScrapeCost(): { totalUSD: number; priceSnapshot: ScrapePr
 export function computeEmbeddingCost(tokens: number): { totalUSD: number; priceSnapshot: EmbeddingPricing } {
   const totalUSD = (tokens / 1_000_000) * EMBEDDING_PRICING.per1MTokens;
   return { totalUSD, priceSnapshot: EMBEDDING_PRICING };
+}
+
+export function computeEmailSendCost(provider: string): { totalUSD: number; priceSnapshot: EmailSendPricing } {
+  const pricing = EMAIL_SEND_PRICING[provider] ?? UNKNOWN_EMAIL_PRICING;
+  return { totalUSD: pricing.perSend, priceSnapshot: pricing };
 }

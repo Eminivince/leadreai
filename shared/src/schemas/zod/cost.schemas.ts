@@ -17,6 +17,7 @@ export const COST_CATEGORIES = [
   'transcription', // per-minute audio transcription
   'scrape',        // per-call Playwright/headless render
   'embedding',     // per-token embedding calls (Library ingest, read_document)
+  'email_send',    // per-outbound email (Resend/SendGrid/Gmail/SMTP)
 ] as const;
 
 export const CostCategorySchema = z.enum(COST_CATEGORIES);

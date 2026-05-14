@@ -13,6 +13,9 @@ import SequenceEnrollment from '../models/SequenceEnrollment.js';
 import { SuppressionEntry } from '../models/SuppressionList.js';
 import type { ICampaign } from '../models/Campaign.js';
 import type { ISequenceDoc } from '../models/Sequence.js';
+import { preflightEmailProvider } from './email/preflight.js';
+import { ApiError } from '../utils/ApiError.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Pure transform from the wizard's create-campaign payload into the input
@@ -149,6 +152,31 @@ export async function activateCampaign(params: {
   sequence: ISequenceDoc;
 }): Promise<ActivateResult> {
   const { workspaceId, enrolledBy, campaign, sequence } = params;
+
+  // Credential preflight — verify the workspace email provider actually
+  // accepts our key before we enroll anyone. The pre-fix flow let
+  // activation succeed with stale credentials; users would see "Campaign
+  // active" then 0 sends until the next manual reconnect. Now we fail
+  // loud at activation, surface the provider's reason, and let the user
+  // fix the credential first.
+  const wsForPreflight = await Workspace.findById(workspaceId)
+    .select('+emailConfig.apiKey +emailConfig.smtpPass +emailConfig.gmail.refreshToken +emailConfig.gmail.accessToken')
+    .lean();
+  if (!wsForPreflight?.emailConfig) {
+    throw ApiError.badRequest('Workspace has no email config — connect a sender before activating.');
+  }
+  const preflight = await preflightEmailProvider(wsForPreflight.emailConfig);
+  if (!preflight.ok) {
+    logger.warn('[activateCampaign] email preflight failed — refusing activation', {
+      workspaceId: String(workspaceId),
+      campaignId: String(campaign._id),
+      provider: preflight.provider,
+      reason: preflight.reason,
+    });
+    throw ApiError.badRequest(
+      `Email provider preflight failed (${preflight.provider}): ${preflight.reason ?? 'unknown error'}. Reconnect the sender and try again.`,
+    );
+  }
 
   const [file, suppression] = await Promise.all([
     File.findOne({ _id: campaign.fileId, workspaceId }).lean(),

@@ -31,6 +31,7 @@ const CATEGORY_LABEL: Record<CostCategory, string> = {
  transcription: 'Transcription',
  scrape: 'Page scrape',
  embedding: 'Embeddings',
+ email_send: 'Email send',
 };
 
 export function JobCostCard({ workspaceId, jobId, frozen = false }: JobCostCardProps) {

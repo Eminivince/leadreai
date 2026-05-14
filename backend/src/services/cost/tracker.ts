@@ -8,6 +8,7 @@ import {
   computeTranscriptionCost,
   computeScrapeCost,
   computeEmbeddingCost,
+  computeEmailSendCost,
 } from '../../config/pricing.js';
 import { logger } from '../../utils/logger.js';
 
@@ -128,4 +129,12 @@ export async function recordEmbeddingCost(
 ): Promise<void> {
   const { totalUSD, priceSnapshot } = computeEmbeddingCost(tokens);
   await write('embedding', provider, ctx, totalUSD, { input: tokens }, priceSnapshot as unknown as Record<string, number>, model);
+}
+
+export async function recordEmailSendCost(
+  provider: string, // 'resend' | 'sendgrid' | 'gmail' | 'smtp'
+  ctx: BaseContext,
+): Promise<void> {
+  const { totalUSD, priceSnapshot } = computeEmailSendCost(provider);
+  await write('email_send', provider, ctx, totalUSD, { count: 1 }, priceSnapshot as unknown as Record<string, number>);
 }

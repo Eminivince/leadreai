@@ -3,6 +3,7 @@ import { Resend } from 'resend';
 import { decrypt } from '../../utils/encrypt.js';
 import { logger } from '../../utils/logger.js';
 import type { IEmailConfig } from '../../models/Workspace.js';
+import { recordEmailSendCost } from '../cost/tracker.js';
 
 export interface SendEmailOptions {
   to: string;
@@ -10,8 +11,11 @@ export interface SendEmailOptions {
   html: string;
   text?: string;
   unsubscribeUrl?: string;
-  /** Required for Gmail token refresh to persist the new access token. */
+  /** Required for Gmail token refresh + per-workspace cost attribution. */
   workspaceId?: string;
+  /** Optional campaign attribution — when set, the cost event carries
+   *  `campaignId` so the dashboard can report cost per campaign. */
+  campaignId?: string;
 }
 
 export interface SendEmailResult {
@@ -60,6 +64,13 @@ export async function sendEmailForWorkspace(
       logger.error('[emailService] Resend error', { error });
       throw new Error(error?.message ?? 'Resend: failed to send email');
     }
+    if (opts.workspaceId) {
+      void recordEmailSendCost('resend', {
+        workspaceId: opts.workspaceId,
+        campaignId: opts.campaignId,
+        meta: { messageId: data.id, to: opts.to },
+      });
+    }
     return { messageId: data.id };
   }
 
@@ -80,12 +91,19 @@ export async function sendEmailForWorkspace(
       ...(config.replyTo ? { replyTo: config.replyTo } : {}),
       ...(Object.keys(headers).length > 0 ? { headers } : {}),
     });
+    if (opts.workspaceId) {
+      void recordEmailSendCost('sendgrid', {
+        workspaceId: opts.workspaceId,
+        campaignId: opts.campaignId,
+        meta: { messageId: String(info.messageId), to: opts.to },
+      });
+    }
     return { messageId: String(info.messageId) };
   }
 
   if (config.provider === 'gmail') {
     const { sendViaGmail } = await import('../../controllers/gmail.controller.js');
-    const gmailCfg = (config as any).gmail as { accessToken?: string; refreshToken?: string; expiresAt?: Date } | undefined;
+    const gmailCfg = (config as unknown as { gmail?: { accessToken?: string; refreshToken?: string; expiresAt?: Date } }).gmail;
     if (!gmailCfg?.accessToken) throw new Error('Gmail not configured for this workspace');
     const messageId = await sendViaGmail(
       { accessToken: gmailCfg.accessToken, refreshToken: gmailCfg.refreshToken, expiresAt: gmailCfg.expiresAt },
@@ -99,6 +117,13 @@ export async function sendEmailForWorkspace(
         replyTo: config.replyTo,
       },
     );
+    if (opts.workspaceId) {
+      void recordEmailSendCost('gmail', {
+        workspaceId: opts.workspaceId,
+        campaignId: opts.campaignId,
+        meta: { messageId, to: opts.to },
+      });
+    }
     return { messageId };
   }
 
@@ -120,6 +145,13 @@ export async function sendEmailForWorkspace(
       ...(config.replyTo ? { replyTo: config.replyTo } : {}),
       ...(Object.keys(headers).length > 0 ? { headers } : {}),
     });
+    if (opts.workspaceId) {
+      void recordEmailSendCost('smtp', {
+        workspaceId: opts.workspaceId,
+        campaignId: opts.campaignId,
+        meta: { messageId: String(info.messageId), to: opts.to },
+      });
+    }
     return { messageId: String(info.messageId) };
   }
 
