@@ -115,6 +115,13 @@ const envSchema = z.object({
   PAYSTACK_PLAN_CODE_GROWTH: z.string().optional(),
   PAYSTACK_CURRENCY: z.string().default('ngn'),
   PAYSTACK_NGN_RATE: z.coerce.number().default(1600),
+  // Sentry — when SENTRY_DSN is set we initialise the SDK at boot. Without
+  // it the init helpers are no-ops, so this is safe to leave unset in
+  // local dev. Release tag is optional; falls back to git SHA if injected
+  // by CI (`vercel build` and the GitHub Actions runner both expose this).
+  SENTRY_DSN: z.string().url().optional(),
+  SENTRY_RELEASE: z.string().optional(),
+  SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0.1),
 });
 
 const parsed = envSchema.safeParse(process.env);

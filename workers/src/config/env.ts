@@ -126,6 +126,11 @@ const envSchema = z.object({
   SANDBOX_IMAGE: z.string().default('leadreai-sandbox:latest'),
   SANDBOX_TIMEOUT_MS: z.coerce.number().int().min(5000).default(30_000),
   SANDBOX_MEMORY_MB: z.coerce.number().int().min(64).default(256),
+  // Sentry — mirror of backend env shape so the same DSN can be reused
+  // across services. When unset, the workers' sentry init is a no-op.
+  SENTRY_DSN: z.string().url().optional(),
+  SENTRY_RELEASE: z.string().optional(),
+  SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0.1),
 });
 
 const parsed = envSchema.safeParse(process.env);
