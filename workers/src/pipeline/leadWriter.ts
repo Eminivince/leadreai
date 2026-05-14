@@ -184,7 +184,7 @@ export async function writeLeads(
               companyDomain: lead.companyDomain,
               companyName: lead.companyName,
               websiteUrl: lead.website,
-              existingEmails: (lead.emails ?? []).map((e: any) => e.address),
+              existingEmails: (lead.emails ?? []).map((e: { address: string }) => e.address),
               ...(personaContext ? { personaContext } : {}),
               ...(roleKeywords && roleKeywords.length > 0 ? { roleKeywords } : {}),
             },

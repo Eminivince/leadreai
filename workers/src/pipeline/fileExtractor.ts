@@ -66,7 +66,7 @@ export interface ExtractedFileData {
 // Constants
 // ---------------------------------------------------------------------------
 
-const EMAIL_REGEX = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
+const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 const PHONE_REGEX = /\+?[\d][\d\s\-().]{6,18}[\d]/g;
 const MAX_BYTES = env.MAX_FILE_DOWNLOAD_SIZE_MB * 1024 * 1024;
 

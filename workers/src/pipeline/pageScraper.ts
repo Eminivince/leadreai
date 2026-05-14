@@ -28,7 +28,7 @@ function nextProxy(): { server: string; username?: string; password?: string } |
   return PROXIES[proxyIndex++ % PROXIES.length];
 }
 
-const EMAIL_REGEX = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
+const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 const PHONE_REGEX = /(?:\+?[\d]{1,3}[\s\-.])?(?:\([\d]{1,4}\)[\s\-.])?[\d]{3,5}[\s\-.][\d]{3,5}(?:[\s\-.][\d]{2,5})?/g;
 const FILE_EXT_REGEX = /\.(pdf|docx?|xlsx?)(\?[^"']*)?$/i;
 const SKIP_DOMAINS = ['linkedin.com', 'facebook.com', 'twitter.com', 'instagram.com', 'google.com'];

@@ -13,6 +13,10 @@ export interface LeadForOutreach {
   industry?: string;
   address?: { city?: string; country?: string; state?: string };
   socialProfiles?: { linkedinUrl?: string };
+  qualificationReason?: string;
+  agentReasoning?: string;
+  prospectingQuery?: string;
+  dynamicFields?: Record<string, unknown>;
 }
 
 export interface WorkspaceForOutreach {
@@ -23,6 +27,7 @@ export interface WorkspaceForOutreach {
 
 export interface CampaignForOutreach {
   name?: string;
+  goal?: string;
   outreachConfig?: { tone?: string; language?: string; channel?: string };
 }
 
@@ -86,6 +91,10 @@ function buildSystemPrompt(workspace: WorkspaceForOutreach, campaign: CampaignFo
 
   const aboutSender = kbEntries.length > 0 ? kbEntries : '(No knowledge base entries provided.)';
 
+  const goalSection = campaign.goal
+    ? `\n\nCAMPAIGN GOAL (use to set intent, do not quote verbatim):\n${campaign.goal}`
+    : '';
+
   return `You are a cold outreach personalization agent.
 
 RULES:
@@ -97,7 +106,7 @@ RULES:
 - Language: ${language}
 
 ABOUT THE SENDER:
-${aboutSender}
+${aboutSender}${goalSection}
 
 OUTPUT: Return ONLY valid JSON (no markdown, no explanation):
 {
@@ -126,6 +135,25 @@ function buildUserMessage(lead: LeadForOutreach, snippets: string[]): string {
       ? snippets.map((s) => `- ${s}`).join('\n')
       : 'No recent research available.';
 
+  const qualificationSection = lead.qualificationReason
+    ? `\n\nWHY THIS LEAD QUALIFIED:\n${lead.qualificationReason}`
+    : '';
+
+  const agentReasoningSection = lead.agentReasoning
+    ? `\n\nAGENT RESEARCH NOTES:\n${lead.agentReasoning}`
+    : '';
+
+  const prospectingSection = lead.prospectingQuery
+    ? `\n\nORIGINAL SEARCH BRIEF (use to anchor relevance, do not quote verbatim):\n${lead.prospectingQuery}`
+    : '';
+
+  const dynamicSection =
+    lead.dynamicFields && Object.keys(lead.dynamicFields).length > 0
+      ? `\n\nADDITIONAL FACTS:\n${Object.entries(lead.dynamicFields)
+          .map(([k, v]) => `- ${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`)
+          .join('\n')}`
+      : '';
+
   return `LEAD:
 Company: ${companyName}
 Domain: ${companyDomain}
@@ -135,7 +163,7 @@ Website: ${website}
 LinkedIn: ${linkedinUrl}
 
 RECENT RESEARCH (if available):
-${researchSection}
+${researchSection}${qualificationSection}${agentReasoningSection}${prospectingSection}${dynamicSection}
 
 Generate a personalized cold email for this lead.`;
 }

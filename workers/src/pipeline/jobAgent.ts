@@ -100,11 +100,10 @@ async function countLeadsForJob(jobId: string): Promise<number> {
 }
 
 async function queryLeadsForJob(jobId: string): Promise<LeadRecord[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const docs = await PollLeadModel.find({
     jobId: new mongoose.Types.ObjectId(jobId),
     isDuplicate: { $ne: true },
-  }).lean() as any[];
+  }).lean();
   return docs as unknown as LeadRecord[];
 }
 

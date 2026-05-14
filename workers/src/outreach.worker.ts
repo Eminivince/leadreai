@@ -121,12 +121,13 @@ async function processOutreachJob(job: Job, publisher: Redis): Promise<void> {
     leadCount: leadIds.length,
   });
 
-  // Load workspace and campaign once per job
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // Load workspace and campaign once per job. TODO(task #8): type as IWorkspaceLean / ICampaignLean.
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   const [workspace, campaign] = await Promise.all([
     Workspace.findById(workspaceId).select('settings knowledgeBase name').lean() as Promise<any>,
     Campaign.findById(campaignId).select('outreachConfig').lean() as Promise<any>,
   ]);
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   if (!workspace) {
     throw new Error(`Workspace not found: ${workspaceId}`);

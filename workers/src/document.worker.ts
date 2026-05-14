@@ -165,7 +165,7 @@ async function parseLocalBuffer(
   const CHUNK_SIZE = 2200;
   const CHUNK_OVERLAP = 200;
   const MAX_CHUNKS = 200;
-  const EMAIL_REGEX = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
+  const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
   const PHONE_REGEX = /\+?[\d][\d\s\-().]{6,18}[\d]/g;
 
   function chunkText(text: string, pageHint?: number): Array<{ idx: number; text: string; pageHint?: number }> {

@@ -229,14 +229,15 @@ export async function enrollLeads(req: Request, res: Response): Promise<void> {
     try {
       const result = await SequenceEnrollment.insertMany(docsToInsert, { ordered: false });
       enrolled = result.length;
-    } catch (err: any) {
+    } catch (err: unknown) {
       // ordered:false — Mongoose throws MongoBulkWriteError on partial failure
       // insertedDocs contains successfully inserted documents
-      if (Array.isArray(err?.insertedDocs)) {
-        enrolled = (err.insertedDocs as unknown[]).length;
-      } else if (err?.result?.insertedCount != null) {
-        enrolled = err.result.insertedCount as number;
-      } else if (err?.code === 11000 || err?.name === 'MongoBulkWriteError') {
+      const bulkErr = err as { insertedDocs?: unknown[]; result?: { insertedCount?: number }; code?: number; name?: string };
+      if (Array.isArray(bulkErr?.insertedDocs)) {
+        enrolled = bulkErr.insertedDocs.length;
+      } else if (bulkErr?.result?.insertedCount != null) {
+        enrolled = bulkErr.result.insertedCount;
+      } else if (bulkErr?.code === 11000 || bulkErr?.name === 'MongoBulkWriteError') {
         // Could not recover count — re-query to get the true enrolled count
         enrolled = await SequenceEnrollment.countDocuments({
           sequenceId,

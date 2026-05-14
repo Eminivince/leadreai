@@ -33,7 +33,6 @@ import type { LeadRecord } from '../pipeline/deduplicator.js';
 
 const SUBAGENT_QUEUE_PREFIX = `{bull}:leadreai:${env.NODE_ENV}`;
 const GATHER_TIMEOUT_MS = 300_000; // 5 min — subagents can take 3-4 min when rate-limited
-const POLL_INTERVAL_MS = 3_000;
 
 // ── Minimal Mongo models (same lazy-registration pattern as jobAgent.ts) ──────
 
@@ -51,19 +50,11 @@ const PJModel: mongoose.Model<any> =
   (mongoose.models['ProspectingJob'] as mongoose.Model<any> | undefined) ??
   mongoose.model('ProspectingJob', _pjSchema, 'prospectingjobs');
 
-async function countLeads(jobId: string): Promise<number> {
-  return LeadModel.countDocuments({
-    jobId: new mongoose.Types.ObjectId(jobId),
-    isDuplicate: { $ne: true },
-  });
-}
-
 async function queryLeads(jobId: string): Promise<LeadRecord[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const docs = await LeadModel.find({
     jobId: new mongoose.Types.ObjectId(jobId),
     isDuplicate: { $ne: true },
-  }).lean() as any[];
+  }).lean();
   return docs as unknown as LeadRecord[];
 }
 
@@ -298,11 +289,12 @@ async function callDiscovery(prompt: string): Promise<RawCandidate[]> {
   // and let the subagent search for a footprint downstream.
   const valid: RawCandidate[] = [];
   for (const c of candidateArray) {
-    if (typeof (c as any)?.name !== 'string' || (c as any).name.trim() === '') {
+    const entry = c as Record<string, unknown>;
+    const entryName = entry?.name;
+    if (typeof entryName !== 'string' || entryName.trim() === '') {
       logger.warn('[hybridDiscovery] skipping malformed candidate from LLM (no name)', { entry: c });
       continue;
     }
-    const entry = c as any;
     // Normalise domain: accept string, null, undefined, or empty string.
     // null/undefined/'' all become '' which the validator skips DNS for.
     const rawDomain = typeof entry.domain === 'string' ? entry.domain.trim() : '';
@@ -313,26 +305,29 @@ async function callDiscovery(prompt: string): Promise<RawCandidate[]> {
     // so a downstream subagent isn't misled by guesses.
     let likelyContact: HybridCandidate['likelyContact'];
     if (entry.likelyContact && typeof entry.likelyContact === 'object') {
-      const lcName = typeof entry.likelyContact.name === 'string'
-        ? entry.likelyContact.name.trim() : '';
+      const lc = entry.likelyContact as Record<string, unknown>;
+      const lcName = typeof lc.name === 'string' ? lc.name.trim() : '';
       if (lcName && lcName.split(/\s+/).filter(Boolean).length >= 2) {
         likelyContact = {
           name: lcName,
-          title: typeof entry.likelyContact.title === 'string'
-            ? entry.likelyContact.title.trim().slice(0, 120) : undefined,
-          sourceHint: typeof entry.likelyContact.sourceHint === 'string'
-            ? entry.likelyContact.sourceHint.trim().slice(0, 200) : undefined,
+          title: typeof lc.title === 'string' ? lc.title.trim().slice(0, 120) : undefined,
+          sourceHint: typeof lc.sourceHint === 'string' ? lc.sourceHint.trim().slice(0, 200) : undefined,
         };
       }
     }
+    const confidenceRaw = entry.confidence;
+    const confidence: 'high' | 'medium' | 'low' =
+      confidenceRaw === 'high' || confidenceRaw === 'medium' || confidenceRaw === 'low'
+        ? confidenceRaw
+        : 'medium';
     valid.push({
-      name: entry.name.trim(),
+      name: entryName.trim(),
       domain: hasDomain ? cleanDomain! : '',
       description: typeof entry.description === 'string' ? entry.description : '',
       fitReason: typeof entry.fitReason === 'string' ? entry.fitReason : '',
-      confidence: ['high', 'medium', 'low'].includes(entry.confidence) ? entry.confidence : 'medium',
+      confidence,
       signals: Array.isArray(entry.signals)
-        ? entry.signals.filter((s: unknown) => typeof s === 'string')
+        ? (entry.signals as unknown[]).filter((s): s is string => typeof s === 'string')
         : [],
       ...(hasDomain ? {} : { domainUnverified: true }),
       ...(likelyContact ? { likelyContact } : {}),

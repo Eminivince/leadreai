@@ -26,7 +26,7 @@ const NOISE_PREFIXES = [
   'security', 'cert', 'soc',
 ];
 
-const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 export async function detectEmails(
   domain: string,

@@ -3,6 +3,18 @@ import { Redis } from 'ioredis';
 import { logger } from '../utils/logger.js';
 import { callLlmOnce, isLlmConfigured } from '../utils/llmClient.js';
 import { env } from '../config/env.js';
+
+// Structural shape of leads consumed by qualification — accepts both LeadRecord
+// and raw Mongoose lean documents which carry the same fields.
+interface QualifierLead {
+  companyDomain?: string;
+  companyName?: string;
+  industry?: string;
+  address?: { city?: string; country?: string };
+  emails?: unknown[];
+  phones?: unknown[];
+  website?: string;
+}
 import type { ParsedIntent } from '@leadreai/shared';
 
 // ---------------------------------------------------------------------------
@@ -59,7 +71,7 @@ interface QualificationResult {
   qualificationReason: string;
 }
 
-function buildUserMessage(rawQuery: string, parsedIntent: ParsedIntent | null | undefined, leads: any[]): string {
+function buildUserMessage(rawQuery: string, parsedIntent: ParsedIntent | null | undefined, leads: QualifierLead[]): string {
   const industry = parsedIntent?.industry ?? 'unknown';
   const country = parsedIntent?.geography?.country ?? 'unknown';
   const city = parsedIntent?.geography?.city ?? 'unknown';
@@ -83,7 +95,7 @@ ${leadLines}`;
 // AI call helpers
 // ---------------------------------------------------------------------------
 
-async function qualifyBatch(rawQuery: string, parsedIntent: ParsedIntent | null | undefined, leads: any[]): Promise<QualificationResult[]> {
+async function qualifyBatch(rawQuery: string, parsedIntent: ParsedIntent | null | undefined, leads: QualifierLead[]): Promise<QualificationResult[]> {
   const defaultQualified: QualificationResult[] = leads.map((l) => ({
     companyDomain: l.companyDomain ?? 'unknown',
     qualificationStatus: 'qualified',
@@ -174,7 +186,7 @@ export async function runLeadQualifier(
   publisher: Redis,
 ): Promise<void> {
   // 1. Fetch all leads for this job
-  const leads = await Lead.find({ jobId: new mongoose.Types.ObjectId(jobId) }).lean();
+  const leads = (await Lead.find({ jobId: new mongoose.Types.ObjectId(jobId) }).lean()) as unknown as QualifierLead[];
   logger.info('[leadQualifier] Loaded leads for job', { jobId, count: leads.length });
 
   if (leads.length === 0) {
@@ -282,7 +294,7 @@ export async function runLeadQualifier(
   });
 
   // 6. Tally results
-  const qualified = leads.filter((l: any) => {
+  const qualified = leads.filter((l) => {
     const r = qualificationMap.get(l.companyDomain ?? 'unknown');
     return !r || r.qualificationStatus === 'qualified';
   }).length;

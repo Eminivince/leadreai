@@ -379,7 +379,7 @@ async function buildLeadRecord(
 export async function runSmartDiscovery(
   input: SmartDiscoveryInput,
 ): Promise<LeadRecord[]> {
-  const { parsedIntent, rawQuery, clarifications } = input;
+  const { parsedIntent, rawQuery } = input;
 
   // 1. Parallel searches
   const queries = buildSearchQueries(parsedIntent, rawQuery);

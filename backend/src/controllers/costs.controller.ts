@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 import ProspectingJob from '../models/ProspectingJob.js';
 import {
   computeJobCostBreakdown,
-  computeJobCostSummary,
   computeWorkspaceCost,
   exportWorkspaceCostCsv,
 } from '../services/cost/aggregator.js';

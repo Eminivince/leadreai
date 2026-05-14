@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import EmailEvent from '../models/EmailEvent.js';
 import SequenceEnrollment, { type ISequenceEnrollmentDoc } from '../models/SequenceEnrollment.js';
 import Sequence from '../models/Sequence.js';

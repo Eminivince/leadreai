@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import DataTable, { type IDataTableDoc } from '../../models/DataTable.js';
+import DataTable from '../../models/DataTable.js';
 import DataTableRow from '../../models/DataTableRow.js';
 import { getDataSource } from '../data-sources/registry.js';
 import { runDataSource } from '../data-sources/executor.js';

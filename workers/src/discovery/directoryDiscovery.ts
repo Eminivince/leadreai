@@ -41,9 +41,10 @@ const DIRECTORY_HOSTS = [
   'zigi.ng',
 ];
 
-/** Major Nigerian commercial hubs — used to fan-out queries when the brief
- *  doesn't pin a specific city. Directories index by city, so a Lagos query
- *  surfaces a different result set than a country-level query. */
+/** Major Nigerian commercial hubs — reserved for future per-city fan-out
+ *  when the brief doesn't pin a city. Not yet referenced; see tasks/todo.md
+ *  Sprint 4. */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const NIGERIA_HUBS = ['Lagos', 'Abuja', 'Port Harcourt'];
 
 const SERP_TIMEOUT_MS = 30_000;
