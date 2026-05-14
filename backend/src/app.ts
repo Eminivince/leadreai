@@ -1,11 +1,14 @@
-import express, { type Express } from 'express';
+import express, { type Express, type Request } from 'express';
 import mongoose from 'mongoose';
 import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { env } from './config/env.js';
+import { getRedis } from './config/redis.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { globalRateLimiter } from './middleware/rateLimiter.js';
+import { requestId } from './middleware/requestId.js';
+import { logger } from './utils/logger.js';
 import authRouter from './routes/auth.routes.js';
 import workspaceRouter from './routes/workspace.routes.js';
 import jobsRouter from './routes/jobs.routes.js';
@@ -43,6 +46,9 @@ import { notificationStream } from './sse/notificationStream.js';
 export function createApp(): Express {
   const app = express();
 
+  // Request ID has to be the FIRST middleware so even helmet/CORS failures
+  // emit a traceable response header.
+  app.use(requestId);
   app.use(helmet());
   app.use(cors({
     origin: env.FRONTEND_URL,
@@ -50,16 +56,50 @@ export function createApp(): Express {
   }));
   app.use(express.json({
     limit: '1mb',
-    verify: (req: any, _res, buf) => {
-      req.rawBody = buf;
+    verify: (req, _res, buf) => {
+      (req as Request).rawBody = buf;
     },
   }));
   app.use(cookieParser());
 
   app.use(globalRateLimiter);
 
+  // Liveness — answers "is this process running at all?" Always 200 unless
+  // the event loop is wedged. Used by Docker HEALTHCHECK + container
+  // orchestrators that want a heartbeat without exercising dependencies.
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  // Readiness — answers "can this process serve traffic right now?" Probes
+  // Mongo + Redis so a deploy doesn't get traffic before the connection
+  // pools are warm, and so a sick pod gets removed from the LB instead of
+  // silently swallowing requests. Returns 503 on any dependency failure so
+  // K8s/ECS readiness probes flip the pod out of rotation.
+  app.get('/ready', async (_req, res) => {
+    const checks: Record<string, 'ok' | { error: string }> = {};
+    try {
+      // Mongo: cheap "ping" via admin command. The Mongoose connection
+      // state covers most failures; the ping catches the case where the
+      // socket is open but the server is genuinely unreachable.
+      const db = mongoose.connection.db;
+      if (!db) throw new Error('Mongoose DB not initialized');
+      await db.admin().ping();
+      checks['mongo'] = 'ok';
+    } catch (err) {
+      checks['mongo'] = { error: err instanceof Error ? err.message : String(err) };
+    }
+    try {
+      const pong = await getRedis().ping();
+      checks['redis'] = pong === 'PONG' ? 'ok' : { error: `unexpected reply: ${pong}` };
+    } catch (err) {
+      checks['redis'] = { error: err instanceof Error ? err.message : String(err) };
+    }
+    const ready = Object.values(checks).every((v) => v === 'ok');
+    if (!ready) {
+      logger.warn('[/ready] dependency check failed', { checks });
+    }
+    res.status(ready ? 200 : 503).json({ status: ready ? 'ready' : 'unready', checks });
   });
 
   // OAuth callbacks must be top-level (no auth middleware, fixed URL for provider registration)

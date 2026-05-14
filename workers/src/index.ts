@@ -3,6 +3,7 @@ import { Queue } from 'bullmq';
 import mongoose from 'mongoose';
 import { logger } from './utils/logger.js';
 import { env } from './config/env.js';
+import { initSentry, captureException } from './lib/sentry.js';
 import { createProspectingWorker } from './prospecting.worker.js';
 import { createOutreachWorker } from './outreach.worker.js';
 import { createContactWorker } from './contact.worker.js';
@@ -116,7 +117,29 @@ async function cancelOrphanedJobs(): Promise<void> {
 // executed.
 import './services/data-sources/sources/index.js';
 
+// Process-level safety net for workers. Same rationale as backend: log,
+// give logger 100ms to flush, then let the orchestrator restart. A wedged
+// worker with an unhandled rejection silently failing jobs is worse than a
+// loud restart.
+process.on('uncaughtException', (err) => {
+  logger.error('[workers] uncaughtException — exiting', {
+    error: err.message,
+    stack: err.stack,
+  });
+  captureException(err, { source: 'uncaughtException' });
+  setTimeout(() => process.exit(1), 100);
+});
+process.on('unhandledRejection', (reason) => {
+  logger.error('[workers] unhandledRejection — exiting', {
+    reason: reason instanceof Error ? reason.message : String(reason),
+    stack: reason instanceof Error ? reason.stack : undefined,
+  });
+  captureException(reason, { source: 'unhandledRejection' });
+  setTimeout(() => process.exit(1), 100);
+});
+
 async function bootstrap() {
+  initSentry();
   // Dev pain-reliever: purge any stalled jobs from a previous process
   // before we attach fresh workers. Does nothing unless the env flag is
   // set and we're outside production.
