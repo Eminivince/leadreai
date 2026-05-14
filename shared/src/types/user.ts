@@ -13,7 +13,9 @@ export interface User {
   _id: string;
   email: string;
   firstName: string;
-  lastName: string;
+  // Optional — passwordless + social sign-ups may not capture a last
+  // name. Password register still enforces both.
+  lastName?: string;
   avatarUrl?: string;
   plan: PlanTier;
   planExpiresAt?: string;

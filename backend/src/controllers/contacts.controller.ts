@@ -28,10 +28,10 @@ export async function listContacts(req: Request, res: Response): Promise<void> {
     filter['leadId'] = new mongoose.Types.ObjectId(leadId);
   }
 
-  if (seniority && !SENIORITY_LEVELS.includes(seniority as any)) {
+  if (seniority && !(SENIORITY_LEVELS as readonly string[]).includes(seniority)) {
     throw ApiError.badRequest(`seniority must be one of: ${SENIORITY_LEVELS.join(', ')}`);
   }
-  if (department && !DEPARTMENTS.includes(department as any)) {
+  if (department && !(DEPARTMENTS as readonly string[]).includes(department)) {
     throw ApiError.badRequest(`department must be one of: ${DEPARTMENTS.join(', ')}`);
   }
 

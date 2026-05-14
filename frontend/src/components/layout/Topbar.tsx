@@ -1,61 +1,100 @@
 'use client';
 
+import React from 'react';
 import { usePathname } from 'next/navigation';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAppStore } from '@/store/useAppStore';
-import { useCredits } from '@/hooks/useCredits';
-import { Zap } from 'lucide-react';
+import { NotificationDropdown } from './NotificationDropdown';
+import { ThemeToggle } from '@/components/shared/ThemeToggle';
+import { CreditsChip } from '@/components/shared/CreditsChip';
+
+const ROUTE_MAP: Record<string, string> = {
+ '/dashboard':       'Dashboard',
+ '/dashboard/leads':    'Leads',
+ '/dashboard/campaigns':  'Campaigns',
+ '/dashboard/tables':    'Tables',
+ '/dashboard/workflows':  'Workflows',
+ '/dashboard/files':    'Files',
+ '/dashboard/library':   'Library',
+ '/dashboard/integrations': 'Integrations',
+ '/dashboard/settings':   'Settings',
+};
 
 function resolveTitle(pathname: string): string {
-  if (pathname === '/dashboard') return 'Dashboard';
-  if (pathname.startsWith('/dashboard/leads')) {
-    const segments = pathname.split('/').filter(Boolean);
-    if (segments.length === 3) return 'Lead Detail';
-    return 'Leads';
-  }
-  if (pathname.startsWith('/dashboard/campaigns')) {
-    const segments = pathname.split('/').filter(Boolean);
-    if (segments.length === 3) return 'Campaign Detail';
-    if (segments.length >= 4) return 'Draft Editor';
-    return 'Campaigns';
-  }
-  if (pathname.startsWith('/dashboard/settings/crm')) return 'CRM Integration';
-  if (pathname.startsWith('/dashboard/settings')) return 'Settings';
-  return 'Dashboard';
+ if (ROUTE_MAP[pathname]) return ROUTE_MAP[pathname];
+ for (const [prefix, label] of Object.entries(ROUTE_MAP)) {
+  if (pathname.startsWith(prefix + '/')) return label;
+ }
+ return '';
 }
 
-function getInitials(firstName?: string, lastName?: string) {
-  return `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase() || '?';
+function greeting(): string {
+ const h = new Date().getHours();
+ if (h < 12) return 'Good morning';
+ if (h < 17) return 'Good afternoon';
+ return 'Good evening';
 }
+
+function formatDate(d: Date = new Date()): string {
+ return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+const SearchIcon = () => (
+ <svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+  <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.75" />
+  <path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+ </svg>
+);
 
 export function Topbar() {
-  const pathname = usePathname();
-  const { user } = useAppStore();
-  const { data: credits } = useCredits();
-  const title = resolveTitle(pathname);
+ const pathname = usePathname();
+ const { user, openSearch } = useAppStore();
+ const title = resolveTitle(pathname);
+ const firstName = user?.firstName ?? '';
 
-  return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/50 bg-card/80 px-6 backdrop-blur">
-      <h1 className="text-sm font-semibold text-foreground">{title}</h1>
-      <div className="flex items-center gap-3">
-        {credits !== undefined && (
-          <div className="flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">
-            <Zap size={12} />
-            <span>{credits.creditsBalance.toLocaleString()}</span>
-          </div>
-        )}
-        {user?.plan && (
-          <Badge variant="indigo" className="capitalize">
-            {user.plan}
-          </Badge>
-        )}
-        <Avatar className="h-7 w-7">
-          <AvatarFallback className="text-xs">
-            {getInitials(user?.firstName, user?.lastName)}
-          </AvatarFallback>
-        </Avatar>
-      </div>
-    </header>
-  );
+ const [dateStr, setDateStr] = React.useState(() => formatDate());
+ const [greet, setGreet] = React.useState(() => greeting());
+
+ React.useEffect(() => {
+  const id = setInterval(() => { setDateStr(formatDate()); setGreet(greeting()); }, 60_000);
+  return () => clearInterval(id);
+ }, []);
+
+ return (
+  <div className="h-[52px] flex items-center gap-4 px-6 md:px-8">
+   {/* Page title */}
+   {title && (
+    <span className="text-[15px] font-semibold text-[color:var(--ink)] truncate">
+     {title}
+    </span>
+   )}
+
+   {/* Date — subtle */}
+   <span className="hidden md:block ml-auto text-[12.5px] text-[color:var(--ink-3)]">
+    {dateStr}
+   </span>
+
+   {/* Actions */}
+   <div className="flex items-center gap-0.5 ml-auto md:ml-0">
+    <button
+     onClick={() => openSearch?.()}
+     title="Search (⌘K)"
+     className="h-8 w-8 flex items-center justify-center rounded-lg text-[color:var(--ink-3)] hover:text-[color:var(--ink)] hover:bg-[color:var(--paper-3)] transition-all"
+    >
+     <SearchIcon />
+    </button>
+
+    <CreditsChip className="ml-1" />
+
+    <NotificationDropdown />
+
+    <ThemeToggle className="h-8 w-8" />
+
+    {firstName && (
+     <span className="hidden lg:inline ml-2 text-[13px] text-[color:var(--ink-2)]">
+      {greet}, <span className="font-semibold text-[color:var(--ink)]">{firstName}</span>.
+     </span>
+    )}
+   </div>
+  </div>
+ );
 }

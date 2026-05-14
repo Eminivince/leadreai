@@ -17,8 +17,9 @@ const enrollmentSchema = new Schema({
   nextStepAt: Date,
 }, { strict: false });
 
-const EnrollmentModel = mongoose.models['ENROLLMENT_SCHED'] as mongoose.Model<any> ??
-  mongoose.model('ENROLLMENT_SCHED', enrollmentSchema, 'sequenceenrollments');
+interface IEnrollmentLean { _id: mongoose.Types.ObjectId; currentStep: number; status?: string; nextStepAt?: Date }
+const EnrollmentModel = (mongoose.models['ENROLLMENT_SCHED'] as mongoose.Model<IEnrollmentLean> | undefined) ??
+  mongoose.model<IEnrollmentLean>('ENROLLMENT_SCHED', enrollmentSchema, 'sequenceenrollments');
 
 export function startSequenceScheduler(connection: Redis): { timer: NodeJS.Timeout; close: () => Promise<void> } {
   const queue = new Queue<SequenceStepPayload>('sequence-step', {
@@ -47,7 +48,7 @@ export function startSequenceScheduler(connection: Redis): { timer: NodeJS.Timeo
 
       logger.info(`[scheduler] Found ${dueEnrollments.length} due enrollments`);
 
-      const jobs = dueEnrollments.map((e: any) => ({
+      const jobs = dueEnrollments.map((e) => ({
         name: 'step' as const,
         data: { enrollmentId: String(e._id), stepNumber: e.currentStep as number },
         opts: {

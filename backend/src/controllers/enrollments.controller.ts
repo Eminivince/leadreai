@@ -40,7 +40,7 @@ export async function listEnrollments(req: Request, res: Response): Promise<void
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .populate('leadId', 'companyName companyDomain'),
+      .populate('leadId', 'companyName companyDomain emails'),
     SequenceEnrollment.countDocuments(filter),
   ]);
   res.json({ success: true, data: enrollments, total, page, limit });

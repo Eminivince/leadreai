@@ -108,6 +108,9 @@ export interface Lead {
   qualificationStatus: QualificationStatus;
   qualificationScore?: number;
   qualificationReason?: string;
+  /** Research agent's commit-time rationale — "why I'm emitting this lead".
+   *  Written by writeLead.ts from the agent's `reasoning` argument. */
+  agentReasoning?: string;
   tags: string[];
   notes?: string;
   contactIds?: string[];
@@ -119,6 +122,14 @@ export interface Lead {
       seniority: 'c_level' | 'vp' | 'director' | 'manager' | 'ic' | 'unknown';
     };
   };
+  /**
+   * Query-specific fact values keyed by the job's outputSchema column key
+   * (e.g. `amount_raised`, `funding_round`). See shared FactValue type.
+   * Absent for leads whose parent query didn't declare an outputSchema.
+   */
+  facts?: Record<string, import('../schemas/zod/job.schemas.js').FactValue>;
+  /** Fraction 0-1 of REQUIRED schema columns that have a value. */
+  schemaFulfillmentPct?: number;
   createdAt: string;
   updatedAt: string;
 }

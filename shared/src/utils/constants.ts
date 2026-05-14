@@ -11,7 +11,7 @@ export const JOB_STATUSES = [
 
 export const OUTREACH_CHANNELS = ['email', 'linkedin', 'sms'] as const;
 
-export const PLAN_TIERS = ['free', 'pro', 'enterprise'] as const;
+export const PLAN_TIERS = ['free', 'growth', 'enterprise'] as const;
 
 export const WORKSPACE_ROLES = ['owner', 'admin', 'member'] as const;
 

@@ -13,7 +13,7 @@ export interface FetchedPage {
 
 const FETCH_TIMEOUT_MS = 20_000;
 const MAX_TEXT = 6_000;
-const EMAIL_REGEX = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
+const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 
 export async function fetchUrl(url: string): Promise<FetchedPage> {
   const controller = new AbortController();

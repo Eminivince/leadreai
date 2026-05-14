@@ -64,6 +64,12 @@ export interface ILead extends mongoose.Document {
   qualificationStatus: QualificationStatus;
   qualificationScore?: number;
   qualificationReason?: string;
+  /** The agent's own justification for emitting this lead. Captured at
+   *  `write_lead` time as the `reasoning` argument the agent passes
+   *  alongside the lead payload. Complements `qualificationReason`
+   *  which is the post-hoc grader's verdict — `agentReasoning` is the
+   *  pre-commit "why I'm writing this" from the research agent itself. */
+  agentReasoning?: string;
   tags: string[];
   notes?: string;
   suppressedAt?: Date;
@@ -168,6 +174,7 @@ const leadSchema = new Schema<ILead>(
     qualificationStatus: { type: String, enum: QUALIFICATION_STATUSES, default: 'pending' },
     qualificationScore: { type: Number, min: 0, max: 1 },
     qualificationReason: { type: String },
+    agentReasoning: { type: String, maxlength: 2000 },
     tags: { type: [String], default: [] },
     notes: { type: String, maxlength: 5000 },
     suppressedAt: { type: Date },
@@ -208,7 +215,15 @@ leadSchema.index({ rankScore: -1 });
 leadSchema.index({ industry: 1 });
 leadSchema.index({ 'address.country': 1 });
 leadSchema.index({ companyName: 'text', description: 'text' });
-leadSchema.index({ workspaceId: 1, companyDomain: 1 }, { unique: true, sparse: true });
+// Unique on (workspaceId, companyDomain) but only for non-empty domains.
+// Sparse indexes don't actually help here — they include null and empty
+// strings in the unique check, which conflicts when multiple domain-less
+// leads (small SMEs / bukkas) need to coexist in the same workspace.
+// The partial filter excludes both empty strings and missing values.
+leadSchema.index(
+  { workspaceId: 1, companyDomain: 1 },
+  { unique: true, partialFilterExpression: { companyDomain: { $type: 'string', $gt: '' } } },
+);
 leadSchema.index({ workspaceId: 1, isDuplicate: 1, rankScore: -1 });
 leadSchema.index({ workspaceId: 1, qualificationStatus: 1 });
 

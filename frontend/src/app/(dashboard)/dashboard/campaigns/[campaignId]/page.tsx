@@ -1,501 +1,370 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Trash2, Plus, Zap, CheckCircle2, ChevronRight } from 'lucide-react';
-import { toast } from 'sonner';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import { EmptyState } from '@/components/shared/EmptyState';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useWorkspace } from '@/hooks/useWorkspace';
-import { useOutreachGeneration } from '@/hooks/useOutreachGeneration';
 import { apiFetch } from '@/lib/api';
-import type { Campaign, Lead, OutreachDraft } from '@leadreai/shared';
-import type { ApiResponse } from '@leadreai/shared';
+import type { ApiResponse, Campaign } from '@leadreai/shared';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+/* ─────────────────────────────────────────────────────────────────
+ * Campaign detail — analytics-first view of a saved + (optionally)
+ * activated campaign. Refreshed to match the rest of the redesigned
+ * dashboard: dot-pill status, mono tabular metrics, hairline rows,
+ * rounded-xl cards. Pause/resume controls available when applicable.
+ * ───────────────────────────────────────────────────────────────── */
 
-interface PagedPayload<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
+interface SequenceStepLite {
+  stepNumber: number;
+  channel: string;
+  delayDays: number;
+  useAI?: boolean;
+  goal?: string;
+  tone?: string;
+  emailTemplate?: { subject?: string; body?: string };
 }
 
-interface CampaignLeadsResponse {
-  success: true;
-  data: PagedPayload<Lead>;
+interface StatsResponse {
+  campaign: Campaign;
+  sequence: { _id: string; name: string; status: string; steps: SequenceStepLite[] } | null;
+  enrollments: {
+    active: number; paused: number; completed: number; stopped: number;
+    bounced: number; unsubscribed: number; replied: number; total: number;
+  };
+  perStep: Array<{ stepNumber: number; sent: number; bounced: number; replied: number }>;
+  campaignStats: {
+    totalLeads: number; draftsCreated: number; sent: number;
+    opened: number; replied: number; bounced: number;
+  };
 }
 
-interface AllLeadsResponse {
-  success: true;
-  data: Lead[];
-  total: number;
-}
-
-interface DraftsResponse {
-  success: true;
-  data: PagedPayload<OutreachDraft>;
-}
-
-// ─── Status badge helpers ─────────────────────────────────────────────────────
-
-const CAMPAIGN_STATUS_STYLES: Record<Campaign['status'], string> = {
-  draft: 'bg-muted text-muted-foreground border-border',
-  active: 'bg-green-500/15 text-green-400 border-green-500/30',
-  paused: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30',
-  completed: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-  archived: 'bg-muted text-muted-foreground border-border',
-};
-
-function CampaignStatusBadge({ status }: { status: Campaign['status'] }) {
+function ArrowEast({ className = 'w-3 h-3' }: { className?: string }) {
   return (
-    <span
-      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${CAMPAIGN_STATUS_STYLES[status]}`}
-    >
-      {status}
+    <svg viewBox="0 0 16 16" fill="none" className={className}>
+      <path d="M2 8h12M10 4l4 4-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/**
+ * Status pill — dot + lowercase mono. Same shape used on the
+ * campaigns list and dashboard. Active state pulses; everything
+ * else stays still.
+ */
+function StatusPill({ status }: { status: string }) {
+  const map: Record<string, { label: string; dot: string; text: string; border: string; pulse: boolean }> = {
+    active:    { label: 'active',    dot: 'bg-[color:var(--forest)]',   text: 'text-[color:var(--forest-2)]', border: 'border-[color:var(--forest)]/30 bg-[color:var(--forest)]/[0.06]', pulse: true },
+    paused:    { label: 'paused',    dot: 'bg-[color:var(--warn)]',     text: 'text-[color:var(--warn)]',     border: 'border-[color:var(--warn)]/30 bg-[color:var(--warn)]/[0.04]',    pulse: false },
+    draft:     { label: 'draft',     dot: 'bg-[color:var(--ink-3)]',    text: 'text-[color:var(--ink-2)]',    border: 'border-[color:var(--rule)] bg-[color:var(--paper-2)]',          pulse: false },
+    completed: { label: 'completed', dot: 'bg-[color:var(--ink-3)]',    text: 'text-[color:var(--ink-2)]',    border: 'border-[color:var(--rule)] bg-[color:var(--paper-2)]',          pulse: false },
+    archived:  { label: 'archived',  dot: 'bg-[color:var(--ink-3)]/60', text: 'text-[color:var(--ink-3)]',    border: 'border-[color:var(--rule)] bg-[color:var(--paper-2)]',          pulse: false },
+  };
+  const m = map[status] ?? map.draft!;
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-md border px-2 h-6 ${m.border}`}>
+      {m.pulse ? (
+        <span className="relative inline-flex">
+          <span className={`relative inline-block w-1.5 h-1.5 rounded-full ${m.dot}`} />
+          <span className={`absolute inset-0 inline-block w-1.5 h-1.5 rounded-full ${m.dot} opacity-60 animate-ping`} />
+        </span>
+      ) : (
+        <span className={`inline-block w-1.5 h-1.5 rounded-full ${m.dot}`} />
+      )}
+      <span className={`font-mono text-[10.5px] ${m.text}`}>{m.label}</span>
     </span>
   );
 }
 
-const DRAFT_STATUS_STYLES: Record<string, string> = {
-  draft: 'bg-muted text-muted-foreground border-border',
-  approved: 'bg-green-500/15 text-green-400 border-green-500/30',
-  sent: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-  failed: 'bg-red-500/15 text-red-400 border-red-500/30',
-};
-
-function DraftStatusBadge({ status }: { status: string }) {
+/**
+ * KPI cell — one of a row inside a rounded-xl card. Tabular-nums
+ * carry the number; mono lowercase carries the label. Same visual
+ * register as the dashboard's MetricsStrip so the two surfaces feel
+ * like one product.
+ */
+function Kpi({ label, value, accent = false }: { label: string; value: number | string; accent?: boolean }) {
   return (
-    <span
-      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${DRAFT_STATUS_STYLES[status] ?? DRAFT_STATUS_STYLES.draft}`}
-    >
-      {status}
-    </span>
-  );
-}
-
-// ─── Progress bar ─────────────────────────────────────────────────────────────
-
-function ProgressBar({ value }: { value: number }) {
-  const pct = Math.max(0, Math.min(100, value));
-  return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+    <div className="px-4 md:px-5 py-4 flex flex-col gap-1.5">
+      <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
+        {label}
+      </span>
       <div
-        className="h-full rounded-full bg-indigo-500 transition-all duration-300"
-        style={{ width: `${pct}%` }}
-      />
+        className={`font-mono text-[24px] md:text-[28px] leading-none tabular-nums ${
+          accent ? 'text-[color:var(--ink)]' : 'text-[color:var(--ink-2)]'
+        }`}
+      >
+        {value}
+      </div>
     </div>
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+/**
+ * Section primitive — drops the editorial chapter numeral + italic
+ * title. Now a clean header row with mono numeral + 14.5/600 title.
+ */
+function Section({ chapter, title, children, action }: {
+  chapter: string;
+  title: React.ReactNode;
+  children: React.ReactNode;
+  action?: React.ReactNode;
+}) {
+  return (
+    <section className="mt-6">
+      <div className="flex items-baseline justify-between gap-3 mb-3">
+        <div className="flex items-baseline gap-2">
+          <span className="font-mono text-[10.5px] tabular-nums tracking-[0.04em] text-[color:var(--ink-3)]">
+            {chapter}
+          </span>
+          <h2 className="text-[14.5px] font-semibold text-[color:var(--ink)] tracking-[-0.005em]">
+            {title}
+          </h2>
+        </div>
+        {action}
+      </div>
+      <div>{children}</div>
+    </section>
+  );
+}
 
 export default function CampaignDetailPage() {
   const params = useParams();
-  const campaignId = params.campaignId as string;
+  const campaignId = (params.campaignId as string) ?? '';
   const { workspaceId } = useWorkspace();
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
 
-  const [addLeadsOpen, setAddLeadsOpen] = useState(false);
-  const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
-  const [leadSearch, setLeadSearch] = useState('');
-
-  // ── Queries ────────────────────────────────────────────────────────────────
-
-  const { data: campaignData, isLoading: campaignLoading } = useQuery({
-    queryKey: ['campaign', workspaceId, campaignId],
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['campaign-stats', workspaceId, campaignId],
     queryFn: () =>
-      apiFetch<ApiResponse<Campaign>>(
-        `/api/v1/workspaces/${workspaceId}/campaigns/${campaignId}`
+      apiFetch<ApiResponse<StatsResponse>>(
+        `/api/v1/workspaces/${workspaceId}/campaigns/${campaignId}/stats`,
       ),
     enabled: !!workspaceId && !!campaignId,
+    refetchInterval: 15_000,
   });
 
-  const { data: campaignLeadsData, isLoading: leadsLoading } = useQuery({
-    queryKey: ['campaign-leads', workspaceId, campaignId],
-    queryFn: () =>
-      apiFetch<CampaignLeadsResponse>(
-        `/api/v1/workspaces/${workspaceId}/campaigns/${campaignId}/leads`
-      ),
-    enabled: !!workspaceId && !!campaignId,
-  });
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [busy, setBusy] = useState<null | 'pause' | 'resume'>(null);
 
-  const { data: draftsData, isLoading: draftsLoading } = useQuery({
-    queryKey: ['campaign-drafts', workspaceId, campaignId],
-    queryFn: () =>
-      apiFetch<DraftsResponse>(
-        `/api/v1/workspaces/${workspaceId}/outreach?campaignId=${campaignId}`
-      ),
-    enabled: !!workspaceId && !!campaignId,
-  });
-
-  const { data: allLeadsData } = useQuery({
-    queryKey: ['leads-all-qualified', workspaceId, leadSearch],
-    queryFn: () => {
-      const params = new URLSearchParams({
-        limit: '100',
-        qualificationStatus: 'qualified',
-        isDuplicate: 'false',
-      });
-      if (leadSearch) params.set('q', leadSearch);
-      return apiFetch<AllLeadsResponse>(
-        `/api/v1/workspaces/${workspaceId}/leads?${params}`
+  async function runAction(action: 'pause' | 'resume') {
+    if (!workspaceId || !campaignId || busy) return;
+    setBusy(action);
+    setActionError(null);
+    try {
+      await apiFetch<ApiResponse<unknown>>(
+        `/api/v1/workspaces/${workspaceId}/campaigns/${campaignId}/${action}`,
+        { method: 'POST' },
       );
-    },
-    enabled: !!workspaceId && addLeadsOpen,
-  });
-
-  const campaign = campaignData?.data;
-  const rawCampaignLeads = campaignLeadsData?.data;
-  const campaignLeads = Array.isArray(rawCampaignLeads)
-    ? rawCampaignLeads
-    : Array.isArray(rawCampaignLeads?.data)
-      ? rawCampaignLeads.data
-      : [];
-  const rawDrafts = draftsData?.data;
-  const drafts = Array.isArray(rawDrafts)
-    ? rawDrafts
-    : Array.isArray(rawDrafts?.data)
-      ? rawDrafts.data
-      : [];
-  const allLeads = allLeadsData?.data ?? [];
-
-  // Already-added lead IDs for filtering
-  const addedLeadIdSet = new Set(campaignLeads.map((l) => l._id));
-
-  // ── Generation hook ────────────────────────────────────────────────────────
-
-  const { done, total, percentage, isComplete, isGenerating, error: generationError, startGeneration } =
-    useOutreachGeneration({
-      workspaceId: workspaceId ?? '',
-      campaignId,
-      onComplete: () => {
-        void queryClient.invalidateQueries({ queryKey: ['campaign-drafts', workspaceId, campaignId] });
-        toast.success('Draft generation complete!');
-      },
-    });
-
-  // ── Mutations ──────────────────────────────────────────────────────────────
-
-  const addLeadsMutation = useMutation({
-    mutationFn: (leadIds: string[]) =>
-      apiFetch(`/api/v1/workspaces/${workspaceId}/campaigns/${campaignId}/leads`, {
-        method: 'POST',
-        body: JSON.stringify({ leadIds }),
-      }),
-    onSuccess: () => {
-      toast.success('Leads added to campaign.');
-      void queryClient.invalidateQueries({ queryKey: ['campaign-leads', workspaceId, campaignId] });
-      void queryClient.invalidateQueries({ queryKey: ['campaign', workspaceId, campaignId] });
-      setAddLeadsOpen(false);
-      setSelectedLeadIds(new Set());
-    },
-    onError: (err) => {
-      toast.error(err instanceof Error ? err.message : 'Failed to add leads.');
-    },
-  });
-
-  const removeLeadMutation = useMutation({
-    mutationFn: (leadId: string) =>
-      apiFetch(
-        `/api/v1/workspaces/${workspaceId}/campaigns/${campaignId}/leads/${leadId}`,
-        { method: 'DELETE' }
-      ),
-    onSuccess: () => {
-      toast.success('Lead removed.');
-      void queryClient.invalidateQueries({ queryKey: ['campaign-leads', workspaceId, campaignId] });
-      void queryClient.invalidateQueries({ queryKey: ['campaign', workspaceId, campaignId] });
-    },
-    onError: (err) => {
-      toast.error(err instanceof Error ? err.message : 'Failed to remove lead.');
-    },
-  });
-
-  // ── Handlers ───────────────────────────────────────────────────────────────
-
-  function toggleLeadSelection(id: string) {
-    setSelectedLeadIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+      await qc.invalidateQueries({ queryKey: ['campaign-stats', workspaceId, campaignId] });
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : `${action} failed`);
+    } finally {
+      setBusy(null);
+    }
   }
 
-  function handleAddSelected() {
-    if (selectedLeadIds.size === 0) return;
-    addLeadsMutation.mutate(Array.from(selectedLeadIds));
-  }
-
-  // ── Render ─────────────────────────────────────────────────────────────────
-
-  if (campaignLoading) {
+  if (isLoading) {
     return (
-      <div className="py-16 text-center text-sm text-muted-foreground">Loading campaign…</div>
+      <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-16 text-center">
+        <span className="font-mono text-[12px] text-[color:var(--ink-3)]">Loading campaign…</span>
+      </div>
     );
   }
 
-  if (!campaign) {
+  if (error || !data?.data) {
     return (
-      <div className="py-16 text-center text-sm text-muted-foreground">Campaign not found.</div>
+      <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-16 text-center">
+        <p className="text-[14px] font-medium text-[color:var(--warn)]">
+          Couldn&rsquo;t load this campaign.
+        </p>
+        <button
+          onClick={() => router.push('/dashboard/campaigns')}
+          className="mt-4 inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-[12.5px] font-medium text-[color:var(--ink-2)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition-colors"
+        >
+          <ArrowEast className="w-3 h-3 rotate-180" />
+          Back to campaigns
+        </button>
+      </div>
     );
   }
 
-  const canGenerate = campaignLeads.length > 0 && !isGenerating;
+  const { campaign, sequence, enrollments, perStep, campaignStats } = data.data;
 
   return (
-    <div className="space-y-8">
-      {/* ── Campaign header ─────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h2 className="text-2xl font-bold text-foreground">{campaign.name}</h2>
-            <CampaignStatusBadge status={campaign.status} />
+    <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10 animate-fade-up">
+      {/* Header — breadcrumb + title row + actions */}
+      <section className="mb-6">
+        <div className="flex items-center gap-1.5 mb-3 font-mono text-[10.5px] text-[color:var(--ink-3)]">
+          <Link
+            href="/dashboard/campaigns"
+            className="hover:text-[color:var(--ink)] transition-colors"
+          >
+            Campaigns
+          </Link>
+          <span className="text-[color:var(--ink-3)]/60">/</span>
+          <span className="text-[color:var(--ink-2)] truncate max-w-[480px]">{campaign.name}</span>
+        </div>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)] truncate">
+                {campaign.name}
+              </h1>
+              <StatusPill status={campaign.status} />
+            </div>
+            {campaign.description && (
+              <p className="mt-1 text-[13px] text-[color:var(--ink-2)] leading-[1.5] max-w-[680px]">
+                {campaign.description}
+              </p>
+            )}
           </div>
-          {campaign.description && (
-            <p className="text-sm text-muted-foreground mb-2">{campaign.description}</p>
-          )}
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span>Tone: <span className="text-foreground capitalize">{campaign.outreachConfig.tone}</span></span>
-            <span>Language: <span className="text-foreground">{campaign.outreachConfig.language}</span></span>
-            <span>Created: {new Date(campaign.createdAt).toLocaleDateString()}</span>
+          <div className="flex items-center gap-2 shrink-0">
+            {campaign.status === 'active' && (
+              <button
+                onClick={() => void runAction('pause')}
+                disabled={busy !== null}
+                className="inline-flex items-center h-8 px-3 rounded-md text-[12.5px] font-medium text-[color:var(--ink-2)] border border-[color:var(--rule)] bg-[color:var(--paper-2)] hover:border-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition-colors disabled:opacity-50"
+              >
+                {busy === 'pause' ? 'Pausing…' : 'Pause'}
+              </button>
+            )}
+            {campaign.status === 'paused' && (
+              <button
+                onClick={() => void runAction('resume')}
+                disabled={busy !== null}
+                className="inline-flex items-center h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--forest)] text-white hover:bg-[color:var(--forest-2)] transition-colors disabled:opacity-50"
+              >
+                {busy === 'resume' ? 'Resuming…' : 'Resume'}
+              </button>
+            )}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ── Leads section ───────────────────────────────────────────────── */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-4 pb-3">
-          <CardTitle className="text-base font-semibold">
-            Leads{' '}
-            <Badge variant="secondary" className="ml-1 text-xs">
-              {campaignLeads.length}
-            </Badge>
-          </CardTitle>
-          <Button size="sm" onClick={() => setAddLeadsOpen(true)}>
-            <Plus size={14} className="mr-1.5" />
-            Add Leads
-          </Button>
-        </CardHeader>
-        <CardContent className="p-0">
-          {leadsLoading ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">Loading leads…</div>
-          ) : campaignLeads.length === 0 ? (
-            <EmptyState title="No leads added yet." description="Add qualified leads to this campaign." />
-          ) : (
-            <div className="divide-y divide-border">
-              {campaignLeads.map((lead) => (
+      {actionError && (
+        <div role="alert" className="mb-4 flex items-start gap-3 rounded-lg border border-[color:var(--warn)]/30 bg-[color:var(--warn)]/[0.04] px-4 py-3 text-[13px] text-[color:var(--ink)]">
+          <span className="mt-[6px] inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--warn)] shrink-0" aria-hidden />
+          <span className="text-[color:var(--ink-2)]">{actionError}</span>
+        </div>
+      )}
+
+      {/* KPI strip — single rounded-xl card with mono tabular numbers */}
+      <Section chapter="01" title="At a glance">
+        <div
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 rounded-xl border border-[color:var(--rule)] bg-[color:var(--paper)] overflow-hidden"
+          aria-label="Campaign metrics"
+        >
+          {[
+            { label: 'Enrolled',     value: enrollments.total,                                                accent: true },
+            { label: 'Active',       value: enrollments.active,                                              accent: false },
+            { label: 'Sent',         value: campaignStats.sent,                                              accent: false },
+            { label: 'Replied',      value: enrollments.replied + campaignStats.replied,                     accent: false },
+            { label: 'Bounced',      value: enrollments.bounced + campaignStats.bounced,                     accent: false },
+            { label: 'Unsubscribed', value: enrollments.unsubscribed,                                        accent: false },
+          ].map((c, i) => (
+            <div
+              key={c.label}
+              className={`${i > 0 ? 'border-l border-t md:border-t-0 border-[color:var(--rule)]' : ''}`}
+            >
+              <Kpi label={c.label} value={c.value} accent={c.accent} />
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 font-mono text-[10.5px] tabular-nums text-[color:var(--ink-3)]">
+          {enrollments.paused > 0 ? `${enrollments.paused} paused · ` : ''}
+          {enrollments.completed > 0 ? `${enrollments.completed} completed · ` : ''}
+          {enrollments.stopped > 0 ? `${enrollments.stopped} stopped · ` : ''}
+          {enrollments.total === 0 && 'Not activated yet — enroll leads from the campaigns index.'}
+        </p>
+      </Section>
+
+      {/* Per-step sequence */}
+      <Section chapter="02" title="Per-step">
+        {sequence ? (
+          <div className="rounded-xl border border-[color:var(--rule)] overflow-hidden bg-[color:var(--paper)]">
+            {sequence.steps.map((step, idx) => {
+              const stats = perStep.find((p) => p.stepNumber === step.stepNumber) ?? { sent: 0, bounced: 0, replied: 0 };
+              return (
                 <div
-                  key={lead._id}
-                  className="flex items-center gap-4 px-5 py-3"
+                  key={step.stepNumber}
+                  className={`grid grid-cols-[36px_auto_1fr_auto_auto_auto] gap-3 md:gap-4 items-center px-4 md:px-5 py-3 ${
+                    idx > 0 ? 'border-t border-[color:var(--rule)]' : ''
+                  }`}
                 >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {lead.companyName}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {lead.companyDomain ?? '—'}
-                      {lead.industry ? ` · ${lead.industry}` : ''}
-                    </p>
+                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full font-mono text-[11px] tabular-nums text-[color:var(--ink-3)] border border-[color:var(--rule)] bg-[color:var(--paper-2)]">
+                    {step.stepNumber}
+                  </span>
+                  <span className="font-mono text-[10.5px] tabular-nums text-[color:var(--ink-3)] uppercase">
+                    {step.channel}{step.useAI ? ' · ai' : ''}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="text-[13.5px] text-[color:var(--ink)] font-medium truncate">
+                      {step.emailTemplate?.subject || (
+                        <span className="text-[color:var(--ink-3)] font-normal">No subject</span>
+                      )}
+                    </div>
+                    <div className="font-mono text-[10.5px] tabular-nums text-[color:var(--ink-3)] mt-0.5 truncate">
+                      Day {step.delayDays}
+                      {step.tone ? ` · ${step.tone}` : ''}
+                      {step.goal ? ` · ${step.goal}` : ''}
+                    </div>
                   </div>
-                  <div className="flex shrink-0 items-center gap-3 text-xs text-muted-foreground">
-                    <span>{lead.emails.length} email{lead.emails.length !== 1 ? 's' : ''}</span>
-                    <span className="capitalize">{lead.outreachStatus}</span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                      onClick={() => removeLeadMutation.mutate(lead._id)}
-                      disabled={removeLeadMutation.isPending}
-                    >
-                      <Trash2 size={13} />
-                      <span className="sr-only">Remove</span>
-                    </Button>
-                  </div>
+                  <StepCount label="sent" n={stats.sent} />
+                  <StepCount label="repl" n={stats.replied} />
+                  <StepCount label="bnc" n={stats.bounced} tone={stats.bounced > 0 ? 'warn' : 'muted'} />
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* ── Generate Drafts section ──────────────────────────────────────── */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-4 pb-3">
-          <CardTitle className="text-base font-semibold">Generate Drafts</CardTitle>
-          <Button
-            size="sm"
-            onClick={startGeneration}
-            disabled={!canGenerate || !workspaceId}
-          >
-            <Zap size={14} className="mr-1.5" />
-            {isGenerating ? 'Generating…' : 'Generate Drafts'}
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {isGenerating && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Generating drafts…</span>
-                <span>{done}/{total}</span>
-              </div>
-              <ProgressBar value={percentage} />
-            </div>
-          )}
-          {isComplete && !isGenerating && (
-            <div className="flex items-center gap-2 text-sm text-green-400">
-              <CheckCircle2 size={16} />
-              Generation complete!
-            </div>
-          )}
-          {generationError && !isGenerating && (
-            <p className="text-xs text-destructive">{generationError}</p>
-          )}
-          {!isGenerating && !isComplete && (
-            <p className="text-xs text-muted-foreground">
-              {campaignLeads.length === 0
-                ? 'Add leads first to enable draft generation.'
-                : `Generate personalized outreach drafts for ${campaignLeads.length} lead${campaignLeads.length !== 1 ? 's' : ''}.`}
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* ── Drafts section ──────────────────────────────────────────────── */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold">
-            Drafts{' '}
-            <Badge variant="secondary" className="ml-1 text-xs">
-              {drafts.length}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {draftsLoading ? (
-            <div className="py-8 text-center text-sm text-muted-foreground">Loading drafts…</div>
-          ) : drafts.length === 0 ? (
-            <EmptyState title="No drafts generated yet." description="Generate drafts from the section above." />
-          ) : (
-            <div className="divide-y divide-border">
-              {drafts.map((draft) => (
-                <button
-                  key={draft._id}
-                  onClick={() =>
-                    router.push(`/dashboard/campaigns/${campaignId}/drafts/${draft._id}`)
-                  }
-                  className="flex w-full items-center gap-4 px-5 py-3 text-left transition-colors hover:bg-secondary/40"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {draft.subject ?? '(No subject)'}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {draft.firstLine ?? draft.body.slice(0, 80)}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    <DraftStatusBadge status={draft.status} />
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(draft.createdAt).toLocaleDateString()}
-                    </span>
-                    <ChevronRight size={14} className="text-muted-foreground" />
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* ── Add Leads dialog ────────────────────────────────────────────── */}
-      <Dialog open={addLeadsOpen} onOpenChange={(open) => { if (!open) { setAddLeadsOpen(false); setSelectedLeadIds(new Set()); } }}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Add Leads</DialogTitle>
-            <DialogDescription>
-              Select qualified leads to add to this campaign.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3">
-            <Input
-              placeholder="Search leads…"
-              value={leadSearch}
-              onChange={(e) => setLeadSearch(e.target.value)}
-            />
-
-            <div className="max-h-72 overflow-y-auto divide-y divide-border rounded-md border border-border">
-              {allLeads.length === 0 ? (
-                <div className="py-8 text-center text-sm text-muted-foreground">
-                  No qualified leads found.
-                </div>
-              ) : (
-                allLeads.map((lead) => {
-                  const alreadyAdded = addedLeadIdSet.has(lead._id);
-                  const selected = selectedLeadIds.has(lead._id);
-                  return (
-                    <label
-                      key={lead._id}
-                      className={`flex cursor-pointer items-center gap-3 px-4 py-2.5 transition-colors ${alreadyAdded ? 'opacity-40 cursor-not-allowed' : 'hover:bg-secondary/40'}`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selected}
-                        disabled={alreadyAdded}
-                        onChange={() => toggleLeadSelection(lead._id)}
-                        className="h-4 w-4 rounded border-border accent-indigo-500"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {lead.companyName}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {lead.companyDomain ?? '—'}
-                          {alreadyAdded ? ' · already added' : ''}
-                        </p>
-                      </div>
-                    </label>
-                  );
-                })
-              )}
-            </div>
-
-            <p className="text-xs text-muted-foreground">
-              {selectedLeadIds.size} selected
+              );
+            })}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-[color:var(--rule)] bg-[color:var(--paper-2)]/40 p-6 text-center">
+            <p className="text-[13px] text-[color:var(--ink-2)]">
+              This campaign has no linked sequence.
+              <span className="text-[color:var(--ink-3)] ml-1">(Legacy campaigns predate the builder update.)</span>
             </p>
           </div>
+        )}
+      </Section>
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => { setAddLeadsOpen(false); setSelectedLeadIds(new Set()); }}
-              disabled={addLeadsMutation.isPending}
+      {/* Notes */}
+      <Section chapter="03" title="Notes">
+        <ul className="text-[12.5px] text-[color:var(--ink-2)] space-y-1.5 leading-[1.55]">
+          <li>
+            Stats refresh every 15 seconds.
+            <span className="text-[color:var(--ink-3)] ml-1">Sent counter is maintained by the sequence worker per successful delivery.</span>
+          </li>
+          <li>
+            Reply + bounce ingestion comes online with the webhook milestone; those columns will stay at zero until then.
+          </li>
+          <li>
+            AI-generated drafts are persisted under{' '}
+            <Link
+              href={`/dashboard/leads?campaignId=${campaign._id}`}
+              className="text-[color:var(--ink)] hover:text-[color:var(--forest)] underline underline-offset-[3px] decoration-[color:var(--rule)] hover:decoration-[color:var(--forest)] transition-colors"
             >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddSelected}
-              disabled={selectedLeadIds.size === 0 || addLeadsMutation.isPending}
-            >
-              {addLeadsMutation.isPending ? 'Adding…' : `Add Selected (${selectedLeadIds.size})`}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              leads
+            </Link>{' '}
+            for audit.
+          </li>
+        </ul>
+      </Section>
+    </div>
+  );
+}
+
+function StepCount({ label, n, tone = 'muted' }: { label: string; n: number; tone?: 'muted' | 'warn' }) {
+  const numCls = tone === 'warn' && n > 0
+    ? 'text-[color:var(--warn)]'
+    : n > 0 ? 'text-[color:var(--ink)]' : 'text-[color:var(--ink-3)]';
+  return (
+    <div className="w-[60px] text-right">
+      <div className={`font-mono text-[16px] leading-none tabular-nums ${numCls}`}>
+        {n}
+      </div>
+      <div className="mt-1 font-mono text-[9.5px] tracking-[0.04em] text-[color:var(--ink-3)]">
+        {label}
+      </div>
     </div>
   );
 }

@@ -7,9 +7,6 @@ import * as crmController from '../controllers/crm.controller.js';
 // Routes mounted at /api/v1/workspaces/:workspaceId/crm
 const router: RouterType = Router({ mergeParams: true });
 
-// OAuth callback — no auth middleware (HubSpot redirects here)
-router.get('/hubspot/callback', asyncHandler(crmController.hubspotCallback));
-
 // Authenticated routes
 router.use(authenticate);
 

@@ -17,6 +17,12 @@ export interface GenerateOptions {
   maxTokens?: number;
   /** Pass true to enable prompt caching on the system prompt (Anthropic only). */
   cacheSystem?: boolean;
+  /** Override the global provider flag and use a specific provider. */
+  forceProvider?: 'anthropic' | 'google' | 'openrouter' | 'local';
+  /** AbortSignal — when aborted, the upstream fetch is cancelled. */
+  signal?: AbortSignal;
+  /** Override the model for this specific call (OpenRouter path only). */
+  model?: string;
 }
 
 async function generateWithAnthropic(
@@ -110,7 +116,7 @@ async function generateWithOpenRouter(
   }
 
   const body = {
-    model: env.OPENROUTER_MODEL,
+    model: options.model ?? env.OPENROUTER_MODEL,
     max_tokens: options.maxTokens ?? env.ANTHROPIC_MAX_TOKENS,
     messages: [
       ...(options.systemPrompt ? [{ role: 'system', content: options.systemPrompt }] : []),
@@ -127,6 +133,7 @@ async function generateWithOpenRouter(
       'X-Title': 'LeadreAI',
     },
     body: JSON.stringify(body),
+    ...(options.signal && { signal: options.signal }),
   });
 
   if (!res.ok) {
@@ -203,20 +210,18 @@ async function generateWithLocal(
 
 /**
  * Unified AI text generation.
- * Priority: USE_LOCAL_LLM → USE_OPENROUTER → USE_GOOGLE → Anthropic (default)
+ * Priority: forceProvider option → USE_LOCAL_LLM → USE_OPENROUTER → USE_GOOGLE → Anthropic (default)
  */
 export async function generateText(
   messages: AiMessage[],
   options: GenerateOptions = {},
 ): Promise<AiResponse> {
-  if (env.USE_LOCAL_LLM) {
-    return generateWithLocal(messages, options);
-  }
-  if (env.USE_OPENROUTER) {
-    return generateWithOpenRouter(messages, options);
-  }
-  if (env.USE_GOOGLE) {
-    return generateWithGoogle(messages, options);
-  }
+  if (options.forceProvider === 'anthropic') return generateWithAnthropic(messages, options);
+  if (options.forceProvider === 'google')    return generateWithGoogle(messages, options);
+  if (options.forceProvider === 'openrouter') return generateWithOpenRouter(messages, options);
+  if (options.forceProvider === 'local')     return generateWithLocal(messages, options);
+  if (env.USE_LOCAL_LLM)    return generateWithLocal(messages, options);
+  if (env.USE_OPENROUTER)   return generateWithOpenRouter(messages, options);
+  if (env.USE_GOOGLE)       return generateWithGoogle(messages, options);
   return generateWithAnthropic(messages, options);
 }

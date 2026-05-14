@@ -4,7 +4,7 @@ import { authenticate } from '../middleware/authenticate.js';
 import { authorize } from '../middleware/authorize.js';
 import { validate } from '../middleware/validate.js';
 import { jobRateLimiter } from '../middleware/rateLimiter.js';
-import { CreateJobSchema } from '@leadreai/shared';
+import { CreateJobSchema, ClarifyRequestSchema } from '@leadreai/shared';
 import * as jobsController from '../controllers/jobs.controller.js';
 
 const router: RouterType = Router({ mergeParams: true });
@@ -12,6 +12,7 @@ const router: RouterType = Router({ mergeParams: true });
 router.use(authenticate);
 router.use(authorize(['owner', 'admin', 'member']));
 
+router.post('/clarify', jobRateLimiter, validate(ClarifyRequestSchema), asyncHandler(jobsController.clarifyQuery));
 router.post('/', jobRateLimiter, validate(CreateJobSchema), asyncHandler(jobsController.createJob));
 router.get('/', asyncHandler(jobsController.listJobs));
 router.get('/:jobId', asyncHandler(jobsController.getJob));

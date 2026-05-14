@@ -27,6 +27,10 @@ export async function jobProgressStream(req: Request, res: Response): Promise<vo
   // 3. Send initial "connected" event + current job state so late-connecting clients bootstrap
   send({ type: 'connected', jobId });
   send({ type: 'status', status: job.status, percentage: job.progress?.percentage ?? 0 });
+  const existingLog = (job as { activityLog?: unknown[] }).activityLog;
+  if (Array.isArray(existingLog) && existingLog.length > 0) {
+    send({ type: 'activity_bootstrap', entries: existingLog });
+  }
 
   // 4. Create a DEDICATED Redis connection for pub/sub
   // IMPORTANT: pub/sub requires a dedicated connection — do NOT reuse getRedis() singleton

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hero Layout Approaches</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f0f13;
+    color: #e8e8e8;
+    padding: 32px 24px;
+  }
+  h1 { font-size: 14px; font-weight: 600; color: #666; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #444; margin-bottom: 32px; }
+  .layouts { display: flex; flex-direction: column; gap: 28px; max-width: 1100px; }
+  .layout-card {
+    border: 1.5px solid #1e1e26;
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: #0a0a0e;
+  }
+  .layout-card:hover { border-color: #333; }
+  .layout-card.selected { border-color: #f59e0b; box-shadow: 0 0 0 3px #f59e0b18; }
+  .card-header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 20px;
+    border-bottom: 1px solid #141418;
+    background: #0d0d12;
+  }
+  .letter {
+    width: 28px; height: 28px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  .la { background: #f59e0b18; color: #fbbf24; border: 1px solid #f59e0b30; }
+  .lb { background: #818cf818; color: #a5b4fc; border: 1px solid #818cf830; }
+  .lc { background: #10b98118; color: #6ee7b7; border: 1px solid #10b98130; }
+  .card-title { font-size: 13px; font-weight: 600; color: #d4d4d8; }
+  .card-desc { font-size: 11px; color: #444; margin-left: auto; max-width: 360px; text-align: right; line-height: 1.5; }
+  .rec-badge { font-size: 10px; background: #f59e0b18; color: #fbbf24; border: 1px solid #f59e0b30; border-radius: 20px; padding: 2px 9px; white-space: nowrap; }
+  .mockup { background: white; padding: 0; }
+
+  /* ── LAYOUT A: Centered search-first ── */
+  .la-page { background: #fff; padding: 0; font-family: -apple-system, sans-serif; }
+  .la-nav { display: flex; align-items: center; justify-content: space-between; padding: 12px 32px; border-bottom: 1px solid #f0f0f0; }
+  .la-logo { font-size: 14px; font-weight: 800; color: #111; letter-spacing: -0.02em; }
+  .la-logo span { color: #f59e0b; }
+  .la-nav-right { display: flex; align-items: center; gap: 16px; }
+  .la-nav-link { font-size: 11px; color: #9ca3af; }
+  .la-nav-cta { font-size: 11px; font-weight: 600; background: #111; color: white; border-radius: 20px; padding: 5px 14px; }
+  .la-hero {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 52px 32px 40px;
+    text-align: center;
+    background: linear-gradient(180deg, #fffbeb 0%, #fff 60%);
+  }
+  .la-badge { display: inline-flex; align-items: center; gap: 6px; background: #fef3c7; border: 1px solid #fde68a; border-radius: 20px; padding: 4px 12px; font-size: 10px; color: #92400e; margin-bottom: 18px; }
+  .la-badge-dot { width: 6px; height: 6px; background: #f59e0b; border-radius: 50%; }
+  .la-headline { font-size: 34px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.05; color: #111; max-width: 480px; margin-bottom: 12px; }
+  .la-headline em { color: #f59e0b; font-style: normal; }
+  .la-subline { font-size: 13px; color: #6b7280; max-width: 360px; line-height: 1.6; margin-bottom: 24px; }
+  .la-search-box {
+    width: 100%; max-width: 520px;
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 2px 16px #0000000a;
+    margin-bottom: 10px;
+  }
+  .la-search-icon { font-size: 14px; }
+  .la-search-text { flex: 1; font-size: 13px; color: #9ca3af; }
+  .la-search-btn { font-size: 12px; font-weight: 600; background: #f59e0b; color: white; border-radius: 8px; padding: 7px 16px; white-space: nowrap; }
+  .la-chips { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-bottom: 28px; }
+  .la-chip { font-size: 10px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 20px; padding: 4px 11px; color: #6b7280; }
+  .la-logos { display: flex; align-items: center; gap: 20px; opacity: 0.3; }
+  .la-logo-item { font-size: 11px; font-weight: 700; color: #374151; letter-spacing: -0.01em; }
+  .la-logos-label { font-size: 10px; color: #9ca3af; margin-right: 4px; }
+
+  /* ── LAYOUT B: Split hero ── */
+  .lb-page { background: #fff; font-family: -apple-system, sans-serif; }
+  .lb-nav { display: flex; align-items: center; justify-content: space-between; padding: 12px 32px; border-bottom: 1px solid #f0f0f0; }
+  .lb-logo { font-size: 14px; font-weight: 800; color: #111; letter-spacing: -0.02em; }
+  .lb-logo span { color: #f59e0b; }
+  .lb-nav-cta { font-size: 11px; font-weight: 600; background: #111; color: white; border-radius: 20px; padding: 5px 14px; }
+  .lb-hero { display: grid; grid-template-columns: 1fr 1fr; gap: 0; min-height: 280px; }
+  .lb-left {
+    padding: 36px 32px;
+    display: flex; flex-direction: column; justify-content: center;
+    background: linear-gradient(135deg, #fffbeb, #fff);
+    border-right: 1px solid #f0f0f0;
+  }
+  .lb-eyebrow { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: #f59e0b; margin-bottom: 14px; font-weight: 600; }
+  .lb-headline { font-size: 28px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; color: #111; margin-bottom: 10px; }
+  .lb-headline em { color: #f59e0b; font-style: normal; }
+  .lb-body { font-size: 12px; color: #6b7280; line-height: 1.6; margin-bottom: 18px; max-width: 280px; }
+  .lb-stats { display: flex; gap: 20px; }
+  .lb-stat-num { font-size: 18px; font-weight: 800; color: #111; }
+  .lb-stat-label { font-size: 10px; color: #9ca3af; }
+  .lb-right { padding: 24px 28px; background: #f9fafb; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+  .lb-search-wrap { background: white; border: 1.5px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; display: flex; gap: 8px; align-items: center; box-shadow: 0 1px 8px #0000000a; }
+  .lb-search-input { flex: 1; font-size: 11px; color: #374151; }
+  .lb-search-placeholder { color: #9ca3af; }
+  .lb-search-go { font-size: 10px; font-weight: 600; background: #f59e0b; color: white; border-radius: 6px; padding: 5px 12px; }
+  .lb-result-preview { background: white; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+  .lb-result-row { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-bottom: 1px solid #f5f5f5; font-size: 10px; }
+  .lb-result-row:last-child { border-bottom: none; }
+  .lb-result-dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; flex-shrink: 0; }
+  .lb-result-name { color: #374151; flex: 1; }
+  .lb-result-badge { background: #dcfce7; color: #166534; border-radius: 4px; padding: 2px 6px; font-size: 9px; font-weight: 500; }
+  .lb-email-prompt { display: flex; gap: 6px; }
+  .lb-email-input { flex: 1; background: white; border: 1.5px solid #e5e7eb; border-radius: 8px; padding: 9px 12px; font-size: 11px; color: #9ca3af; }
+  .lb-email-btn { font-size: 11px; font-weight: 600; background: #111; color: white; border-radius: 8px; padding: 9px 14px; white-space: nowrap; }
+
+  /* ── LAYOUT C: Full-bleed search ── */
+  .lc-page { background: #fff; font-family: -apple-system, sans-serif; }
+  .lc-nav { display: flex; align-items: center; justify-content: space-between; padding: 12px 32px; border-bottom: 1px solid #f0f0f0; }
+  .lc-logo { font-size: 14px; font-weight: 800; color: #111; letter-spacing: -0.02em; }
+  .lc-logo span { color: #f59e0b; }
+  .lc-nav-cta { font-size: 11px; font-weight: 600; background: #111; color: white; border-radius: 20px; padding: 5px 14px; }
+  .lc-hero { background: #111; padding: 44px 32px 0; }
+  .lc-hero-top { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 28px; }
+  .lc-headline { font-size: 34px; font-weight: 800; letter-spacing: -0.035em; color: white; line-height: 1.05; margin-bottom: 8px; }
+  .lc-headline em { color: #f59e0b; font-style: normal; }
+  .lc-sub { font-size: 12px; color: #6b7280; }
+  .lc-search-full {
+    width: 100%; max-width: 640px; margin: 0 auto 28px;
+    background: #1e1e1e;
+    border: 1.5px solid #2e2e2e;
+    border-radius: 14px;
+    padding: 14px 20px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .lc-search-icon { font-size: 16px; opacity: 0.4; }
+  .lc-search-text { flex: 1; font-size: 13px; color: #666; }
+  .lc-search-cursor { display: inline-block; width: 2px; height: 14px; background: #f59e0b; margin-left: 2px; vertical-align: middle; }
+  .lc-search-enter { font-size: 10px; background: #2e2e2e; color: #555; border-radius: 6px; padding: 4px 10px; display: flex; align-items: center; gap: 4px; }
+  .lc-table-preview { background: white; border-radius: 12px 12px 0 0; overflow: hidden; border: 1px solid #e5e7eb; border-bottom: none; }
+  .lc-table-head { display: grid; grid-template-columns: 2fr 1.5fr 2fr 1fr 1fr; gap: 8px; padding: 8px 16px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+  .lc-th { font-size: 9px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.08em; }
+  .lc-table-row { display: grid; grid-template-columns: 2fr 1.5fr 2fr 1fr 1fr; gap: 8px; padding: 9px 16px; border-bottom: 1px solid #f5f5f5; align-items: center; }
+  .lc-td { font-size: 11px; color: #374151; }
+  .lc-td-dim { color: #d1d5db; }
+  .lc-td-badge { font-size: 9px; background: #dcfce7; color: #166534; border-radius: 4px; padding: 2px 6px; font-weight: 500; display: inline-block; }
+  .lc-td-badge-dim { background: #f3f4f6; color: #9ca3af; }
+  .lc-blur-overlay { height: 40px; background: linear-gradient(to bottom, transparent, white); margin-top: -40px; position: relative; }
+
+  /* selected */
+  .selected-indicator { margin-top: 20px; font-size: 12px; color: #444; text-align: center; min-height: 20px; }
+</style>
+</head>
+<body>
+
+<h1>Hero Layout Approaches</h1>
+<p class="subtitle">All three use the Modern SaaS direction (white + amber). Click to select.</p>
+
+<div class="layouts">
+
+  <!-- LAYOUT A -->
+  <div class="layout-card" id="layout-a" onclick="pick('a')">
+    <div class="card-header">
+      <div class="letter la">A</div>
+      <div class="card-title">Centered Search-First</div>
+      <div class="rec-badge">Recommended</div>
+      <div class="card-desc">Headline + full-width search bar centered. Chips below suggest queries. Email gate appears inline when you type. Clean, focused, high-intent.</div>
+    </div>
+    <div class="mockup">
+      <div class="la-page">
+        <div class="la-nav">
+          <div class="la-logo">Leadre<span>AI</span></div>
+          <div class="la-nav-right">
+            <span class="la-nav-link">How it works</span>
+            <span class="la-nav-link">Pricing</span>
+            <span class="la-nav-cta">Sign in</span>
+          </div>
+        </div>
+        <div class="la-hero">
+          <div class="la-badge"><div class="la-badge-dot"></div>Built for African markets</div>
+          <div class="la-headline">Find your next customer.<br><em>Before your competitors do.</em></div>
+          <div class="la-subline">Type who you&rsquo;re selling to. Get a verified lead list&mdash;with emails, phones, and sources&mdash;in minutes.</div>
+          <div class="la-search-box">
+            <div class="la-search-icon">&#128269;</div>
+            <div class="la-search-text">Series B fintechs in Lagos with a CTO&hellip;</div>
+            <div class="la-search-btn">Search &rarr;</div>
+          </div>
+          <div class="la-chips">
+            <div class="la-chip">Fintech CEOs &middot; Lagos</div>
+            <div class="la-chip">Law firms &middot; Nairobi</div>
+            <div class="la-chip">Manufacturers &middot; Accra</div>
+            <div class="la-chip">Logistics directors &middot; Nigeria</div>
+          </div>
+          <div class="la-logos">
+            <span class="la-logos-label">Trusted by teams at</span>
+            <span class="la-logo-item">Arlo</span>
+            <span class="la-logo-item">Ardent</span>
+            <span class="la-logo-item">Meridian</span>
+            <span class="la-logo-item">Volta</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAYOUT B -->
+  <div class="layout-card" id="layout-b" onclick="pick('b')">
+    <div class="card-header">
+      <div class="letter lb">B</div>
+      <div class="card-title">Split Hero</div>
+      <div class="card-desc">Left: pitch + stats. Right: search box + partial results + email gate inline. Sells and demonstrates simultaneously above the fold.</div>
+    </div>
+    <div class="mockup">
+      <div class="lb-page">
+        <div class="lb-nav">
+          <div class="lb-logo">Leadre<span>AI</span></div>
+          <div class="lb-nav-cta">Sign in</div>
+        </div>
+        <div class="lb-hero">
+          <div class="lb-left">
+            <div class="lb-eyebrow">AI Lead Research</div>
+            <div class="lb-headline">Find anyone.<br><em>Anywhere.</em></div>
+            <div class="lb-body">Type a sentence describing your ideal customer. Get a verified list with contacts in minutes &mdash; built for African markets.</div>
+            <div class="lb-stats">
+              <div>
+                <div class="lb-stat-num">50k+</div>
+                <div class="lb-stat-label">Leads generated</div>
+              </div>
+              <div>
+                <div class="lb-stat-num">94%</div>
+                <div class="lb-stat-label">Email accuracy</div>
+              </div>
+              <div>
+                <div class="lb-stat-num">8min</div>
+                <div class="lb-stat-label">Avg. delivery</div>
+              </div>
+            </div>
+          </div>
+          <div class="lb-right">
+            <div class="lb-search-wrap">
+              <div class="lb-search-input"><span class="lb-search-placeholder">Top Nigerian fintechs with Series-B funding&hellip;</span></div>
+              <div class="lb-search-go">Search</div>
+            </div>
+            <div class="lb-result-preview">
+              <div class="lb-result-row">
+                <div class="lb-result-dot"></div>
+                <div class="lb-result-name">Paystack &middot; Shola Akinlade &middot; shola@pay&hellip;</div>
+                <div class="lb-result-badge">Verified</div>
+              </div>
+              <div class="lb-result-row">
+                <div class="lb-result-dot" style="background:#d1d5db"></div>
+                <div class="lb-result-name" style="color:#9ca3af">Moniepoint &middot; Tosin Eniolorunda &middot; &mdash;</div>
+                <div class="lb-result-badge" style="background:#f3f4f6;color:#9ca3af">Enriching</div>
+              </div>
+              <div class="lb-result-row" style="background:#f9fafb">
+                <div style="font-size:10px;color:#6b7280;text-align:center;width:100%;padding:2px 0">Enter email to unlock full results</div>
+              </div>
+            </div>
+            <div class="lb-email-prompt">
+              <div class="lb-email-input">your@company.com</div>
+              <div class="lb-email-btn">Get results &rarr;</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAYOUT C -->
+  <div class="layout-card" id="layout-c" onclick="pick('c')">
+    <div class="card-header">
+      <div class="letter lc">C</div>
+      <div class="card-title">Full-Bleed Search</div>
+      <div class="card-desc">Dark hero with full-width search bar. Below it, a results table bleeds into white. Boldest option &mdash; the product IS the page.</div>
+    </div>
+    <div class="mockup">
+      <div class="lc-page">
+        <div class="lc-nav">
+          <div class="lc-logo">Leadre<span>AI</span></div>
+          <div class="lc-nav-cta">Sign in</div>
+        </div>
+        <div class="lc-hero">
+          <div class="lc-hero-top">
+            <div class="lc-headline">Your next 50 customers<br>are already out there. <em>Find them.</em></div>
+            <div class="lc-sub">Type a query. Get a verified lead list. Delivered in minutes.</div>
+          </div>
+          <div class="lc-search-full" style="margin: 0 auto 28px;">
+            <div class="lc-search-icon">&#128269;</div>
+            <div class="lc-search-text">Series B fintechs in Lagos&hellip;<span class="lc-search-cursor"></span></div>
+            <div class="lc-search-enter">&#9166; Search</div>
+          </div>
+          <div class="lc-table-preview">
+            <div class="lc-table-head">
+              <div class="lc-th">Company</div>
+              <div class="lc-th">Contact</div>
+              <div class="lc-th">Email</div>
+              <div class="lc-th">Raised</div>
+              <div class="lc-th">Status</div>
+            </div>
+            <div class="lc-table-row">
+              <div class="lc-td" style="font-weight:600">Paystack</div>
+              <div class="lc-td">Shola Akinlade</div>
+              <div class="lc-td">shola@paystack.com</div>
+              <div class="lc-td">$8M</div>
+              <div class="lc-td"><span class="lc-td-badge">Verified</span></div>
+            </div>
+            <div class="lc-table-row">
+              <div class="lc-td" style="font-weight:600">Moniepoint</div>
+              <div class="lc-td">Tosin Eniolorunda</div>
+              <div class="lc-td lc-td-dim">tosin@monie&hellip;</div>
+              <div class="lc-td">$110M</div>
+              <div class="lc-td"><span class="lc-td-badge lc-td-badge-dim">Enriching</span></div>
+            </div>
+            <div class="lc-table-row" style="filter:blur(3px);opacity:0.4">
+              <div class="lc-td" style="font-weight:600">Flutterwave</div>
+              <div class="lc-td">O. Agboola</div>
+              <div class="lc-td">gb@flutter&hellip;</div>
+              <div class="lc-td">$250M</div>
+              <div class="lc-td"><span class="lc-td-badge">Verified</span></div>
+            </div>
+          </div>
+          <div class="lc-blur-overlay"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="selected-indicator" id="indicator">Click a layout to select it</div>
+
+<script>
+  var plainNames = { a: 'A — Centered Search-First', b: 'B — Split Hero', c: 'C — Full-Bleed Search' };
+  function pick(choice) {
+    document.querySelectorAll('.layout-card').forEach(function(el) { el.classList.remove('selected'); });
+    var el = document.getElementById('layout-' + choice);
+    if (el) { el.classList.add('selected'); }
+    var indicator = document.getElementById('indicator');
+    var strong = document.createElement('strong');
+    strong.style.color = '#fbbf24';
+    strong.textContent = plainNames[choice];
+    indicator.textContent = 'Selected: ';
+    indicator.appendChild(strong);
+    indicator.appendChild(document.createTextNode(' — let me know in the terminal'));
+    try {
+      fetch('/__select', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ choice: choice, text: plainNames[choice] }) });
+    } catch(e) {}
+  }
+</script>
+</body>
+</html>

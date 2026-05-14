@@ -16,7 +16,7 @@ export async function hubspotConnect(req: Request, res: Response): Promise<void>
   const params = new URLSearchParams({
     client_id: env.HUBSPOT_CLIENT_ID ?? '',
     redirect_uri: env.HUBSPOT_REDIRECT_URI ?? '',
-    scope: 'crm.objects.companies.write crm.objects.contacts.write oauth',
+    scope: 'crm.objects.companies.read crm.objects.companies.write crm.objects.contacts.read crm.objects.contacts.write',
     state: workspaceId!,
   });
   res.redirect(`https://app.hubspot.com/oauth/authorize?${params}`);
@@ -24,7 +24,7 @@ export async function hubspotConnect(req: Request, res: Response): Promise<void>
 
 // GET /crm/hubspot/callback
 // Exchanges code for tokens, encrypts and stores in workspace.crmConfig
-// Then redirects to frontend: ${env.FRONTEND_URL}/dashboard/settings/crm?connected=true
+// Then redirects to frontend: ${env.FRONTEND_URL}/dashboard/integrations?crm=connected
 export async function hubspotCallback(req: Request, res: Response): Promise<void> {
   const code = req.query['code'] as string;
   const workspaceId = req.query['state'] as string;
@@ -72,7 +72,7 @@ export async function hubspotCallback(req: Request, res: Response): Promise<void
     },
   });
 
-  res.redirect(`${env.FRONTEND_URL}/dashboard/settings/crm?connected=true`);
+  res.redirect(`${env.FRONTEND_URL}/dashboard/integrations?crm=connected`);
 }
 
 // GET /crm/hubspot/status

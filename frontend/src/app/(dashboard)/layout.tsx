@@ -2,21 +2,43 @@
 
 import { Sidebar } from '../../components/layout/Sidebar';
 import { Topbar } from '../../components/layout/Topbar';
+import { TopUpModal } from '../../components/credits/TopUpModal';
+import { ChangePlanModal } from '../../components/credits/ChangePlanModal';
+import { CommandPalette } from '../../components/search/CommandPalette';
+import { PatraChat } from '../../components/chat/PatraChat';
 import { useAuth } from '../../hooks/useAuth';
 import { LoadingSpinner } from '../../components/shared/LoadingSpinner';
 
+/* ─────────────────────────────────────────────────────────────────
+ * Dashboard shell — editorial broadsheet.
+ * The palette lives in globals.css (:root + html.dark), so this
+ * shell only composes the Sidebar/Topbar and chrome.
+ * ───────────────────────────────────────────────────────────────── */
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { isLoading } = useAuth(true); // redirects to /login if unauthenticated
+ const { isLoading } = useAuth(true);
 
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center"><LoadingSpinner size={32} /></div>;
-
+ if (isLoading) {
   return (
-    <div className="flex min-h-screen bg-background">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Topbar />
-        <main className="flex-1 p-6">{children}</main>
-      </div>
-    </div>
+   <div className="min-h-screen flex items-center justify-center bg-[color:var(--paper)]">
+    <LoadingSpinner size={28} />
+   </div>
   );
+ }
+
+ return (
+  <div className="flex min-h-screen w-full bg-[color:var(--paper)] text-[color:var(--ink)] selection:bg-[color:var(--forest)] selection:text-white">
+   <Sidebar />
+   <main className="flex-1 min-w-0 flex flex-col">
+    <div className="sticky top-0 z-20 bg-[color:var(--paper)]/95 backdrop-blur-sm border-b border-[color:var(--rule)]">
+     <Topbar />
+    </div>
+    <div className="flex-1 relative bg-[color:var(--paper-2)]">{children}</div>
+   </main>
+   <TopUpModal />
+   <ChangePlanModal />
+   <CommandPalette />
+   <PatraChat />
+  </div>
+ );
 }

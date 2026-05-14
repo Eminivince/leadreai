@@ -1,5 +1,8 @@
 interface LeadData {
-  companyName: string;
+  // Optional because Mongoose `strict: false` documents can legitimately
+  // lack a companyName — the resolver below already handles the empty
+  // case by emitting 'there' as the fallback greeting.
+  companyName?: string;
   companyDomain?: string;
   industry?: string;
   website?: string;
@@ -14,10 +17,10 @@ interface ContactData {
 }
 
 const VARIABLE_RESOLVERS: Record<string, (lead: LeadData, contact?: ContactData) => string> = {
-  firstName: (l, c) => c?.firstName ?? l.companyName.split(' ')[0] ?? '',
+  firstName: (l, c) => c?.firstName ?? l.companyName?.split(' ')[0] ?? '',
   lastName: (l, c) => c?.lastName ?? '',
-  fullName: (l, c) => c?.fullName ?? l.companyName,
-  companyName: (l) => l.companyName,
+  fullName: (l, c) => c?.fullName ?? l.companyName ?? '',
+  companyName: (l) => l.companyName ?? '',
   industry: (l) => l.industry ?? '',
   city: (l) => l.address?.city ?? '',
   country: (l) => l.address?.country ?? '',

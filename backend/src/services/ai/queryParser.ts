@@ -1,6 +1,7 @@
-import { ParsedIntentSchema, type ParsedIntent } from '@leadreai/shared';
+import { ParsedIntentSchema, type ParsedIntent, type ClarificationAnswer } from '@leadreai/shared';
 import { generateText, type AiMessage } from './aiProvider.js';
 import { ApiError } from '../../utils/ApiError.js';
+import { env } from '../../config/env.js';
 
 export const PARSER_SYSTEM_PROMPT = `You are a lead-generation query parser. Your sole job is to extract structured intent from a natural-language prospecting query and return it as a single, valid JSON object.
 
@@ -19,14 +20,17 @@ Output EXACTLY this JSON schema (all keys required; use null only where explicit
     "state": "<string | null>",
     "city": "<string | null>"
   },
-  "targetCount": "<integer 1-1000> — leads requested; default 50 if not specified; for 'top N' use N",
+  "targetCount": "<integer 1-10> — leads requested; DEFAULT 10 if the user did not specify a number; for 'top N' use N (capped at 10). Never propose more than 10 even if the user asks for more — downstream code clamps anyway.",
   "desiredFields": "<array of strings> — pick any subset of: 'businessEmail', 'officePhone', 'mobilePhone', 'address', 'website', 'linkedin', 'whois', 'techStack'; default to ['businessEmail'] if none implied. Infer: 'email' → 'businessEmail'; 'phone' → 'officePhone'; 'website' → 'website'; 'LinkedIn' → 'linkedin'; etc. NEVER invent new field names.",
   "companySize": "<string | null> — e.g. '50-200', 'startup', 'enterprise', or null",
   "keywords": "<string[]> — relevant search terms extracted from the query",
   "confidenceScore": "<number 0-1> — decimal confidence",
   "queryType": "<'named_entity_list' | 'demographic_filter' | 'contact_lookup'>",
   "namedEntities": "<string[] | null> — specific company/org names ONLY if query mentions them (e.g. ['Aluko & Oyebode']); null otherwise",
-  "outputSchema": "<array> — extra columns the user wants beyond standard contact fields. One entry per column. Empty [] if the query only asks for standard fields (name/email/phone/website)."
+  "outputSchema": "<array> — extra columns the user wants beyond standard contact fields. One entry per column. Empty [] if the query only asks for standard fields (name/email/phone/website).",
+  "userOffering": "<string | null> — what the person submitting the query is selling or offering, if stated or strongly implied. Extract the SERVICE being sold to the leads, not the leads themselves. Examples: query 'travel agencies that need flight booking software' → 'flight booking software'; 'find law firms for our legal research service' → 'legal research service'; 'I need Nigerian fintechs' (no offering stated) → null. Keep it concise (under 15 words).",
+  "targetBuyerIndustries": "<string[] | null> — REQUIRED reasoning step when userOffering is set: which industries/sectors of company would BUY this offering? Returns 3-7 broad industry labels. Examples: userOffering='travel agency services for staff bookings' → ['oil & gas','consulting','NGOs','construction','manufacturing','education','multinationals']; userOffering='industrial paint' → ['construction','real estate','automotive workshops','manufacturing','marine services']; userOffering='B2B accounting software' → ['startups','SMEs','professional services','retail','manufacturing']. Set to null when (a) userOffering is null, OR (b) the query already names the target industry directly so industry is enough. CRITICAL: this list must NOT include the user's offering itself — if user sells travel-agency services, the buyers are NOT travel agencies, they are corporates that NEED travel agencies.",
+  "excludeWellKnown": "<boolean> — true ONLY when the brief explicitly excludes prominent / well-known / household-name companies. Cues that warrant true: 'small companies', 'not big', 'not the big ones', 'not household names', 'not popular', 'lesser-known', 'upcoming', 'under-the-radar', 'mid-market', 'don't want major brands', 'not already established'. When in doubt, default to false — only set true when the brief is unambiguous about avoiding prominent companies."
 }
 
 outputSchema entries: each object has {key, label, type, description, required}.
@@ -53,13 +57,19 @@ queryType classification:
 - 'demographic_filter': filter-based prospecting (e.g. 'Series B fintechs in NYC using Salesforce')
 
 Rules:
-- targetCount must be an integer 1-1000.
+- targetCount must be an integer 1-10. If unspecified, use 10. If the user requests more (e.g. "find 50"), clamp to 10 — discovery and enrichment cost scales linearly so we cap per-job to control latency and spend.
 - confidenceScore must be a decimal 0-1.
 - desiredFields must be a non-empty array from the allowed enum ONLY.
-- For named_entity_list with 'top N': set targetCount=N. If no specific names, namedEntities is null.
+- For named_entity_list with 'top N': set targetCount=min(N,10). If no specific names, namedEntities is null.
 - For contact_lookup with explicit company names: list them in namedEntities.
 - For demographic_filter: namedEntities is ALWAYS null.
 - outputSchema is ALWAYS an array (possibly empty []), never null. Keys must be unique.
+- CRITICAL — distinguish "what the user sells" from "what the user wants to find". Briefs like "find corporates that need travel agencies" mean the user SELLS travel-agency services and wants CORPORATE BUYERS of those services. The target is the BUYER, not the offering. When you see this shape:
+    * Set userOffering = the service the user is selling ("travel agency services for staff bookings").
+    * Set targetBuyerIndustries = the industries that would BUY this ("oil & gas", "consulting", etc.). Multiple entries — usually 4-7.
+    * Set industry = null UNLESS the brief also names a specific buyer industry the user wants to focus on.
+    * keywords should reflect the BUYER side (e.g. "corporate staff travel", "regional offices", "field operations") — NOT the user's offering keywords (NOT "travel agencies", "flight tickets", "hotels").
+  If you set the target keywords to describe the user's offering, downstream code searches for the user's competitors instead of clients. This is the single most common parser failure mode — be explicit about which side of the transaction each field describes.
 
 REMINDER: Your entire response must be a single valid JSON object. No prose before, no prose after. Start with "{". End with "}".`;
 
@@ -92,16 +102,40 @@ function extractFirstJsonObject(text: string): string | null {
 }
 
 /**
+ * Formats clarification Q&A pairs into a plain-text block appended to the
+ * user message, so the parser treats them as additional context without
+ * us needing to structurally map each answer to a specific ParsedIntent
+ * field. Answers also flow down to the agent so it can honor constraints
+ * the parser didn't capture.
+ */
+function formatClarifications(clarifications: ClarificationAnswer[] | undefined): string {
+  if (!clarifications || clarifications.length === 0) return '';
+  const lines = clarifications.map((c) => {
+    const answer = Array.isArray(c.answer) ? c.answer.join(', ') : c.answer;
+    return `- ${c.question}\n  Answer: ${answer}`;
+  });
+  return `\n\nCLARIFICATIONS (answered by user — honor these as hard constraints):\n${lines.join('\n')}`;
+}
+
+/**
  * Parses a raw natural-language prospecting query into a structured ParsedIntent
  * using the configured AI provider. On schema failure, retries ONCE with a
  * correction prompt that includes the previous bad output and Zod's complaints.
+ *
+ * `clarifications` are the user's answers to the clarifier checklist. They're
+ * formatted as a plain-text appendix to the user message — the parser treats
+ * them as additional query context.
  */
-export async function parseQuery(rawQuery: string): Promise<ParsedIntent> {
+export async function parseQuery(
+  rawQuery: string,
+  clarifications?: ClarificationAnswer[],
+): Promise<ParsedIntent> {
   if (!rawQuery.trim()) {
     throw ApiError.badRequest('rawQuery must not be empty');
   }
 
-  const conversation: AiMessage[] = [{ role: 'user', content: rawQuery }];
+  const userContent = `${rawQuery}${formatClarifications(clarifications)}`;
+  const conversation: AiMessage[] = [{ role: 'user', content: userContent }];
   const MAX_ATTEMPTS = 2;
   let lastRawResponse = '';
   let lastZodIssues: unknown = null;
@@ -112,6 +146,15 @@ export async function parseQuery(rawQuery: string): Promise<ParsedIntent> {
       systemPrompt: PARSER_SYSTEM_PROMPT,
       cacheSystem: true,
       maxTokens: 2048,
+      // Intent parsing is a judgment task — distinguishing "what user
+      // sells" from "what user wants to find", inferring buyer industries
+      // from a stated offering. v4-pro's chain-of-thought handles this
+      // nuance better than V3's mechanical extraction. One call per job
+      // — the latency cost is paid back many times over downstream when
+      // the wrong intent doesn't waste the rest of the pipeline.
+      ...(env.USE_OPENROUTER && env.JUDGMENT_LLM_MODEL
+        ? { model: env.JUDGMENT_LLM_MODEL }
+        : {}),
     });
     lastRawResponse = response.text;
 
@@ -152,7 +195,16 @@ export async function parseQuery(rawQuery: string): Promise<ParsedIntent> {
 
     const result = ParsedIntentSchema.safeParse(parsed);
     if (result.success) {
-      return result.data;
+      // Hard server-side clamps independent of model compliance:
+      //   - targetCount is capped at 10 per job (cost / latency control;
+      //     each lead burns SERP, LLM, and Hunter budget).
+      //   - Missing or malformed targetCount defaults to 10.
+      // This runs after the schema parse so the LLM can't override either.
+      const tc = result.data.targetCount;
+      const clamped = !Number.isFinite(tc) || tc == null
+        ? 10
+        : Math.max(1, Math.min(10, Math.floor(tc)));
+      return { ...result.data, targetCount: clamped };
     }
     lastZodIssues = result.error.issues;
 

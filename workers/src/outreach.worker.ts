@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { logger } from './utils/logger.js';
 import { env } from './config/env.js';
 import { researchCompany, generateOutreachDraft } from './services/outreachGenerator.js';
+import { runWithCostContext } from './services/costTracker.js';
 
 // ---------------------------------------------------------------------------
 // Inline Mongoose models (workers pattern — strict:false)
@@ -120,12 +121,13 @@ async function processOutreachJob(job: Job, publisher: Redis): Promise<void> {
     leadCount: leadIds.length,
   });
 
-  // Load workspace and campaign once per job
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // Load workspace and campaign once per job. TODO(task #8): type as IWorkspaceLean / ICampaignLean.
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   const [workspace, campaign] = await Promise.all([
     Workspace.findById(workspaceId).select('settings knowledgeBase name').lean() as Promise<any>,
     Campaign.findById(campaignId).select('outreachConfig').lean() as Promise<any>,
   ]);
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   if (!workspace) {
     throw new Error(`Workspace not found: ${workspaceId}`);
@@ -277,7 +279,11 @@ export async function createOutreachWorker(connection: Redis, publisher: Redis):
     'outreach',
     async (job: Job) => {
       try {
-        await processOutreachJob(job, publisher);
+        const data = job.data as OutreachJobData;
+        await runWithCostContext(
+          { workspaceId: data.workspaceId, campaignId: data.campaignId },
+          () => processOutreachJob(job, publisher),
+        );
       } catch (err) {
         const data = job.data as OutreachJobData;
         const total = data.leadIds?.length ?? 0;

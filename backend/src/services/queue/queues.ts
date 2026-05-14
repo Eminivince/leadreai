@@ -18,6 +18,9 @@ let _exportQueue: Queue | null = null;
 let _contactEnrichmentQueue: Queue | null = null;
 let _hubspotSyncQueue: Queue | null = null;
 let _sequenceStepQueue: Queue | null = null;
+let _documentQueue: Queue | null = null;
+let _tableEnrichmentQueue: Queue | null = null;
+let _subagentProspectingQueue: Queue | null = null;
 
 export function getProspectingQueue(): Queue {
   if (!_prospectingQueue) {
@@ -85,6 +88,22 @@ export function getHubspotSyncQueue(): Queue {
   return _hubspotSyncQueue;
 }
 
+export function getDocumentQueue(): Queue {
+  if (!_documentQueue) {
+    _documentQueue = new Queue('document-process', {
+      connection: getRedis(),
+      prefix: QUEUE_PREFIX,
+      defaultJobOptions: {
+        removeOnComplete: { count: 200 },
+        removeOnFail: { count: 500 },
+        attempts: 2,
+        backoff: { type: 'exponential', delay: 10_000 },
+      },
+    });
+  }
+  return _documentQueue;
+}
+
 export function getSequenceStepQueue(): Queue {
   if (!_sequenceStepQueue) {
     _sequenceStepQueue = new Queue('sequence-step', {
@@ -99,4 +118,35 @@ export function getSequenceStepQueue(): Queue {
     });
   }
   return _sequenceStepQueue;
+}
+
+export function getTableEnrichmentQueue(): Queue {
+  if (!_tableEnrichmentQueue) {
+    _tableEnrichmentQueue = new Queue('table-enrichment', {
+      connection: getRedis(),
+      prefix: QUEUE_PREFIX,
+      // Phase 15D — one job per (table, column, row). Failures retry
+      // twice with exponential backoff; provider rate-limits are already
+      // classified as 'rate_limited' by the executor and re-run will
+      // happen when user retriggers rather than auto-retrying rapidly.
+      defaultJobOptions: {
+        removeOnComplete: { count: 500 },
+        removeOnFail: { count: 1000 },
+        attempts: 2,
+        backoff: { type: 'exponential', delay: 10_000 },
+      },
+    });
+  }
+  return _tableEnrichmentQueue;
+}
+
+export function getSubagentProspectingQueue(): Queue {
+  if (!_subagentProspectingQueue) {
+    _subagentProspectingQueue = new Queue('prospecting-subagent', {
+      connection: getRedis(),
+      prefix: QUEUE_PREFIX,
+      defaultJobOptions: { removeOnComplete: { count: 200 }, removeOnFail: { count: 50 } },
+    });
+  }
+  return _subagentProspectingQueue;
 }

@@ -15,8 +15,14 @@ router.get('/:campaignId', asyncHandler(campaignsController.getCampaign));
 router.patch('/:campaignId', asyncHandler(campaignsController.updateCampaign));
 router.delete('/:campaignId', asyncHandler(campaignsController.deleteCampaign));
 
-router.post('/:campaignId/leads', asyncHandler(campaignsController.addLeads));
-router.delete('/:campaignId/leads/:leadId', asyncHandler(campaignsController.removeLeadFromCampaign));
 router.get('/:campaignId/leads', asyncHandler(campaignsController.listCampaignLeads));
+
+router.get('/:campaignId/preflight', asyncHandler(campaignsController.preflightCampaign));
+router.post('/:campaignId/activate', asyncHandler(campaignsController.activateCampaignHandler));
+
+router.get('/:campaignId/stats', asyncHandler(campaignsController.campaignStats));
+router.post('/:campaignId/pause', asyncHandler(campaignsController.pauseCampaignHandler));
+router.post('/:campaignId/resume', asyncHandler(campaignsController.resumeCampaignHandler));
+router.post('/:campaignId/archive', asyncHandler(campaignsController.archiveCampaignHandler));
 
 export default router;

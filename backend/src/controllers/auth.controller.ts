@@ -65,8 +65,8 @@ export async function register(req: Request, res: Response): Promise<void> {
     throw err;
   }
 
-  const accessToken = signAccessToken({ sub: String(user._id), email: user.email });
-  const refreshToken = signRefreshToken(String(user._id));
+  const accessToken = signAccessToken({ sub: String(user._id), email: user.email, tv: user.tokenVersion });
+  const refreshToken = signRefreshToken(String(user._id), user.tokenVersion);
 
   res.cookie('refresh_token', refreshToken, REFRESH_COOKIE_OPTIONS);
   logger.info('User registered', { userId: String(user._id), email: user.email });
@@ -95,8 +95,8 @@ export async function login(req: Request, res: Response): Promise<void> {
   user.lastLoginAt = new Date();
   await user.save();
 
-  const accessToken = signAccessToken({ sub: String(user._id), email: user.email });
-  const refreshToken = signRefreshToken(String(user._id));
+  const accessToken = signAccessToken({ sub: String(user._id), email: user.email, tv: user.tokenVersion });
+  const refreshToken = signRefreshToken(String(user._id), user.tokenVersion);
 
   res.cookie('refresh_token', refreshToken, REFRESH_COOKIE_OPTIONS);
 
@@ -108,7 +108,20 @@ export async function login(req: Request, res: Response): Promise<void> {
   });
 }
 
-export async function logout(_req: Request, res: Response): Promise<void> {
+export async function logout(req: Request, res: Response): Promise<void> {
+  // Server-side invalidation: bump tokenVersion so every token currently
+  // in circulation (including any stolen refresh cookie) is rejected on
+  // the next authenticate / refresh call. The cookie clear is incidental;
+  // the real signal is in the database.
+  if (req.user) {
+    await User.findByIdAndUpdate(req.user._id, { $inc: { tokenVersion: 1 } }).catch((err) => {
+      logger.warn('Failed to bump tokenVersion on logout', {
+        userId: String(req.user?._id),
+        err: err instanceof Error ? err.message : String(err),
+      });
+    });
+    logger.info('User logged out', { userId: String(req.user._id) });
+  }
   res.clearCookie('refresh_token', { path: '/api/v1/auth/refresh' });
   res.status(200).json({ success: true, data: null });
 }
@@ -131,7 +144,21 @@ export async function refresh(req: Request, res: Response): Promise<void> {
     throw ApiError.unauthorized('User not found');
   }
 
-  const accessToken = signAccessToken({ sub: String(user._id), email: user.email });
+  // Session-epoch check: a refresh cookie issued before the user logged
+  // out (or was admin-revoked) carries a stale `tv`. Reject it so the
+  // attacker can't exchange a stolen long-lived cookie for fresh access
+  // tokens after the user has logically signed out.
+  const refreshTv = payload.tv ?? 0;
+  if (refreshTv !== user.tokenVersion) {
+    logger.warn('Refresh rejected: tokenVersion mismatch', {
+      userId: String(user._id),
+      cookieTv: refreshTv,
+      userTv: user.tokenVersion,
+    });
+    throw ApiError.unauthorized('Session expired');
+  }
+
+  const accessToken = signAccessToken({ sub: String(user._id), email: user.email, tv: user.tokenVersion });
 
   res.status(200).json({ success: true, data: { accessToken } });
 }
@@ -173,7 +200,29 @@ export async function updateMe(req: Request, res: Response): Promise<void> {
 
 export async function getCredits(req: Request, res: Response): Promise<void> {
   if (!req.user) throw ApiError.unauthorized();
-  const user = await User.findById(req.user._id).select('creditsBalance plan');
+
+  // Lazy renewal: if the monthly bucket is due for a refill, bump it
+  // before we return the balance so the user sees the true post-renewal
+  // state rather than "last month's leftovers."
+  const { renewSubscriptionIfDue } = await import('../services/credits.js');
+  await renewSubscriptionIfDue(req.user._id).catch(() => {
+    /* non-fatal — balance read below just sees pre-renewal state */
+  });
+
+  const user = await User.findById(req.user._id).select(
+    'creditsBalance monthlyCreditsBalance subscriptionRenewsAt plan planExpiresAt',
+  );
   if (!user) throw ApiError.notFound('User not found');
-  res.json({ success: true, data: { creditsBalance: user.creditsBalance, plan: user.plan } });
+
+  res.json({
+    success: true,
+    data: {
+      plan: user.plan,
+      planExpiresAt: user.planExpiresAt,
+      subscriptionRenewsAt: user.subscriptionRenewsAt,
+      monthlyCreditsBalance: user.monthlyCreditsBalance,
+      creditsBalance: user.creditsBalance,
+      totalCreditsBalance: user.monthlyCreditsBalance + user.creditsBalance,
+    },
+  });
 }

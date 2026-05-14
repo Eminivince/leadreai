@@ -4,6 +4,7 @@ import { braveProvider } from './brave.js';
 import { serpApiProvider } from './serpapi.js';
 import { serperProvider } from './serper.js';
 import { getQueryCache } from './queryCache.js';
+import { recordSerpCost } from '../../services/costTracker.js';
 import type { SearchEngine, SearchProvider, SearchResultItem } from './types.js';
 
 /**
@@ -74,6 +75,12 @@ export async function routedSearch(query: string, engine: SearchEngine): Promise
 
   for (const provider of providers) {
     const result = await provider.search(query, engine);
+    // Record cost for EVERY provider call we actually made — failed calls
+    // still consumed quota (429s, empty responses, auth errors all burn credit).
+    // Cache hits bypass this loop entirely, so we don't pay for them. Skipped
+    // for providers flagged as free (Brave on current plan).
+    void recordSerpCost(provider.id);
+
     if (result.quotaExhausted) {
       logger.warn('[searchRouter] provider exhausted for rest of process', { provider: provider.id });
       exhaustedProviders.add(provider.id);

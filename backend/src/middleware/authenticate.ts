@@ -6,8 +6,11 @@ import { verifyAccessToken } from '../lib/jwt.js';
 import { ApiError } from '../utils/ApiError.js';
 import Workspace from '../models/Workspace.js';
 
-// Extend Express Request to carry authenticated user
+// Extend Express Request to carry authenticated user. Module-augmentation via
+// `namespace Express` is the documented Express pattern and is intentional.
+// eslint-disable-next-line @typescript-eslint/no-namespace
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       user?: IUser;
@@ -40,6 +43,14 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
 
     if (!user) {
       throw ApiError.unauthorized('User not found');
+    }
+
+    // Session epoch — see User.tokenVersion. A token issued before logout
+    // (or admin force-rotate) carries a stale `tv` and must be rejected
+    // even if its signature is valid and it hasn't expired yet.
+    const tokenTv = payload.tv ?? 0;
+    if (tokenTv !== user.tokenVersion) {
+      throw ApiError.unauthorized('Session expired');
     }
 
     req.user = user;

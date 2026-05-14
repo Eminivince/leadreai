@@ -3,6 +3,7 @@ import { runPageScraper } from '../pageScraper.js';
 import type { ToolDef } from './index.js';
 import { logger } from '../../utils/logger.js';
 import { env } from '../../config/env.js';
+import { recordScrapeCost } from '../../services/costTracker.js';
 
 export const scrapePageTool: ToolDef = {
   name: 'scrape_page',
@@ -22,6 +23,9 @@ export const scrapePageTool: ToolDef = {
         ctx.publisher,
         ctx.jobId,
       );
+      // Record cost on every scrape attempt — Playwright container CPU is
+      // consumed even when the page returns 0 useful data.
+      void recordScrapeCost('playwright');
       const page = results[0];
       if (!page) return { ok: false, output: 'scrape returned nothing' };
       return {

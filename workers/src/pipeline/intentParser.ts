@@ -112,17 +112,25 @@ export async function runIntentParser(
   const parsedIntent = jobDoc.parsedIntent as ParsedIntent;
   if (!parsedIntent) throw new Error(`Job ${jobId} has no parsedIntent`);
   const rawQuery = typeof jobDoc.rawQuery === 'string' ? jobDoc.rawQuery : undefined;
+  // Clarifications are already rolled into parsedIntent via the backend
+  // parser, but we also surface them verbatim to the agent so it honors
+  // constraints the parser may not have mapped to structured fields
+  // (e.g. free-text excludes, custom personas).
+  const clarifications = Array.isArray(jobDoc.clarifications)
+    ? jobDoc.clarifications as Array<{ id: string; question: string; answer: unknown }>
+    : undefined;
 
   logger.info('[Pipeline] parsedIntent loaded', {
     jobId, queryType: parsedIntent.queryType,
     industry: parsedIntent.industry, targetCount: parsedIntent.targetCount,
+    clarificationCount: clarifications?.length ?? 0,
   });
 
   await pushProgress(jobId, publisher, 'collecting', 10, 'jobAgentStart');
 
   // ── AGENT OWNS THE PIPELINE ───────────────────────────────────────────
   const agentResult = await runJobAgent({
-    jobId, workspaceId, parsedIntent, rawQuery, publisher,
+    jobId, workspaceId, parsedIntent, rawQuery, clarifications, publisher,
   });
 
   logger.info('[Pipeline] JobAgent finished', {
@@ -133,24 +141,28 @@ export async function runIntentParser(
   });
 
   // ── Dedup + Rank + Persist ───────────────────────────────────────────
-  await pushProgress(jobId, publisher, 'deduplicating', 85, 'deduplication');
-  const deduped = deduplicateLeads(agentResult.leads);
+  // Fan-out path handles its own writeLeads call (including lifecycle).
+  let ranked: ReturnType<typeof rankLeads> = [];
+  if (!agentResult.fanOutComplete) {
+    await pushProgress(jobId, publisher, 'deduplicating', 85, 'deduplication');
+    const deduped = deduplicateLeads(agentResult.leads);
 
-  await pushProgress(jobId, publisher, 'deduplicating', 92, 'ranking');
-  const ranked = rankLeads(deduped, parsedIntent.desiredFields);
+    await pushProgress(jobId, publisher, 'deduplicating', 92, 'ranking');
+    ranked = rankLeads(deduped, parsedIntent.desiredFields);
 
-  await pushProgress(jobId, publisher, 'deduplicating', 97, 'leadWrite');
-  await writeLeads(ranked, jobId, workspaceId, publisher);
+    await pushProgress(jobId, publisher, 'deduplicating', 97, 'leadWrite');
+    await writeLeads(ranked, jobId, workspaceId, publisher);
+  }
 
   await pushProgress(jobId, publisher, 'complete', 100, 'done');
 
   // Persist a compact agent transcript for post-hoc debugging
   await ProspectingJob.findByIdAndUpdate(jobId, {
-    'progress.leadsFoundSoFar': ranked.length,
+    'progress.leadsFoundSoFar': agentResult.leadsFound ?? ranked.length,
     agentTranscript: agentResult.transcript.slice(-40),
     agentStopReason: agentResult.stopReason,
     agentStepsUsed: agentResult.stepsUsed,
   });
 
-  logger.info('[Pipeline] Job complete', { jobId, totalLeads: ranked.length });
+  logger.info('[Pipeline] Job complete', { jobId, totalLeads: agentResult.leadsFound ?? ranked.length });
 }

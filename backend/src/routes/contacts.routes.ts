@@ -16,10 +16,12 @@ import {
 export const contactsRouter: RouterType = Router({ mergeParams: true });
 contactsRouter.use(authenticate);
 
-contactsRouter.get('/', asyncHandler(listContacts));
+// IDOR fix: every contact route enforces workspace membership. Read = any
+// member; write = owner/admin. Previously list/get/patch were authed-only.
+contactsRouter.get('/', authorize(['owner', 'admin', 'member']), asyncHandler(listContacts));
 contactsRouter.post('/bulk-tag', authorize(['owner', 'admin']), asyncHandler(bulkTagContacts));
-contactsRouter.get('/:contactId', asyncHandler(getContact));
-contactsRouter.patch('/:contactId', asyncHandler(updateContact));
+contactsRouter.get('/:contactId', authorize(['owner', 'admin', 'member']), asyncHandler(getContact));
+contactsRouter.patch('/:contactId', authorize(['owner', 'admin']), asyncHandler(updateContact));
 contactsRouter.delete('/:contactId', authorize(['owner', 'admin']), asyncHandler(softDeleteContact));
 
 // Mounted at /api/v1/workspaces/:workspaceId/leads

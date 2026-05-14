@@ -47,6 +47,9 @@ jobs:
       - name: Build workers
         run: pnpm --filter @leadreai/workers build
 
+      - name: Build frontend
+        run: pnpm --filter @leadreai/frontend build
+
       - name: Lint shared
         run: pnpm --filter @leadreai/shared lint
 
@@ -58,3 +61,8 @@ jobs:
 
       - name: Lint frontend
         run: pnpm --filter @leadreai/frontend lint
+
+      # Test harness. Sprint 0 ships the stage; Sprint 6 fills it in with
+      # vitest suites for credits / auth / webhooks / sequence worker.
+      - name: Run unit tests
+        run: pnpm -r run test --if-present

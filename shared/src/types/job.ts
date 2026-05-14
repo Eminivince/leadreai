@@ -18,6 +18,14 @@ export interface JobGeography {
 // ../schemas/zod/job.schemas.ts (as Zod-inferred types, the source of truth
 // for runtime validation). Re-export here for convenience; don't re-declare.
 export type { FactType, OutputSchemaColumn, FactValue } from '../schemas/zod/job.schemas.js';
+export type {
+  ClarificationQuestion,
+  ClarificationQuestionType,
+  ClarificationAnswer,
+  ClarifyRequest,
+  ClarifyResponse,
+  PolicyDecision,
+} from '../schemas/zod/job.schemas.js';
 
 export interface ParsedIntent {
   /** Null when the query names a specific company without industry context; enrichment fills it in later. */
@@ -35,6 +43,10 @@ export interface ParsedIntent {
   namedEntities: string[] | null;
   /** Extra columns the user asked for. Empty array for queries that only ask for the standard contact fields. */
   outputSchema?: import('../schemas/zod/job.schemas.js').OutputSchemaColumn[];
+  /** What the app's user is selling or offering (e.g. "corporate travel booking services for SMEs").
+   *  Extracted by the query parser when present; used by the hybrid discovery prompt to generate
+   *  concrete fit-reasons per candidate. Null when the query gives no indication. */
+  userOffering?: string | null;
 }
 
 export interface JobProgress {
@@ -72,6 +84,7 @@ export interface ProspectingJob {
   workspaceId: string;
   createdBy: string;
   rawQuery: string;
+  clarifications?: import('../schemas/zod/job.schemas.js').ClarificationAnswer[];
   parsedIntent?: ParsedIntent;
   status: JobStatus;
   progress: JobProgress;

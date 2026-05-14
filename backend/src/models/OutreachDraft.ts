@@ -58,5 +58,6 @@ outreachDraftSchema.index({ workspaceId: 1 });
 outreachDraftSchema.index({ campaignId: 1 });
 outreachDraftSchema.index({ leadId: 1 });
 outreachDraftSchema.index({ campaignId: 1, status: 1 });
+outreachDraftSchema.index({ 'deliveryMetadata.messageId': 1 }, { sparse: true });
 
 export default mongoose.model<IOutreachDraft>('OutreachDraft', outreachDraftSchema);
