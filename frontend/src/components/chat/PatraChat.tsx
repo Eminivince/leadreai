@@ -258,7 +258,7 @@ export function PatraChat() {
         className={`fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all ${
           open
             ? 'bg-[color:var(--ink)]/80 scale-90'
-            : 'bg-[color:var(--ink)] hover:bg-[color:var(--forest)] hover:scale-105'
+            : 'bg-[color:var(--ink)] hover:bg-[color:var(--ember)] hover:scale-105'
         }`}
       >
         {open
@@ -280,7 +280,7 @@ export function PatraChat() {
               </div>
               <div>
                 <div className="text-[13.5px] font-semibold text-[color:var(--ink)] leading-tight">Patra</div>
-                <div className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--forest)] leading-tight">AI assistant</div>
+                <div className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ember)] leading-tight">AI assistant</div>
               </div>
             </div>
             <button
@@ -348,7 +348,7 @@ export function PatraChat() {
               <button
                 onClick={() => void send()}
                 disabled={!input.trim() || loading}
-                className="w-9 h-9 rounded-lg bg-[color:var(--ink)] text-[color:var(--paper)] flex items-center justify-center hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40 shrink-0"
+                className="w-9 h-9 rounded-lg bg-[color:var(--ink)] text-[color:var(--paper)] flex items-center justify-center hover:bg-[color:var(--ember)] transition-colors disabled:opacity-40 shrink-0"
               >
                 <SendIcon className="w-3.5 h-3.5" />
               </button>

@@ -192,7 +192,7 @@ export function EmailPanel({ workspaceId }: { workspaceId: string }) {
    <div>
     <span
      className={`font-mono text-[9.5px] tracking-[0.22em] uppercase ${
-      verified ? 'text-[color:var(--forest)]' : 'text-[color:var(--ink-3)]'
+      verified ? 'text-[color:var(--ember)]' : 'text-[color:var(--ink-3)]'
      }`}
     >
      {verified ? 'On the wire' : 'Not filed'}
@@ -201,11 +201,11 @@ export function EmailPanel({ workspaceId }: { workspaceId: string }) {
      {verified ? (
       <>
        Sending from{' '}
-       <em className="italic text-[color:var(--forest)]">{existing?.fromEmail}</em>
+       <em className="italic text-[color:var(--ember)]">{existing?.fromEmail}</em>
       </>
      ) : (
       <>
-       Choose a <em className="italic text-[color:var(--forest)]">sender</em> for outreach.
+       Choose a <em className="italic text-[color:var(--ember)]">sender</em> for outreach.
       </>
      )}
     </h3>
@@ -278,7 +278,7 @@ export function EmailPanel({ workspaceId }: { workspaceId: string }) {
      <div className="flex items-baseline justify-between mb-2">
       <Label>API key</Label>
       {existing?.hasApiKey && (
-       <span className=" italic text-[11.5px] text-[color:var(--forest)]">
+       <span className=" italic text-[11.5px] text-[color:var(--ember)]">
         · saved — leave blank to keep
        </span>
       )}
@@ -340,7 +340,7 @@ export function EmailPanel({ workspaceId }: { workspaceId: string }) {
        <div className="flex items-baseline justify-between mb-2">
         <Label>App password</Label>
         {existing?.hasSmtpPass && (
-         <span className=" italic text-[11.5px] text-[color:var(--forest)]">
+         <span className=" italic text-[11.5px] text-[color:var(--ember)]">
           · saved
          </span>
         )}
@@ -369,7 +369,7 @@ export function EmailPanel({ workspaceId }: { workspaceId: string }) {
     <button
      type="submit"
      disabled={saveMutation.isPending}
-     className="group inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-3 rounded-full text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-60"
+     className="group inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-3 rounded-full text-[13px] font-medium hover:bg-[color:var(--ember)] transition-colors disabled:opacity-60"
     >
      {saveMutation.isPending ? 'Saving…' : verified ? 'Save changes' : 'File this sender'}
      <ArrowEast className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />

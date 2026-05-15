@@ -114,8 +114,8 @@ export function toneClasses(tone: CellTone): {
   switch (tone) {
     case 'positive':
       return {
-        text: 'text-[color:var(--forest)]',
-        badge: 'bg-[color:var(--forest)]/10 text-[color:var(--forest)] border-[color:var(--forest)]/30',
+        text: 'text-[color:var(--ember)]',
+        badge: 'bg-[color:var(--ember)]/10 text-[color:var(--ember)] border-[color:var(--ember)]/30',
       };
     case 'negative':
       return {

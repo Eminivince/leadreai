@@ -178,7 +178,7 @@ function Bar({ value, max }: { value: number; max: number }) {
  return (
   <div className="relative h-[3px] bg-[color:var(--rule)]/40 rounded-full overflow-hidden">
    <div
-    className="absolute inset-y-0 left-0 bg-[color:var(--forest)]"
+    className="absolute inset-y-0 left-0 bg-[color:var(--ember)]"
     style={{ width: `${pct}%` }}
    />
   </div>

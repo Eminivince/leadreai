@@ -55,7 +55,7 @@ export function PageHelp({ title, body, tips }: PageHelpProps) {
               <ul className="mt-3 pt-3 border-t border-dashed border-[color:var(--rule)] flex flex-col gap-1.5">
                 {tips.map((tip) => (
                   <li key={tip} className="flex items-start gap-2 text-[12px] text-[color:var(--ink-3)] leading-[1.5]">
-                    <span className="text-[color:var(--forest)] shrink-0 mt-0.5 font-bold">·</span>
+                    <span className="text-[color:var(--ember)] shrink-0 mt-0.5 font-bold">·</span>
                     {tip}
                   </li>
                 ))}

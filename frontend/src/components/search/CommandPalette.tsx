@@ -356,7 +356,7 @@ export function CommandPalette() {
             }`}
            >
             {active && (
-             <span className="absolute left-0 top-2 bottom-2 w-[2px] bg-[color:var(--forest)]" />
+             <span className="absolute left-0 top-2 bottom-2 w-[2px] bg-[color:var(--ember)]" />
             )}
             <span className="font-mono text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] shrink-0">
              {row.kicker}

@@ -82,12 +82,12 @@ function PackageCard({
       onClick={onSelect}
       className={`relative w-full flex items-center justify-between gap-4 p-4 text-left border transition-colors ${
         selected
-          ? 'border-[color:var(--forest)] bg-[color:var(--paper-3)]'
+          ? 'border-[color:var(--ember)] bg-[color:var(--paper-3)]'
           : 'border-[color:var(--rule)] hover:border-[color:var(--ink-2)] bg-[color:var(--paper)]'
       }`}
     >
       {selected && (
-        <span className="absolute left-0 top-2 bottom-2 w-[2px] bg-[color:var(--forest)]" />
+        <span className="absolute left-0 top-2 bottom-2 w-[2px] bg-[color:var(--ember)]" />
       )}
       <div className="min-w-0">
         <div className=" text-[22px] leading-tight text-[color:var(--ink)]">
@@ -209,7 +209,7 @@ export function TopUpModal() {
               id="topup-title"
               className="mt-1 text-[26px] leading-[1.05] text-[color:var(--ink)]"
             >
-              Buy <em className="italic text-[color:var(--forest)]">dispatches</em>.
+              Buy <em className="italic text-[color:var(--ember)]">dispatches</em>.
             </h2>
             <p className="mt-1 italic text-[12.5px] text-[color:var(--ink-2)]">
               One credit covers one dispatch, regardless of lead count.

@@ -58,12 +58,12 @@ function PlanCard({
    onClick={onSelect}
    className={`relative w-full text-left border transition-colors p-5 ${
     selected
-     ? 'border-[color:var(--forest)] bg-[color:var(--paper-3)]'
+     ? 'border-[color:var(--ember)] bg-[color:var(--paper-3)]'
      : 'border-[color:var(--rule)] hover:border-[color:var(--ink-2)] bg-[color:var(--paper)]'
    }`}
   >
    {selected && (
-    <span className="absolute left-0 top-3 bottom-3 w-[2px] bg-[color:var(--forest)]" />
+    <span className="absolute left-0 top-3 bottom-3 w-[2px] bg-[color:var(--ember)]" />
    )}
    <div className="flex items-start justify-between gap-4 mb-1">
     <div>
@@ -72,7 +72,7 @@ function PlanCard({
        {plan.label}
       </span>
       {current && (
-       <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--forest)] border border-[color:var(--forest)]/40 px-1.5 py-0.5">
+       <span className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ember)] border border-[color:var(--ember)]/40 px-1.5 py-0.5">
         Current
        </span>
       )}
@@ -182,7 +182,7 @@ export function ChangePlanModal() {
        id="changeplan-title"
        className="mt-1 text-[26px] leading-[1.05] text-[color:var(--ink)]"
       >
-       Pick a <em className="italic text-[color:var(--forest)]">subscription</em>.
+       Pick a <em className="italic text-[color:var(--ember)]">subscription</em>.
       </h2>
       <p className="mt-1 italic text-[12.5px] text-[color:var(--ink-2)]">
        Subscriptions refill a monthly allowance. Top-ups stack on top.

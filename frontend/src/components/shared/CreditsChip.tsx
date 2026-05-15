@@ -38,13 +38,13 @@ export function CreditsChip({ className = '' }: { className?: string }) {
       title={`${data.plan} plan · ${balance} credit${balance === 1 ? '' : 's'} remaining · click to top up`}
       className={`group inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md border transition-colors ${
         isLow
-          ? 'border-[color:var(--forest)]/40 bg-[color:var(--forest)]/5 hover:border-[color:var(--forest)]'
+          ? 'border-[color:var(--ember)]/40 bg-[color:var(--ember)]/5 hover:border-[color:var(--ember)]'
           : 'border-[color:var(--rule)] bg-[color:var(--paper-2)] hover:border-[color:var(--ink-3)]'
       } ${className}`}
     >
       <span
         className={`inline-block w-1.5 h-1.5 rounded-full ${
-          isLow ? 'bg-[color:var(--forest)]' : 'bg-[color:var(--ink-3)]'
+          isLow ? 'bg-[color:var(--ember)]' : 'bg-[color:var(--ink-3)]'
         }`}
         aria-hidden
       />

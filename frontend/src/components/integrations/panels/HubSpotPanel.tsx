@@ -97,7 +97,7 @@ export function HubSpotPanel({ workspaceId }: { workspaceId: string }) {
       Not filed
      </span>
      <h3 className="mt-2 text-[24px] leading-[1.15] text-[color:var(--ink)]">
-      Wire LeadreAI to your <em className="italic text-[color:var(--forest)]">HubSpot portal</em>.
+      Wire LeadreAI to your <em className="italic text-[color:var(--ember)]">HubSpot portal</em>.
      </h3>
      <p className="mt-2 text-[13.5px] leading-[1.55] text-[color:var(--ink-2)]">
       We use the official HubSpot OAuth flow. You&rsquo;ll approve the scopes in a browser tab and
@@ -130,7 +130,7 @@ export function HubSpotPanel({ workspaceId }: { workspaceId: string }) {
 
     <button
      onClick={handleConnect}
-     className="group inline-flex items-center justify-between gap-4 w-full bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-3.5 rounded-full hover:bg-[color:var(--forest)] transition-colors"
+     className="group inline-flex items-center justify-between gap-4 w-full bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-3.5 rounded-full hover:bg-[color:var(--ember)] transition-colors"
     >
      <span className=" text-[14px] font-medium">
       Connect via OAuth
@@ -153,12 +153,12 @@ export function HubSpotPanel({ workspaceId }: { workspaceId: string }) {
   <div className="flex flex-col gap-7">
    {/* Status summary */}
    <div>
-    <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
+    <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ember)]">
      On the wire
     </span>
     <h3 className="mt-2 text-[24px] leading-[1.15] text-[color:var(--ink)]">
      Connected to portal{' '}
-     <span className="font-mono text-[18px] text-[color:var(--forest)]">
+     <span className="font-mono text-[18px] text-[color:var(--ember)]">
       {status.portalId}
      </span>
     </h3>
@@ -249,7 +249,7 @@ export function HubSpotPanel({ workspaceId }: { workspaceId: string }) {
     <button
      onClick={handleSync}
      disabled={syncMutation.isPending}
-     className="group inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-60"
+     className="group inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full text-[13px] font-medium hover:bg-[color:var(--ember)] transition-colors disabled:opacity-60"
     >
      {syncMutation.isPending ? 'Dispatching…' : 'Dispatch now'}
      <ArrowEast className="w-3 h-3" />
