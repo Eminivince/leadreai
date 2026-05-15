@@ -124,7 +124,7 @@ function NavRow({
 
  const rowBase = 'group relative flex items-center gap-2.5 h-9 px-3 mx-2 rounded-lg text-[13px] transition-all duration-150';
  const rowState = isActive
-  ? 'bg-[color:var(--forest)]/10 text-[color:var(--forest-2)] font-semibold'
+  ? 'bg-[color:var(--ember)]/8 text-[color:var(--ember)] font-semibold pl-[11px] border-l-2 border-[color:var(--ember)]'
   : isDisabled
    ? 'text-[color:var(--ink-3)]/60 cursor-default'
    : 'text-[color:var(--ink-3)] hover:bg-[color:var(--paper-3)] hover:text-[color:var(--ink)]';
@@ -208,7 +208,7 @@ function NavRow({
         const childClass = cn(
          'flex h-8 items-center px-2.5 rounded-md text-[12.5px] transition-all duration-150',
          childActive
-          ? 'text-[color:var(--forest-2)] font-semibold bg-[color:var(--forest)]/10'
+          ? 'text-[color:var(--ember)] font-semibold bg-[color:var(--ember)]/8'
           : childDisabled
            ? 'text-[color:var(--ink-3)]/50 cursor-default'
            : 'text-[color:var(--ink-3)] hover:text-[color:var(--ink)] hover:bg-[color:var(--paper-3)]',
@@ -291,14 +291,14 @@ export function Sidebar() {
   <motion.aside
    animate={{ width: collapsed ? 60 : 240 }}
    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-   className="shrink-0 h-screen sticky top-0 flex flex-col bg-[color:var(--paper)] border-r border-[color:var(--rule)] overflow-hidden z-30"
+   className="shrink-0 h-screen sticky top-0 flex flex-col bg-[color:var(--paper-2)] border-r border-[color:var(--rule)] overflow-hidden z-30"
    style={{ willChange: 'width' }}
   >
    {/* Logo + workspace */}
    <div className="flex items-center gap-3 px-4 h-[60px] border-b border-[color:var(--rule)] shrink-0">
     <Link
      href="/"
-     className="shrink-0 w-8 h-8 rounded-lg bg-[color:var(--forest)] flex items-center justify-center"
+     className="shrink-0 w-8 h-8 rounded-lg bg-[color:var(--ember)] flex items-center justify-center"
      title="Home"
     >
      <span className="font-extrabold text-[13px] text-white leading-none">L</span>
@@ -315,7 +315,7 @@ export function Sidebar() {
       >
        <div className="flex items-baseline gap-0.5 whitespace-nowrap">
         <span className="font-extrabold text-[15px] tracking-tight text-[color:var(--ink)]">Leadre</span>
-        <span className="font-extrabold text-[15px] text-[color:var(--forest)]">.</span>
+        <span className="font-extrabold text-[15px] text-[color:var(--ember)]">.</span>
         <span className="font-extrabold text-[15px] tracking-tight text-[color:var(--ink)]">AI</span>
        </div>
        <div className="text-[10.5px] text-[color:var(--ink-3)] truncate -mt-0.5">
@@ -374,7 +374,7 @@ export function Sidebar() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="px-5 mb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[color:var(--ink-3)]/70 whitespace-nowrap"
+        className="px-5 mb-1 font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-4)] whitespace-nowrap"
        >
         Workspace
        </motion.span>
@@ -404,7 +404,7 @@ export function Sidebar() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="px-5 mb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[color:var(--ink-3)]/70 whitespace-nowrap"
+        className="px-5 mb-1 font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ink-4)] whitespace-nowrap"
        >
         More
        </motion.span>
@@ -443,7 +443,7 @@ export function Sidebar() {
         <span className="text-[10.5px] font-semibold text-[color:var(--ink-3)]">Credits</span>
         <button
          onClick={openTopUp}
-         className="text-[10.5px] font-semibold text-[color:var(--forest)] hover:text-[color:var(--forest-2)] transition-colors"
+         className="text-[10.5px] font-semibold text-[color:var(--ember)] hover:text-[color:var(--ember-2)] transition-colors"
         >
          {totalBalance.toLocaleString()}
         </button>
@@ -453,7 +453,7 @@ export function Sidebar() {
          initial={{ width: 0 }}
          animate={{ width: `${monthlyPct}%` }}
          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-         className={cn('h-full rounded-full', monthlyPct > 80 ? 'bg-red-400' : 'bg-[color:var(--forest)]')}
+         className={cn('h-full rounded-full', monthlyPct > 80 ? 'bg-red-400' : 'bg-[color:var(--ember)]')}
         />
        </div>
        <div className="flex items-center justify-between mt-1">
@@ -461,7 +461,7 @@ export function Sidebar() {
          {monthlyBalance.toLocaleString()} / {allowance.toLocaleString()} mo
         </span>
         {topupBalance > 0 && (
-         <span className="text-[10px] text-[color:var(--forest)] font-semibold">
+         <span className="text-[10px] text-[color:var(--ember)] font-semibold">
           +{topupBalance.toLocaleString()}
          </span>
         )}
@@ -473,7 +473,7 @@ export function Sidebar() {
     {/* User row */}
     <div className="flex items-center gap-2.5">
      <div
-      className="w-7 h-7 rounded-full bg-[color:var(--forest)] flex items-center justify-center shrink-0"
+      className="w-7 h-7 rounded-full bg-[color:var(--ember)] flex items-center justify-center shrink-0"
       title={`${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || user?.email}
      >
       <span className="text-[10px] font-bold text-white">{initials}</span>

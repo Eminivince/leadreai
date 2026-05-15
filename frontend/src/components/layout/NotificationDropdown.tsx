@@ -28,13 +28,13 @@ function BellGlyph({ className = 'w-3.5 h-3.5' }: { className?: string }) {
 function dotTone(type: Notification['type']): string {
  switch (type) {
   case 'job.complete':
-   return 'bg-[color:var(--forest)]';
+   return 'bg-[color:var(--ember)]';
   case 'job.failed':
   case 'crm.sync_failed':
    return 'bg-[color:var(--warn)]';
   case 'campaign.drafts_complete':
   case 'crm.sync_complete':
-   return 'bg-[color:var(--forest)]';
+   return 'bg-[color:var(--ember)]';
   default:
    return 'bg-[color:var(--ink-3)]';
  }
@@ -97,7 +97,7 @@ export function NotificationDropdown() {
    >
     <BellGlyph />
     {unread > 0 && (
-     <span className="absolute top-0.5 right-0.5 min-w-[14px] h-[14px] px-[3px] rounded-full bg-[color:var(--rust)] text-[color:var(--paper)] font-mono text-[9px] font-semibold flex items-center justify-center leading-none tabular-nums">
+     <span className="absolute top-0.5 right-0.5 min-w-[14px] h-[14px] px-[3px] rounded-full bg-[color:var(--ember-2)] text-[color:var(--paper)] font-mono text-[9px] font-semibold flex items-center justify-center leading-none tabular-nums">
       {unread > 99 ? '99+' : unread}
      </span>
     )}

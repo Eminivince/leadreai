@@ -61,7 +61,7 @@ export function Topbar() {
  }, []);
 
  return (
-  <div className="h-[52px] flex items-center gap-4 px-6 md:px-8">
+  <div className="h-14 flex items-center gap-4 px-6 md:px-8">
    {/* Page title */}
    {title && (
     <span className="text-[15px] font-semibold text-[color:var(--ink)] truncate">

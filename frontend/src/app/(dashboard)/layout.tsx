@@ -29,7 +29,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
  }
 
  return (
-  <div className="flex min-h-screen w-full bg-[color:var(--paper)] text-[color:var(--ink)] selection:bg-[color:var(--forest)] selection:text-white flex-col">
+  <div className="flex min-h-screen w-full bg-[color:var(--paper)] text-[color:var(--ink)] selection:bg-[color:var(--ember)] selection:text-white flex-col">
    <ImpersonationBanner />
    <div className="flex flex-1 min-h-0 w-full">
    <Sidebar />
