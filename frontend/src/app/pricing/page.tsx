@@ -86,11 +86,11 @@ export default function PricingPage() {
       <AltNav />
 
       {/* Hero */}
-      <section className="px-6 pt-20 pb-12 text-center">
+      <section className="px-4 sm:px-6 pt-12 sm:pt-20 pb-12 text-center">
         <div className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ember)] mb-5">
           Pricing
         </div>
-        <h1 className="font-display font-normal text-[clamp(36px,4.5vw,52px)] leading-[1.05] tracking-[-0.01em] text-[color:var(--ink)] max-w-[640px] mx-auto">
+        <h1 className="font-display font-normal text-[clamp(28px,7vw,52px)] leading-[1.05] tracking-[-0.01em] text-[color:var(--ink)] max-w-[640px] mx-auto">
           Simple, <em className="not-italic font-display italic text-[color:var(--ember)]">honest</em> pricing
         </h1>
         <p className="mt-5 font-sans text-[15px] text-[color:var(--ink-3)] max-w-[460px] mx-auto leading-[1.6]">
@@ -99,7 +99,7 @@ export default function PricingPage() {
       </section>
 
       {/* Pricing grid */}
-      <section className="px-6 pb-20">
+      <section className="px-4 sm:px-6 pb-20">
         <div className="grid gap-6 max-w-[960px] mx-auto items-stretch grid-cols-1 md:grid-cols-3">
           {PRICING_TIERS.map((tier) => {
             const featured = tier.highlighted
@@ -167,7 +167,7 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ */}
-      <section className="bg-[color:var(--paper-2)] px-6 py-20 border-t border-[color:var(--rule)]">
+      <section className="bg-[color:var(--paper-2)] px-4 sm:px-6 py-12 sm:py-20 border-t border-[color:var(--rule)]">
         <div className="max-w-[720px] mx-auto">
           <div className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-4)] mb-3 text-center">
             FAQ

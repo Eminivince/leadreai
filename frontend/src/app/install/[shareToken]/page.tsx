@@ -105,8 +105,8 @@ export default function InstallWorkflowPage() {
 
   return (
     <main className="min-h-screen bg-[color:var(--paper)]">
-      <div className="mx-auto max-w-2xl px-6 py-16">
-        <div className="bg-white border border-[color:var(--rule)] rounded-2xl p-8">
+      <div className="mx-auto max-w-2xl px-4 sm:px-6 py-10 sm:py-16">
+        <div className="bg-white border border-[color:var(--rule)] rounded-2xl p-6 sm:p-8">
           <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-4)]">
             Install workflow
           </span>
