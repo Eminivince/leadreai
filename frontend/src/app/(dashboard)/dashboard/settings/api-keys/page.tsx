@@ -130,9 +130,9 @@ export default function ApiKeysSettingsPage() {
           </form>
 
           {freshKey && (
-            <div className="mt-5 border border-[color:var(--forest)]/40 bg-[color:var(--paper-3)] rounded-md p-5">
+            <div className="mt-5 border border-[color:var(--ember)]/40 bg-[color:var(--ember-bg)] rounded-lg p-5">
               <div className="flex items-center justify-between mb-3">
-                <span className="font-mono text-[10px] tracking-[0.06em] text-[color:var(--forest)]">
+                <span className="font-mono text-[10px] tracking-[0.06em] text-[color:var(--ember)]">
                   Copy now — won&rsquo;t be shown again
                 </span>
                 <button

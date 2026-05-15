@@ -126,14 +126,14 @@ export default function DataSourcesPage() {
  return (
   <div className="flex flex-col gap-5">
    {/* Header card with invocation log link */}
-   <div className="bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-xl px-6 py-4 flex items-center justify-between">
+   <div className="bg-white border border-[color:var(--rule)] rounded-xl px-6 py-4 flex items-center justify-between">
     <div>
      <span className="text-[13.5px] font-semibold text-[color:var(--ink)]">Connected providers</span>
      <p className="text-[12.5px] text-[color:var(--ink-3)] mt-0.5">Bring your own API keys for paid enrichment providers.</p>
     </div>
     <Link
      href="/dashboard/settings/data-sources/invocations"
-     className="text-[13px] font-semibold text-[color:var(--forest)] hover:text-[color:var(--forest-2)] underline underline-offset-2 transition whitespace-nowrap"
+     className="text-[13px] font-semibold text-[color:var(--ember)] hover:text-[color:var(--ember-2)] underline underline-offset-2 transition whitespace-nowrap"
     >
      View invocation log
     </Link>
@@ -144,7 +144,7 @@ export default function DataSourcesPage() {
    )}
 
    {grouped.map((g) => (
-    <div key={g.label} className="bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-xl overflow-hidden">
+    <div key={g.label} className="bg-white border border-[color:var(--rule)] rounded-xl overflow-hidden">
      <div className="px-6 py-4 border-b border-[color:var(--rule)]">
       <h2 className="text-[14px] font-bold text-[color:var(--ink)]">{g.label}</h2>
       <p className="text-[12.5px] text-[color:var(--ink-3)] mt-0.5">{g.description}</p>
@@ -163,7 +163,7 @@ export default function DataSourcesPage() {
         >
          <span
           className={`inline-block w-2 h-2 rounded-full shrink-0 ${
-           connected ? 'bg-[color:var(--forest)]' : 'bg-[color:var(--rule)]'
+           connected ? 'bg-[color:var(--success)]' : 'bg-[color:var(--rule)]'
           }`}
           aria-hidden
          />
@@ -174,7 +174,7 @@ export default function DataSourcesPage() {
          <span className="text-[11px] font-medium text-[color:var(--ink-3)] whitespace-nowrap">
           {authBadge(s)}
          </span>
-         <span className={`text-[11px] font-semibold whitespace-nowrap ${connected ? 'text-[color:var(--forest)]' : 'text-[color:var(--ink-3)]'}`}>
+         <span className={`text-[11px] font-semibold whitespace-nowrap ${connected ? 'text-[color:var(--success)]' : 'text-[color:var(--ink-3)]'}`}>
           {needsAuth
            ? credCount > 0
             ? `${credCount} cred${credCount === 1 ? '' : 's'}`
@@ -348,7 +348,7 @@ function SourceDrawer({
                {c.label || '—'}
               </span>
               {c.isDefault && (
-               <span className="font-mono text-[9px] tracking-[0.06em] text-[color:var(--forest)]">
+               <span className="font-mono text-[9px] tracking-[0.06em] text-[color:var(--success)]">
                 Default
                </span>
               )}
@@ -401,7 +401,7 @@ function SourceDrawer({
          <div
           className={`mt-3 border-l-2 px-3 py-2 text-[12.5px] ${
            testResult.ok
-            ? 'border-[color:var(--forest)] text-[color:var(--ink)]'
+            ? 'border-[color:var(--ember)] text-[color:var(--ink)]'
             : 'border-[color:var(--warn)] text-[color:var(--ink)]'
           }`}
          >
@@ -429,7 +429,7 @@ function SourceDrawer({
          <button
           onClick={() => void handleSave()}
           disabled={!requiredFieldsFilled || saving}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-4 py-2 rounded-md text-[13px] font-medium disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:opacity-85 px-4 py-2 rounded-md text-[13px] font-medium disabled:opacity-40 transition-opacity"
          >
           {saving ? 'Saving…' : 'Save credential'}
          </button>

@@ -56,7 +56,7 @@ function GmailCard({ workspaceId }: { workspaceId: string }) {
     <div
       className={`border rounded-md p-5 flex items-center justify-between gap-4 transition-colors ${
         status?.connected
-          ? 'border-[color:var(--forest)] bg-[color:var(--forest)]/5'
+          ? 'border-[color:var(--success)] bg-[color:var(--success)]/5'
           : 'border-[color:var(--rule)]'
       }`}
     >
@@ -87,7 +87,7 @@ function GmailCard({ workspaceId }: { workspaceId: string }) {
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[14px] font-medium text-[color:var(--ink)]">Gmail</span>
             {status?.connected && (
-              <span className="font-mono text-[9px] tracking-[0.06em] text-[color:var(--forest)] bg-[color:var(--forest)]/10 px-2 py-0.5 rounded-md whitespace-nowrap">
+              <span className="font-mono text-[9px] tracking-[0.06em] text-[color:var(--success)] bg-[color:var(--success)]/10 px-2 py-0.5 rounded-md whitespace-nowrap">
                 Active sender
               </span>
             )}
@@ -116,7 +116,7 @@ function GmailCard({ workspaceId }: { workspaceId: string }) {
       ) : (
         <button
           onClick={handleConnect}
-          className="shrink-0 inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2 rounded-md text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors"
+          className="shrink-0 inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2 rounded-md text-[13px] font-medium hover:opacity-85 transition-opacity"
         >
           Connect Gmail
         </button>
@@ -183,7 +183,7 @@ function ProviderBlock({ provider, webhookUrl, steps }: ProviderBlockProps) {
         <ol className="flex flex-col gap-2">
           {steps.map((step, i) => (
             <li key={i} className="flex gap-3 items-baseline">
-              <span className="italic text-[18px] text-[color:var(--forest)] tabular-nums w-5 shrink-0">
+              <span className="italic text-[18px] text-[color:var(--ember)] tabular-nums w-5 shrink-0">
                 {i + 1}
               </span>
               <span className="text-[13.5px] leading-[1.55] text-[color:var(--ink-2)]">{step}</span>

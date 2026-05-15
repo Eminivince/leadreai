@@ -87,7 +87,7 @@ export default function InvocationsPage() {
       type="checkbox"
       checked={autoRefresh}
       onChange={(e) => setAutoRefresh(e.target.checked)}
-      className="accent-[color:var(--forest)]"
+      className="accent-[color:var(--ember)]"
      />
      Auto-refresh
     </label>
@@ -261,7 +261,7 @@ function InvocationDrawer({
        {invocation.parentJobId && (
         <Link
          href={`/dashboard/leads?jobId=${invocation.parentJobId}`}
-         className=" text-[13px] text-[color:var(--ink)] hover:text-[color:var(--forest)] underline underline-offset-[4px] decoration-[color:var(--rule)]"
+         className=" text-[13px] text-[color:var(--ink)] hover:text-[color:var(--success)] underline underline-offset-[4px] decoration-[color:var(--rule)]"
         >
          Parent job → {invocation.parentJobId}
         </Link>
@@ -316,7 +316,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function StatusChip({ status }: { status: InvocationStatus }) {
  const styles: Record<InvocationStatus, string> = {
-  success: 'text-[color:var(--forest)] border-[color:var(--forest)]/40 bg-[color:var(--forest)]/5',
+  success: 'text-[color:var(--success)] border-[color:var(--success)]/40 bg-[color:var(--success)]/5',
   failed: 'text-[color:var(--warn)] border-[color:var(--warn)]/40 bg-[color:var(--warn)]/5',
   rate_limited: 'text-[color:var(--warn)] border-[color:var(--warn)]/40 bg-[color:var(--warn)]/5',
   auth_failed: 'text-[color:var(--warn)] border-[color:var(--warn)]/40 bg-[color:var(--warn)]/5',
