@@ -200,15 +200,24 @@ export default function SuppressionSettingsPage() {
               {entries.map((entry) => (
                 <div
                   key={entry._id}
-                  className="grid grid-cols-[1fr_120px_100px_40px] gap-4 items-center py-3 border-b border-[color:var(--rule)]/70"
+                  className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_120px_100px_40px] gap-x-4 gap-y-1 items-center py-3 border-b border-[color:var(--rule)]/70"
                 >
-                  <span className="font-mono text-[13px] text-[color:var(--ink)] truncate">
+                  <span className="font-mono text-[13px] text-[color:var(--ink)] truncate min-w-0">
                     {entry.email ?? entry.domain ?? '—'}
                   </span>
-                  <span className="font-mono text-[9.5px] tracking-[0.06em] text-[color:var(--ink-2)] border border-[color:var(--rule)] bg-[color:var(--paper-3)] px-2 py-0.5 justify-self-start">
+                  <button
+                    onClick={() => setRemoveTarget({ id: entry._id, name: entry.email ?? entry.domain ?? entry._id })}
+                    disabled={removeMutation.isPending}
+                    className="sm:hidden order-2 p-2 text-[color:var(--ink-3)] hover:text-[color:var(--warn)] transition disabled:opacity-60 justify-self-end"
+                    title="Remove"
+                    aria-label={`Remove suppression entry ${entry.email ?? entry.domain ?? ''}`}
+                  >
+                    <TrashGlyph />
+                  </button>
+                  <span className="col-span-2 sm:col-span-1 font-mono text-[9.5px] tracking-[0.06em] text-[color:var(--ink-2)] border border-[color:var(--rule)] bg-[color:var(--paper-3)] px-2 py-0.5 justify-self-start">
                     {REASON_LABELS[entry.reason]}
                   </span>
-                  <span className="font-mono text-[10px] text-[color:var(--ink-3)]">
+                  <span className="col-span-2 sm:col-span-1 font-mono text-[10px] text-[color:var(--ink-3)]">
                     {new Date(entry.addedAt).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
@@ -218,7 +227,7 @@ export default function SuppressionSettingsPage() {
                   <button
                     onClick={() => setRemoveTarget({ id: entry._id, name: entry.email ?? entry.domain ?? entry._id })}
                     disabled={removeMutation.isPending}
-                    className="p-2 text-[color:var(--ink-3)] hover:text-[color:var(--warn)] transition disabled:opacity-60"
+                    className="hidden sm:inline-flex items-center justify-center p-2 text-[color:var(--ink-3)] hover:text-[color:var(--warn)] transition disabled:opacity-60"
                     title="Remove"
                     aria-label={`Remove suppression entry ${entry.email ?? entry.domain ?? ''}`}
                   >

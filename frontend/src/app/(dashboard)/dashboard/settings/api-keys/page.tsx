@@ -130,8 +130,8 @@ export default function ApiKeysSettingsPage() {
           </form>
 
           {freshKey && (
-            <div className="mt-5 border border-[color:var(--ember)]/40 bg-[color:var(--ember-bg)] rounded-lg p-5">
-              <div className="flex items-center justify-between mb-3">
+            <div className="mt-5 border border-[color:var(--ember)]/40 bg-[color:var(--ember-bg)] rounded-lg p-4 sm:p-5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
                 <span className="font-mono text-[10px] tracking-[0.06em] text-[color:var(--ember)]">
                   Copy now — won&rsquo;t be shown again
                 </span>
@@ -186,15 +186,26 @@ export default function ApiKeysSettingsPage() {
               {keys.map((k) => (
                 <div
                   key={k._id}
-                  className="grid grid-cols-[1fr_auto_140px_40px] gap-4 items-center py-3 border-b border-[color:var(--rule)]/70"
+                  className="flex flex-col sm:grid sm:grid-cols-[1fr_auto_140px_40px] gap-2 sm:gap-4 sm:items-center py-3 border-b border-[color:var(--rule)]/70"
                 >
-                  <div className="min-w-0">
-                    <div className=" text-[13.5px] font-medium text-[color:var(--ink)] truncate">
-                      {k.name}
+                  <div className="min-w-0 flex items-start justify-between gap-2 sm:block">
+                    <div className="min-w-0">
+                      <div className=" text-[13.5px] font-medium text-[color:var(--ink)] truncate">
+                        {k.name}
+                      </div>
+                      <div className="font-mono text-[11px] text-[color:var(--ink-3)] truncate mt-0.5">
+                        {k.prefix}••••
+                      </div>
                     </div>
-                    <div className="font-mono text-[11px] text-[color:var(--ink-3)] truncate mt-0.5">
-                      {k.prefix}••••
-                    </div>
+                    <button
+                      onClick={() => setRevokeTarget({ id: k._id, name: k.name })}
+                      disabled={revokeMutation.isPending}
+                      className="sm:hidden p-2 -mr-2 text-[color:var(--ink-3)] hover:text-[color:var(--warn)] transition disabled:opacity-60 shrink-0"
+                      title="Revoke"
+                      aria-label={`Revoke API key ${k.name}`}
+                    >
+                      <TrashGlyph />
+                    </button>
                   </div>
                   <span className="font-mono text-[10px] text-[color:var(--ink-3)]">
                     issued {new Date(k.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -205,7 +216,7 @@ export default function ApiKeysSettingsPage() {
                   <button
                     onClick={() => setRevokeTarget({ id: k._id, name: k.name })}
                     disabled={revokeMutation.isPending}
-                    className="p-2 text-[color:var(--ink-3)] hover:text-[color:var(--warn)] transition disabled:opacity-60"
+                    className="hidden sm:inline-flex p-2 text-[color:var(--ink-3)] hover:text-[color:var(--warn)] transition disabled:opacity-60 items-center justify-center"
                     title="Revoke"
                     aria-label={`Revoke API key ${k.name}`}
                   >

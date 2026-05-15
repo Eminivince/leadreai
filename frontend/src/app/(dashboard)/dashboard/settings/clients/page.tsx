@@ -120,7 +120,7 @@ export default function ClientWorkspacesPage() {
             {clients.map((c) => (
               <li
                 key={c._id}
-                className="flex items-center justify-between gap-4 border-b border-[color:var(--rule)] py-3"
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 border-b border-[color:var(--rule)] py-3"
               >
                 <div>
                   <div className="text-[14px] font-medium text-[color:var(--ink)]">{c.name}</div>

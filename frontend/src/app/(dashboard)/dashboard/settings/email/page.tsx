@@ -54,7 +54,7 @@ function GmailCard({ workspaceId }: { workspaceId: string }) {
 
   return (
     <div
-      className={`border rounded-md p-5 flex items-center justify-between gap-4 transition-colors ${
+      className={`border rounded-md p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 transition-colors ${
         status?.connected
           ? 'border-[color:var(--success)] bg-[color:var(--success)]/5'
           : 'border-[color:var(--rule)]'
@@ -159,7 +159,7 @@ interface ProviderBlockProps {
 
 function ProviderBlock({ provider, webhookUrl, steps }: ProviderBlockProps) {
   return (
-    <section className="border border-[color:var(--rule)] rounded-md p-6 flex flex-col gap-5">
+    <section className="border border-[color:var(--rule)] rounded-md p-4 sm:p-6 flex flex-col gap-5">
       <div className="flex items-center gap-3">
         <span className="text-[18px] text-[color:var(--ink)]">{provider}</span>
       </div>
@@ -168,11 +168,13 @@ function ProviderBlock({ provider, webhookUrl, steps }: ProviderBlockProps) {
         <span className="font-mono text-[9.5px] tracking-[0.06em] text-[color:var(--ink-3)] block mb-2">
           Webhook URL
         </span>
-        <div className="flex items-center gap-3 border border-[color:var(--rule)] rounded-md px-3 py-2.5 bg-[color:var(--paper-3)]/60">
-          <code className="flex-1 font-mono text-[12px] text-[color:var(--ink)] break-all">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 border border-[color:var(--rule)] rounded-md px-3 py-2.5 bg-[color:var(--paper-3)]/60">
+          <code className="flex-1 min-w-0 font-mono text-[12px] text-[color:var(--ink)] break-all">
             {webhookUrl}
           </code>
-          <CopyButton text={webhookUrl} />
+          <div className="self-start sm:self-auto">
+            <CopyButton text={webhookUrl} />
+          </div>
         </div>
       </div>
 

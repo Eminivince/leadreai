@@ -126,7 +126,7 @@ export default function DataSourcesPage() {
  return (
   <div className="flex flex-col gap-5">
    {/* Header card with invocation log link */}
-   <div className="bg-white border border-[color:var(--rule)] rounded-xl px-6 py-4 flex items-center justify-between">
+   <div className="bg-white border border-[color:var(--rule)] rounded-xl px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <div>
      <span className="text-[13.5px] font-semibold text-[color:var(--ink)]">Connected providers</span>
      <p className="text-[12.5px] text-[color:var(--ink-3)] mt-0.5">Bring your own API keys for paid enrichment providers.</p>
@@ -145,7 +145,7 @@ export default function DataSourcesPage() {
 
    {grouped.map((g) => (
     <div key={g.label} className="bg-white border border-[color:var(--rule)] rounded-xl overflow-hidden">
-     <div className="px-6 py-4 border-b border-[color:var(--rule)]">
+     <div className="px-4 sm:px-6 py-4 border-b border-[color:var(--rule)]">
       <h2 className="text-[14px] font-bold text-[color:var(--ink)]">{g.label}</h2>
       <p className="text-[12.5px] text-[color:var(--ink-3)] mt-0.5">{g.description}</p>
      </div>
@@ -159,7 +159,7 @@ export default function DataSourcesPage() {
         <button
          key={s.id}
          onClick={() => setActiveId(s.id)}
-         className="w-full flex items-center gap-4 px-6 py-3.5 text-left hover:bg-[color:var(--paper-3)] transition"
+         className="w-full flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3.5 text-left hover:bg-[color:var(--paper-3)] transition"
         >
          <span
           className={`inline-block w-2 h-2 rounded-full shrink-0 ${
@@ -171,7 +171,7 @@ export default function DataSourcesPage() {
           <div className="text-[13.5px] font-semibold text-[color:var(--ink)] truncate">{s.name}</div>
           <p className="text-[12.5px] text-[color:var(--ink-3)] line-clamp-1">{s.description}</p>
          </div>
-         <span className="text-[11px] font-medium text-[color:var(--ink-3)] whitespace-nowrap">
+         <span className="hidden md:inline text-[11px] font-medium text-[color:var(--ink-3)] whitespace-nowrap">
           {authBadge(s)}
          </span>
          <span className={`text-[11px] font-semibold whitespace-nowrap ${connected ? 'text-[color:var(--success)]' : 'text-[color:var(--ink-3)]'}`}>
@@ -291,10 +291,10 @@ function SourceDrawer({
  return (
   <div className="fixed inset-0 z-[60] flex">
    {/* scrim */}
-   <div className="flex-1 bg-[color:var(--ink)]/30" onClick={onClose} aria-hidden />
+   <div className="hidden sm:block flex-1 bg-[color:var(--ink)]/30" onClick={onClose} aria-hidden />
    {/* panel */}
-   <div className="w-full max-w-[540px] bg-[color:var(--paper)] border-l border-[color:var(--rule)] overflow-y-auto">
-    <div className="px-6 md:px-8 py-6 md:py-8 flex flex-col gap-6">
+   <div className="w-full sm:max-w-[540px] bg-[color:var(--paper)] border-l border-[color:var(--rule)] overflow-y-auto">
+    <div className="px-5 sm:px-6 md:px-8 py-6 md:py-8 flex flex-col gap-6">
      {/* Header */}
      <div className="flex items-start justify-between gap-4">
       <div>
