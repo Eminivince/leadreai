@@ -1,128 +1,84 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* ── Modern SaaS palette (light) ──────────────────────────
-     * Clean white + amber accent. Replaces the broadsheet
-     * ivory/forest palette across dashboard and app shell. */
-    --paper:    #ffffff;   /* primary background */
-    --paper-2:  #f9fafb;   /* raised surface (toolbars, dividers) */
-    --paper-3:  #f3f4f6;   /* subtle panel tint (cards, hover) */
-    --ink:      #111827;   /* primary text */
-    --ink-2:    #374151;   /* secondary / body */
-    --ink-3:    #6b7280;   /* tertiary / meta */
-    --rule:     #e5e7eb;   /* hairline */
-    --forest:   #f59e0b;   /* amber accent (replaces forest green) */
-    --forest-2: #d97706;   /* amber-600 */
-    --rust:     #92400e;   /* amber-800 (high usage / warning tint) */
-    --warn:     #dc2626;   /* red — actual error / destructive */
+    /* Backgrounds */
+    --paper:    #F6F2EA;   /* warm cream — main bg */
+    --paper-2:  #EDE8DC;   /* raised surfaces, table stripes */
+    --paper-3:  #E4DCCE;   /* subtle panel tint */
 
-    /* Legacy shadcn tokens — rebound to new palette */
-    --background: 0 0% 100%;              /* white */
-    --foreground: 221 39% 11%;            /* --ink */
-    --card: 210 40% 98%;                  /* --paper-2 */
-    --card-foreground: 221 39% 11%;
-    --border: 214 32% 91%;                /* --rule */
-    --input: 214 32% 91%;
-    --ring: 38 92% 50%;                   /* --forest (amber) */
-    --primary: 221 39% 11%;               /* ink */
-    --primary-foreground: 0 0% 100%;      /* white */
-    --secondary: 210 40% 96%;             /* paper-2 */
-    --secondary-foreground: 221 39% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 220 9% 46%;       /* ink-3 */
-    --accent: 38 92% 50%;                 /* amber */
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 51%;             /* warn */
+    /* Text */
+    --ink:      #1C1714;   /* primary */
+    --ink-2:    #4A4035;   /* secondary */
+    --ink-3:    #8A7A65;   /* tertiary / meta */
+    --ink-4:    #B8A898;   /* quaternary / placeholder */
+
+    /* Structure */
+    --rule:     #DDD7CC;   /* hairlines, borders */
+
+    /* Accent — burnt terracotta */
+    --ember:    #B84C2B;
+    --ember-bg: #F7E8E2;
+    --ember-2:  #8A3520;
+
+    /* Semantic */
+    --warn:     #DC2626;
+    --success:  #2D7A4A;
+
+    /* shadcn HSL tokens — mapped to new palette */
+    --background: 40 40% 94%;
+    --foreground: 23 17% 9%;
+    --card: 38 32% 90%;
+    --card-foreground: 23 17% 9%;
+    --border: 39 20% 83%;
+    --input: 39 20% 83%;
+    --ring: 14 62% 45%;
+    --primary: 23 17% 9%;
+    --primary-foreground: 40 40% 94%;
+    --secondary: 38 32% 88%;
+    --secondary-foreground: 23 17% 9%;
+    --muted: 38 32% 88%;
+    --muted-foreground: 30 18% 47%;
+    --accent: 14 62% 45%;
+    --accent-foreground: 40 40% 94%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --radius: 0.75rem;
+    --radius: 0.5rem;
   }
 
-  /* ── Marketing-page tokens (alt-* set) ──────────────────
-   * Used by /, /pricing, /docs, /althome via className="alt-tokens".
-   * Was previously inlined via a style object, but inline styles
-   * outrank `.dark` overrides, so the public pages couldn't
-   * follow the theme. Defining as a class scopes the tokens AND
-   * lets the dark variant override them. */
-  .alt-tokens {
-    --alt-amber:        #f59e0b;
-    --alt-amber-light:  #fef3c7;
-    --alt-amber-border: #fde68a;
-    --alt-amber-dark:   #92400e;
-    --alt-ink:          #111827;
-    --alt-ink-2:        #374151;
-    --alt-ink-3:        #6b7280;
-    --alt-ink-4:        #9ca3af;
-    --alt-rule:         #e5e7eb;
-    --alt-paper-2:      #f9fafb;
-    --alt-paper-3:      #f3f4f6;
-    --alt-green-bg:     #dcfce7;
-    --alt-green-text:   #166534;
-  }
-  .dark .alt-tokens {
-    /* Dark variant. Surface ladder mirrors the dashboard dark
-     * palette so the same toggle reads cleanly across both. The
-     * amber accent stays identical so brand colour is consistent. */
-    --alt-amber:        #f59e0b;
-    --alt-amber-light:  #422006;
-    --alt-amber-border: #78350f;
-    --alt-amber-dark:   #fcd34d;
-    --alt-ink:          #f3f4f6;
-    --alt-ink-2:        #d1d5db;
-    --alt-ink-3:        #9ca3af;
-    --alt-ink-4:        #6b7280;
-    --alt-rule:         #1f2937;
-    --alt-paper-2:      #11161f;
-    --alt-paper-3:      #1a212d;
-    --alt-green-bg:     #052e16;
-    --alt-green-text:   #86efac;
-  }
-
-  /* ── Dark palette ────────────────────────────────────────
-   * Activated by next-themes adding `.dark` on <html>. Mirror
-   * every light token here. Designed to share the same amber
-   * accent (--forest) so brand identity carries across themes,
-   * but invert paper/ink so the app reads cleanly on a near-
-   * black surface. Choose --paper slightly off-black (#0b0f17)
-   * rather than pure #000 because pure black amplifies OLED
-   * smearing on text and over-contrasts the amber accent.
-   * --paper-2 / --paper-3 step UP into the page rather than
-   * down (raised surfaces are LIGHTER than the page in dark
-   * mode — opposite of light mode), matching modern SaaS dark
-   * conventions (Linear, Vercel, GitHub). */
   .dark {
-    --paper:    #0b0f17;   /* primary background — near-black, not pure */
-    --paper-2:  #11161f;   /* raised surface */
-    --paper-3:  #1a212d;   /* subtle panel tint */
-    --ink:      #f3f4f6;   /* primary text — off-white */
-    --ink-2:    #d1d5db;   /* secondary / body */
-    --ink-3:    #9ca3af;   /* tertiary / meta */
-    --rule:     #1f2937;   /* hairline */
-    --forest:   #f59e0b;   /* amber accent — same in both themes */
-    --forest-2: #fbbf24;   /* amber-400 (lighter for dark surface contrast) */
-    --rust:     #fcd34d;   /* amber-300 */
-    --warn:     #f87171;   /* red-400 (softer on dark) */
+    --paper:    #1C1714;
+    --paper-2:  #26201A;
+    --paper-3:  #312820;
+    --ink:      #F0EBE0;
+    --ink-2:    #C8B8A0;
+    --ink-3:    #8A7A65;
+    --ink-4:    #5A4A38;
+    --rule:     #3A3028;
+    --ember:    #D4623A;
+    --ember-bg: #2A1810;
+    --ember-2:  #E87850;
+    --warn:     #F87171;
+    --success:  #4ADE80;
 
-    /* shadcn tokens — HSL form */
-    --background: 220 25% 7%;             /* --paper */
-    --foreground: 220 14% 96%;            /* --ink */
-    --card: 220 23% 9%;                   /* --paper-2 */
-    --card-foreground: 220 14% 96%;
-    --border: 220 13% 17%;                /* --rule */
-    --input: 220 13% 17%;
-    --ring: 38 92% 50%;                   /* amber */
-    --primary: 220 14% 96%;               /* ink (light on dark) */
-    --primary-foreground: 220 25% 7%;     /* paper (dark) */
-    --secondary: 220 22% 12%;             /* paper-3 */
-    --secondary-foreground: 220 14% 96%;
-    --muted: 220 22% 12%;
-    --muted-foreground: 220 9% 65%;       /* ink-3 */
-    --accent: 38 92% 50%;
-    --accent-foreground: 220 25% 7%;
+    /* shadcn dark */
+    --background: 22 14% 10%;
+    --foreground: 40 35% 92%;
+    --card: 22 18% 13%;
+    --card-foreground: 40 35% 92%;
+    --border: 22 14% 20%;
+    --input: 22 14% 20%;
+    --ring: 15 61% 53%;
+    --primary: 40 35% 92%;
+    --primary-foreground: 22 14% 10%;
+    --secondary: 22 18% 19%;
+    --secondary-foreground: 40 35% 92%;
+    --muted: 22 18% 19%;
+    --muted-foreground: 30 12% 55%;
+    --accent: 15 61% 53%;
+    --accent-foreground: 22 14% 10%;
     --destructive: 0 84% 70%;
     --destructive-foreground: 0 0% 100%;
   }
@@ -134,6 +90,7 @@
   body {
     background: var(--paper);
     color: var(--ink);
+    font-family: var(--font-body), system-ui, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
@@ -283,22 +240,21 @@
 /* ── Auth pages ─────────────────────────────────────────── */
 .ldr-input {
   width: 100%;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: #fff;
-  font-family: var(--font-barlow), sans-serif;
-  font-size: 14px;
-  padding: 11px 14px;
-  border-radius: 12px;
-  transition: border-color .15s, background .15s, box-shadow .15s;
+  background: white;
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 13.5px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  transition: border-color .15s;
   outline: none;
 }
-.ldr-input::placeholder { color: rgba(255,255,255,0.35); }
-.ldr-input:hover { background: rgba(255,255,255,0.06); }
+.ldr-input::placeholder { color: var(--ink-4); }
+.ldr-input:hover { border-color: var(--ink-3); }
 .ldr-input:focus {
-  border-color: rgba(255,255,255,0.55);
-  background: rgba(255,255,255,0.07);
-  box-shadow: 0 0 0 4px rgba(255,255,255,0.06);
+  border-color: var(--ink);
+  box-shadow: none;
 }
 
 /* ── B2B SaaS animation utilities ──────────────────────────── */
@@ -368,7 +324,7 @@
   top: 0; bottom: 0;
   left: 0;
   width: 25%;
-  background: var(--forest);
+  background: var(--ember);
   animation: indeterminateSweep 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
