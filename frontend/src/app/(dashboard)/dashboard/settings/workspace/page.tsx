@@ -37,7 +37,7 @@ function Toggle({
    onClick={() => onChange(!checked)}
    className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border transition-colors disabled:opacity-60 ${
     checked
-     ? 'bg-[color:var(--forest)] border-[color:var(--forest)]'
+     ? 'bg-[color:var(--ember)] border-[color:var(--ember)]'
      : 'bg-[color:var(--paper-3)] border-[color:var(--rule)]'
    }`}
   >
@@ -136,7 +136,7 @@ export default function WorkspaceSettingsPage() {
    className="flex flex-col gap-5"
   >
    {/* Identity */}
-   <div className="bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-xl overflow-hidden">
+   <div className="bg-white border border-[color:var(--rule)] rounded-xl overflow-hidden">
     <div className="px-6 py-5 border-b border-[color:var(--rule)]">
      <h2 className="text-[16px] font-bold text-[color:var(--ink)]">Identity</h2>
      <p className="text-[13px] text-[color:var(--ink-3)] mt-0.5">Workspace name and description.</p>
@@ -146,7 +146,7 @@ export default function WorkspaceSettingsPage() {
       <div className="flex flex-col gap-1.5">
        <label className="text-[13px] font-semibold text-[color:var(--ink)]">Workspace name</label>
        <input
-        className="bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-lg px-3.5 py-2.5 text-[13.5px] text-[color:var(--ink)] outline-none focus:border-[color:var(--forest)] focus:ring-2 focus:ring-[color:var(--forest)]/10 transition-all"
+        className="bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-lg px-3.5 py-2.5 text-[13.5px] text-[color:var(--ink)] outline-none focus:border-[color:var(--ember)] focus:ring-2 focus:ring-[color:var(--ember)]/10 transition-all"
         value={name}
         onChange={(e) => { setDirty(true); setName(e.target.value); }}
         maxLength={200}
@@ -168,7 +168,7 @@ export default function WorkspaceSettingsPage() {
       <textarea
        rows={3}
        placeholder="What this workspace is for."
-       className="bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-lg px-3.5 py-2.5 text-[13.5px] text-[color:var(--ink)] outline-none focus:border-[color:var(--forest)] focus:ring-2 focus:ring-[color:var(--forest)]/10 transition-all resize-none"
+       className="bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-lg px-3.5 py-2.5 text-[13.5px] text-[color:var(--ink)] outline-none focus:border-[color:var(--ember)] focus:ring-2 focus:ring-[color:var(--ember)]/10 transition-all resize-none"
        value={description}
        onChange={(e) => { setDirty(true); setDescription(e.target.value); }}
        maxLength={500}
@@ -179,7 +179,7 @@ export default function WorkspaceSettingsPage() {
      <button
       type="submit"
       disabled={saveMutation.isPending || !dirty}
-      className="bg-[color:var(--forest)] text-white px-4 py-2 rounded-lg text-[13.5px] font-semibold disabled:opacity-50 hover:bg-[color:var(--forest-2)] transition-colors"
+      className="bg-[color:var(--ember)] text-white px-4 py-2 rounded-lg text-[13.5px] font-semibold disabled:opacity-50 hover:bg-[color:var(--ember-2)] transition-colors"
      >
       {saveMutation.isPending ? 'Saving…' : 'Save changes'}
      </button>
@@ -187,7 +187,7 @@ export default function WorkspaceSettingsPage() {
    </div>
 
    {/* Preferences */}
-   <div className="bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-xl overflow-hidden">
+   <div className="bg-white border border-[color:var(--rule)] rounded-xl overflow-hidden">
     <div className="px-6 py-5 border-b border-[color:var(--rule)]">
      <h2 className="text-[16px] font-bold text-[color:var(--ink)]">Preferences</h2>
      <p className="text-[13px] text-[color:var(--ink-3)] mt-0.5">Defaults for searches and exports.</p>
@@ -215,7 +215,7 @@ export default function WorkspaceSettingsPage() {
       <select
        value={defaultExportFormat}
        onChange={(e) => { setDirty(true); setDefaultExportFormat(e.target.value as 'csv' | 'xlsx'); }}
-       className="bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-lg px-3 py-2 text-[13px] text-[color:var(--ink)] outline-none focus:border-[color:var(--forest)] focus:ring-2 focus:ring-[color:var(--forest)]/10 transition-all"
+       className="bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-lg px-3 py-2 text-[13px] text-[color:var(--ink)] outline-none focus:border-[color:var(--ember)] focus:ring-2 focus:ring-[color:var(--ember)]/10 transition-all"
       >
        <option value="csv">CSV</option>
        <option value="xlsx">Excel (XLSX)</option>
@@ -226,7 +226,7 @@ export default function WorkspaceSettingsPage() {
      <button
       type="submit"
       disabled={saveMutation.isPending || !dirty}
-      className="bg-[color:var(--forest)] text-white px-4 py-2 rounded-lg text-[13.5px] font-semibold disabled:opacity-50 hover:bg-[color:var(--forest-2)] transition-colors"
+      className="bg-[color:var(--ember)] text-white px-4 py-2 rounded-lg text-[13.5px] font-semibold disabled:opacity-50 hover:bg-[color:var(--ember-2)] transition-colors"
      >
       {saveMutation.isPending ? 'Saving…' : 'Save changes'}
      </button>
@@ -234,7 +234,7 @@ export default function WorkspaceSettingsPage() {
    </div>
 
    {/* Danger zone */}
-   <div className="bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-xl overflow-hidden">
+   <div className="bg-white border border-[color:var(--rule)] rounded-xl overflow-hidden">
     <div className="px-6 py-5 border-b border-[color:var(--rule)]">
      <h2 className="text-[16px] font-bold text-[color:var(--ink)]">Danger zone</h2>
      <p className="text-[13px] text-[color:var(--ink-3)] mt-0.5">Irreversible workspace actions.</p>

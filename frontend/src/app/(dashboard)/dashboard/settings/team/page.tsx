@@ -17,7 +17,7 @@ import { ForthcomingPanel } from '@/components/settings/primitives';
  */
 
 function roleBadge(role: string): { label: string; cls: string } {
- if (role === 'owner') return { label: 'Owner', cls: 'bg-[color:var(--forest)]/10 text-[color:var(--forest)] border-[color:var(--forest)]/30' };
+ if (role === 'owner') return { label: 'Owner', cls: 'bg-[color:var(--ember)]/10 text-[color:var(--ember)] border-[color:var(--ember)]/30' };
  if (role === 'admin') return { label: 'Admin', cls: 'bg-[color:var(--paper-3)] text-[color:var(--ink)] border-[color:var(--rule)]' };
  return            { label: 'Member', cls: 'bg-[color:var(--paper-3)] text-[color:var(--ink-3)] border-[color:var(--rule)]' };
 }
@@ -55,7 +55,7 @@ export default function TeamSettingsPage() {
  return (
   <div className="flex flex-col gap-5">
    {/* Members card */}
-   <div className="bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-xl overflow-hidden">
+   <div className="bg-white border border-[color:var(--rule)] rounded-xl overflow-hidden">
     <div className="px-6 py-5 border-b border-[color:var(--rule)] flex items-center justify-between">
      <div>
       <h2 className="text-[16px] font-bold text-[color:var(--ink)]">Team members</h2>
@@ -93,7 +93,7 @@ export default function TeamSettingsPage() {
             {name}
            </span>
            {isSelf && (
-            <span className="text-[11px] font-medium text-[color:var(--forest)] bg-[color:var(--forest)]/10 px-1.5 py-0.5 rounded">
+            <span className="text-[11px] font-medium text-[color:var(--ember)] bg-[color:var(--ember)]/10 px-1.5 py-0.5 rounded">
              You
             </span>
            )}
@@ -116,7 +116,7 @@ export default function TeamSettingsPage() {
    </div>
 
    {/* Invitations card */}
-   <div className="bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-xl overflow-hidden">
+   <div className="bg-white border border-[color:var(--rule)] rounded-xl overflow-hidden">
     <div className="px-6 py-5 border-b border-[color:var(--rule)]">
      <h2 className="text-[16px] font-bold text-[color:var(--ink)]">Invitations</h2>
      <p className="text-[13px] text-[color:var(--ink-3)] mt-0.5">Invite colleagues to join this workspace.</p>

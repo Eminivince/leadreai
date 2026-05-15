@@ -74,9 +74,9 @@ function BalanceCard({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex-1 min-w-[240px] rounded-xl border border-[color:var(--rule)] bg-[color:var(--paper)] p-4 md:p-5">
+    <div className="flex-1 min-w-[240px] rounded-xl border border-[color:var(--rule)] bg-white p-4 md:p-5">
       <div className="flex items-center justify-between gap-3 mb-2">
-        <span className="font-mono text-[10px] tracking-[0.04em] uppercase text-[color:var(--forest-2)]">
+        <span className="font-mono text-[10px] tracking-[0.04em] uppercase text-[color:var(--ember-2)]">
           {kicker}
         </span>
         <span className="font-mono text-[10px] tabular-nums text-[color:var(--ink-3)]">
@@ -173,9 +173,9 @@ export default function BillingSettingsPage() {
                 className="absolute inset-0 translate-x-1 translate-y-1 bg-[color:var(--rule)]/25"
                 aria-hidden
               />
-              <div className="relative bg-[color:var(--paper-2)] border border-[color:var(--rule)] p-6 md:p-7">
+              <div className="relative bg-white border-2 border-[color:var(--ember)] rounded-xl p-6 md:p-7">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="font-mono text-[10px] tracking-[0.06em] text-[color:var(--forest)]">
+                  <span className="font-mono text-[10px] tracking-[0.06em] text-[color:var(--ember)]">
                     Current plan
                   </span>
                   <span className="font-mono text-[10px] tracking-[0.06em] text-[color:var(--ink-3)]">
@@ -205,8 +205,8 @@ export default function BillingSettingsPage() {
                     <div
                       className={
                         monthlyPct > 80
-                          ? 'h-full bg-[color:var(--rust)]'
-                          : 'h-full bg-[color:var(--forest)]'
+                          ? 'h-full bg-[color:var(--warn)]'
+                          : 'h-full bg-[color:var(--ember)]'
                       }
                       style={{ width: `${monthlyPct}%` }}
                     />
@@ -313,7 +313,7 @@ export default function BillingSettingsPage() {
                 const isCredit = t.kind === 'credit';
                 const bucketTone =
                   t.bucket === 'monthly'
-                    ? 'text-[color:var(--forest)] border-[color:var(--forest)]/40'
+                    ? 'text-[color:var(--ember)] border-[color:var(--ember)]/40'
                     : 'text-[color:var(--ink-2)] border-[color:var(--rule)]';
                 return (
                   <div
@@ -340,7 +340,7 @@ export default function BillingSettingsPage() {
                     </span>
                     <span
                       className={`font-mono text-[13px] tabular-nums whitespace-nowrap ${
-                        isCredit ? 'text-[color:var(--forest)]' : 'text-[color:var(--ink)]'
+                        isCredit ? 'text-[color:var(--ember)]' : 'text-[color:var(--ink)]'
                       }`}
                     >
                       {isCredit ? '+' : ''}

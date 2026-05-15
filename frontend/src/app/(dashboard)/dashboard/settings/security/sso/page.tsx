@@ -114,10 +114,18 @@ export default function SsoSettingsPage() {
             type="checkbox"
             checked={enabled}
             onChange={(e) => setEnabled(e.target.checked)}
-            className="accent-[color:var(--forest)]"
+            className="accent-[color:var(--ember)]"
             disabled={isLoading}
           />
           Enable SSO for this workspace
+          {cfg?.enabled && (
+            <span className="ml-2 inline-flex items-center gap-1 text-[12px] font-medium text-[color:var(--success)]">
+              <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5">
+                <path d="M3 8l3 3 7-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Connected
+            </span>
+          )}
         </label>
 
         <div>

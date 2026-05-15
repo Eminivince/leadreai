@@ -121,7 +121,7 @@ export default function AccountSettingsPage() {
                 {user.email}
               </span>
               {user.isEmailVerified ? (
-                <span className="font-mono text-[9.5px] tracking-[0.06em] text-[color:var(--forest)]">
+                <span className="font-mono text-[9.5px] tracking-[0.06em] text-[color:var(--success)]">
                   Verified
                 </span>
               ) : (

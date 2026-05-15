@@ -34,7 +34,7 @@ export default function SecurityIndexPage() {
  const items = SETTINGS_SECTIONS.filter((s) => s.group === 'security');
 
  return (
-  <div className="bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-xl overflow-hidden">
+  <div className="bg-white border border-[color:var(--rule)] rounded-xl overflow-hidden">
    <ul className="divide-y divide-[color:var(--rule)]">
     {items.map((s) => {
      const Icon = s.icon;
