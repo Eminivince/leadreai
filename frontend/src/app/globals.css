@@ -48,6 +48,30 @@
     --radius: 0.5rem;
   }
 
+  /* ── Compat shim ──────────────────────────────────────────
+   * Old tokens kept as aliases so unmigrated components still
+   * render correctly. Remove after all consumers are migrated. */
+  :root {
+    --forest:   var(--ember);
+    --forest-2: var(--ember-2);
+    --rust:     var(--ember-2);
+
+    /* alt-* tokens for legacy marketing pages */
+    --alt-amber:        var(--ember);
+    --alt-amber-light:  var(--ember-bg);
+    --alt-amber-border: var(--rule);
+    --alt-amber-dark:   var(--ember-2);
+    --alt-ink:          var(--ink);
+    --alt-ink-2:        var(--ink-2);
+    --alt-ink-3:        var(--ink-3);
+    --alt-ink-4:        var(--ink-4);
+    --alt-rule:         var(--rule);
+    --alt-paper-2:      var(--paper-2);
+    --alt-paper-3:      var(--paper-3);
+    --alt-green-bg:     var(--ember-bg);
+    --alt-green-text:   var(--success);
+  }
+
   .dark {
     --paper:    #1C1714;
     --paper-2:  #26201A;
@@ -81,6 +105,62 @@
     --accent-foreground: 22 14% 10%;
     --destructive: 0 84% 70%;
     --destructive-foreground: 0 0% 100%;
+  }
+
+  /* ── Compat shim (dark) ───────────────────────────────────
+   * Mirrors the light-mode aliases so unmigrated components
+   * resolve to the dark-palette ember/ink values. */
+  .dark {
+    --forest:   var(--ember);
+    --forest-2: var(--ember-2);
+    --rust:     var(--ember-2);
+
+    --alt-amber:        var(--ember);
+    --alt-amber-light:  var(--ember-bg);
+    --alt-amber-border: var(--rule);
+    --alt-amber-dark:   var(--ember-2);
+    --alt-ink:          var(--ink);
+    --alt-ink-2:        var(--ink-2);
+    --alt-ink-3:        var(--ink-3);
+    --alt-ink-4:        var(--ink-4);
+    --alt-rule:         var(--rule);
+    --alt-paper-2:      var(--paper-2);
+    --alt-paper-3:      var(--paper-3);
+    --alt-green-bg:     var(--ember-bg);
+    --alt-green-text:   var(--success);
+  }
+
+  /* Scoped alias block — marketing pages apply className="alt-tokens"
+   * on a child element to scope these tokens locally. */
+  .alt-tokens {
+    --alt-amber:        var(--ember);
+    --alt-amber-light:  var(--ember-bg);
+    --alt-amber-border: var(--rule);
+    --alt-amber-dark:   var(--ember-2);
+    --alt-ink:          var(--ink);
+    --alt-ink-2:        var(--ink-2);
+    --alt-ink-3:        var(--ink-3);
+    --alt-ink-4:        var(--ink-4);
+    --alt-rule:         var(--rule);
+    --alt-paper-2:      var(--paper-2);
+    --alt-paper-3:      var(--paper-3);
+    --alt-green-bg:     var(--ember-bg);
+    --alt-green-text:   var(--success);
+  }
+  .dark .alt-tokens {
+    --alt-amber:        var(--ember);
+    --alt-amber-light:  var(--ember-bg);
+    --alt-amber-border: var(--rule);
+    --alt-amber-dark:   var(--ember-2);
+    --alt-ink:          var(--ink);
+    --alt-ink-2:        var(--ink-2);
+    --alt-ink-3:        var(--ink-3);
+    --alt-ink-4:        var(--ink-4);
+    --alt-rule:         var(--rule);
+    --alt-paper-2:      var(--paper-2);
+    --alt-paper-3:      var(--paper-3);
+    --alt-green-bg:     var(--ember-bg);
+    --alt-green-text:   var(--success);
   }
 
 * {
