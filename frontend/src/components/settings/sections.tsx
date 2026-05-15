@@ -283,13 +283,13 @@ export function planBadgeStyle(b: PlanBadge): { label: string; cls: string } | n
  if (b === 'enterprise') {
   return {
    label: 'Enterprise',
-   cls: 'border-[color:var(--forest)]/40 text-[color:var(--forest)] bg-[color:var(--forest)]/[0.06]',
+   cls: 'border-transparent text-[color:var(--ember)] bg-[color:var(--ember-bg)] font-mono text-[9.5px] tracking-[0.16em] uppercase',
   };
  }
  if (b === 'agency') {
   return {
    label: 'Agency',
-   cls: 'border-[color:var(--ink)]/15 text-[color:var(--ink-2)] bg-[color:var(--paper-2)]',
+   cls: 'border-transparent text-[color:var(--ember)] bg-[color:var(--ember-bg)] font-mono text-[9.5px] tracking-[0.16em] uppercase',
   };
  }
  return null;
