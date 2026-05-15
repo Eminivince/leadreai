@@ -123,7 +123,7 @@ export default function TableDetailPage() {
 
   if (loadingTable && !table) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center  italic text-[14px] text-[color:var(--ink-3)]">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-20 text-center  italic text-[14px] text-[color:var(--ink-3)]">
         Loading table…
       </div>
     );
@@ -131,7 +131,7 @@ export default function TableDetailPage() {
 
   if (!table) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-20 text-center">
         <p className=" text-[14px] text-[color:var(--ink-2)]">Table not found.</p>
         <Link href="/dashboard/tables" className="mt-4 inline-block font-mono text-[11px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)]">
           ← All tables
@@ -141,11 +141,11 @@ export default function TableDetailPage() {
   }
 
   return (
-    <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-10 md:py-12">
+    <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-10 md:py-12">
       {/* Header */}
-      <section className="mb-8 flex items-end justify-between gap-4 flex-wrap">
+      <section className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 flex-wrap">
         <div className="max-w-[720px]">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3 mb-4 flex-wrap">
             <Link
               href="/dashboard/tables"
               className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
@@ -157,7 +157,7 @@ export default function TableDetailPage() {
               {table.rowType}
             </span>
           </div>
-          <h1 className=" text-[38px] md:text-[52px] leading-[0.97] tracking-[-0.015em] text-[color:var(--ink)]">
+          <h1 className=" text-[28px] sm:text-[38px] md:text-[52px] leading-[0.97] tracking-[-0.015em] text-[color:var(--ink)]">
             {table.name}
           </h1>
           {table.description && (
@@ -872,7 +872,7 @@ function BulkActionBar({
 
   return (
     <div className="sticky top-4 z-30 mb-4 border border-[color:var(--ink)] bg-[color:var(--paper)] rounded-sm shadow-[0_8px_24px_-12px_rgba(0,0,0,0.25)]">
-      <div className="flex items-center justify-between gap-4 px-4 py-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 px-4 py-3 flex-wrap">
         <div className="flex items-baseline gap-3">
           <span className=" text-[20px] text-[color:var(--ink)]">
             {selectedIds.size}

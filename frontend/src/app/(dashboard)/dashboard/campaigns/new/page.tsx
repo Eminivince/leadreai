@@ -1995,9 +1995,9 @@ export default function CampaignBuilderPage() {
   }
 
   return (
-    <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10">
+    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 md:py-10">
       {/* Header — compact breadcrumb + title row */}
-      <section className="mb-6">
+      <section className="mb-5 sm:mb-6">
         <div className="flex items-center gap-1.5 mb-3 font-mono text-[10.5px] text-[color:var(--ink-3)]">
           <Link
             href="/dashboard/campaigns"
@@ -2008,16 +2008,16 @@ export default function CampaignBuilderPage() {
           <span className="text-[color:var(--ink-3)]/60">/</span>
           <span className="text-[color:var(--ink-2)]">New</span>
         </div>
-        <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 flex-wrap">
           <div>
-            <h1 className="font-display text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
+            <h1 className="font-display text-[24px] sm:text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
               New campaign
             </h1>
             <p className="mt-0.5 text-[12.5px] text-[color:var(--ink-3)]">
               Four steps. Saves as a draft — activate when you&rsquo;re ready.
             </p>
           </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <PageHelp
             title="Campaigns"
             body="Email outreach sequences. Pick a lead file as the audience, write your email steps, set a schedule, and activate. Track opens and replies on the campaign detail page."
@@ -2096,7 +2096,7 @@ export default function CampaignBuilderPage() {
       </div>
 
       {/* Content grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-10 lg:gap-14">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-6 lg:gap-14">
         <div className="min-w-0">
           {step === 'audience' && (
             <AudienceStep
@@ -2144,7 +2144,7 @@ export default function CampaignBuilderPage() {
           advanceBlock string surfaces both as a tooltip and as a
           subtle helper line so users see WHY the button is dim
           before they click. */}
-      <div className="mt-10 sticky bottom-0 bg-[color:var(--paper)]/95 backdrop-blur-sm border-t border-[color:var(--rule)] -mx-6 md:-mx-8 lg:-mx-10 px-6 md:px-8 lg:px-10 py-3.5 flex items-center justify-between gap-3">
+      <div className="mt-8 sm:mt-10 sticky bottom-0 bg-[color:var(--paper)]/95 backdrop-blur-sm border-t border-[color:var(--rule)] -mx-4 sm:-mx-6 md:-mx-8 lg:-mx-10 px-4 sm:px-6 md:px-8 lg:px-10 py-3.5 flex items-center justify-between gap-3">
         <button
           onClick={() => {
             if (canPrev) {
