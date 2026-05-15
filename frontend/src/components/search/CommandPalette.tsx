@@ -292,13 +292,13 @@ export function CommandPalette() {
    <button
     aria-label="Close"
     onClick={closeSearch}
-    className="absolute inset-0 bg-[color:var(--ink)]/35 backdrop-blur-[2px]"
+    className="absolute inset-0 bg-[color:var(--ink)]/40 backdrop-blur-sm"
    />
    <div
     role="dialog"
     aria-modal="true"
     aria-label="Search"
-    className="relative w-full max-w-[640px] bg-[color:var(--paper)] border border-[color:var(--rule)] shadow-2xl flex flex-col max-h-[70vh]"
+    className="relative w-full max-w-[640px] bg-white border border-[color:var(--rule)] rounded-xl shadow-xl flex flex-col max-h-[70vh] overflow-hidden"
    >
     {/* Input */}
     <div className="flex items-center gap-3 px-5 py-4 border-b border-[color:var(--rule)]">
@@ -312,10 +312,10 @@ export function CommandPalette() {
       }}
       onKeyDown={onInputKey}
       placeholder="Search leads, dispatches, files, campaigns…"
-      className="flex-1 bg-transparent outline-none text-[15px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
+      className="flex-1 bg-transparent font-sans outline-none text-[14px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-4)] w-full"
      />
-     <kbd className="font-mono text-[9.5px] tracking-[0.14em] uppercase text-[color:var(--ink-3)] border border-[color:var(--rule)] bg-[color:var(--paper-3)] px-1.5 py-0.5 rounded-sm">
-      esc
+     <kbd className="font-mono text-[9px] bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded px-1 text-[color:var(--ink-3)]">
+      ESC
      </kbd>
     </div>
 
@@ -323,10 +323,10 @@ export function CommandPalette() {
     <div ref={listRef} className="flex-1 overflow-y-auto">
      {rows.length === 0 ? (
       <div className="px-5 py-12 text-center">
-       <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+       <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-4)]">
         {isFetching ? 'Searching' : 'No matches'}
        </span>
-       <p className="mt-2 italic text-[13px] text-[color:var(--ink-2)]">
+       <p className="mt-2 font-sans text-[13.5px] text-[color:var(--ink-2)]">
         {isFetching
          ? 'Looking across the desk\u2026'
          : query
@@ -338,7 +338,7 @@ export function CommandPalette() {
       <ul>
        {sections.map((sec) => (
         <li key={sec.key}>
-         <div className="px-5 pt-3 pb-1 font-mono text-[9px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+         <div className="px-5 pt-3 pb-1 font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-4)]">
           {sec.label}
          </div>
          {sec.rows.map(({ row, idx }) => {
@@ -351,29 +351,38 @@ export function CommandPalette() {
             onClick={() => activate(row.href)}
             className={`relative w-full text-left grid grid-cols-[auto_1fr_auto] gap-3 items-baseline px-5 py-2.5 transition-colors ${
              active
-              ? 'bg-[color:var(--paper-3)]'
-              : 'hover:bg-[color:var(--paper-3)]/60'
+              ? 'bg-[color:var(--ember-bg)] text-[color:var(--ember)]'
+              : 'font-sans text-[13.5px] text-[color:var(--ink-2)] hover:bg-[color:var(--paper-2)]'
             }`}
            >
-            {active && (
-             <span className="absolute left-0 top-2 bottom-2 w-[2px] bg-[color:var(--ember)]" />
-            )}
-            <span className="font-mono text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ink-3)] shrink-0">
+            <span
+             className={`font-mono text-[9.5px] tracking-[0.16em] uppercase shrink-0 ${
+              active ? 'text-[color:var(--ember)]' : 'text-[color:var(--ink-3)]'
+             }`}
+            >
              {row.kicker}
             </span>
             <span className="min-w-0">
-             <span className="block text-[13.5px] text-[color:var(--ink)] truncate">
+             <span
+              className={`block font-sans text-[13.5px] truncate ${
+               active ? 'text-[color:var(--ember)] font-medium' : 'text-[color:var(--ink)]'
+              }`}
+             >
               {row.title}
              </span>
              {row.sub && (
-              <span className="block italic text-[12px] text-[color:var(--ink-2)] truncate">
+              <span
+               className={`block font-sans text-[12px] truncate ${
+                active ? 'text-[color:var(--ember-2)]' : 'text-[color:var(--ink-3)]'
+               }`}
+              >
                {row.sub}
               </span>
              )}
             </span>
             {active && (
-             <kbd className="font-mono text-[9px] tracking-[0.14em] uppercase text-[color:var(--ink-2)] border border-[color:var(--rule)] bg-[color:var(--paper)] px-1.5 py-0.5 rounded-sm shrink-0">
-              enter
+             <kbd className="font-mono text-[9px] bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded px-1 text-[color:var(--ink-3)] shrink-0">
+              \u21b5
              </kbd>
             )}
            </button>
@@ -386,22 +395,22 @@ export function CommandPalette() {
     </div>
 
     {/* Footer hint */}
-    <div className="px-5 py-2.5 border-t border-[color:var(--rule)] bg-[color:var(--paper-3)]/60 flex items-center justify-between gap-3">
-     <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+    <div className="px-5 py-2.5 border-t border-[color:var(--rule)] bg-[color:var(--paper-2)] flex items-center justify-between gap-3">
+     <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-4)]">
       The wire
      </span>
-     <div className="flex items-center gap-3 font-mono text-[9px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
-      <span>
-       <kbd className="border border-[color:var(--rule)] bg-[color:var(--paper)] px-1 py-0.5 rounded-sm mr-1">↑</kbd>
-       <kbd className="border border-[color:var(--rule)] bg-[color:var(--paper)] px-1 py-0.5 rounded-sm">↓</kbd>{' '}
+     <div className="flex items-center gap-3 font-sans text-[11px] text-[color:var(--ink-3)]">
+      <span className="inline-flex items-center gap-1">
+       <kbd className="font-mono text-[9px] bg-white border border-[color:var(--rule)] rounded px-1 text-[color:var(--ink-3)]">↑</kbd>
+       <kbd className="font-mono text-[9px] bg-white border border-[color:var(--rule)] rounded px-1 text-[color:var(--ink-3)]">↓</kbd>
        move
       </span>
-      <span>
-       <kbd className="border border-[color:var(--rule)] bg-[color:var(--paper)] px-1 py-0.5 rounded-sm">↵</kbd>{' '}
+      <span className="inline-flex items-center gap-1">
+       <kbd className="font-mono text-[9px] bg-white border border-[color:var(--rule)] rounded px-1 text-[color:var(--ink-3)]">↵</kbd>
        select
       </span>
-      <span>
-       <kbd className="border border-[color:var(--rule)] bg-[color:var(--paper)] px-1 py-0.5 rounded-sm">esc</kbd>{' '}
+      <span className="inline-flex items-center gap-1">
+       <kbd className="font-mono text-[9px] bg-white border border-[color:var(--rule)] rounded px-1 text-[color:var(--ink-3)]">ESC</kbd>
        close
       </span>
      </div>
