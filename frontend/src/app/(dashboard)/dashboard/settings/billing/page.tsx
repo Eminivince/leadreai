@@ -318,7 +318,7 @@ export default function BillingSettingsPage() {
                 return (
                   <div
                     key={t._id}
-                    className="grid grid-cols-[40px_1fr_auto_auto_auto] gap-4 items-baseline py-3 border-b border-[color:var(--rule)]/70"
+                    className="grid grid-cols-[28px_1fr_auto] sm:grid-cols-[40px_1fr_auto_auto_auto] gap-2 sm:gap-4 items-baseline py-3 border-b border-[color:var(--rule)]/70"
                   >
                     <span className="font-mono text-[10px] tracking-[0.06em] text-[color:var(--ink-3)] tabular-nums">
                       {String(i + 1).padStart(2, '0')}
@@ -334,7 +334,7 @@ export default function BillingSettingsPage() {
                       )}
                     </div>
                     <span
-                      className={`font-mono text-[9.5px] tracking-[0.04em] px-2 py-0.5 border bg-[color:var(--paper-3)] ${bucketTone}`}
+                      className={`hidden sm:inline font-mono text-[9.5px] tracking-[0.04em] px-2 py-0.5 border bg-[color:var(--paper-3)] ${bucketTone}`}
                     >
                       {t.bucket}
                     </span>
@@ -346,12 +346,15 @@ export default function BillingSettingsPage() {
                       {isCredit ? '+' : ''}
                       {t.delta.toLocaleString()}
                     </span>
-                    <span className="font-mono text-[10px] tracking-[0.04em] text-[color:var(--ink-3)] tabular-nums whitespace-nowrap">
+                    <span className="hidden sm:inline font-mono text-[10px] tracking-[0.04em] text-[color:var(--ink-3)] tabular-nums whitespace-nowrap">
                       {new Date(t.createdAt).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
                       })}{' '}
                       · bal {t.balanceAfter.toLocaleString()}
+                    </span>
+                    <span className="sm:hidden col-start-2 -mt-2 font-mono text-[10px] tracking-[0.04em] text-[color:var(--ink-3)] tabular-nums">
+                      {t.bucket} · {new Date(t.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · bal {t.balanceAfter.toLocaleString()}
                     </span>
                   </div>
                 );
@@ -449,7 +452,7 @@ function BudgetPanel() {
         />
       </div>
 
-      <div className="flex items-center justify-between gap-3 pt-1">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1">
         <GhostButton
           onClick={() => save.mutate({ monthlyCapUSD: null })}
           disabled={save.isPending || !budget?.monthlyCapUSD}

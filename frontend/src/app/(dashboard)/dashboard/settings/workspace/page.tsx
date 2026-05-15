@@ -62,7 +62,7 @@ function ToggleRow({
  sub?: string;
 }) {
  return (
-  <div className="flex items-center justify-between gap-6 py-3.5 border-b border-[color:var(--rule)] last:border-0">
+  <div className="flex items-center justify-between gap-4 sm:gap-6 py-3.5 border-b border-[color:var(--rule)] last:border-0">
    <div className="min-w-0 flex-1">
     <div className="text-[13.5px] font-medium text-[color:var(--ink)]">{label}</div>
     {sub && (
@@ -137,11 +137,11 @@ export default function WorkspaceSettingsPage() {
   >
    {/* Identity */}
    <div className="bg-white border border-[color:var(--rule)] rounded-xl overflow-hidden">
-    <div className="px-6 py-5 border-b border-[color:var(--rule)]">
+    <div className="px-4 sm:px-6 py-5 border-b border-[color:var(--rule)]">
      <h2 className="text-[16px] font-bold text-[color:var(--ink)]">Identity</h2>
      <p className="text-[13px] text-[color:var(--ink-3)] mt-0.5">Workspace name and description.</p>
     </div>
-    <div className="p-6 flex flex-col gap-5">
+    <div className="p-4 sm:p-6 flex flex-col gap-5">
      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <div className="flex flex-col gap-1.5">
        <label className="text-[13px] font-semibold text-[color:var(--ink)]">Workspace name</label>
@@ -175,7 +175,7 @@ export default function WorkspaceSettingsPage() {
       />
      </div>
     </div>
-    <div className="px-6 py-4 bg-[color:var(--paper-2)] border-t border-[color:var(--rule)] flex justify-end">
+    <div className="px-4 sm:px-6 py-4 bg-[color:var(--paper-2)] border-t border-[color:var(--rule)] flex justify-end">
      <button
       type="submit"
       disabled={saveMutation.isPending || !dirty}
@@ -188,11 +188,11 @@ export default function WorkspaceSettingsPage() {
 
    {/* Preferences */}
    <div className="bg-white border border-[color:var(--rule)] rounded-xl overflow-hidden">
-    <div className="px-6 py-5 border-b border-[color:var(--rule)]">
+    <div className="px-4 sm:px-6 py-5 border-b border-[color:var(--rule)]">
      <h2 className="text-[16px] font-bold text-[color:var(--ink)]">Preferences</h2>
      <p className="text-[13px] text-[color:var(--ink-3)] mt-0.5">Defaults for searches and exports.</p>
     </div>
-    <div className="px-6 py-2">
+    <div className="px-4 sm:px-6 py-2">
      <ToggleRow
       checked={notifyOnJobComplete}
       onChange={(v) => { setDirty(true); setNotifyOnJobComplete(v); }}
@@ -205,7 +205,7 @@ export default function WorkspaceSettingsPage() {
       label="Thrift mode"
       sub="Skips SerpAPI searches during prospecting. Faster and free — but with less web research."
      />
-     <div className="flex items-center justify-between gap-6 py-3.5">
+     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6 py-3.5">
       <div className="min-w-0 flex-1">
        <div className="text-[13.5px] font-medium text-[color:var(--ink)]">Default export format</div>
        <div className="mt-0.5 text-[12.5px] text-[color:var(--ink-3)]">
@@ -215,14 +215,14 @@ export default function WorkspaceSettingsPage() {
       <select
        value={defaultExportFormat}
        onChange={(e) => { setDirty(true); setDefaultExportFormat(e.target.value as 'csv' | 'xlsx'); }}
-       className="bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-lg px-3 py-2 text-[13px] text-[color:var(--ink)] outline-none focus:border-[color:var(--ember)] focus:ring-2 focus:ring-[color:var(--ember)]/10 transition-all"
+       className="w-full sm:w-auto bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-lg px-3 py-2 text-[13px] text-[color:var(--ink)] outline-none focus:border-[color:var(--ember)] focus:ring-2 focus:ring-[color:var(--ember)]/10 transition-all"
       >
        <option value="csv">CSV</option>
        <option value="xlsx">Excel (XLSX)</option>
       </select>
      </div>
     </div>
-    <div className="px-6 py-4 bg-[color:var(--paper-2)] border-t border-[color:var(--rule)] flex justify-end">
+    <div className="px-4 sm:px-6 py-4 bg-[color:var(--paper-2)] border-t border-[color:var(--rule)] flex justify-end">
      <button
       type="submit"
       disabled={saveMutation.isPending || !dirty}
@@ -235,11 +235,11 @@ export default function WorkspaceSettingsPage() {
 
    {/* Danger zone */}
    <div className="bg-white border border-[color:var(--rule)] rounded-xl overflow-hidden">
-    <div className="px-6 py-5 border-b border-[color:var(--rule)]">
+    <div className="px-4 sm:px-6 py-5 border-b border-[color:var(--rule)]">
      <h2 className="text-[16px] font-bold text-[color:var(--ink)]">Danger zone</h2>
      <p className="text-[13px] text-[color:var(--ink-3)] mt-0.5">Irreversible workspace actions.</p>
     </div>
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
      <ForthcomingPanel title="Archive or delete this workspace.">
       Archiving hides the workspace and stops all running searches. Deletion is permanent.
       Both operations are forthcoming — contact us today if you need either.

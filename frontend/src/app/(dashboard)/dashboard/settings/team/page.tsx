@@ -56,7 +56,7 @@ export default function TeamSettingsPage() {
   <div className="flex flex-col gap-5">
    {/* Members card */}
    <div className="bg-white border border-[color:var(--rule)] rounded-xl overflow-hidden">
-    <div className="px-6 py-5 border-b border-[color:var(--rule)] flex items-center justify-between">
+    <div className="px-4 sm:px-6 py-5 border-b border-[color:var(--rule)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
      <div>
       <h2 className="text-[16px] font-bold text-[color:var(--ink)]">Team members</h2>
       <p className="text-[13px] text-[color:var(--ink-3)] mt-0.5">
@@ -66,7 +66,7 @@ export default function TeamSettingsPage() {
     </div>
 
     {members.length === 0 ? (
-     <div className="p-6 text-[13.5px] text-[color:var(--ink-3)]">No members found.</div>
+     <div className="p-4 sm:p-6 text-[13.5px] text-[color:var(--ink-3)]">No members found.</div>
     ) : (
      <div className="divide-y divide-[color:var(--rule)]">
       {members.map((m) => {
@@ -82,7 +82,7 @@ export default function TeamSettingsPage() {
        return (
         <div
          key={m.userId}
-         className="px-6 py-4 flex items-center gap-4"
+         className="px-4 sm:px-6 py-4 flex items-center gap-3 sm:gap-4 flex-wrap"
         >
          <div className="w-9 h-9 rounded-full bg-[color:var(--ink)] text-white flex items-center justify-center shrink-0 text-[13px] font-semibold">
           {initials(name)}
@@ -117,11 +117,11 @@ export default function TeamSettingsPage() {
 
    {/* Invitations card */}
    <div className="bg-white border border-[color:var(--rule)] rounded-xl overflow-hidden">
-    <div className="px-6 py-5 border-b border-[color:var(--rule)]">
+    <div className="px-4 sm:px-6 py-5 border-b border-[color:var(--rule)]">
      <h2 className="text-[16px] font-bold text-[color:var(--ink)]">Invitations</h2>
      <p className="text-[13px] text-[color:var(--ink-3)] mt-0.5">Invite colleagues to join this workspace.</p>
     </div>
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
      <ForthcomingPanel title="Invite a team member.">
       Invitations, role changes, and seat removal are coming in a later release. For now we
       seat the workspace owner automatically. Reach out if you need a colleague added today
