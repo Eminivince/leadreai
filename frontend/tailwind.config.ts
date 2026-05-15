@@ -13,16 +13,9 @@ content: [
   theme: {
     extend: {
       fontFamily: {
-        // Primary B2B SaaS pairing — Geist for everything UI, mono for
-        // all numbers, labels, and IDs. Tabular-numbers feature is on
-        // by default for both Geist faces.
-        sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
-        mono: ['var(--font-geist-mono)', 'ui-monospace', 'monospace'],
-        // Legacy — kept while marketing pages and older components
-        // still reference them. Will retire as those migrate.
-        heading: ['var(--font-instrument-serif)', 'serif'],
-        body: ['var(--font-barlow)', 'sans-serif'],
-        'mono-legacy': ['var(--font-jetbrains-mono)', 'ui-monospace', 'monospace'],
+        display: ['var(--font-display)', 'Georgia', 'serif'],
+        sans:    ['var(--font-body)',    'system-ui', 'sans-serif'],
+        mono:    ['var(--font-mono)',    'ui-monospace', 'monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',
