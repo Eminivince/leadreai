@@ -231,7 +231,14 @@ function NavRow({
 }
 
 /* ── Sidebar ─────────────────────────────────────────────────── */
-export function Sidebar() {
+interface SidebarProps {
+ /** Mobile drawer open state. Transient — not persisted. */
+ mobileOpen?: boolean;
+ /** Called when the drawer should close (backdrop click, Escape, route change). */
+ onMobileClose?: () => void;
+}
+
+export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps = {}) {
  const pathname = usePathname();
  const router = useRouter();
  const { user, workspace, reset, openTopUp } = useAppStore();
@@ -255,10 +262,43 @@ export function Sidebar() {
  useEffect(() => {
   const onKeyDown = (e: KeyboardEvent) => {
    if ((e.metaKey || e.ctrlKey) && e.key === '\\') { e.preventDefault(); toggleCollapsed(); }
+   if (e.key === 'Escape' && mobileOpen) { onMobileClose?.(); }
   };
   window.addEventListener('keydown', onKeyDown);
   return () => window.removeEventListener('keydown', onKeyDown);
- }, [toggleCollapsed]);
+ }, [toggleCollapsed, mobileOpen, onMobileClose]);
+
+ // Auto-close the mobile drawer on route change.
+ useEffect(() => {
+  if (mobileOpen) onMobileClose?.();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [pathname]);
+
+ // Lock body scroll while the mobile drawer is open.
+ useEffect(() => {
+  if (typeof document === 'undefined') return;
+  if (mobileOpen) {
+   const prev = document.body.style.overflow;
+   document.body.style.overflow = 'hidden';
+   return () => { document.body.style.overflow = prev; };
+  }
+ }, [mobileOpen]);
+
+ // Track viewport so we can ignore `collapsed` on mobile (drawer is
+ // always full-width when open). SSR-safe default = desktop.
+ const [isMobile, setIsMobile] = useState(false);
+ useEffect(() => {
+  if (typeof window === 'undefined') return;
+  const mq = window.matchMedia('(max-width: 767px)');
+  const update = () => setIsMobile(mq.matches);
+  update();
+  mq.addEventListener('change', update);
+  return () => mq.removeEventListener('change', update);
+ }, []);
+
+ // On mobile the drawer is full-width with labels; collapse only
+ // applies to the desktop inline sidebar.
+ const effectiveCollapsed = isMobile ? false : collapsed;
 
  const toggleExpanded = (key: string) => {
   setExpanded(prev => {
@@ -288,12 +328,30 @@ export function Sidebar() {
  const getForceExpanded = (item: NavItem) => isChildActive(item, pathname);
 
  return (
-  <motion.aside
-   animate={{ width: collapsed ? 60 : 240 }}
-   transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-   className="shrink-0 h-screen sticky top-0 flex flex-col bg-[color:var(--paper-2)] border-r border-[color:var(--rule)] overflow-hidden z-30"
-   style={{ willChange: 'width' }}
-  >
+  <>
+   {/* Mobile backdrop */}
+   {mobileOpen && (
+    <div
+     className="fixed inset-0 bg-[color:var(--ink)]/40 backdrop-blur-sm z-40 md:hidden"
+     onClick={() => onMobileClose?.()}
+     aria-hidden="true"
+    />
+   )}
+
+   <motion.aside
+    animate={{ width: effectiveCollapsed ? 60 : isMobile ? 288 : 240 }}
+    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+    className={cn(
+     'flex flex-col bg-[color:var(--paper-2)] border-r border-[color:var(--rule)] overflow-hidden',
+     // Mobile: fixed overlay drawer
+     'fixed inset-y-0 left-0 z-50 h-screen transform transition-transform duration-200 ease-out',
+     mobileOpen ? 'translate-x-0' : '-translate-x-full',
+     // Desktop: inline sticky column
+     'md:sticky md:top-0 md:z-30 md:translate-x-0 md:shrink-0 md:transition-none',
+    )}
+    style={{ willChange: 'width' }}
+    aria-hidden={!mobileOpen && isMobile}
+   >
    {/* Logo + workspace */}
    <div className="flex items-center gap-3 px-4 h-[60px] border-b border-[color:var(--rule)] shrink-0">
     <Link
@@ -305,7 +363,7 @@ export function Sidebar() {
     </Link>
 
     <AnimatePresence initial={false}>
-     {!collapsed && (
+     {!effectiveCollapsed && (
       <motion.div
        initial={{ opacity: 0, x: -6 }}
        animate={{ opacity: 1, x: 0 }}
@@ -326,36 +384,45 @@ export function Sidebar() {
     </AnimatePresence>
 
     <AnimatePresence initial={false}>
-     {!collapsed && (
+     {!effectiveCollapsed && (
       <motion.button
        initial={{ opacity: 0 }}
        animate={{ opacity: 1 }}
        exit={{ opacity: 0 }}
-       onClick={toggleCollapsed}
-       title="Collapse sidebar (⌘\\)"
-       className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md text-[color:var(--ink-3)] hover:text-[color:var(--ink)] hover:bg-[color:var(--paper-3)] transition-all"
+       onClick={() => (isMobile ? onMobileClose?.() : toggleCollapsed())}
+       title={isMobile ? 'Close menu' : 'Collapse sidebar (⌘\\)'}
+       aria-label={isMobile ? 'Close menu' : 'Collapse sidebar'}
+       className="shrink-0 w-8 h-8 md:w-6 md:h-6 flex items-center justify-center rounded-md text-[color:var(--ink-3)] hover:text-[color:var(--ink)] hover:bg-[color:var(--paper-3)] transition-all"
       >
-       <svg width={14} height={14} viewBox="0 0 16 16" fill="none">
-        <path d="m10 4-4 4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-       </svg>
+       {isMobile ? (
+        <svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+         <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+        </svg>
+       ) : (
+        <svg width={14} height={14} viewBox="0 0 16 16" fill="none">
+         <path d="m10 4-4 4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+       )}
       </motion.button>
      )}
     </AnimatePresence>
 
-    {collapsed && (
+    {effectiveCollapsed && (
      <button
       onClick={toggleCollapsed}
       title="Expand sidebar (⌘\\)"
+      aria-label="Expand sidebar"
       className="absolute inset-0 w-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
      />
     )}
    </div>
 
-   {/* Expand button when collapsed */}
-   {collapsed && (
+   {/* Expand button when collapsed (desktop only) */}
+   {effectiveCollapsed && (
     <button
      onClick={toggleCollapsed}
      title="Expand sidebar (⌘\\)"
+     aria-label="Expand sidebar"
      className="h-8 mx-2 mt-2 flex items-center justify-center rounded-lg text-[color:var(--ink-3)] hover:text-[color:var(--ink)] hover:bg-[color:var(--paper-3)] transition-all shrink-0"
     >
      <svg width={14} height={14} viewBox="0 0 16 16" fill="none">
@@ -369,7 +436,7 @@ export function Sidebar() {
     {/* Primary nav */}
     <div className="flex flex-col gap-0.5">
      <AnimatePresence initial={false}>
-      {!collapsed && (
+      {!effectiveCollapsed && (
        <motion.span
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -390,7 +457,7 @@ export function Sidebar() {
         pathname={pathname}
         expanded={isExpanded}
         onToggle={toggleExpanded}
-        showLabels={!collapsed}
+        showLabels={!effectiveCollapsed}
        />
       );
      })}
@@ -399,7 +466,7 @@ export function Sidebar() {
     {/* Secondary nav */}
     <div className="flex flex-col gap-0.5">
      <AnimatePresence initial={false}>
-      {!collapsed && (
+      {!effectiveCollapsed && (
        <motion.span
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -420,7 +487,7 @@ export function Sidebar() {
         pathname={pathname}
         expanded={isExpanded}
         onToggle={toggleExpanded}
-        showLabels={!collapsed}
+        showLabels={!effectiveCollapsed}
        />
       );
      })}
@@ -431,7 +498,7 @@ export function Sidebar() {
    <div className="border-t border-[color:var(--rule)] px-3 py-3 flex flex-col gap-3 shrink-0">
     {/* Credits */}
     <AnimatePresence initial={false}>
-     {!collapsed && (
+     {!effectiveCollapsed && (
       <motion.div
        initial={{ opacity: 0, height: 0 }}
        animate={{ opacity: 1, height: 'auto' }}
@@ -480,7 +547,7 @@ export function Sidebar() {
      </div>
 
      <AnimatePresence initial={false}>
-      {!collapsed && (
+      {!effectiveCollapsed && (
        <motion.div
         initial={{ opacity: 0, width: 0 }}
         animate={{ opacity: 1, width: 'auto' }}
@@ -499,14 +566,15 @@ export function Sidebar() {
      </AnimatePresence>
 
      <AnimatePresence initial={false}>
-      {!collapsed && (
+      {!effectiveCollapsed && (
        <motion.button
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={handleLogout}
         title="Sign out"
-        className="shrink-0 w-7 h-7 flex items-center justify-center rounded-md text-[color:var(--ink-3)] hover:text-[color:var(--ink)] hover:bg-[color:var(--paper-3)] transition-all"
+        aria-label="Sign out"
+        className="shrink-0 w-9 h-9 md:w-7 md:h-7 flex items-center justify-center rounded-md text-[color:var(--ink-3)] hover:text-[color:var(--ink)] hover:bg-[color:var(--paper-3)] transition-all"
        >
         <svg width={14} height={14} viewBox="0 0 24 24" fill="none">
          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -515,10 +583,11 @@ export function Sidebar() {
       )}
      </AnimatePresence>
 
-     {collapsed && (
+     {effectiveCollapsed && (
       <button
        onClick={handleLogout}
        title="Sign out"
+       aria-label="Sign out"
        className="w-7 h-7 flex items-center justify-center rounded-md text-[color:var(--ink-3)] hover:text-red-500 transition-colors"
       >
        <svg width={14} height={14} viewBox="0 0 24 24" fill="none">
@@ -528,6 +597,7 @@ export function Sidebar() {
      )}
     </div>
    </div>
-  </motion.aside>
+   </motion.aside>
+  </>
  );
 }

@@ -33,10 +33,10 @@ export function ImpersonationBanner() {
   return (
     <div
       role="alert"
-      className="sticky top-0 z-50 flex items-center justify-between gap-3 bg-[color:var(--ember-bg)] border-b border-[color:var(--ember)]/30 px-6 py-2 font-sans font-medium text-[12.5px] text-[color:var(--ember-2)]"
+      className="sticky top-0 z-50 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 bg-[color:var(--ember-bg)] border-b border-[color:var(--ember)]/30 px-4 sm:px-6 py-2 font-sans font-medium text-[12.5px] text-[color:var(--ember-2)]"
     >
-      <span>
-        You are impersonating <code className="font-mono">{userId ?? 'a user'}</code>.
+      <span className="min-w-0 break-words">
+        You are impersonating <code className="font-mono break-all">{userId ?? 'a user'}</code>.
         All actions are logged.
       </span>
       <button
@@ -46,9 +46,10 @@ export function ImpersonationBanner() {
           sessionStorage.removeItem('impersonation-user');
           window.location.href = '/dashboard';
         }}
-        className="font-sans font-semibold text-[12.5px] text-[color:var(--ember)] hover:text-[color:var(--ember-2)] hover:underline transition-colors"
+        className="shrink-0 font-sans font-semibold text-[12.5px] text-[color:var(--ember)] hover:text-[color:var(--ember-2)] hover:underline transition-colors"
       >
-        Return to your account
+        <span className="hidden sm:inline">Return to your account</span>
+        <span className="sm:hidden">Exit</span>
       </button>
     </div>
   );

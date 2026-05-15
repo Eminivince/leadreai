@@ -46,7 +46,11 @@ const SearchIcon = () => (
  </svg>
 );
 
-export function Topbar() {
+interface TopbarProps {
+ onOpenMobileSidebar?: () => void;
+}
+
+export function Topbar({ onOpenMobileSidebar }: TopbarProps = {}) {
  const pathname = usePathname();
  const { user, openSearch } = useAppStore();
  const title = resolveTitle(pathname);
@@ -61,17 +65,32 @@ export function Topbar() {
  }, []);
 
  return (
-  <div className="h-14 flex items-center gap-4 px-6 md:px-8">
+  <div className="h-14 flex items-center gap-3 md:gap-4 px-4 md:px-8 min-w-0">
+   {/* Hamburger (mobile only) */}
+   <button
+    onClick={() => onOpenMobileSidebar?.()}
+    className="md:hidden shrink-0 h-9 w-9 flex items-center justify-center rounded-lg text-[color:var(--ink-2)] hover:bg-[color:var(--paper-3)] transition-colors"
+    aria-label="Open menu"
+    type="button"
+   >
+    <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round">
+     <path d="M3 6h18M3 12h18M3 18h18" />
+    </svg>
+   </button>
+
    {/* Page title */}
    {title && (
-    <span className="text-[15px] font-semibold text-[color:var(--ink)] truncate">
+    <span className="text-[15px] font-semibold text-[color:var(--ink)] truncate min-w-0">
      {title}
     </span>
    )}
 
    {/* Workspace switcher (Task #25) — sits next to the title so the
-       active workspace identity is always visible without a click. */}
-   <WorkspaceSwitcher />
+       active workspace identity is always visible without a click.
+       Hidden on mobile to preserve title + action room. */}
+   <div className="hidden md:flex">
+    <WorkspaceSwitcher />
+   </div>
 
    {/* Date — subtle */}
    <span className="hidden md:block ml-auto text-[12.5px] text-[color:var(--ink-3)]">
@@ -79,11 +98,12 @@ export function Topbar() {
    </span>
 
    {/* Actions */}
-   <div className="flex items-center gap-0.5 ml-auto md:ml-0">
+   <div className="flex items-center gap-0.5 ml-auto md:ml-0 shrink-0">
     <button
      onClick={() => openSearch?.()}
      title="Search (⌘K)"
-     className="h-8 w-8 flex items-center justify-center rounded-lg text-[color:var(--ink-3)] hover:text-[color:var(--ink)] hover:bg-[color:var(--paper-3)] transition-all"
+     aria-label="Search"
+     className="h-9 w-9 flex items-center justify-center rounded-lg text-[color:var(--ink-3)] hover:text-[color:var(--ink)] hover:bg-[color:var(--paper-3)] transition-all"
     >
      <SearchIcon />
     </button>
@@ -92,7 +112,7 @@ export function Topbar() {
 
     <NotificationDropdown />
 
-    <ThemeToggle className="h-8 w-8" />
+    <ThemeToggle className="h-9 w-9" />
 
     {firstName && (
      <span className="hidden lg:inline ml-2 text-[13px] text-[color:var(--ink-2)]">
