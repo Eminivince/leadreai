@@ -69,7 +69,7 @@ const TESTIMONIALS = [
 
 export default function LandingPage() {
   return (
-    <main className="bg-[color:var(--paper)] text-[color:var(--ink)] min-w-[900px]">
+    <main className="bg-[color:var(--paper)] text-[color:var(--ink)]">
       <SiteNav />
       <HeroSection />
       <WhatItIsSection />
@@ -85,8 +85,8 @@ export default function LandingPage() {
 
 function SiteNav() {
   return (
-    <nav className="flex items-center justify-between px-12 h-14 border-b border-[color:var(--rule)]">
-      <div className="flex items-center gap-2.5">
+    <nav className="flex items-center justify-between px-4 sm:px-6 md:px-12 h-14 border-b border-[color:var(--rule)] gap-4">
+      <div className="flex items-center gap-2.5 min-w-0">
         <div className="w-7 h-7 rounded-[7px] bg-[color:var(--ink)] flex items-center justify-center flex-shrink-0">
           <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4" aria-hidden="true">
             <path d="M3 13 L3 3 L6 3 L6 10 L13 10 L13 13 Z" fill="white" />
@@ -98,7 +98,7 @@ function SiteNav() {
         </span>
       </div>
 
-      <div className="flex items-center gap-7">
+      <div className="hidden md:flex items-center gap-7">
         <Link
           href="/pricing"
           className="font-sans text-[13px] text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition-colors tracking-[0.01em]"
@@ -122,13 +122,13 @@ function SiteNav() {
       <div className="flex items-center gap-2.5">
         <Link
           href="/login"
-          className="font-sans text-[13px] font-medium text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition-colors tracking-[0.01em]"
+          className="hidden sm:inline-block font-sans text-[13px] font-medium text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition-colors tracking-[0.01em]"
         >
           Sign in
         </Link>
         <Link
           href="/register"
-          className="bg-[color:var(--ink)] text-[color:var(--paper)] font-sans text-[12.5px] font-semibold px-[18px] py-2 rounded-md tracking-[0.02em] hover:opacity-85 transition-opacity"
+          className="bg-[color:var(--ink)] text-[color:var(--paper)] font-sans text-[12.5px] font-semibold px-[14px] sm:px-[18px] py-2 rounded-md tracking-[0.02em] hover:opacity-85 transition-opacity whitespace-nowrap"
         >
           Start for free
         </Link>
@@ -143,9 +143,9 @@ function SiteNav() {
 
 function HeroSection() {
   return (
-    <section className="grid grid-cols-[1fr_420px] px-12 min-h-[calc(100vh-56px)] border-b border-[color:var(--rule)]">
+    <section className="flex flex-col md:grid md:grid-cols-[1fr_420px] px-4 sm:px-6 md:px-12 md:min-h-[calc(100vh-56px)] border-b border-[color:var(--rule)]">
       {/* LEFT */}
-      <div className="flex flex-col justify-center py-[60px] pr-16 border-r border-[color:var(--rule)]">
+      <div className="flex flex-col justify-center py-10 md:py-[60px] md:pr-16 md:border-r border-[color:var(--rule)]">
         {/* Eyebrow */}
         <div className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--ember)] mb-6 flex items-center gap-2.5">
           <span className="w-5 h-px bg-[color:var(--ember)] flex-shrink-0" aria-hidden="true" />
@@ -153,7 +153,7 @@ function HeroSection() {
         </div>
 
         {/* Headline */}
-        <h1 className="font-display font-normal text-[clamp(48px,4.5vw,64px)] leading-[1.05] tracking-[-0.02em] text-[color:var(--ink)] mb-7">
+        <h1 className="font-display font-normal text-[clamp(34px,8vw,64px)] leading-[1.05] tracking-[-0.02em] text-[color:var(--ink)] mb-7">
           Your clients ask
           <br />
           where the data
@@ -197,9 +197,9 @@ function HeroSection() {
         </div>
 
         {/* Trust strip */}
-        <div className="mt-12 pt-6 border-t border-[color:var(--rule)] flex items-center gap-7">
+        <div className="mt-12 pt-6 border-t border-[color:var(--rule)] grid grid-cols-2 sm:flex sm:items-center gap-4 sm:gap-7">
           {TRUST_STATS.map((stat, i) => (
-            <div key={stat.label} className="flex items-center gap-7">
+            <div key={stat.label} className="flex items-center gap-4 sm:gap-7">
               <div className="flex flex-col gap-0.5">
                 <div className="font-display text-[22px] font-normal text-[color:var(--ink)] tracking-[-0.02em] leading-none">
                   {stat.num}
@@ -212,7 +212,7 @@ function HeroSection() {
                 </div>
               </div>
               {i < TRUST_STATS.length - 1 && (
-                <span className="w-px h-8 bg-[color:var(--rule)]" aria-hidden="true" />
+                <span className="hidden sm:block w-px h-8 bg-[color:var(--rule)]" aria-hidden="true" />
               )}
             </div>
           ))}
@@ -220,7 +220,7 @@ function HeroSection() {
       </div>
 
       {/* RIGHT */}
-      <div className="flex flex-col justify-center py-12 pl-[52px]">
+      <div className="flex flex-col justify-center py-10 md:py-12 md:pl-[52px]">
         <div className="font-mono text-[9.5px] text-[color:var(--ink-4)] tracking-[0.18em] uppercase mb-3">
           Live result — Fintech Series A, Lagos
         </div>
@@ -241,7 +241,8 @@ function HeroSection() {
         </div>
 
         {/* Demo table */}
-        <table className="w-full border-collapse border-[1.5px] border-[color:var(--rule)] rounded-lg overflow-hidden bg-white">
+        <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+        <table className="w-full min-w-[420px] border-collapse border-[1.5px] border-[color:var(--rule)] rounded-lg overflow-hidden bg-white">
           <thead>
             <tr className="bg-[color:var(--paper-2)] border-b-[1.5px] border-[color:var(--rule)]">
               <th className="text-left font-mono text-[8.5px] tracking-[0.16em] uppercase text-[color:var(--ink-4)] font-medium px-3.5 py-2.5">
@@ -319,6 +320,7 @@ function HeroSection() {
             ))}
           </tbody>
         </table>
+        </div>
 
         {/* Unlock gate */}
         <div
@@ -351,14 +353,14 @@ function WhatItIsSection() {
   return (
     <section
       id="what-it-is"
-      className="px-12 py-[72px] border-b border-[color:var(--rule)] grid grid-cols-[280px_1fr] gap-20 items-start"
+      className="px-4 sm:px-6 md:px-12 py-12 md:py-[72px] border-b border-[color:var(--rule)] flex flex-col gap-6 md:grid md:grid-cols-[280px_1fr] md:gap-20 md:items-start"
     >
       <div className="font-mono text-[10px] text-[color:var(--ink-4)] tracking-[0.18em] uppercase pt-1">
         What it is
       </div>
 
       <div>
-        <h2 className="font-display text-[34px] font-normal text-[color:var(--ink)] tracking-[-0.02em] leading-[1.15] mb-5">
+        <h2 className="font-display text-[clamp(28px,5.5vw,34px)] font-normal text-[color:var(--ink)] tracking-[-0.02em] leading-[1.15] mb-5">
           Not a database.
           <br />A <em className="italic text-[color:var(--ink-2)]">research agent.</em>
         </h2>
@@ -376,12 +378,14 @@ function WhatItIsSection() {
           coverage, stale emails, and no evidence trail.
         </p>
 
-        <div className="mt-10 grid grid-cols-3 border-[1.5px] border-[color:var(--rule)] rounded-[10px] overflow-hidden">
+        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 border-[1.5px] border-[color:var(--rule)] rounded-[10px] overflow-hidden">
           {PILLARS.map((pillar, i) => (
             <div
               key={pillar.num}
               className={`px-[22px] pt-[22px] pb-5 ${
-                i < PILLARS.length - 1 ? 'border-r border-[color:var(--rule)]' : ''
+                i < PILLARS.length - 1
+                  ? 'border-b md:border-b-0 md:border-r border-[color:var(--rule)]'
+                  : ''
               }`}
             >
               <div className="font-mono text-[10px] text-[color:var(--ember)] tracking-[0.1em] mb-2.5">
@@ -407,9 +411,9 @@ function WhatItIsSection() {
 
 function TestimonialsSection() {
   return (
-    <section id="testimonials" className="px-12 py-[72px] border-b border-[color:var(--rule)]">
-      <div className="flex items-baseline justify-between mb-10">
-        <h2 className="font-display text-[32px] font-normal text-[color:var(--ink)] tracking-[-0.02em] leading-[1.15]">
+    <section id="testimonials" className="px-4 sm:px-6 md:px-12 py-12 md:py-[72px] border-b border-[color:var(--rule)]">
+      <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-3 mb-10">
+        <h2 className="font-display text-[clamp(26px,5vw,32px)] font-normal text-[color:var(--ink)] tracking-[-0.02em] leading-[1.15]">
           Agencies who
           <br />
           <em className="italic text-[color:var(--ink-3)]">actually use it.</em>
@@ -420,7 +424,7 @@ function TestimonialsSection() {
       </div>
 
       <div
-        className="grid grid-cols-3 border-[1.5px] border-[color:var(--rule)] rounded-xl overflow-hidden bg-[color:var(--rule)]"
+        className="grid grid-cols-1 md:grid-cols-3 border-[1.5px] border-[color:var(--rule)] rounded-xl overflow-hidden bg-[color:var(--rule)]"
         style={{ gap: '1.5px' }}
       >
         {TESTIMONIALS.map((t) => (
@@ -463,7 +467,7 @@ function TestimonialsSection() {
 
 function SiteFooter() {
   return (
-    <footer className="px-12 py-10 flex items-center justify-between gap-6 flex-wrap">
+    <footer className="px-4 sm:px-6 md:px-12 py-10 flex items-center justify-between gap-6 flex-wrap">
       <div className="flex items-center gap-2.5">
         <div className="w-6 h-6 rounded-md bg-[color:var(--ink)] flex items-center justify-center flex-shrink-0">
           <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
