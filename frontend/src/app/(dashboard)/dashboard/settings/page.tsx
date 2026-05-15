@@ -40,14 +40,14 @@ export default function SettingsIndexPage() {
     return (
      <section
       key={g.key}
-      className="bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-xl overflow-hidden flex flex-col"
+      className="bg-white border border-[color:var(--rule)] rounded-xl overflow-hidden flex flex-col hover:border-[color:var(--ink-3)] transition-colors"
      >
       {/* Group header */}
-      <header className="px-5 pt-4 pb-3 border-b border-[color:var(--rule)]">
-       <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+      <header className="px-6 pt-5 pb-4 border-b border-[color:var(--rule)]">
+       <div className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-4)]">
         {g.label}
        </div>
-       <p className="mt-1 text-[12.5px] text-[color:var(--ink-2)] leading-snug">
+       <p className="mt-1.5 font-sans text-[13px] text-[color:var(--ink-3)] leading-snug">
         {g.lede}
        </p>
       </header>
@@ -61,14 +61,14 @@ export default function SettingsIndexPage() {
          <li key={s.href}>
           <Link
            href={s.href}
-           className="group flex items-start gap-3 px-5 py-3 transition-colors hover:bg-[color:var(--paper-2)]"
+           className="group flex items-start gap-3 px-6 py-3.5 transition-colors hover:bg-[color:var(--paper-2)]"
           >
-           <span className="mt-0.5 w-7 h-7 rounded-md bg-[color:var(--paper-2)] border border-[color:var(--rule)] flex items-center justify-center shrink-0 text-[color:var(--ink-2)] group-hover:text-[color:var(--ink)] transition-colors">
+           <span className="mt-0.5 w-7 h-7 rounded-md bg-[color:var(--paper-2)] border border-[color:var(--rule)] flex items-center justify-center shrink-0 text-[color:var(--ink-3)] group-hover:text-[color:var(--ember)] transition-colors">
             <Icon className="w-[15px] h-[15px]" />
            </span>
            <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-             <span className="text-[13.5px] font-semibold text-[color:var(--ink)]">
+             <span className="font-sans font-semibold text-[14px] text-[color:var(--ink)]">
               {s.label}
              </span>
              {badge && (
@@ -79,7 +79,7 @@ export default function SettingsIndexPage() {
               </span>
              )}
             </div>
-            <div className="text-[12px] text-[color:var(--ink-3)] mt-0.5 leading-snug">
+            <div className="font-sans text-[13px] text-[color:var(--ink-3)] mt-0.5 leading-snug">
              {s.lede}
             </div>
            </div>

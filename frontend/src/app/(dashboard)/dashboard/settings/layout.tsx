@@ -31,25 +31,25 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
  const byGroup = sectionsByGroup();
 
  return (
-  <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10 animate-fade-up">
+  <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10 bg-[color:var(--paper)] animate-fade-up">
    {/* Inline header */}
    <section className="mb-6 flex items-start justify-between gap-4 flex-wrap">
     <div>
-     <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+     <div className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-4)]">
       {isIndex ? 'Settings' : 'Settings'}
       {active && (
        <>
         <span aria-hidden className="mx-2 opacity-60">/</span>
-        <span className="text-[color:var(--ink-2)]">
+        <span className="text-[color:var(--ink-3)]">
          {SETTINGS_GROUPS.find((g) => g.key === active.group)?.label}
         </span>
        </>
       )}
      </div>
-     <h1 className="mt-1 text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)]">
+     <h1 className="mt-1 font-display text-[28px] text-[color:var(--ink)]">
       {isIndex ? 'Settings' : (active?.label ?? 'Settings')}
      </h1>
-     <p className="mt-0.5 text-[12.5px] text-[color:var(--ink-3)]">
+     <p className="mt-1 font-sans text-[13px] text-[color:var(--ink-3)]">
       {isIndex
        ? 'Your account, workspace, outreach setup, billing, and security — all in one place.'
        : (active?.lede ?? 'Manage your workspace.')}
@@ -80,14 +80,14 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
    {/* Body: sidebar + content */}
    <div className="flex gap-6 md:gap-8">
     {/* Desktop grouped sidebar */}
-    <nav className="w-56 shrink-0 hidden lg:block" aria-label="Settings">
+    <nav className="w-56 shrink-0 hidden lg:block bg-[color:var(--paper)]" aria-label="Settings">
      <div className="flex flex-col gap-5">
       {SETTINGS_GROUPS.map((g) => {
        const items = byGroup.get(g.key) ?? [];
        if (items.length === 0) return null;
        return (
         <div key={g.key}>
-         <div className="px-3 mb-1.5 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+         <div className="px-3 mb-1.5 font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-4)]">
           {g.label}
          </div>
          <ul className="flex flex-col gap-0.5">
@@ -99,10 +99,10 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
              <Link
               href={s.href}
               className={cn(
-               'group flex items-center justify-between gap-2 px-3 h-8 rounded-md text-[12.5px] transition-colors',
+               'group flex items-center justify-between gap-2 px-3 h-8 rounded-lg text-[12.5px] transition-colors',
                isActive
-                ? 'bg-[color:var(--ink)] text-[color:var(--paper)] font-medium'
-                : 'text-[color:var(--ink-2)] hover:text-[color:var(--ink)] hover:bg-[color:var(--paper-2)]',
+                ? 'bg-[color:var(--ember-bg)] text-[color:var(--ember)] font-medium'
+                : 'text-[color:var(--ink-3)] hover:text-[color:var(--ink)] hover:bg-[color:var(--paper-2)]',
               )}
              >
               <span className="truncate">{s.label}</span>
@@ -111,7 +111,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                 className={cn(
                  'shrink-0 inline-flex items-center px-1.5 h-[16px] rounded border text-[9.5px] tracking-[0.04em] font-medium uppercase',
                  isActive
-                  ? 'border-[color:var(--paper)]/30 text-[color:var(--paper)]/80 bg-transparent'
+                  ? 'border-[color:var(--ember)]/30 text-[color:var(--ember)]/80 bg-transparent'
                   : badge.cls,
                 )}
                >
@@ -152,10 +152,10 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
             <Link
              href={s.href}
              className={cn(
-              'inline-flex items-center h-7 px-3 rounded-md text-[12px] transition-colors',
+              'inline-flex items-center h-7 px-3 rounded-lg text-[12px] transition-colors',
               isActive
-               ? 'bg-[color:var(--ink)] text-[color:var(--paper)] font-medium'
-               : 'text-[color:var(--ink-2)] border border-[color:var(--rule)] bg-[color:var(--paper)] hover:border-[color:var(--ink-3)]',
+               ? 'bg-[color:var(--ember-bg)] text-[color:var(--ember)] font-medium'
+               : 'text-[color:var(--ink-3)] border border-[color:var(--rule)] bg-white hover:border-[color:var(--ink-3)] hover:text-[color:var(--ink)]',
              )}
             >
              {s.label}
