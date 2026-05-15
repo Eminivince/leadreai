@@ -1,0 +1,272 @@
+<h2>Which design language feels right?</h2>
+<p class="subtitle">Three genuinely different directions — all minimal, all non-generic. Pick the one that feels like LeadreAI.</p>
+
+<style>
+  .dir-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+  .dir-card {
+    border: 2px solid transparent;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.1s;
+    background: #fff;
+  }
+  .dir-card:hover { transform: translateY(-2px); }
+  .dir-card.selected { border-color: #6366f1 !important; }
+  .dir-card .preview {
+    height: 220px;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .dir-card .meta {
+    padding: 14px 16px;
+    border-top: 1px solid #e5e5e5;
+    background: #fff;
+  }
+  .dir-card .meta h3 { font-size: 13px; font-weight: 700; margin: 0 0 4px; color: #111; }
+  .dir-card .meta p { font-size: 11.5px; color: #666; margin: 0; line-height: 1.5; }
+
+  /* ─── Direction A: Intelligence Terminal ─── */
+  .dir-a .preview {
+    background: #0c0c0c;
+    font-family: 'Georgia', serif;
+  }
+  .dir-a .badge {
+    display: inline-block;
+    font-family: 'Courier New', monospace;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #FFB800;
+    border: 1px solid #FFB800;
+    padding: 2px 6px;
+    margin-bottom: 14px;
+  }
+  .dir-a .headline {
+    font-size: 22px;
+    font-weight: 400;
+    color: #F5F0E8;
+    line-height: 1.25;
+    font-style: italic;
+    margin-bottom: 10px;
+  }
+  .dir-a .headline strong { font-style: normal; color: #FFB800; }
+  .dir-a .subline {
+    font-family: 'Courier New', monospace;
+    font-size: 9.5px;
+    color: #666;
+    letter-spacing: 0.08em;
+    line-height: 1.6;
+  }
+  .dir-a .data-row {
+    position: absolute;
+    bottom: 16px;
+    left: 20px; right: 20px;
+    display: flex;
+    gap: 16px;
+    border-top: 1px solid #222;
+    padding-top: 10px;
+  }
+  .dir-a .data-row span {
+    font-family: 'Courier New', monospace;
+    font-size: 9px;
+    color: #444;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .dir-a .data-row span em {
+    display: block;
+    color: #FFB800;
+    font-style: normal;
+    font-size: 12px;
+    margin-bottom: 1px;
+  }
+  .dir-a .palette {
+    display: flex; gap: 6px; margin-top: 8px;
+  }
+  .dir-a .palette span {
+    width: 22px; height: 22px; border-radius: 2px;
+    border: 1px solid #e5e5e5;
+  }
+
+  /* ─── Direction B: Precision Warm ─── */
+  .dir-b .preview {
+    background: #FAFAF7;
+    font-family: 'Helvetica Neue', sans-serif;
+  }
+  .dir-b .eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #C4511A;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .dir-b .headline {
+    font-size: 26px;
+    font-weight: 800;
+    color: #1A1A18;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 10px;
+  }
+  .dir-b .headline .accent { color: #C4511A; }
+  .dir-b .subline {
+    font-size: 11px;
+    color: #888;
+    line-height: 1.55;
+    max-width: 200px;
+  }
+  .dir-b .pill-row {
+    display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap;
+  }
+  .dir-b .pill {
+    font-size: 9.5px;
+    background: #F0EBE3;
+    color: #6B4226;
+    border-radius: 2px;
+    padding: 3px 8px;
+    letter-spacing: 0.04em;
+  }
+  .dir-b .palette {
+    display: flex; gap: 6px; margin-top: 8px;
+  }
+  .dir-b .palette span {
+    width: 22px; height: 22px; border-radius: 2px;
+    border: 1px solid #e5e5e5;
+  }
+
+  /* ─── Direction C: Ink & Infrastructure ─── */
+  .dir-c .preview {
+    background: #ffffff;
+    font-family: 'Helvetica Neue', sans-serif;
+    border-bottom: none;
+  }
+  .dir-c .rule-top {
+    height: 2px; background: #080808; margin-bottom: 18px;
+  }
+  .dir-c .eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 10px;
+  }
+  .dir-c .headline {
+    font-size: 28px;
+    font-weight: 900;
+    color: #080808;
+    line-height: 1.0;
+    letter-spacing: -0.04em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .dir-c .headline .accent { color: #1400FF; }
+  .dir-c .grid-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-top: 1px solid #E8E8E8;
+    padding: 6px 0;
+  }
+  .dir-c .grid-line:last-child { border-bottom: 1px solid #E8E8E8; }
+  .dir-c .grid-num {
+    font-size: 9px; color: #1400FF; font-weight: 700;
+    letter-spacing: 0.08em; width: 20px; font-family: 'Courier New', monospace;
+  }
+  .dir-c .grid-label {
+    font-size: 10px; color: #333; letter-spacing: 0.04em;
+    text-transform: uppercase; font-weight: 600;
+  }
+  .dir-c .palette {
+    display: flex; gap: 6px; margin-top: 8px;
+  }
+  .dir-c .palette span {
+    width: 22px; height: 22px; border-radius: 2px;
+    border: 1px solid #e5e5e5;
+  }
+</style>
+
+<div class="dir-cards">
+  <!-- Direction A -->
+  <div class="dir-card dir-a" data-choice="a" onclick="toggleSelect(this)">
+    <div class="preview">
+      <div class="badge">Intelligence Layer</div>
+      <div class="headline">Find the company<br><strong>before the pitch.</strong></div>
+      <div class="subline">Evidence-backed B2B research<br>for markets Apollo doesn't cover.</div>
+      <div class="data-row">
+        <span><em>50k+</em>leads</span>
+        <span><em>8 min</em>avg run</span>
+        <span><em>3×</em>sources</span>
+      </div>
+    </div>
+    <div class="meta">
+      <h3>A — The Intelligence Terminal</h3>
+      <p>Dark ground, off-white serif type, amber signal. Feels like a Bloomberg desk or The Economist data tool. Serious, authoritative, built for research professionals.</p>
+      <div class="palette">
+        <span style="background:#0c0c0c"></span>
+        <span style="background:#F5F0E8"></span>
+        <span style="background:#FFB800"></span>
+        <span style="background:#222222"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Direction B -->
+  <div class="dir-card dir-b" data-choice="b" onclick="toggleSelect(this)">
+    <div class="preview">
+      <div class="eyebrow">B2B Research Platform</div>
+      <div class="headline">Find leads<br>that <span class="accent">matter.</span></div>
+      <div class="subline">Live research agent for African and emerging markets. Every result evidence-backed.</div>
+      <div class="pill-row">
+        <span class="pill">Lagos</span>
+        <span class="pill">Fintech CEOs</span>
+        <span class="pill">Series A+</span>
+      </div>
+    </div>
+    <div class="meta">
+      <h3>B — Precision Warm</h3>
+      <p>Warm white, burnt sienna accent, tight grotesque type. Feels like a premium African fintech — Paystack, Mono. Confident, modern, culturally rooted.</p>
+      <div class="palette">
+        <span style="background:#FAFAF7"></span>
+        <span style="background:#1A1A18"></span>
+        <span style="background:#C4511A"></span>
+        <span style="background:#8A9E7B"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Direction C -->
+  <div class="dir-card dir-c" data-choice="c" onclick="toggleSelect(this)">
+    <div class="preview">
+      <div class="rule-top"></div>
+      <div class="eyebrow">B2B Intelligence</div>
+      <div class="headline">Research.<br><span class="accent">Evidence.</span><br>Export.</div>
+      <div style="margin-top: 12px;">
+        <div class="grid-line"><span class="grid-num">01</span><span class="grid-label">Describe target</span></div>
+        <div class="grid-line"><span class="grid-num">02</span><span class="grid-label">Agent dispatches</span></div>
+        <div class="grid-line"><span class="grid-num">03</span><span class="grid-label">Export with proof</span></div>
+      </div>
+    </div>
+    <div class="meta">
+      <h3>C — Ink & Infrastructure</h3>
+      <p>Pure white, near-black, electric blue accent. Feels like Linear or Vercel — engineering product minimalism taken to its logical end. Structure IS the design.</p>
+      <div class="palette">
+        <span style="background:#ffffff; border-color:#ccc"></span>
+        <span style="background:#080808"></span>
+        <span style="background:#1400FF"></span>
+        <span style="background:#999999"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top: 20px; font-size: 12px; color: #888; text-align: center;">Click a direction to select it, then confirm in the terminal. You can pick one or tell me if you want to blend two.</p>

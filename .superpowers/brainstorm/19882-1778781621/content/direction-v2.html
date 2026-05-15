@@ -1,0 +1,436 @@
+<h2>Three more — genuinely different this time</h2>
+<p class="subtitle">These pull from the product's actual metaphors: field intelligence, West African business press, physical evidence. Not SaaS color swaps.</p>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Barlow+Condensed:wght@400;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap');
+
+* { box-sizing: border-box; }
+
+.dir-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.dcard {
+  border: 2px solid #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.12s, box-shadow 0.12s;
+  background: #fff;
+}
+.dcard:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+.dcard.selected { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.2); }
+
+.dcard .preview { height: 260px; position: relative; overflow: hidden; }
+.dcard .desc { padding: 14px 16px; border-top: 1px solid #e8e8e8; }
+.dcard .desc h3 { font-size: 12.5px; font-weight: 700; margin: 0 0 5px; color: #111; }
+.dcard .desc p { font-size: 11px; color: #666; margin: 0; line-height: 1.55; }
+.dcard .swatch-row { display: flex; gap: 5px; margin-top: 10px; }
+.dcard .swatch { width: 20px; height: 20px; border-radius: 2px; border: 1px solid #ddd; }
+
+/* ══════════════════════════════════════════
+   A — DOSSIER
+   Intelligence file / physical document energy
+   ══════════════════════════════════════════ */
+.dossier {
+  background: #F4EFE3;
+  font-family: 'Space Mono', monospace;
+  padding: 0;
+}
+.dossier .file-header {
+  background: #1A1208;
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.dossier .file-header .stamp {
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #C8102E;
+  border: 1px solid #C8102E;
+  padding: 2px 6px;
+}
+.dossier .file-header .ref {
+  font-size: 8px;
+  color: #554B35;
+  letter-spacing: 0.12em;
+}
+.dossier .body { padding: 14px 16px; }
+.dossier .subject-line {
+  font-size: 8.5px;
+  color: #7A6E56;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #D4C9B0;
+  padding-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+.dossier .headline {
+  font-family: 'DM Serif Display', serif;
+  font-size: 21px;
+  font-style: italic;
+  color: #1A1208;
+  line-height: 1.2;
+  margin-bottom: 10px;
+}
+.dossier .evidence-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+.dossier .ev-item {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 8px;
+  color: #6B5E44;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+}
+.dossier .ev-num {
+  color: #C8102E;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+.dossier .ruled-line {
+  height: 1px; background: repeating-linear-gradient(90deg, #C9BEA8 0, #C9BEA8 4px, transparent 4px, transparent 8px);
+  margin: 8px 0;
+}
+.dossier .footer-bar {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: #1A1208;
+  padding: 6px 16px;
+  display: flex;
+  gap: 16px;
+}
+.dossier .footer-bar span {
+  font-size: 7.5px; color: #554B35; letter-spacing: 0.14em; text-transform: uppercase;
+}
+.dossier .footer-bar span em {
+  color: #C8102E; font-style: normal;
+}
+
+/* ══════════════════════════════════════════
+   B — BUSINESS PRESS
+   West African editorial / financial newspaper
+   ══════════════════════════════════════════ */
+.press {
+  background: #FAF8F2;
+  padding: 0;
+}
+.press .masthead {
+  background: #0A2240;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.press .masthead .brand {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #FAF8F2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.press .masthead .edition {
+  font-family: 'Space Mono', monospace;
+  font-size: 7.5px;
+  color: #5B7FA6;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.press .section-bar {
+  background: #F0C040;
+  padding: 3px 16px;
+  font-family: 'Space Mono', monospace;
+  font-size: 7.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #0A2240;
+  font-weight: 700;
+}
+.press .columns {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 0;
+  padding: 0;
+  flex: 1;
+}
+.press .col-main {
+  padding: 12px 14px 12px 16px;
+  border-right: 1px solid #D8D0BC;
+}
+.press .col-side {
+  padding: 10px 12px;
+}
+.press .kicker {
+  font-family: 'Space Mono', monospace;
+  font-size: 7.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #C8102E;
+  margin-bottom: 5px;
+}
+.press .hed {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #0A0A0A;
+  margin-bottom: 6px;
+}
+.press .dek {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 10px;
+  color: #4A4A3A;
+  line-height: 1.5;
+  font-style: italic;
+}
+.press .byline {
+  font-family: 'Space Mono', monospace;
+  font-size: 7.5px;
+  color: #888;
+  margin-top: 7px;
+  letter-spacing: 0.08em;
+  border-top: 1px solid #D8D0BC;
+  padding-top: 6px;
+}
+.press .sidebar-head {
+  font-family: 'Space Mono', monospace;
+  font-size: 7.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #0A2240;
+  margin-bottom: 7px;
+  border-bottom: 2px solid #0A2240;
+  padding-bottom: 4px;
+}
+.press .stat-item {
+  margin-bottom: 7px;
+}
+.press .stat-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #0A2240;
+  line-height: 1;
+}
+.press .stat-lbl {
+  font-family: 'Space Mono', monospace;
+  font-size: 7.5px;
+  color: #888;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ══════════════════════════════════════════
+   C — MANIFEST
+   Lagos/Accra commercial boldness — big type,
+   block geometry, earth+gold. Think market signage
+   elevated to digital.
+   ══════════════════════════════════════════ */
+.manifest {
+  background: #F7F2E8;
+  padding: 0;
+  position: relative;
+}
+.manifest .top-rule { height: 5px; background: #1C1C1C; }
+.manifest .inner { padding: 16px; }
+.manifest .market-tag {
+  display: inline-block;
+  background: #1C1C1C;
+  color: #F7F2E8;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 3px 8px;
+  margin-bottom: 12px;
+}
+.manifest .big-hed {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: #1C1C1C;
+  margin-bottom: 12px;
+}
+.manifest .big-hed .line2 { color: #D4862A; display: block; }
+.manifest .sub {
+  font-family: 'Space Mono', monospace;
+  font-size: 8.5px;
+  color: #7A6E56;
+  letter-spacing: 0.08em;
+  line-height: 1.6;
+  max-width: 180px;
+  margin-bottom: 14px;
+}
+.manifest .stat-band {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: #1C1C1C;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+.manifest .stat-cell {
+  padding: 8px 12px;
+  border-right: 1px solid #333;
+}
+.manifest .stat-cell:last-child { border-right: none; }
+.manifest .stat-big {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #D4862A;
+  line-height: 1;
+}
+.manifest .stat-sm {
+  font-family: 'Space Mono', monospace;
+  font-size: 7px;
+  color: #666;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+</style>
+
+<div class="dir-grid">
+
+  <!-- A: DOSSIER -->
+  <div class="dcard" data-choice="a" onclick="toggleSelect(this)">
+    <div class="preview">
+      <div class="dossier" style="height:100%;display:flex;flex-direction:column;">
+        <div class="file-header">
+          <span class="stamp">Restricted</span>
+          <span class="ref">REF: LRA-2026-04 · Lagos Dispatch</span>
+        </div>
+        <div class="body" style="flex:1">
+          <div class="subject-line">
+            <span>Research Brief</span>
+            <span>14 May 2026</span>
+          </div>
+          <div class="headline">Find the company<br>before the pitch.</div>
+          <div class="ruled-line"></div>
+          <div class="evidence-row">
+            <div class="ev-item"><span class="ev-num">[1]</span> Paystack — verified CEO contact, Series B, Lagos HQ confirmed via filings</div>
+            <div class="ev-item"><span class="ev-num">[2]</span> Moniepoint — 3 decision-makers, SERP + LinkedIn cross-referenced</div>
+            <div class="ev-item"><span class="ev-num">[3]</span> Flutterwave — last enriched 2026-05-12 · 2 sources</div>
+          </div>
+        </div>
+        <div class="footer-bar">
+          <span><em>50k+</em> leads</span>
+          <span><em>3×</em> sources</span>
+          <span><em>8 min</em> avg</span>
+        </div>
+      </div>
+    </div>
+    <div class="desc">
+      <h3>A — The Dossier</h3>
+      <p>Intelligence file aesthetic. Physical document energy. Cream paper, stamped monospace metadata, evidence numbering. Maps directly to the product's provenance-first philosophy. Nothing in SaaS looks like this.</p>
+      <div class="swatch-row">
+        <div class="swatch" style="background:#F4EFE3"></div>
+        <div class="swatch" style="background:#1A1208"></div>
+        <div class="swatch" style="background:#C8102E"></div>
+        <div class="swatch" style="background:#D4C9B0"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B: BUSINESS PRESS -->
+  <div class="dcard" data-choice="b" onclick="toggleSelect(this)">
+    <div class="preview">
+      <div class="press" style="height:100%;display:flex;flex-direction:column;">
+        <div class="masthead">
+          <span class="brand">Leadre</span>
+          <span class="edition">Lagos · Nairobi · Accra · 14 May 2026</span>
+        </div>
+        <div class="section-bar">B2B Intelligence</div>
+        <div class="columns" style="flex:1;overflow:hidden;">
+          <div class="col-main">
+            <div class="kicker">Research Platform</div>
+            <div class="hed">Live leads. Every cell evidence-backed.</div>
+            <div class="dek">A research agent that runs against live registries, SERP, and filings — not a stale database.</div>
+            <div class="byline">LAGOS BUREAU · REF: LRA-001</div>
+          </div>
+          <div class="col-side">
+            <div class="sidebar-head">Key Stats</div>
+            <div class="stat-item">
+              <div class="stat-num">50k+</div>
+              <div class="stat-lbl">leads delivered</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-num">8min</div>
+              <div class="stat-lbl">avg research run</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-num">3×</div>
+              <div class="stat-lbl">sources per cell</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="desc">
+      <h3>B — West African Business Press</h3>
+      <p>Masthead, column grid, section tabs, datelines. Like BusinessDay Nigeria or The Continent built a SaaS product. Dark navy + gold bar + newsprint white. Serious editorial credibility.</p>
+      <div class="swatch-row">
+        <div class="swatch" style="background:#FAF8F2"></div>
+        <div class="swatch" style="background:#0A2240"></div>
+        <div class="swatch" style="background:#F0C040"></div>
+        <div class="swatch" style="background:#C8102E"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C: MANIFEST -->
+  <div class="dcard" data-choice="c" onclick="toggleSelect(this)">
+    <div class="preview">
+      <div class="manifest" style="height:100%;display:flex;flex-direction:column;">
+        <div class="top-rule"></div>
+        <div class="inner" style="flex:1">
+          <div class="market-tag">Lagos · Nairobi · Abuja</div>
+          <div class="big-hed">Find<br>leads<br><span class="line2">fast.</span></div>
+          <div class="sub">Evidence-backed B2B research for markets the big databases skip.</div>
+        </div>
+        <div class="stat-band">
+          <div class="stat-cell">
+            <div class="stat-big">50k+</div>
+            <div class="stat-sm">leads</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-big">8m</div>
+            <div class="stat-sm">avg run</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-big">3×</div>
+            <div class="stat-sm">sources</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="desc">
+      <h3>C — Manifest</h3>
+      <p>Lagos market-signage boldness elevated to digital. Massive condensed type, earth + gold palette, thick rules, zero decoration. Direct, loud, confident. The anti-SaaS — it just states facts.</p>
+      <div class="swatch-row">
+        <div class="swatch" style="background:#F7F2E8"></div>
+        <div class="swatch" style="background:#1C1C1C"></div>
+        <div class="swatch" style="background:#D4862A"></div>
+        <div class="swatch" style="background:#D4C9B0"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p style="margin-top:18px;font-size:11.5px;color:#888;text-align:center;">Each pulls from a different real-world visual culture — not SaaS. Click to select, then tell me your reaction in the terminal.</p>

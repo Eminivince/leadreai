@@ -1,0 +1,493 @@
+<h2>Direction C — Full landing page</h2>
+<p class="subtitle">Syne Bold / Neon design language across all sections: hero → product demo table → testimonials.</p>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.mockup {
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 20px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  font-family: 'Syne', sans-serif;
+}
+.mockup.selected { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.18); }
+.mockup:hover { border-color: #00FF88; }
+
+/* ── NAV ── */
+.nav {
+  background: #0A0A0A;
+  border-bottom: 1px solid #161616;
+  padding: 0 32px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav-logo { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: 0.02em; }
+.nav-links { display: flex; gap: 24px; }
+.nav-links span { font-size: 10.5px; color: #3a3a3a; letter-spacing: 0.1em; text-transform: uppercase; }
+.nav-cta {
+  background: #00FF88;
+  color: #0A0A0A;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: 2px;
+}
+
+/* ── HERO ── */
+.hero {
+  background: #0A0A0A;
+  padding: 56px 32px 48px;
+  border-bottom: 1px solid #161616;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 320px; height: 320px;
+  background: radial-gradient(circle, rgba(0,255,136,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.eyebrow {
+  font-size: 9.5px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: #00FF88;
+  margin-bottom: 16px;
+  font-weight: 400;
+}
+.hero-hed {
+  font-size: 64px;
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  color: #fff;
+  margin-bottom: 24px;
+}
+.hero-hed .muted { color: #1E1E1E; }
+.hero-hed .green { color: #00FF88; }
+.hero-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: #444;
+  line-height: 1.6;
+  max-width: 380px;
+  margin-bottom: 28px;
+}
+.hero-actions { display: flex; gap: 12px; align-items: center; }
+.btn-primary {
+  background: #00FF88;
+  color: #0A0A0A;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 12px 24px;
+  border-radius: 2px;
+}
+.btn-ghost {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #333;
+  letter-spacing: 0.1em;
+}
+
+/* ── PROOF STRIP ── */
+.proof-strip {
+  background: #0A0A0A;
+  border-bottom: 1px solid #161616;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+.proof-cell {
+  padding: 16px 24px;
+  border-right: 1px solid #161616;
+}
+.proof-cell:last-child { border-right: none; }
+.proof-num {
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+.proof-num em { color: #00FF88; font-style: normal; }
+.proof-lbl {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  color: #2a2a2a;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+
+/* ── PRODUCT DEMO SECTION ── */
+.demo-section {
+  background: #0E0E0E;
+  padding: 40px 32px;
+  border-bottom: 1px solid #161616;
+}
+.section-label {
+  font-size: 9.5px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: #00FF88;
+  margin-bottom: 8px;
+}
+.section-hed {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #fff;
+  margin-bottom: 24px;
+  line-height: 1.1;
+}
+.section-hed .muted { color: #1E1E1E; }
+
+/* Query bar */
+.demo-query {
+  background: #141414;
+  border: 1px solid #222;
+  border-radius: 3px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 0;
+}
+.demo-query-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #888;
+  flex: 1;
+}
+.demo-query-badge {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  background: rgba(0,255,136,0.1);
+  color: #00FF88;
+  border: 1px solid rgba(0,255,136,0.2);
+  padding: 3px 10px;
+  border-radius: 2px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Results heading */
+.results-meta {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #333;
+  padding: 10px 0 6px;
+  letter-spacing: 0.04em;
+}
+.results-meta strong { color: #00FF88; }
+
+/* Table */
+.demo-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #1A1A1A;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.demo-table thead tr {
+  background: #141414;
+  border-bottom: 1px solid #1A1A1A;
+}
+.demo-table th {
+  text-align: left;
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #2E2E2E;
+  font-weight: 600;
+  padding: 10px 16px;
+}
+.demo-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #141414;
+  vertical-align: middle;
+}
+.demo-table tr:last-child td { border-bottom: none; }
+.demo-table tr:nth-child(even) td { background: #0C0C0C; }
+.co-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+.co-domain {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: #2E2E2E;
+  margin-top: 1px;
+}
+.contact-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  color: #888;
+}
+.verified {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #00FF88;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.verified::before { content: '✓'; font-weight: 700; }
+.sources {
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  color: #2a2a2a;
+}
+.blur-row td { filter: blur(4px); opacity: 0.3; user-select: none; }
+
+/* Gate */
+.demo-gate {
+  background: linear-gradient(to bottom, rgba(14,14,14,0) 0%, #0E0E0E 55%);
+  text-align: center;
+  padding: 20px 0 0;
+  margin-top: -36px;
+  position: relative;
+}
+.gate-btn {
+  display: inline-block;
+  background: transparent;
+  border: 1px solid #222;
+  color: #888;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 10px 24px;
+  border-radius: 2px;
+  margin-bottom: 6px;
+}
+.gate-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: #1E1E1E;
+}
+
+/* ── TESTIMONIALS ── */
+.testi-section {
+  background: #0A0A0A;
+  padding: 40px 32px;
+}
+.testi-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.testi-label {
+  font-size: 9.5px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: #00FF88;
+  white-space: nowrap;
+}
+.testi-rule { flex: 1; height: 1px; background: #161616; }
+
+.testi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.testi-card {
+  background: #0E0E0E;
+  border: 1px solid #181818;
+  border-radius: 2px;
+  padding: 18px;
+}
+.testi-quote {
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 16px;
+  font-style: italic;
+}
+.testi-quote::before { content: '"'; color: #00FF88; font-style: normal; }
+.testi-quote::after { content: '"'; color: #00FF88; font-style: normal; }
+.testi-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid #141414;
+}
+.testi-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: #0A0A0A;
+  border: 1px solid #00FF88;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800;
+  color: #00FF88;
+  flex-shrink: 0;
+}
+.testi-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px; font-weight: 700; color: #ddd;
+}
+.testi-role {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px; color: #2a2a2a; margin-top: 1px;
+}
+</style>
+
+<div class="mockup" data-choice="c" onclick="toggleSelect(this)">
+
+  <!-- NAV -->
+  <div class="nav">
+    <div class="nav-logo">LEADRE</div>
+    <div class="nav-links">
+      <span>Product</span>
+      <span>Pricing</span>
+      <span>Docs</span>
+    </div>
+    <div class="nav-cta">Get started</div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="eyebrow">B2B Intelligence · Africa</div>
+    <div class="hero-hed">Find<br><span class="muted">leads,</span><br><span class="green">fast.</span></div>
+    <div class="hero-sub">A research agent that turns a plain-English brief into an evidence-backed lead table. Every cell justified. Every source linked.</div>
+    <div class="hero-actions">
+      <div class="btn-primary">Get started free</div>
+      <div class="btn-ghost">See a live demo →</div>
+    </div>
+  </div>
+
+  <!-- PROOF STRIP -->
+  <div class="proof-strip">
+    <div class="proof-cell">
+      <div class="proof-num">50<em>k+</em></div>
+      <div class="proof-lbl">Leads delivered</div>
+    </div>
+    <div class="proof-cell">
+      <div class="proof-num">8<em>m</em></div>
+      <div class="proof-lbl">Avg research run</div>
+    </div>
+    <div class="proof-cell">
+      <div class="proof-num">3<em>×</em></div>
+      <div class="proof-lbl">Sources per cell</div>
+    </div>
+    <div class="proof-cell">
+      <div class="proof-num">100<em>%</em></div>
+      <div class="proof-lbl">Evidence-backed</div>
+    </div>
+  </div>
+
+  <!-- PRODUCT DEMO -->
+  <div class="demo-section">
+    <div class="section-label">Live demo</div>
+    <div class="section-hed">See it <span class="muted">work.</span></div>
+
+    <div class="demo-query">
+      <div class="demo-query-text">Fintech founders Series A+, Lagos</div>
+      <div class="demo-query-badge">✓ 8 MIN</div>
+    </div>
+
+    <div class="results-meta"><strong>47 leads found</strong> for "Fintech Series A, Lagos"</div>
+
+    <table class="demo-table">
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th>Contact</th>
+          <th>Email</th>
+          <th>Sources</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="co-name">Paystack</div><div class="co-domain">paystack.com</div></td>
+          <td><div class="contact-name">Shola Akinlade</div></td>
+          <td><div class="verified">verified</div></td>
+          <td><div class="sources">3 sources</div></td>
+        </tr>
+        <tr>
+          <td><div class="co-name">Moniepoint</div><div class="co-domain">moniepoint.com</div></td>
+          <td><div class="contact-name">Tosin Eniolorunda</div></td>
+          <td><div class="verified">verified</div></td>
+          <td><div class="sources">2 sources</div></td>
+        </tr>
+        <tr class="blur-row">
+          <td><div class="co-name">Flutterwave</div><div class="co-domain">flutterwave.com</div></td>
+          <td><div class="contact-name">Olugbenga Agboola</div></td>
+          <td><div class="verified">verified</div></td>
+          <td><div class="sources">4 sources</div></td>
+        </tr>
+        <tr class="blur-row">
+          <td><div class="co-name">Cowrywise</div><div class="co-domain">cowrywise.com</div></td>
+          <td><div class="contact-name">Razaq Ahmed</div></td>
+          <td><div class="verified">verified</div></td>
+          <td><div class="sources">2 sources</div></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="demo-gate">
+      <div class="gate-btn">Unlock all 47 results →</div>
+      <div class="gate-sub">Free to start — no credit card required</div>
+    </div>
+  </div>
+
+  <!-- TESTIMONIALS -->
+  <div class="testi-section">
+    <div class="testi-header">
+      <div class="testi-label">What agencies say</div>
+      <div class="testi-rule"></div>
+    </div>
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-quote">We ran 3 client briefs in one week. Every table came back with verified emails and source links. Nothing else covers Nigerian fintech like this.</div>
+        <div class="testi-author">
+          <div class="testi-avatar">T</div>
+          <div>
+            <div class="testi-name">Tunde Adeyemi</div>
+            <div class="testi-role">Outbound Agency, Lagos</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-quote">Apollo has zero coverage on the markets I work in. Leadre found 60 verified contacts in one run that would have taken me 3 days manually.</div>
+        <div class="testi-author">
+          <div class="testi-avatar">A</div>
+          <div>
+            <div class="testi-name">Amara Okonkwo</div>
+            <div class="testi-role">Research Lead, Nairobi</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-quote">My clients ask where the data comes from. With Leadre I can click any cell and show them the source. That's a conversation I never had with Clay.</div>
+        <div class="testi-author">
+          <div class="testi-avatar">K</div>
+          <div>
+            <div class="testi-name">Kofi Mensah</div>
+            <div class="testi-role">B2B Research, Accra</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p style="margin-top: 18px; font-size: 11.5px; color: #888; text-align: center;">Click the mockup to select it. Tell me what to tweak — any colour, section, spacing, copy, or layout detail.</p>
