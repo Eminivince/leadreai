@@ -288,7 +288,7 @@ export function CommandPalette() {
  );
 
  return (
-  <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[10vh]">
+  <div className="fixed inset-0 z-50 flex items-start justify-center p-3 sm:p-4 pt-[8vh] sm:pt-[10vh]">
    <button
     aria-label="Close"
     onClick={closeSearch}
@@ -298,7 +298,7 @@ export function CommandPalette() {
     role="dialog"
     aria-modal="true"
     aria-label="Search"
-    className="relative w-full max-w-[640px] bg-white border border-[color:var(--rule)] rounded-xl shadow-xl flex flex-col max-h-[70vh] overflow-hidden"
+    className="relative w-full max-w-[640px] bg-white border border-[color:var(--rule)] rounded-xl shadow-xl flex flex-col max-h-[80vh] sm:max-h-[70vh] overflow-hidden"
    >
     {/* Input */}
     <div className="flex items-center gap-3 px-5 py-4 border-b border-[color:var(--rule)]">
@@ -395,12 +395,12 @@ export function CommandPalette() {
     </div>
 
     {/* Footer hint */}
-    <div className="px-5 py-2.5 border-t border-[color:var(--rule)] bg-[color:var(--paper-2)] flex items-center justify-between gap-3">
+    <div className="px-4 sm:px-5 py-2.5 border-t border-[color:var(--rule)] bg-[color:var(--paper-2)] flex items-center justify-between gap-3">
      <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-4)]">
       The wire
      </span>
-     <div className="flex items-center gap-3 font-sans text-[11px] text-[color:var(--ink-3)]">
-      <span className="inline-flex items-center gap-1">
+     <div className="flex items-center gap-2 sm:gap-3 font-sans text-[11px] text-[color:var(--ink-3)]">
+      <span className="hidden sm:inline-flex items-center gap-1">
        <kbd className="font-mono text-[9px] bg-white border border-[color:var(--rule)] rounded px-1 text-[color:var(--ink-3)]">↑</kbd>
        <kbd className="font-mono text-[9px] bg-white border border-[color:var(--rule)] rounded px-1 text-[color:var(--ink-3)]">↓</kbd>
        move

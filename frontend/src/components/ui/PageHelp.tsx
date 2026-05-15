@@ -43,7 +43,7 @@ export function PageHelp({ title, body, tips }: PageHelpProps) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 z-50 w-[300px] bg-[color:var(--paper)] border border-[color:var(--rule)] shadow-xl rounded-sm">
+        <div className="absolute right-0 top-full mt-2 z-50 w-[min(300px,calc(100vw-24px))] bg-[color:var(--paper)] border border-[color:var(--rule)] shadow-xl rounded-sm">
           <div className="px-4 pt-3 pb-1">
             <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
               {title}

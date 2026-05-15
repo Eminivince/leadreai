@@ -150,7 +150,7 @@ export function OnboardingWizard(): React.JSX.Element | null {
  const allDone = state.completedSteps.length === STEPS.length;
 
  return (
-  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-4">
+  <div className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center p-0 sm:p-4">
    <button
     aria-label="Close for this session"
     onClick={handleSnooze}
@@ -160,24 +160,24 @@ export function OnboardingWizard(): React.JSX.Element | null {
     role="dialog"
     aria-modal="true"
     aria-labelledby="onboarding-title"
-    className="relative w-full max-w-[540px] bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-2xl shadow-xl"
+    className="relative w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-[540px] bg-[color:var(--paper)] border-0 sm:border sm:border-[color:var(--rule)] rounded-none sm:rounded-2xl shadow-xl flex flex-col overflow-hidden"
    >
     {/* Header */}
-    <div className="flex items-start justify-between gap-3 px-6 py-5 border-b border-[color:var(--rule)]">
-     <div>
+    <div className="flex items-start justify-between gap-3 px-5 sm:px-6 py-4 sm:py-5 border-b border-[color:var(--rule)] shrink-0">
+     <div className="min-w-0">
       <div className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-4)]">
        Get started · Step {visibleStep.n} of {STEPS.length}
       </div>
       <h2
        id="onboarding-title"
-       className="mt-1.5 font-display font-normal text-[26px] leading-[1.15] tracking-[-0.01em] text-[color:var(--ink)]"
+       className="mt-1.5 font-display font-normal text-[22px] sm:text-[26px] leading-[1.15] tracking-[-0.01em] text-[color:var(--ink)]"
       >
        {visibleStep.title}
       </h2>
      </div>
      <button
       onClick={handleSnooze}
-      className="p-2 text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition shrink-0 text-[18px] leading-none font-sans"
+      className="-mr-2 w-10 h-10 inline-flex items-center justify-center text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition shrink-0 text-[22px] leading-none font-sans"
       aria-label="Close for now"
       title="Close — we'll show this again next session"
      >
@@ -186,16 +186,16 @@ export function OnboardingWizard(): React.JSX.Element | null {
     </div>
 
     {/* Body */}
-    <div className="px-6 py-6">
+    <div className="px-5 sm:px-6 py-5 sm:py-6 flex-1 overflow-y-auto">
      <p className="font-sans text-[14px] leading-[1.65] text-[color:var(--ink-3)]">
       {visibleStep.body}
      </p>
 
-     <div className="mt-5 flex flex-wrap items-center gap-3">
+     <div className="mt-5 flex flex-col-reverse sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3">
       <Link
        href={visibleStep.ctaHref}
        onClick={handleSnooze}
-       className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] font-sans font-semibold text-[13px] px-5 py-2.5 rounded-lg hover:opacity-85 transition-opacity"
+       className="inline-flex items-center justify-center sm:justify-start gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] font-sans font-semibold text-[13px] px-5 py-2.5 rounded-lg hover:opacity-85 transition-opacity w-full sm:w-auto"
       >
        {visibleStep.ctaLabel}
        <span aria-hidden>→</span>
@@ -204,7 +204,7 @@ export function OnboardingWizard(): React.JSX.Element | null {
        type="button"
        disabled={completeMutation.isPending || completed.has(visibleStep.key)}
        onClick={() => completeMutation.mutate(visibleStep.key)}
-       className="border border-[color:var(--rule)] bg-transparent text-[color:var(--ink-2)] font-sans font-medium text-[13px] px-5 py-2.5 rounded-lg hover:border-[color:var(--ink)] hover:text-[color:var(--ink)] transition-colors disabled:opacity-60 disabled:hover:border-[color:var(--rule)] disabled:hover:text-[color:var(--ink-2)]"
+       className="inline-flex items-center justify-center border border-[color:var(--rule)] bg-transparent text-[color:var(--ink-2)] font-sans font-medium text-[13px] px-5 py-2.5 rounded-lg hover:border-[color:var(--ink)] hover:text-[color:var(--ink)] transition-colors disabled:opacity-60 disabled:hover:border-[color:var(--rule)] disabled:hover:text-[color:var(--ink-2)] w-full sm:w-auto"
       >
        {completed.has(visibleStep.key)
         ? 'Done'
@@ -216,7 +216,7 @@ export function OnboardingWizard(): React.JSX.Element | null {
     </div>
 
     {/* Stepper / footer */}
-    <div className="px-6 py-4 border-t border-[color:var(--rule)] flex items-center justify-between gap-3">
+    <div className="px-5 sm:px-6 py-4 border-t border-[color:var(--rule)] flex items-center justify-between gap-3 shrink-0">
      <div className="flex items-center gap-2">
       {STEPS.map((s) => {
        const isComplete = completed.has(s.key);
@@ -250,7 +250,7 @@ export function OnboardingWizard(): React.JSX.Element | null {
     </div>
 
     {allDone && (
-     <div className="px-6 pb-5 -mt-2 font-sans text-[12px] text-[color:var(--ink-3)] italic">
+     <div className="px-5 sm:px-6 pb-5 -mt-2 font-sans text-[12px] text-[color:var(--ink-3)] italic shrink-0">
       All set — you can close this.
      </div>
     )}
