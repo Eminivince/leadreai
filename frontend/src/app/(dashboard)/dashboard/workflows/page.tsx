@@ -76,7 +76,7 @@ export default function WorkflowsIndexPage() {
           they're inside one section, not on a separate top-level. */}
       <section className="mb-6 flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-baseline gap-3">
-          <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)]">
+          <h1 className="font-display text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
             Tables
           </h1>
           <span className="font-mono text-[12px] tabular-nums text-[color:var(--ink-3)]">
@@ -124,7 +124,7 @@ export default function WorkflowsIndexPage() {
           </p>
           <Link
             href="/dashboard/tables"
-            className="mt-5 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] transition-colors"
+            className="mt-5 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] transition-colors"
           >
             Go to tables
             <ArrowEast className="w-3 h-3" />
@@ -179,13 +179,13 @@ function WorkflowCard({ workflow }: { workflow: Workflow }) {
         {hasSeed && (
           <span
             title="This workflow seeds a new table via an agent search"
-            className="inline-flex items-center gap-1.5 rounded-md border border-[color:var(--forest)]/30 bg-[color:var(--forest)]/[0.06] px-2 h-6"
+            className="inline-flex items-center gap-1.5 rounded-md border border-[color:var(--ember)]/30 bg-[color:var(--ember)]/[0.06] px-2 h-6"
           >
             <span
-              className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)]"
+              className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ember)]"
               aria-hidden
             />
-            <span className="font-mono text-[10px] tracking-[0.04em] text-[color:var(--forest-2)]">
+            <span className="font-mono text-[10px] tracking-[0.04em] text-[color:var(--ember-2)]">
               seeded
             </span>
           </span>
@@ -220,8 +220,8 @@ function WorkflowCard({ workflow }: { workflow: Workflow }) {
         <span>
           {colCount}<span className="text-[color:var(--ink-3)]/60 ml-0.5">col</span>
           {enrichedCount > 0 && (
-            <span className="text-[color:var(--forest-2)] ml-2">
-              {enrichedCount}<span className="text-[color:var(--forest-2)]/60 ml-0.5">enr</span>
+            <span className="text-[color:var(--ember-2)] ml-2">
+              {enrichedCount}<span className="text-[color:var(--ember-2)]/60 ml-0.5">enr</span>
             </span>
           )}
         </span>

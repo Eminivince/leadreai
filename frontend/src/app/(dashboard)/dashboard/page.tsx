@@ -181,9 +181,9 @@ function Compose({
             colour. Replaces the old broadsheet headline + dashed
             border treatment. */}
         <div
-          className={`relative bg-[color:var(--paper)] border rounded-xl transition-all duration-200 focus-within:border-[color:var(--forest)]/60 focus-within:shadow-[0_0_0_4px_color-mix(in_srgb,var(--forest)_8%,transparent)] ${
+          className={`relative bg-[color:var(--paper)] border rounded-xl transition-all duration-200 focus-within:border-[color:var(--ember)]/60 focus-within:shadow-[0_0_0_4px_color-mix(in_srgb,var(--ember)_8%,transparent)] ${
             isSubmitting
-              ? 'border-[color:var(--forest)]/60 shadow-[0_0_0_4px_color-mix(in_srgb,var(--forest)_8%,transparent)]'
+              ? 'border-[color:var(--ember)]/60 shadow-[0_0_0_4px_color-mix(in_srgb,var(--ember)_8%,transparent)]'
               : 'border-[color:var(--rule)]'
           }`}
         >
@@ -214,8 +214,8 @@ function Compose({
               disabled={isSubmitting || value.trim().length < 10}
               className={`group inline-flex items-center gap-1.5 px-3.5 h-8 rounded-md text-[12.5px] font-medium tabular-nums transition-all disabled:cursor-not-allowed ${
                 isSubmitting
-                  ? 'bg-[color:var(--forest)] text-white'
-                  : 'bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] disabled:opacity-40 disabled:hover:bg-[color:var(--ink)]'
+                  ? 'bg-[color:var(--ember)] text-white'
+                  : 'bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] disabled:opacity-40 disabled:hover:bg-[color:var(--ink)]'
               }`}
             >
               {isSubmitting ? (
@@ -249,7 +249,7 @@ function Compose({
                   <button
                     type="button"
                     onClick={openTopUp}
-                    className="inline-flex items-center gap-1.5 bg-[color:var(--ink)] text-[color:var(--paper)] px-3 h-7 rounded-md text-[12px] font-medium hover:bg-[color:var(--forest)] transition-colors"
+                    className="inline-flex items-center gap-1.5 bg-[color:var(--ink)] text-[color:var(--paper)] px-3 h-7 rounded-md text-[12px] font-medium hover:bg-[color:var(--ember)] transition-colors"
                   >
                     Buy credits
                   </button>
@@ -275,10 +275,10 @@ function Compose({
             <Link
               href="/dashboard/library"
               title="The agent reads these before every search"
-              className="inline-flex items-center gap-2 rounded-md border border-[color:var(--forest)]/30 bg-[color:var(--forest)]/[0.06] hover:border-[color:var(--forest)]/60 px-2.5 h-7 transition-colors"
+              className="inline-flex items-center gap-2 rounded-md border border-[color:var(--ember)]/30 bg-[color:var(--ember)]/[0.06] hover:border-[color:var(--ember)]/60 px-2.5 h-7 transition-colors"
             >
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)]" aria-hidden />
-              <span className="font-mono text-[10.5px] tracking-[0.06em] text-[color:var(--forest-2)] tabular-nums">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ember)]" aria-hidden />
+              <span className="font-mono text-[10.5px] tracking-[0.06em] text-[color:var(--ember-2)] tabular-nums">
                 {readyLibraryCount} {readyLibraryCount === 1 ? 'doc' : 'docs'} in scope
               </span>
             </Link>
@@ -353,13 +353,13 @@ function ClarifyLoadingPanel({ query, startedAt }: { query: string; startedAt: n
     <section className="relative">
       <div className="flex items-center justify-between gap-4 mb-5">
         <div className="flex items-center gap-3">
-          <span className="block w-8 h-px bg-[color:var(--forest)]" />
-          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
+          <span className="block w-8 h-px bg-[color:var(--ember)]" />
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ember)]">
             Verifying
           </span>
           {/* Tiny pulsing dot so the panel never feels static */}
           <span
-            className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)] animate-pulse"
+            className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ember)] animate-pulse"
             aria-hidden
           />
         </div>
@@ -370,7 +370,7 @@ function ClarifyLoadingPanel({ query, startedAt }: { query: string; startedAt: n
 
       <div className="bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-sm px-6 md:px-8 py-7 md:py-8">
         <h3 className=" text-[28px] md:text-[34px] leading-[1.05] text-[color:var(--ink)]">
-          Verifying your <em className="italic text-[color:var(--forest)]">search</em>…
+          Verifying your <em className="italic text-[color:var(--ember)]">search</em>…
         </h3>
         {query && (
           <p className="mt-3  italic text-[14.5px] text-[color:var(--ink-2)] line-clamp-2">
@@ -454,8 +454,8 @@ function ClarificationPanel({
   return (
     <section className="relative">
       <div className="flex items-center gap-3 mb-6">
-        <span className="block w-8 h-px bg-[color:var(--forest)]" />
-        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
+        <span className="block w-8 h-px bg-[color:var(--ember)]" />
+        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ember)]">
           Before we search — a few clarifying questions
         </span>
       </div>
@@ -497,7 +497,7 @@ function ClarificationPanel({
               <button
                 type="button"
                 onClick={openTopUp}
-                className="inline-flex items-center gap-1.5 bg-[color:var(--ink)] text-[color:var(--paper)] px-3 py-1.5 rounded-full text-[12px] font-medium hover:bg-[color:var(--forest)] transition-colors"
+                className="inline-flex items-center gap-1.5 bg-[color:var(--ink)] text-[color:var(--paper)] px-3 py-1.5 rounded-full text-[12px] font-medium hover:bg-[color:var(--ember)] transition-colors"
               >
                 Buy credits
               </button>
@@ -526,7 +526,7 @@ function ClarificationPanel({
               : isSubmitting ? 'Running the search…'
               : undefined
           }
-          className="group inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="group inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--ember)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? 'Starting the search…' : 'Start the search'}
           <ArrowEast className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
@@ -631,7 +631,7 @@ function QuestionRow({
                   }}
                   className={`h-9 px-4 rounded-full  text-[12.5px] transition-colors ${
                     selected
-                      ? 'bg-[color:var(--forest)] text-[color:var(--paper)]'
+                      ? 'bg-[color:var(--ember)] text-[color:var(--paper)]'
                       : 'border border-[color:var(--rule)] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] hover:border-[color:var(--ink)]'
                   }`}
                 >
@@ -727,16 +727,16 @@ function RefusalPanel({
               <button
                 key={i}
                 onClick={() => onTryReframe(s)}
-                className="group text-left border border-[color:var(--rule)] bg-[color:var(--paper-3)] hover:border-[color:var(--forest)] hover:bg-[color:var(--forest)]/5 rounded-sm px-4 py-3 transition-colors"
+                className="group text-left border border-[color:var(--rule)] bg-[color:var(--paper-3)] hover:border-[color:var(--ember)] hover:bg-[color:var(--ember)]/5 rounded-sm px-4 py-3 transition-colors"
               >
                 <div className="flex items-start gap-3">
-                  <span className=" italic text-[18px] leading-none text-[color:var(--ink-3)] group-hover:text-[color:var(--forest)] tabular-nums shrink-0 mt-1">
+                  <span className=" italic text-[18px] leading-none text-[color:var(--ink-3)] group-hover:text-[color:var(--ember)] tabular-nums shrink-0 mt-1">
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <span className="flex-1  text-[14px] leading-[1.55] text-[color:var(--ink)]">
                     {s}
                   </span>
-                  <ArrowEast className="w-3 h-3 text-[color:var(--ink-3)] group-hover:text-[color:var(--forest)] mt-1.5 transition-colors" />
+                  <ArrowEast className="w-3 h-3 text-[color:var(--ink-3)] group-hover:text-[color:var(--ember)] mt-1.5 transition-colors" />
                 </div>
               </button>
             ))}
@@ -763,11 +763,11 @@ function RefusalPanel({
 function StatusChip({ status }: { status: ProspectingJob['status'] }) {
   const map: Record<ProspectingJob['status'], { label: string; color: string }> = {
     queued:        { label: 'Queued',        color: 'text-[color:var(--ink-2)] bg-[color:var(--paper-2)]' },
-    parsing:       { label: 'Parsing',       color: 'text-[color:var(--forest)] bg-[color:var(--paper-3)]' },
-    collecting:    { label: 'Collecting',    color: 'text-[color:var(--forest)] bg-[color:var(--paper-3)]' },
-    enriching:     { label: 'Enriching',     color: 'text-[color:var(--forest)] bg-[color:var(--paper-3)]' },
-    deduplicating: { label: 'Finalizing',    color: 'text-[color:var(--forest)] bg-[color:var(--paper-3)]' },
-    complete:      { label: 'Complete',      color: 'text-[color:var(--forest)] bg-[color:var(--paper-3)]' },
+    parsing:       { label: 'Parsing',       color: 'text-[color:var(--ember)] bg-[color:var(--paper-3)]' },
+    collecting:    { label: 'Collecting',    color: 'text-[color:var(--ember)] bg-[color:var(--paper-3)]' },
+    enriching:     { label: 'Enriching',     color: 'text-[color:var(--ember)] bg-[color:var(--paper-3)]' },
+    deduplicating: { label: 'Finalizing',    color: 'text-[color:var(--ember)] bg-[color:var(--paper-3)]' },
+    complete:      { label: 'Complete',      color: 'text-[color:var(--ember)] bg-[color:var(--paper-3)]' },
     failed:        { label: 'Failed',        color: 'text-[color:var(--warn)] bg-[color:var(--paper-3)]' },
     cancelled:     { label: 'Cancelled',     color: 'text-[color:var(--ink-2)] bg-[color:var(--paper-2)]' },
   };
@@ -777,7 +777,7 @@ function StatusChip({ status }: { status: ProspectingJob['status'] }) {
       className={`inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[0.16em] uppercase px-2 py-0.5 border border-[color:var(--rule)] ${chip.color}`}
     >
       {status !== 'complete' && status !== 'failed' && status !== 'cancelled' && (
-        <span className="block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)] animate-pulse" />
+        <span className="block w-1.5 h-1.5 rounded-full bg-[color:var(--ember)] animate-pulse" />
       )}
       {chip.label}
     </span>
@@ -835,28 +835,28 @@ function LibraryCitations({ job }: { job: ProspectingJob }) {
   return (
     <div className="mt-5 pt-5 border-t border-[color:var(--rule)]">
       <div className="flex items-center gap-3 mb-3">
-        <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--forest)]">
+        <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-[color:var(--ember)]">
           Cited from your Library
         </span>
-        <span className="flex-1 h-px bg-[color:var(--forest)]/20" />
+        <span className="flex-1 h-px bg-[color:var(--ember)]/20" />
       </div>
       <ul className="flex flex-wrap gap-2">
         {citations.map((c) => (
           <li key={c.documentId}>
             <Link
               href={`/dashboard/library/${c.documentId}`}
-              className="group inline-flex items-center gap-2 border border-[color:var(--forest)]/30 bg-[color:var(--forest)]/5 hover:border-[color:var(--forest)] rounded-full px-3 py-1 transition-colors"
+              className="group inline-flex items-center gap-2 border border-[color:var(--ember)]/30 bg-[color:var(--ember)]/5 hover:border-[color:var(--ember)] rounded-full px-3 py-1 transition-colors"
               title={`${c.chunks} chunk${c.chunks === 1 ? '' : 's'} · top similarity ${Math.round(
                 c.topSimilarity * 100,
               )}%`}
             >
-              <span className="font-mono text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--forest)]">
+              <span className="font-mono text-[9.5px] tracking-[0.16em] uppercase text-[color:var(--ember)]">
                 {c.fileType}
               </span>
               <span className=" italic text-[12.5px] text-[color:var(--ink)] max-w-[220px] truncate">
                 {c.title}
               </span>
-              <span className="font-mono text-[9.5px] tabular-nums text-[color:var(--forest)]">
+              <span className="font-mono text-[9.5px] tabular-nums text-[color:var(--ember)]">
                 ×{c.chunks}
               </span>
             </Link>
@@ -961,8 +961,8 @@ function AuditTrail({ job }: { job: ProspectingJob }) {
           </span>
           {isActive && (
             <span className="inline-flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[color:var(--forest)] stream-dot" aria-hidden />
-              <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--forest)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[color:var(--ember)] stream-dot" aria-hidden />
+              <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ember)]">
                 live
               </span>
             </span>
@@ -1037,7 +1037,7 @@ function Counter({
 }) {
   const valueColor =
     tone === 'positive'
-      ? 'text-[color:var(--forest)]'
+      ? 'text-[color:var(--ember)]'
       : tone === 'negative'
         ? 'text-[color:var(--warn)]'
         : 'text-[color:var(--ink)]';
@@ -1067,9 +1067,9 @@ function AuditEntry({ entry }: { entry: JobActivityLogEntry }) {
   const tone = stepTone(entry.step);
   const stepClass =
     tone === 'positive'
-      ? 'text-[color:var(--forest)] border-[color:var(--forest)]/40'
+      ? 'text-[color:var(--ember)] border-[color:var(--ember)]/40'
       : tone === 'warning'
-        ? 'text-[color:var(--rust,#a9542d)] border-[color:var(--rule)]'
+        ? 'text-[color:var(--ember-2,#a9542d)] border-[color:var(--rule)]'
         : tone === 'negative'
           ? 'text-[color:var(--warn)] border-[color:var(--warn)]/40'
           : 'text-[color:var(--ink-2)] border-[color:var(--rule)]';
@@ -1133,8 +1133,8 @@ function ActiveDispatch({ job }: { job: ProspectingJob }) {
               eyebrow which was a broadsheet motif. */}
           {isLive ? (
             <span className="relative inline-flex">
-              <span className="relative inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)]" />
-              <span className="absolute inset-0 inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)] opacity-60 animate-ping" />
+              <span className="relative inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ember)]" />
+              <span className="absolute inset-0 inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ember)] opacity-60 animate-ping" />
             </span>
           ) : (
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ink-3)]" />
@@ -1194,7 +1194,7 @@ function ActiveDispatch({ job }: { job: ProspectingJob }) {
               <div className="mt-2.5">
                 <div className="h-[3px] rounded-full bg-[color:var(--paper-3)] overflow-hidden">
                   <div
-                    className="h-full bg-[color:var(--forest)] transition-all duration-500"
+                    className="h-full bg-[color:var(--ember)] transition-all duration-500"
                     style={{ width: `${pct}%` }}
                   />
                 </div>
@@ -1241,7 +1241,7 @@ function ActiveDispatch({ job }: { job: ProspectingJob }) {
           </span>
           <Link
             href={`/dashboard/leads?jobId=${job._id}`}
-            className="group inline-flex items-center gap-1.5 text-[12.5px] font-medium text-[color:var(--ink)] hover:text-[color:var(--forest)] transition-colors"
+            className="group inline-flex items-center gap-1.5 text-[12.5px] font-medium text-[color:var(--ink)] hover:text-[color:var(--ember)] transition-colors"
           >
             View all leads
             <ArrowEast className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
@@ -1313,8 +1313,8 @@ function EmptyState() {
   return (
     <section>
       <div className="rounded-xl border border-[color:var(--rule)] bg-[color:var(--paper-2)]/40 p-6 md:p-8 flex items-start gap-4">
-        <div className="shrink-0 w-9 h-9 rounded-lg bg-[color:var(--forest)]/10 border border-[color:var(--forest)]/30 flex items-center justify-center">
-          <ArrowEast className="w-3.5 h-3.5 text-[color:var(--forest-2)] -rotate-90" />
+        <div className="shrink-0 w-9 h-9 rounded-lg bg-[color:var(--ember)]/10 border border-[color:var(--ember)]/30 flex items-center justify-center">
+          <ArrowEast className="w-3.5 h-3.5 text-[color:var(--ember-2)] -rotate-90" />
         </div>
         <div className="flex-1">
           <h3 className="text-[15px] font-semibold text-[color:var(--ink)] leading-[1.3]">
@@ -1383,8 +1383,8 @@ function MetricsStrip({ jobs }: { jobs: ProspectingJob[] }) {
             <div className="flex items-center gap-1.5">
               {c.live && (
                 <span className="relative inline-flex">
-                  <span className="relative inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)]" />
-                  <span className="absolute inset-0 inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)] opacity-60 animate-ping" />
+                  <span className="relative inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ember)]" />
+                  <span className="absolute inset-0 inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ember)] opacity-60 animate-ping" />
                 </span>
               )}
               <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--ink-3)]">
@@ -1633,8 +1633,8 @@ export default function DashboardPage() {
             in this scope) so we don't flash the welcome strip while
             the initial fetch is in flight. */}
         {jobsData !== undefined && jobs.length === 0 && (
-          <div className="animate-fade-up flex items-start gap-3 rounded-xl border border-[color:var(--forest)]/30 bg-[color:var(--forest)]/[0.04] px-4 py-3">
-            <span className="mt-1 inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)] shrink-0" aria-hidden />
+          <div className="animate-fade-up flex items-start gap-3 rounded-xl border border-[color:var(--ember)]/30 bg-[color:var(--ember)]/[0.04] px-4 py-3">
+            <span className="mt-1 inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ember)] shrink-0" aria-hidden />
             <div className="flex-1 min-w-0">
               <p className="text-[13.5px] font-medium text-[color:var(--ink)] leading-tight">
                 Welcome — let&rsquo;s find you some prospects.
@@ -1644,7 +1644,7 @@ export default function DashboardPage() {
                 example briefs to see how it works. Results land on{' '}
                 <Link
                   href="/dashboard/leads"
-                  className="text-[color:var(--ink)] hover:text-[color:var(--forest)] underline underline-offset-2 decoration-[color:var(--rule)] hover:decoration-[color:var(--forest)] transition-colors"
+                  className="text-[color:var(--ink)] hover:text-[color:var(--ember)] underline underline-offset-2 decoration-[color:var(--rule)] hover:decoration-[color:var(--ember)] transition-colors"
                 >
                   Leads
                 </Link>

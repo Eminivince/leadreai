@@ -288,7 +288,7 @@ function WorkflowMeta({
         <button
           onClick={() => void save()}
           disabled={!name.trim() || saving}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2 rounded-full  text-[13px] font-medium hover:bg-[color:var(--ember)] transition-colors disabled:opacity-40"
         >
           {saving ? 'Saving…' : 'Save'}
         </button>
@@ -330,7 +330,7 @@ function ColumnsSummary({ workflow }: { workflow: Workflow }) {
                     {c.label}
                   </span>
                   {isEnriched && (
-                    <span className="font-mono text-[8.5px] text-[color:var(--forest)] shrink-0">
+                    <span className="font-mono text-[8.5px] text-[color:var(--ember)] shrink-0">
                       AI
                     </span>
                   )}
@@ -360,8 +360,8 @@ function SeedSummary({ workflow }: { workflow: Workflow }) {
   return (
     <div className="mb-8">
       <div className="flex items-center gap-3 mb-3">
-        <span className="block w-6 h-px bg-[color:var(--forest)]" />
-        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
+        <span className="block w-6 h-px bg-[color:var(--ember)]" />
+        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ember)]">
           Seed query
         </span>
       </div>
@@ -470,7 +470,7 @@ function RunForm({
 
   return (
     <div className="border border-[color:var(--ink)] bg-[color:var(--paper)] rounded-sm p-6">
-      <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)] block mb-1">
+      <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ember)] block mb-1">
         Run
       </span>
       <h2 className=" text-[26px] leading-tight text-[color:var(--ink)] mb-5">
@@ -497,7 +497,7 @@ function RunForm({
                 type="checkbox"
                 checked={dispatchSeedJob}
                 onChange={(e) => setDispatchSeedJob(e.target.checked)}
-                className="accent-[color:var(--forest)]"
+                className="accent-[color:var(--ember)]"
               />
               Dispatch the seed query now
             </label>
@@ -535,7 +535,7 @@ function RunForm({
             ? `Missing: ${missingRequired.map((p) => p.label).join(', ')}`
             : undefined
         }
-        className="mt-6 w-full inline-flex items-center justify-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-4 py-3 rounded-full  text-[13.5px] font-medium transition-colors disabled:opacity-40"
+        className="mt-6 w-full inline-flex items-center justify-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] px-4 py-3 rounded-full  text-[13.5px] font-medium transition-colors disabled:opacity-40"
       >
         {running ? 'Running…' : hasSeed && dispatchSeedJob ? 'Create table + dispatch →' : 'Create table →'}
       </button>

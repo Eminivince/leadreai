@@ -60,7 +60,7 @@ function ArrowEast({ className = 'w-3 h-3' }: { className?: string }) {
  */
 function StatusPill({ status }: { status: string }) {
   const map: Record<string, { label: string; dot: string; text: string; border: string; pulse: boolean }> = {
-    active:    { label: 'active',    dot: 'bg-[color:var(--forest)]',   text: 'text-[color:var(--forest-2)]', border: 'border-[color:var(--forest)]/30 bg-[color:var(--forest)]/[0.06]', pulse: true },
+    active:    { label: 'active',    dot: 'bg-[color:var(--ember)]',   text: 'text-[color:var(--ember-2)]', border: 'border-[color:var(--ember)]/30 bg-[color:var(--ember)]/[0.06]', pulse: true },
     paused:    { label: 'paused',    dot: 'bg-[color:var(--warn)]',     text: 'text-[color:var(--warn)]',     border: 'border-[color:var(--warn)]/30 bg-[color:var(--warn)]/[0.04]',    pulse: false },
     draft:     { label: 'draft',     dot: 'bg-[color:var(--ink-3)]',    text: 'text-[color:var(--ink-2)]',    border: 'border-[color:var(--rule)] bg-[color:var(--paper-2)]',          pulse: false },
     completed: { label: 'completed', dot: 'bg-[color:var(--ink-3)]',    text: 'text-[color:var(--ink-2)]',    border: 'border-[color:var(--rule)] bg-[color:var(--paper-2)]',          pulse: false },
@@ -214,7 +214,7 @@ export default function CampaignDetailPage() {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)] truncate">
+              <h1 className="font-display text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)] truncate">
                 {campaign.name}
               </h1>
               <StatusPill status={campaign.status} />
@@ -239,7 +239,7 @@ export default function CampaignDetailPage() {
               <button
                 onClick={() => void runAction('resume')}
                 disabled={busy !== null}
-                className="inline-flex items-center h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--forest)] text-white hover:bg-[color:var(--forest-2)] transition-colors disabled:opacity-50"
+                className="inline-flex items-center h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ember)] text-white hover:bg-[color:var(--ember-2)] transition-colors disabled:opacity-50"
               >
                 {busy === 'resume' ? 'Resuming…' : 'Resume'}
               </button>
@@ -363,7 +363,7 @@ export default function CampaignDetailPage() {
             AI-generated drafts are persisted under{' '}
             <Link
               href={`/dashboard/leads?campaignId=${campaign._id}`}
-              className="text-[color:var(--ink)] hover:text-[color:var(--forest)] underline underline-offset-[3px] decoration-[color:var(--rule)] hover:decoration-[color:var(--forest)] transition-colors"
+              className="text-[color:var(--ink)] hover:text-[color:var(--ember)] underline underline-offset-[3px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ember)] transition-colors"
             >
               leads
             </Link>{' '}
@@ -407,7 +407,7 @@ function ClassChip({
 }) {
   const map = {
     positive:
-      'border-[color:var(--forest)]/40 bg-[color:var(--forest)]/[0.08] text-[color:var(--forest-2,#3b6e44)]',
+      'border-[color:var(--ember)]/40 bg-[color:var(--ember)]/[0.08] text-[color:var(--ember-2,#3b6e44)]',
     warn:
       'border-[color:var(--warn)]/40 bg-[color:var(--warn)]/[0.06] text-[color:var(--warn)]',
     neutral:
