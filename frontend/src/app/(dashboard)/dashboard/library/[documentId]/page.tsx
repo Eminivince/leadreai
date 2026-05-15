@@ -180,7 +180,7 @@ export default function LibraryDocumentDetailPage() {
 
   if (docLoading) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-16  italic text-[14px] text-[color:var(--ink-2)] text-center">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-16  italic text-[14px] text-[color:var(--ink-2)] text-center">
         Loading document…
       </div>
     );
@@ -188,7 +188,7 @@ export default function LibraryDocumentDetailPage() {
 
   if (!doc) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-20 text-center">
         <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
           Missing
         </span>
@@ -212,7 +212,7 @@ export default function LibraryDocumentDetailPage() {
     doc.status === 'ready' && ['csv', 'xlsx', 'xls'].includes(doc.fileType);
 
   return (
-    <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-10 md:py-12">
+    <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-10 md:py-12">
       {/* Breadcrumb */}
       <div className="flex items-center gap-3 mb-6 font-mono text-[10px] tracking-[0.22em] uppercase">
         <Link
@@ -226,15 +226,15 @@ export default function LibraryDocumentDetailPage() {
       </div>
 
       {/* Header */}
-      <section className="mb-10 pb-8 border-b border-[color:var(--rule)]">
-        <div className="flex items-center gap-3 mb-5">
+      <section className="mb-6 sm:mb-10 pb-6 sm:pb-8 border-b border-[color:var(--rule)]">
+        <div className="flex items-center gap-3 mb-4 sm:mb-5">
           <span className="block w-8 h-px bg-[color:var(--ink)]" />
           <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
             {isAudio ? 'Transcript' : 'Document'}
           </span>
         </div>
 
-        <div className="flex items-end justify-between gap-6 flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 sm:gap-6 flex-wrap">
           <div className="max-w-[780px]">
             {renaming ? (
               <div className="flex items-center gap-2">
@@ -246,7 +246,7 @@ export default function LibraryDocumentDetailPage() {
                     if (e.key === 'Enter') renameMutation.mutate(titleDraft.trim());
                     else if (e.key === 'Escape') setRenaming(false);
                   }}
-                  className="bg-transparent border-b-2 border-[color:var(--ink)] outline-none py-1  text-[36px] md:text-[44px] leading-tight text-[color:var(--ink)] flex-1"
+                  className="bg-transparent border-b-2 border-[color:var(--ink)] outline-none py-1  text-[26px] sm:text-[36px] md:text-[44px] leading-tight text-[color:var(--ink)] flex-1"
                 />
                 <button
                   onClick={() => renameMutation.mutate(titleDraft.trim())}
@@ -269,7 +269,7 @@ export default function LibraryDocumentDetailPage() {
                   setRenaming(true);
                 }}
                 title="Double-click to rename"
-                className=" text-[36px] md:text-[48px] leading-[0.98] tracking-[-0.015em] text-[color:var(--ink)] cursor-text"
+                className=" text-[26px] sm:text-[36px] md:text-[48px] leading-[0.98] tracking-[-0.015em] text-[color:var(--ink)] cursor-text"
               >
                 {displayTitle}
               </h1>

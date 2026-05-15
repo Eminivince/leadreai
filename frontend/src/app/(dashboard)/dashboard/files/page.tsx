@@ -501,14 +501,14 @@ export default function FilesPage() {
  }
 
  return (
-  <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10 animate-fade-up">
+  <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 md:py-10 animate-fade-up">
    {/* Header — Files is a sub-view of Leads now, so the title block
        reads "Leads" with the Files tab active. Same shape as the
        Leads page so users feel they're inside one section, not on
        a separate top-level surface. */}
-   <section className="mb-6 flex items-center justify-between gap-4 flex-wrap">
-    <div className="flex items-baseline gap-3">
-     <h1 className="font-display text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
+   <section className="mb-5 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 flex-wrap">
+    <div className="flex items-baseline gap-3 flex-wrap">
+     <h1 className="font-display text-[24px] sm:text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
       Leads
      </h1>
      <span className="font-mono text-[12px] tabular-nums text-[color:var(--ink-3)]">
@@ -519,10 +519,10 @@ export default function FilesPage() {
        { key: 'leads', label: 'All', href: '/dashboard/leads' },
        { key: 'files', label: 'Files', href: '/dashboard/files' },
       ]}
-      className="ml-2"
+      className="sm:ml-2"
      />
     </div>
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap">
      <PageHelp
       title="Files"
       body="Named collections of leads. Organise contacts into files — e.g. 'Q3 prospects' or 'Nigeria fintech' — then use a file as the audience for a campaign."
@@ -542,8 +542,8 @@ export default function FilesPage() {
    </section>
 
    {/* Toolbar — segmented filter + search */}
-   <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
-    <div className="inline-flex items-center rounded-md border border-[color:var(--rule)] bg-[color:var(--paper)] p-0.5">
+   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 flex-wrap mb-4">
+    <div className="inline-flex items-center rounded-md border border-[color:var(--rule)] bg-[color:var(--paper)] p-0.5 self-start overflow-x-auto max-w-full">
      {TABS.map((t) => {
       const on = tab === t.k;
       const n = counts[t.k];
@@ -565,7 +565,7 @@ export default function FilesPage() {
       );
      })}
     </div>
-    <div className="flex items-center gap-2 h-8 px-3 border border-[color:var(--rule)] bg-[color:var(--paper)] hover:border-[color:var(--ink-3)] focus-within:border-[color:var(--ember)]/60 focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--ember)_8%,transparent)] rounded-md w-[260px] md:w-[280px] transition-colors">
+    <div className="flex items-center gap-2 h-9 sm:h-8 px-3 border border-[color:var(--rule)] bg-[color:var(--paper)] hover:border-[color:var(--ink-3)] focus-within:border-[color:var(--ember)]/60 focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--ember)_8%,transparent)] rounded-md w-full sm:w-[260px] md:w-[280px] transition-colors">
      <svg viewBox="0 0 24 24" fill="none" className="w-3.5 h-3.5 text-[color:var(--ink-3)] shrink-0">
       <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="1.6" />
       <path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />

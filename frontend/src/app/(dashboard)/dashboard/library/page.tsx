@@ -420,7 +420,7 @@ export default function LibraryPage() {
   const pagedDocs = docs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10 animate-fade-up">
+    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 md:py-10 animate-fade-up">
       {/* Settings → Context breadcrumb. Library is now framed as
           configuration (the agent's reading list); users reach it
           from Settings rather than the primary nav. */}
@@ -434,10 +434,10 @@ export default function LibraryPage() {
         <span className="text-[color:var(--ink-3)]/60">/</span>
         <span className="text-[color:var(--ink-2)]">Context</span>
       </div>
-      <section className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+      <section className="mb-5 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 flex-wrap">
         <div>
           <div className="flex items-baseline gap-3">
-            <h1 className="font-display text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
+            <h1 className="font-display text-[24px] sm:text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
               Context
             </h1>
             <span className="font-mono text-[12px] tabular-nums text-[color:var(--ink-3)]">
@@ -448,7 +448,7 @@ export default function LibraryPage() {
             Documents the agent reads on every search.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <PageHelp
             title="Context"
             body="Documents the agent reads on every search — pitch decks, ICP notes, portfolio lists, case studies. Upload them once; they shape the results of every dispatch from then on."
