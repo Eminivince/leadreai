@@ -191,7 +191,7 @@ export default function IntegrationsPage() {
      </div>
      <div className="flex items-center justify-between gap-6 flex-wrap">
      <div>
-      <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)]">
+      <h1 className="font-display text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
        Integrations
       </h1>
       <p className="text-[12.5px] text-[color:var(--ink-3)] mt-0.5">
@@ -209,7 +209,7 @@ export default function IntegrationsPage() {
        ]}
       />
       <span className="text-[13px] text-[color:var(--ink-3)]">Connected:</span>
-      <span className="font-bold text-[color:var(--forest)] text-[15px]">
+      <span className="font-bold text-[color:var(--ember)] text-[15px]">
        {liveConnected}
        <span className="font-normal text-[color:var(--ink-3)] ml-1">/ {totalLive}</span>
       </span>

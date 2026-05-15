@@ -326,7 +326,7 @@ export default function FileDetailPage() {
                     ? 'Restore the file before starting a campaign.'
                     : undefined
               }
-              className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--ember)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Start a campaign <ArrowEast className="w-3 h-3" />
             </button>
@@ -353,7 +353,7 @@ export default function FileDetailPage() {
           <div className="mt-5">
             <Link
               href="/dashboard/leads"
-              className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors"
+              className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--ember)] transition-colors"
             >
               Open leads archive <ArrowEast className="w-3 h-3" />
             </Link>

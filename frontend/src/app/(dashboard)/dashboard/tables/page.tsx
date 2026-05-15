@@ -149,9 +149,9 @@ function TableRow({
                 onKeyDown={(e) => { if (e.key === 'Escape') { setRenameVal(table.name); setRenaming(false); } }}
                 onBlur={submitRename}
                 maxLength={200}
-                className="flex-1 bg-[color:var(--paper)] border border-[color:var(--forest)]/60 rounded-md outline-none focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--forest)_8%,transparent)] text-[14px] font-medium text-[color:var(--ink)] px-2 py-1 transition-colors"
+                className="flex-1 bg-[color:var(--paper)] border border-[color:var(--ember)]/60 rounded-md outline-none focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--ember)_8%,transparent)] text-[14px] font-medium text-[color:var(--ink)] px-2 py-1 transition-colors"
               />
-              <button type="submit" className="p-1 text-[color:var(--forest-2)] hover:text-[color:var(--forest)]">
+              <button type="submit" className="p-1 text-[color:var(--ember-2)] hover:text-[color:var(--ember)]">
                 <CheckIcon className="w-3.5 h-3.5" />
               </button>
               <button type="button" onClick={() => { setRenameVal(table.name); setRenaming(false); }} className="p-1 text-[color:var(--ink-3)] hover:text-[color:var(--ink)]">
@@ -162,7 +162,7 @@ function TableRow({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => router.push(`/dashboard/tables/${table._id}`)}
-                className="text-[14px] font-medium leading-tight text-[color:var(--ink)] hover:text-[color:var(--forest)] transition-colors text-left truncate"
+                className="text-[14px] font-medium leading-tight text-[color:var(--ink)] hover:text-[color:var(--ember)] transition-colors text-left truncate"
               >
                 {table.name}
               </button>
@@ -230,7 +230,7 @@ function TableRow({
       {/* Inline doc / description editor */}
       {docOpen && (
         <div className="px-4 md:px-5 pb-4">
-          <div className="bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-md p-3 focus-within:border-[color:var(--forest)]/60 focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--forest)_8%,transparent)] transition-all">
+          <div className="bg-[color:var(--paper-2)] border border-[color:var(--rule)] rounded-md p-3 focus-within:border-[color:var(--ember)]/60 focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--ember)_8%,transparent)] transition-all">
             <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--ink-3)] block mb-1.5">
               Notes
             </span>
@@ -252,7 +252,7 @@ function TableRow({
               <button
                 onClick={submitDoc}
                 disabled={patchMutation.isPending}
-                className="text-[12px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-3 h-7 rounded-md disabled:opacity-50 transition-colors"
+                className="text-[12px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] px-3 h-7 rounded-md disabled:opacity-50 transition-colors"
               >
                 {patchMutation.isPending ? '…' : 'Save'}
               </button>
@@ -285,7 +285,7 @@ function ActionBtn({
         danger
           ? 'text-[color:var(--ink-3)] hover:text-[color:var(--warn)]'
           : active
-          ? 'text-[color:var(--forest)] bg-[color:var(--paper-3)]'
+          ? 'text-[color:var(--ember)] bg-[color:var(--paper-3)]'
           : 'text-[color:var(--ink-3)] hover:text-[color:var(--ink)] hover:bg-[color:var(--paper-3)]'
       }`}
     >
@@ -498,7 +498,7 @@ export default function TablesIndexPage() {
           under the same Tables section now; tabs surface both. */}
       <section className="mb-6 flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-baseline gap-3">
-          <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)]">
+          <h1 className="font-display text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
             Tables
           </h1>
           <span className="font-mono text-[12px] tabular-nums text-[color:var(--ink-3)]">
@@ -524,7 +524,7 @@ export default function TablesIndexPage() {
           />
           <button
             onClick={() => setDialogOpen(true)}
-            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] transition-colors"
+            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] transition-colors"
           >
             New table
           </button>
@@ -547,7 +547,7 @@ export default function TablesIndexPage() {
           </p>
           <button
             onClick={() => setDialogOpen(true)}
-            className="mt-5 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] transition-colors"
+            className="mt-5 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] transition-colors"
           >
             New table
           </button>
@@ -768,7 +768,7 @@ function NewTableDialog({
           <button
             onClick={() => void handleCreate()}
             disabled={!name.trim() || saving}
-            className="inline-flex items-center gap-1.5 bg-[color:var(--ink)] text-[color:var(--paper)] px-3.5 h-8 rounded-md text-[12.5px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 bg-[color:var(--ink)] text-[color:var(--paper)] px-3.5 h-8 rounded-md text-[12.5px] font-medium hover:bg-[color:var(--ember)] transition-colors disabled:opacity-40"
           >
             {saving ? 'Creating…' : 'Create table'}
           </button>
@@ -802,7 +802,7 @@ function LabeledInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         autoFocus={autoFocus}
-        className="w-full bg-[color:var(--paper)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] focus:border-[color:var(--forest)]/60 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--forest)_8%,transparent)] rounded-md px-3 h-9 outline-none text-[13.5px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] transition-colors"
+        className="w-full bg-[color:var(--paper)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] focus:border-[color:var(--ember)]/60 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--ember)_8%,transparent)] rounded-md px-3 h-9 outline-none text-[13.5px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] transition-colors"
       />
     </label>
   );
