@@ -1,11 +1,13 @@
 import Link from 'next/link';
 
+import SiteNav from '@/components/marketing/SiteNav';
+
 /**
  * Landing page — warm-cream / Instrument Serif design language.
  * Source of truth: .superpowers/brainstorm/19882-1778781621/content/authentic.html
  *
- * Server component: no client interactivity is needed on the marketing surface.
- * The "unlock" gate is a static CTA that routes to /register.
+ * Server component for everything except SiteNav, which is a client component
+ * because it owns the mobile hamburger menu state.
  */
 
 const TRUST_STATS = [
@@ -76,64 +78,6 @@ export default function LandingPage() {
       <TestimonialsSection />
       <SiteFooter />
     </main>
-  );
-}
-
-/* ────────────────────────────────────────────────────────── */
-/* NAV                                                        */
-/* ────────────────────────────────────────────────────────── */
-
-function SiteNav() {
-  return (
-    <nav className="flex items-center justify-between px-4 sm:px-6 md:px-12 h-14 border-b border-[color:var(--rule)] gap-4">
-      <div className="flex items-center gap-2.5 min-w-0">
-        <div className="w-7 h-7 rounded-[7px] bg-[color:var(--ink)] flex items-center justify-center flex-shrink-0">
-          <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4" aria-hidden="true">
-            <path d="M3 13 L3 3 L6 3 L6 10 L13 10 L13 13 Z" fill="white" />
-            <circle cx="12" cy="4" r="1.8" fill="rgba(255,255,255,0.5)" />
-          </svg>
-        </div>
-        <span className="font-sans font-bold text-[15px] text-[color:var(--ink)] tracking-[-0.02em]">
-          LeadreAI
-        </span>
-      </div>
-
-      <div className="hidden md:flex items-center gap-7">
-        <Link
-          href="/pricing"
-          className="font-sans text-[13px] text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition-colors tracking-[0.01em]"
-        >
-          Pricing
-        </Link>
-        <a
-          href="#what-it-is"
-          className="font-sans text-[13px] text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition-colors tracking-[0.01em]"
-        >
-          Product
-        </a>
-        <a
-          href="#testimonials"
-          className="font-sans text-[13px] text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition-colors tracking-[0.01em]"
-        >
-          Customers
-        </a>
-      </div>
-
-      <div className="flex items-center gap-2.5">
-        <Link
-          href="/login"
-          className="hidden sm:inline-block font-sans text-[13px] font-medium text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition-colors tracking-[0.01em]"
-        >
-          Sign in
-        </Link>
-        <Link
-          href="/register"
-          className="bg-[color:var(--ink)] text-[color:var(--paper)] font-sans text-[12.5px] font-semibold px-[14px] sm:px-[18px] py-2 rounded-md tracking-[0.02em] hover:opacity-85 transition-opacity whitespace-nowrap"
-        >
-          Start for free
-        </Link>
-      </div>
-    </nav>
   );
 }
 
@@ -489,6 +433,12 @@ function SiteFooter() {
           className="font-sans text-[12.5px] text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition-colors"
         >
           Pricing
+        </Link>
+        <Link
+          href="/docs"
+          className="font-sans text-[12.5px] text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition-colors"
+        >
+          Docs
         </Link>
         <Link
           href="/login"
