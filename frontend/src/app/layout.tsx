@@ -1,32 +1,29 @@
 import type { Metadata } from 'next';
-import { Inter, Barlow, Instrument_Serif, JetBrains_Mono } from 'next/font/google';
-import { GeistSans } from 'geist/font/sans';
-import { GeistMono } from 'geist/font/mono';
+import { Instrument_Serif, Outfit, DM_Mono } from 'next/font/google';
 import { Providers } from './providers';
 import { Toaster } from 'sonner';
 import './globals.css';
 
-// Geist is the primary UI typeface for the dashboard redesign — pulled
-// in via the `geist` package so it's locally hosted (no extra DNS hop).
-// Inter / Barlow / Instrument Serif / JetBrains Mono stay loaded for
-// the marketing pages and any pre-redesign components that still
-// reference them. Once those are migrated, the legacy imports can go.
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-const barlow = Barlow({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600'],
-  variable: '--font-barlow',
-});
 const instrumentSerif = Instrument_Serif({
   subsets: ['latin'],
   weight: '400',
   style: ['normal', 'italic'],
-  variable: '--font-instrument-serif',
+  variable: '--font-display',
+  display: 'swap',
 });
-const jetbrainsMono = JetBrains_Mono({
+
+const outfit = Outfit({
   subsets: ['latin'],
-  weight: ['400', '500'],
-  variable: '--font-jetbrains-mono',
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-body',
+  display: 'swap',
+});
+
+const dmMono = DM_Mono({
+  subsets: ['latin'],
+  weight: ['300', '400', '500'],
+  variable: '--font-mono',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -41,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
        the SSR snapshot doesn't know about. Without this attribute React
        would log a hydration mismatch warning on every page load. */
     <html lang="en" suppressHydrationWarning>
-      <body className={`${GeistSans.variable} ${GeistMono.variable} ${inter.variable} ${barlow.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
+      <body className={`${instrumentSerif.variable} ${outfit.variable} ${dmMono.variable} font-sans antialiased`}>
         <Providers>
           {children}
           {/* theme="system" lets sonner choose its own dark/light styling
