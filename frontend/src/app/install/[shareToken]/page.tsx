@@ -82,10 +82,13 @@ export default function InstallWorkflowPage() {
 
   if (previewError) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center px-6 text-center">
-        <h1 className="text-2xl font-semibold text-[color:var(--ink)]">Link not available</h1>
-        <p className="mt-3 text-[color:var(--ink-2)]">{previewError}</p>
-        <Link href="/" className="mt-6 text-sm text-amber-600 hover:underline">
+      <main className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center bg-[color:var(--paper)] px-6 text-center">
+        <h1 className="font-display text-[28px] text-[color:var(--ink)]">Link not available</h1>
+        <p className="mt-3 font-sans text-[14px] text-[color:var(--ink-2)]">{previewError}</p>
+        <Link
+          href="/"
+          className="mt-6 font-sans text-[13px] text-[color:var(--ember)] hover:text-[color:var(--ember-2)] hover:underline"
+        >
           Go home →
         </Link>
       </main>
@@ -94,110 +97,113 @@ export default function InstallWorkflowPage() {
 
   if (!preview) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-xl items-center justify-center px-6">
-        <p className="text-[color:var(--ink-2)] italic">Loading preview…</p>
+      <main className="mx-auto flex min-h-screen max-w-xl items-center justify-center bg-[color:var(--paper)] px-6">
+        <p className="font-sans text-[14px] text-[color:var(--ink-3)]">Loading preview…</p>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
-      <div className="rounded-lg border border-[color:var(--rule)] bg-[color:var(--paper-2)] p-8">
-        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest,#3b6e44)]">
-          Install workflow
-        </span>
-        <h1 className="mt-2 text-3xl font-semibold leading-tight text-[color:var(--ink)]">
-          {preview.name}
-        </h1>
-        {preview.description ? (
-          <p className="mt-3 text-[15px] leading-[1.55] text-[color:var(--ink-2)]">
-            {preview.description}
-          </p>
-        ) : null}
+    <main className="min-h-screen bg-[color:var(--paper)]">
+      <div className="mx-auto max-w-2xl px-6 py-16">
+        <div className="bg-white border border-[color:var(--rule)] rounded-2xl p-8">
+          <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-4)]">
+            Install workflow
+          </span>
+          <h1 className="mt-2 font-display text-[28px] leading-tight text-[color:var(--ink)]">
+            {preview.name}
+          </h1>
+          {preview.description ? (
+            <p className="mt-3 font-sans text-[14px] leading-[1.55] text-[color:var(--ink-2)]">
+              {preview.description}
+            </p>
+          ) : null}
 
-        <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
-          <Stat label="Row type" value={preview.tableTemplate.rowType} />
-          <Stat label="Columns" value={String(preview.tableTemplate.columns.length)} />
-          <Stat label="Has seed query" value={preview.hasSeed ? 'Yes' : 'No'} />
-          <Stat label="Times installed" value={String(preview.publishStats.installs)} />
-        </div>
-
-        {preview.seedParameters && preview.seedParameters.length > 0 ? (
-          <div className="mt-6">
-            <h3 className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
-              Parameters
-            </h3>
-            <ul className="mt-2 space-y-1 text-[13px] text-[color:var(--ink-2)]">
-              {preview.seedParameters.map((p) => (
-                <li key={p.key}>
-                  <span className="font-mono">{p.key}</span> · {p.type}
-                  {p.required ? ' · required' : ''}
-                </li>
-              ))}
-            </ul>
+          <div className="mt-6 grid grid-cols-2 gap-4">
+            <Stat label="Row type" value={preview.tableTemplate.rowType} />
+            <Stat label="Columns" value={String(preview.tableTemplate.columns.length)} />
+            <Stat label="Has seed query" value={preview.hasSeed ? 'Yes' : 'No'} />
+            <Stat label="Times installed" value={String(preview.publishStats.installs)} />
           </div>
-        ) : null}
 
-        <div className="mt-8 border-t border-[color:var(--rule)] pt-6">
-          {authLoading ? (
-            <p className="text-sm italic text-[color:var(--ink-3)]">Checking your session…</p>
-          ) : !user ? (
-            <div className="flex flex-col gap-3">
-              <p className="text-sm text-[color:var(--ink-2)]">
-                Sign in to install this workflow into your workspace.
-              </p>
-              <Link
-                href={`/login?returnTo=${encodeURIComponent(`/install/${shareToken}`)}`}
-                className="inline-flex items-center justify-center rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-white hover:bg-amber-600"
-              >
-                Sign in to install
-              </Link>
+          {preview.seedParameters && preview.seedParameters.length > 0 ? (
+            <div className="mt-6">
+              <h3 className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-4)]">
+                Parameters
+              </h3>
+              <ul className="mt-2 space-y-1 font-sans text-[13px] text-[color:var(--ink-2)]">
+                {preview.seedParameters.map((p) => (
+                  <li key={p.key}>
+                    <span className="font-mono text-[color:var(--ink)]">{p.key}</span> · {p.type}
+                    {p.required ? ' · required' : ''}
+                  </li>
+                ))}
+              </ul>
             </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {workspaces.length > 1 ? (
-                <label className="flex flex-col gap-1 text-sm text-[color:var(--ink-2)]">
-                  <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
-                    Install into
-                  </span>
-                  <select
-                    value={targetWorkspaceId}
-                    onChange={(e) => setTargetWorkspaceId(e.target.value)}
-                    className="rounded border border-[color:var(--rule)] bg-[color:var(--paper-1)] px-3 py-2"
-                  >
-                    {workspaces.map((ws) => (
-                      <option key={ws._id} value={ws._id}>
-                        {ws.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ) : workspaces[0] ? (
-                <p className="text-sm text-[color:var(--ink-2)]">
-                  Installing into <span className="font-medium text-[color:var(--ink)]">{workspaces[0].name}</span>
+          ) : null}
+
+          <div className="mt-8 border-t border-[color:var(--rule)] pt-6">
+            {authLoading ? (
+              <p className="font-sans text-[13px] text-[color:var(--ink-3)]">Checking your session…</p>
+            ) : !user ? (
+              <div className="flex flex-col gap-3">
+                <p className="font-sans text-[14px] text-[color:var(--ink-2)]">
+                  Sign in to install this workflow into your workspace.
                 </p>
-              ) : null}
+                <Link
+                  href={`/login?returnTo=${encodeURIComponent(`/install/${shareToken}`)}`}
+                  className="inline-flex items-center justify-center bg-[color:var(--ink)] text-[color:var(--paper)] font-sans font-semibold text-[13px] px-5 py-2.5 rounded-lg hover:opacity-85 transition-opacity"
+                >
+                  Sign in to install
+                </Link>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {workspaces.length > 1 ? (
+                  <label className="flex flex-col gap-1.5">
+                    <span className="font-sans font-medium text-[12.5px] text-[color:var(--ink-2)]">
+                      Install into
+                    </span>
+                    <select
+                      value={targetWorkspaceId}
+                      onChange={(e) => setTargetWorkspaceId(e.target.value)}
+                      className="bg-white border border-[color:var(--rule)] rounded-lg px-3.5 py-2.5 text-[13.5px] text-[color:var(--ink)] focus:border-[color:var(--ink)] focus:outline-none transition-colors"
+                    >
+                      {workspaces.map((ws) => (
+                        <option key={ws._id} value={ws._id}>
+                          {ws.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : workspaces[0] ? (
+                  <p className="font-sans text-[14px] text-[color:var(--ink-2)]">
+                    Installing into{' '}
+                    <span className="font-medium text-[color:var(--ink)]">{workspaces[0].name}</span>
+                  </p>
+                ) : null}
 
-              <button
-                type="button"
-                onClick={() => void handleInstall()}
-                disabled={installing || !targetWorkspaceId}
-                className="inline-flex items-center justify-center rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-white hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {installing ? 'Installing…' : 'Install into my workspace'}
-              </button>
-              {installError ? (
-                <p className="text-sm text-red-600">{installError}</p>
-              ) : null}
-            </div>
-          )}
+                <button
+                  type="button"
+                  onClick={() => void handleInstall()}
+                  disabled={installing || !targetWorkspaceId}
+                  className="inline-flex items-center justify-center bg-[color:var(--ink)] text-[color:var(--paper)] font-sans font-semibold text-[13px] px-5 py-2.5 rounded-lg hover:opacity-85 transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {installing ? 'Installing…' : 'Install into my workspace'}
+                </button>
+                {installError ? (
+                  <p className="font-sans text-[13px] text-[color:var(--warn)]">{installError}</p>
+                ) : null}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      <p className="mt-6 text-center text-xs text-[color:var(--ink-3)]">
-        Installing creates an independent copy in your workspace. Future
-        edits by the author do not propagate.
-      </p>
+        <p className="mt-6 text-center font-sans text-[12px] text-[color:var(--ink-3)]">
+          Installing creates an independent copy in your workspace. Future edits by the
+          author do not propagate.
+        </p>
+      </div>
     </main>
   );
 }
@@ -205,10 +211,10 @@ export default function InstallWorkflowPage() {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+      <div className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-4)]">
         {label}
       </div>
-      <div className="mt-1 text-[14px] text-[color:var(--ink)]">{value}</div>
+      <div className="mt-1 font-sans text-[14px] text-[color:var(--ink)]">{value}</div>
     </div>
   );
 }

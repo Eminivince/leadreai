@@ -33,7 +33,7 @@ export function ImpersonationBanner() {
   return (
     <div
       role="alert"
-      className="sticky top-0 z-50 flex items-center justify-between gap-3 bg-amber-500 px-4 py-2 text-[13px] font-medium text-white shadow-md"
+      className="sticky top-0 z-50 flex items-center justify-between gap-3 bg-[color:var(--ember-bg)] border-b border-[color:var(--ember)]/30 px-6 py-2 font-sans font-medium text-[12.5px] text-[color:var(--ember-2)]"
     >
       <span>
         You are impersonating <code className="font-mono">{userId ?? 'a user'}</code>.
@@ -46,7 +46,7 @@ export function ImpersonationBanner() {
           sessionStorage.removeItem('impersonation-user');
           window.location.href = '/dashboard';
         }}
-        className="rounded bg-white/20 px-3 py-1 text-xs font-semibold hover:bg-white/30"
+        className="font-sans font-semibold text-[12.5px] text-[color:var(--ember)] hover:text-[color:var(--ember-2)] hover:underline transition-colors"
       >
         Return to your account
       </button>
