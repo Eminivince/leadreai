@@ -6,12 +6,25 @@ import Link from 'next/link';
 /* ─────────────────────────────────────────────────────────────────
  * AuthShell — sign in / sign up
  * ─────────────────────────────────────────────────────────────────
- * B2B SaaS split-screen: dark left panel (60%) + white form right (40%).
- * Left: --ink (#111827) bg, large wordmark, amber bullet features,
- *    testimonial quote.
- * Right: white, clean card form with amber submit button.
- * Mobile: only the form (right side) is shown, single column.
+ * Centered card on warm-cream paper. White card with hairline rule,
+ * Instrument Serif heading, ink/paper primary button, single ember
+ * accent. Mobile collapses to the same single column.
  * ───────────────────────────────────────────────────────────────── */
+
+/* ── Style constants (kept local so the file stays self-contained) ── */
+const INPUT_CLASS =
+ 'w-full bg-white border border-[color:var(--rule)] rounded-lg px-3.5 py-2.5 text-[13.5px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-4)] focus:border-[color:var(--ink)] focus:outline-none transition-colors';
+
+const INPUT_CLASS_ERROR =
+ 'w-full bg-white border border-[color:var(--warn)] rounded-lg px-3.5 py-2.5 text-[13.5px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-4)] focus:outline-none transition-colors';
+
+const PRIMARY_BTN =
+ 'w-full bg-[color:var(--ink)] text-[color:var(--paper)] font-sans font-semibold text-[13px] px-5 py-2.5 rounded-lg hover:opacity-85 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2';
+
+const OUTLINE_BTN =
+ 'w-full inline-flex items-center justify-center gap-3 border border-[color:var(--rule)] bg-transparent text-[color:var(--ink-2)] font-sans font-medium text-[13px] px-5 py-2.5 rounded-lg hover:border-[color:var(--ink)] hover:text-[color:var(--ink)] transition-colors';
+
+const LABEL_CLASS = 'font-sans font-medium text-[12.5px] text-[color:var(--ink-2)]';
 
 /* ── Glyphs ─────────────────────────────────────────────────── */
 const Svg = ({
@@ -52,47 +65,27 @@ const EyeOffIcon = (p: { className?: string }) => (
  </Svg>
 );
 
-const CheckIcon = () => (
- <svg
-  viewBox="0 0 20 20"
-  fill="none"
-  className="w-4 h-4 shrink-0"
-  aria-hidden
- >
-  <circle cx="10" cy="10" r="10" fill="#f59e0b" />
-  <path
-   d="M6 10l2.5 2.5L14 7"
-   stroke="#fff"
-   strokeWidth="1.8"
-   strokeLinecap="round"
-   strokeLinejoin="round"
-  />
- </svg>
-);
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
-function ArrowWest({ className = 'w-3 h-3' }: { className?: string }) {
+/* ── Wordmark logo ──────────────────────────────────────────── */
+function Wordmark() {
  return (
-  <svg viewBox="0 0 16 16" fill="none" className={className}>
-   <path
-    d="M14 8H2M6 4 2 8l4 4"
-    stroke="currentColor"
-    strokeWidth="1.4"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-   />
-  </svg>
+  <Link href="/" className="inline-flex items-baseline gap-0">
+   <span className="font-sans font-bold text-[17px] text-[color:var(--ink)] tracking-[-0.02em]">
+    Leadre
+   </span>
+   <span className="font-sans font-bold text-[17px] text-[color:var(--ember)]">.</span>
+   <span className="font-sans font-bold text-[17px] text-[color:var(--ink)] tracking-[-0.02em]">
+    AI
+   </span>
+  </Link>
  );
 }
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
 function GoogleButton({ isSignup }: { isSignup: boolean }) {
  const href = `${API_BASE}/api/v1/auth/google?returnTo=${encodeURIComponent('/dashboard')}`;
  return (
-  <a
-   href={href}
-   className="w-full inline-flex items-center justify-center gap-3 h-[46px] border border-[#e5e7eb] bg-[color:var(--paper)] hover:bg-[#f9fafb] hover:border-[#d1d5db] transition-colors rounded-lg text-[14px] font-medium text-[#374151]"
-  >
+  <a href={href} className={OUTLINE_BTN}>
    <svg viewBox="0 0 24 24" className="w-4 h-4" aria-hidden>
     <path
      d="M21.6 12.227c0-.709-.064-1.39-.182-2.045H12v3.868h5.382a4.6 4.6 0 0 1-1.995 3.018v2.51h3.23c1.89-1.74 2.983-4.305 2.983-7.35Z"
@@ -113,19 +106,13 @@ function GoogleButton({ isSignup }: { isSignup: boolean }) {
    </svg>
    <span>
     {isSignup ? 'Sign up with ' : 'Continue with '}
-    <span className="font-semibold">Google</span>
+    <span className="font-semibold text-[color:var(--ink)]">Google</span>
    </span>
   </a>
  );
 }
 
-/* ── Magic-link action ──────────────────────────────────────
- * Starts inline as a plain underline link ("Email me a magic link").
- * Clicking it reveals an inline email input + send button. On
- * successful request we swap to a "Check your inbox" confirmation.
- * In dev mode the API returns the link itself — we render it as a
- * one-click button so local testing doesn't need Resend configured.
- * ────────────────────────────────────────────────────────────── */
+/* ── Magic-link action ────────────────────────────────────── */
 function MagicLinkAction({ prefillEmail }: { prefillEmail: string }) {
  const [stage, setStage] = useState<'link' | 'form' | 'sent' | 'error'>('link');
  const [email, setEmail] = useState('');
@@ -172,17 +159,17 @@ function MagicLinkAction({ prefillEmail }: { prefillEmail: string }) {
 
  if (stage === 'sent') {
   return (
-   <div className="flex-1 min-w-[240px]">
-    <span className="text-[12px] font-semibold text-[#f59e0b]">
+   <div className="w-full">
+    <span className="font-sans font-semibold text-[12.5px] text-[color:var(--ember)]">
      Check your inbox
     </span>
-    <p className="mt-1 text-[12.5px] text-[#374151] leading-[1.5]">
-     A one-time sign-in link is on its way to <b>{email}</b>. Valid for 15 minutes.
+    <p className="mt-1 font-sans text-[13px] text-[color:var(--ink-2)] leading-[1.5]">
+     A one-time sign-in link is on its way to <b className="text-[color:var(--ink)]">{email}</b>. Valid for 15 minutes.
     </p>
     {devUrl && (
      <a
       href={devUrl}
-      className="mt-2 inline-flex items-center gap-1 font-mono text-[10.5px] text-[#92400e] hover:text-[#111827]"
+      className="mt-2 inline-flex items-center gap-1 font-mono text-[10.5px] tracking-[0.08em] text-[color:var(--ember)] hover:text-[color:var(--ember-2)]"
      >
       Dev — open link now →
      </a>
@@ -193,7 +180,7 @@ function MagicLinkAction({ prefillEmail }: { prefillEmail: string }) {
       setStage('link');
       setDevUrl(null);
      }}
-     className="mt-2 block text-[12px] text-[#6b7280] hover:text-[#111827] underline underline-offset-[4px]"
+     className="mt-2 block font-sans text-[12.5px] text-[color:var(--ink-3)] hover:text-[color:var(--ink)] underline underline-offset-[4px]"
     >
      Use a different email
     </button>
@@ -203,17 +190,17 @@ function MagicLinkAction({ prefillEmail }: { prefillEmail: string }) {
 
  if (stage === 'error') {
   return (
-   <div className="flex-1 min-w-[240px]">
-    <span className="text-[12px] font-semibold text-[#dc2626]">
+   <div className="w-full">
+    <span className="font-sans font-semibold text-[12.5px] text-[color:var(--warn)]">
      Couldn&rsquo;t send
     </span>
-    <p className="mt-1 text-[12.5px] text-[#374151] leading-[1.5]">
+    <p className="mt-1 font-sans text-[13px] text-[color:var(--ink-2)] leading-[1.5]">
      {message ?? 'Please try again.'}
     </p>
     <button
      type="button"
      onClick={() => setStage('form')}
-     className="mt-2 text-[12px] text-[#111827] underline underline-offset-[4px]"
+     className="mt-2 font-sans text-[12.5px] text-[color:var(--ink)] underline underline-offset-[4px]"
     >
      Try again
     </button>
@@ -223,7 +210,7 @@ function MagicLinkAction({ prefillEmail }: { prefillEmail: string }) {
 
  if (stage === 'form') {
   return (
-   <div className="flex items-center gap-2 flex-1 min-w-[280px]">
+   <div className="flex items-center gap-2 w-full">
     <input
      type="email"
      value={email}
@@ -236,20 +223,20 @@ function MagicLinkAction({ prefillEmail }: { prefillEmail: string }) {
      }}
      placeholder="you@work.com"
      autoFocus
-     className="flex-1 bg-[color:var(--paper)] border border-[#e5e7eb] rounded-lg px-3 py-1.5 text-[13px] text-[#111827] placeholder:text-[#9ca3af] outline-none focus:border-[#f59e0b] focus:ring-2 focus:ring-[#f59e0b]/10 transition-all"
+     className={INPUT_CLASS + ' flex-1 py-1.5'}
     />
     <button
      type="button"
      onClick={() => void send()}
      disabled={sending || !email.trim()}
-     className="text-[12px] font-semibold text-[#f59e0b] hover:text-[#d97706] disabled:opacity-60 shrink-0"
+     className="font-sans text-[12.5px] font-semibold text-[color:var(--ember)] hover:text-[color:var(--ember-2)] disabled:opacity-60 shrink-0"
     >
      {sending ? 'Sending…' : 'Send link'}
     </button>
     <button
      type="button"
      onClick={() => setStage('link')}
-     className="text-[12px] text-[#6b7280] hover:text-[#111827] shrink-0"
+     className="font-sans text-[12.5px] text-[color:var(--ink-3)] hover:text-[color:var(--ink)] shrink-0"
      aria-label="Cancel"
     >
      ✕
@@ -262,20 +249,14 @@ function MagicLinkAction({ prefillEmail }: { prefillEmail: string }) {
   <button
    type="button"
    onClick={() => setStage('form')}
-   className="text-[13px] text-[#6b7280] hover:text-[#374151] underline underline-offset-[4px] decoration-[#e5e7eb] hover:decoration-[#9ca3af]"
+   className="font-sans text-[12.5px] text-[color:var(--ink-3)] hover:text-[color:var(--ink)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]"
   >
    Email me a magic link
   </button>
  );
 }
 
-/* ── SSO discovery action ───────────────────────────────────
- * Mirrors MagicLinkAction's state machine. Inline link expands
- * into an email field, posts to /auth/saml/discover, then redirects
- * the browser to the workspace's IdP entrypoint. A 404 from the API
- * means "no SSO configured for this domain" — we surface that as a
- * friendly nudge back to password / Google sign-in.
- * ────────────────────────────────────────────────────────────── */
+/* ── SSO discovery action ─────────────────────────────────── */
 function SsoAction({ prefillEmail }: { prefillEmail: string }) {
  const [stage, setStage] = useState<'link' | 'form' | 'redirecting' | 'error'>('link');
  const [email, setEmail] = useState('');
@@ -322,20 +303,22 @@ function SsoAction({ prefillEmail }: { prefillEmail: string }) {
 
  if (stage === 'redirecting') {
   return (
-   <span className="text-[12px] text-[#6b7280]">Redirecting to your IdP&hellip;</span>
+   <span className="font-sans text-[12.5px] text-[color:var(--ink-3)]">
+    Redirecting to your IdP&hellip;
+   </span>
   );
  }
 
  if (stage === 'error') {
   return (
-   <div className="flex-1 min-w-[240px] text-right">
-    <p className="text-[12.5px] text-[#dc2626] leading-[1.5]">
+   <div className="w-full text-right">
+    <p className="font-sans text-[12.5px] text-[color:var(--warn)] leading-[1.5]">
      {message ?? 'Could not start SSO.'}
     </p>
     <button
      type="button"
      onClick={() => setStage('form')}
-     className="mt-1 text-[12px] text-[#111827] underline underline-offset-[4px]"
+     className="mt-1 font-sans text-[12.5px] text-[color:var(--ink)] underline underline-offset-[4px]"
     >
      Try a different email
     </button>
@@ -345,7 +328,7 @@ function SsoAction({ prefillEmail }: { prefillEmail: string }) {
 
  if (stage === 'form') {
   return (
-   <div className="flex items-center gap-2 flex-1 min-w-[280px] justify-end">
+   <div className="flex items-center gap-2 w-full justify-end">
     <input
      type="email"
      value={email}
@@ -358,20 +341,20 @@ function SsoAction({ prefillEmail }: { prefillEmail: string }) {
      }}
      placeholder="you@company.com"
      autoFocus
-     className="flex-1 bg-[color:var(--paper)] border border-[#e5e7eb] rounded-lg px-3 py-1.5 text-[13px] text-[#111827] placeholder:text-[#9ca3af] outline-none focus:border-[#f59e0b] focus:ring-2 focus:ring-[#f59e0b]/10 transition-all"
+     className={INPUT_CLASS + ' flex-1 py-1.5'}
     />
     <button
      type="button"
      onClick={() => void discover()}
      disabled={working || !email.trim()}
-     className="text-[12px] font-semibold text-[#f59e0b] hover:text-[#d97706] disabled:opacity-60 shrink-0"
+     className="font-sans text-[12.5px] font-semibold text-[color:var(--ember)] hover:text-[color:var(--ember-2)] disabled:opacity-60 shrink-0"
     >
      {working ? 'Checking…' : 'Continue'}
     </button>
     <button
      type="button"
      onClick={() => setStage('link')}
-     className="text-[12px] text-[#6b7280] hover:text-[#111827] shrink-0"
+     className="font-sans text-[12.5px] text-[color:var(--ink-3)] hover:text-[color:var(--ink)] shrink-0"
      aria-label="Cancel"
     >
      ✕
@@ -384,7 +367,7 @@ function SsoAction({ prefillEmail }: { prefillEmail: string }) {
   <button
    type="button"
    onClick={() => setStage('form')}
-   className="text-[12px] text-[#9ca3af] hover:text-[#6b7280] transition-colors"
+   className="font-sans text-[12.5px] text-[color:var(--ink-4)] hover:text-[color:var(--ink-2)] transition-colors"
   >
    SSO / SAML →
   </button>
@@ -405,7 +388,6 @@ function strengthOf(pw: string): number {
 function Strength({ pw }: { pw: string }) {
  const s = strengthOf(pw);
  const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
- const barColors = ['', 'bg-red-400', 'bg-amber-400', 'bg-amber-400', 'bg-green-500'];
  return (
   <div className="flex items-center gap-3 mt-2">
    <div className="flex-1 grid grid-cols-4 gap-1">
@@ -413,12 +395,16 @@ function Strength({ pw }: { pw: string }) {
      <span
       key={i}
       className={`h-[3px] rounded-full transition-colors ${
-       i < s ? (barColors[s] ?? 'bg-[#f59e0b]') : 'bg-[#e5e7eb]'
+       i < s
+        ? s >= 4
+         ? 'bg-[color:var(--success)]'
+         : 'bg-[color:var(--ember)]'
+        : 'bg-[color:var(--rule)]'
       }`}
      />
     ))}
    </div>
-   <span className="text-[11px] text-[#6b7280] min-w-[42px] text-right">
+   <span className="font-mono text-[10px] tracking-[0.08em] uppercase text-[color:var(--ink-3)] min-w-[42px] text-right">
     {labels[s] || '—'}
    </span>
   </div>
@@ -452,9 +438,7 @@ function Field({
  return (
   <div>
    <label htmlFor={id} className="flex items-baseline justify-between mb-1.5">
-    <span className="text-[13px] font-medium text-[#374151]">
-     {label}
-    </span>
+    <span className={LABEL_CLASS}>{label}</span>
     {hint}
    </label>
    <div className="relative">
@@ -465,19 +449,15 @@ function Field({
      onChange={onChange}
      placeholder={placeholder}
      autoComplete={autoComplete}
-     className={`w-full bg-[color:var(--paper)] border rounded-lg px-4 py-2.5 text-[14px] text-[#111827] placeholder:text-[#9ca3af] outline-none transition-all pr-10 ${
-      error
-       ? 'border-[#dc2626] ring-2 ring-[#dc2626]/10'
-       : 'border-[#e5e7eb] focus:border-[#f59e0b] focus:ring-2 focus:ring-[#f59e0b]/10'
-     }`}
+     className={(error ? INPUT_CLASS_ERROR : INPUT_CLASS) + ' pr-10'}
     />
     {trailing && (
      <div className="absolute right-0 top-1/2 -translate-y-1/2 pr-2">{trailing}</div>
     )}
    </div>
    {error && (
-    <div className="text-[12px] text-[#dc2626] mt-1.5 flex items-center gap-1">
-     <span className="w-1 h-1 rounded-full bg-[#dc2626] shrink-0" />
+    <div className="font-sans text-[12.5px] text-[color:var(--warn)] mt-1.5 flex items-center gap-1.5">
+     <span className="w-1 h-1 rounded-full bg-[color:var(--warn)] shrink-0" />
      {error}
     </div>
    )}
@@ -485,111 +465,27 @@ function Field({
  );
 }
 
-/* ── Left: dark brand panel ─────────────────────────────────── */
-const FEATURES = [
- 'Verified leads with emails, phones & LinkedIn',
- 'AI-powered outreach sequences that personalize at scale',
- 'Built specifically for Nigerian & African markets',
-];
-
-function DeskPanel({ mode }: { mode: 'signin' | 'signup' }) {
- const isSignup = mode === 'signup';
- return (
-  <aside className="hidden lg:flex flex-col justify-between bg-[#111827] px-12 xl:px-16 py-12 xl:py-16 overflow-hidden relative">
-   {/* Subtle amber glow top-right */}
-   <div
-    aria-hidden
-    className="pointer-events-none absolute -top-32 -right-32 w-[480px] h-[480px] rounded-full"
-    style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%)' }}
-   />
-
-   {/* Logo */}
-   <Link href="/" className="relative z-10 flex items-baseline gap-0">
-    <span className="font-extrabold text-[20px] tracking-tight text-white">Leadre</span>
-    <span className="font-extrabold text-[20px] text-[#f59e0b]">.</span>
-    <span className="font-extrabold text-[20px] tracking-tight text-white">AI</span>
-   </Link>
-
-   {/* Hero block */}
-   <div className="relative z-10 flex flex-col gap-8">
-    <div>
-     <p className="text-[12px] font-semibold tracking-[0.12em] uppercase text-[#f59e0b] mb-3">
-      B2B Lead Intelligence
-     </p>
-     <h1 className="font-extrabold text-[48px] xl:text-[56px] tracking-[-0.04em] leading-[1.05] text-white">
-      {isSignup ? (
-       <>Find leads.<br /><span className="text-[#f59e0b]">Close deals.</span></>
-      ) : (
-       <>Welcome<br /><span className="text-[#f59e0b]">back.</span></>
-      )}
-     </h1>
-     <p className="mt-4 text-[15px] text-[#9ca3af] leading-relaxed max-w-[380px]">
-      {isSignup
-       ? 'Describe who you want to reach. Get a verified lead list in minutes.'
-       : 'Your searches, lead lists, and outreach campaigns are waiting for you.'}
-     </p>
-    </div>
-
-    {/* Feature bullets */}
-    <ul className="flex flex-col gap-3">
-     {FEATURES.map((f) => (
-      <li key={f} className="flex items-start gap-3">
-       <CheckIcon />
-       <span className="text-[14px] text-[#d1d5db] leading-snug">{f}</span>
-      </li>
-     ))}
-    </ul>
-
-    {/* Testimonial */}
-    <div className="border-l-2 border-[#f59e0b] pl-5 mt-2">
-     <p className="text-[14px] italic text-[#9ca3af] leading-relaxed">
-      &ldquo;I used to spend a full day assembling a list of fifty companies in Lagos. LeadreAI returned them in eight minutes.&rdquo;
-     </p>
-     <div className="mt-4 flex items-center gap-3">
-      <div className="w-8 h-8 rounded-full bg-[#f59e0b] flex items-center justify-center text-[#111827] text-[12px] font-bold shrink-0">
-       A
-      </div>
-      <div>
-       <div className="text-[13px] font-semibold text-white">Adaeze Okonkwo</div>
-       <div className="text-[12px] text-[#6b7280]">Head of Growth · Arlo Logistics, Lagos</div>
-      </div>
-     </div>
-    </div>
-   </div>
-
-   {/* Footer */}
-   <div className="relative z-10 flex items-center gap-4 text-[11px] text-[#4b5563]">
-    <span>© 2026 LeadreAI</span>
-    <span aria-hidden>·</span>
-    <a href="#" className="hover:text-[#9ca3af] transition-colors">Privacy</a>
-    <span aria-hidden>·</span>
-    <a href="#" className="hover:text-[#9ca3af] transition-colors">Terms</a>
-   </div>
-  </aside>
- );
-}
-
 /* ── Tab toggle ─────────────────────────────────────────────── */
 function TabToggle({ mode }: { mode: 'signin' | 'signup' }) {
  const isSignup = mode === 'signup';
  return (
-  <div className="inline-flex items-center rounded-lg border border-[#e5e7eb] bg-[#f9fafb] p-1 gap-1">
+  <div className="inline-flex items-center rounded-lg border border-[color:var(--rule)] bg-[color:var(--paper-2)] p-1 gap-1">
    <Link
     href="/login"
-    className={`px-4 py-1.5 rounded-md text-[13px] font-medium transition-all ${
+    className={`px-4 py-1.5 rounded-md font-sans text-[12.5px] font-medium transition-colors ${
      !isSignup
-      ? 'bg-[color:var(--paper)] text-[#111827] shadow-sm border border-[#e5e7eb]'
-      : 'text-[#6b7280] hover:text-[#374151]'
+      ? 'bg-white text-[color:var(--ink)] border border-[color:var(--rule)]'
+      : 'text-[color:var(--ink-3)] hover:text-[color:var(--ink)]'
     }`}
    >
     Sign in
    </Link>
    <Link
     href="/register"
-    className={`px-4 py-1.5 rounded-md text-[13px] font-medium transition-all ${
+    className={`px-4 py-1.5 rounded-md font-sans text-[12.5px] font-medium transition-colors ${
      isSignup
-      ? 'bg-[color:var(--paper)] text-[#111827] shadow-sm border border-[#e5e7eb]'
-      : 'text-[#6b7280] hover:text-[#374151]'
+      ? 'bg-white text-[color:var(--ink)] border border-[color:var(--rule)]'
+      : 'text-[color:var(--ink-3)] hover:text-[color:var(--ink)]'
     }`}
    >
     Sign up
@@ -598,7 +494,7 @@ function TabToggle({ mode }: { mode: 'signin' | 'signup' }) {
  );
 }
 
-/* ── Form card ──────────────────────────────────────────────── */
+/* ── Form props ─────────────────────────────────────────────── */
 interface AuthShellProps {
  mode: 'signin' | 'signup';
  onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void> | void;
@@ -635,263 +531,258 @@ export function AuthShell({
  const [accept, setAccept] = useState(false);
 
  return (
-  <main className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-[3fr_2fr] selection:bg-[#f59e0b] selection:text-white">
-   {/* Left: dark brand panel — hidden on mobile */}
-   <DeskPanel mode={mode} />
+  <main className="min-h-screen bg-[color:var(--paper)] flex items-center justify-center px-4 py-12">
+   <div className="w-full max-w-md bg-white border border-[color:var(--rule)] rounded-2xl p-8">
+    {/* Logo */}
+    <div className="flex justify-center mb-7">
+     <Wordmark />
+    </div>
 
-   {/* Right: white form panel */}
-   <section className="relative min-h-screen flex items-center justify-center bg-[color:var(--paper)] px-6 py-12 md:px-10 md:py-14">
-    {/* Back-to-site link */}
-    <Link
-     href="/"
-     className="absolute top-6 right-6 md:top-8 md:right-8 inline-flex items-center gap-1.5 text-[12.5px] text-[#6b7280] hover:text-[#374151] transition-colors"
-    >
-     <ArrowWest className="w-3 h-3" />
-     Back to site
-    </Link>
+    {/* Tab toggle */}
+    <div className="flex justify-center mb-6">
+     <TabToggle mode={mode} />
+    </div>
 
-    <div className="w-full max-w-[420px]">
-     {/* Mobile logo */}
-     <div className="lg:hidden flex items-baseline justify-start mb-8">
-      <Link href="/" className="flex items-baseline gap-0">
-       <span className="font-extrabold text-[20px] tracking-tight text-[#111827]">Leadre</span>
-       <span className="font-extrabold text-[20px] text-[#f59e0b]">.</span>
-       <span className="font-extrabold text-[20px] tracking-tight text-[#111827]">AI</span>
-      </Link>
+    {/* Heading */}
+    <div className="mb-6 text-center">
+     <h1 className="font-display font-normal text-[28px] leading-[1.15] tracking-[-0.01em] text-[color:var(--ink)]">
+      {isSignup ? 'Create your account' : 'Welcome back'}
+     </h1>
+     <p className="mt-2 font-sans text-[13px] text-[color:var(--ink-3)]">
+      {isSignup ? (
+       <>
+        No credit card. Three free searches to start.{' '}
+        <Link
+         href="/login"
+         className="font-sans font-medium text-[color:var(--ember)] hover:text-[color:var(--ember-2)]"
+        >
+         Sign in →
+        </Link>
+       </>
+      ) : (
+       <>
+        New here?{' '}
+        <Link
+         href="/register"
+         className="font-sans font-medium text-[color:var(--ember)] hover:text-[color:var(--ember-2)]"
+        >
+         Create an account →
+        </Link>
+       </>
+      )}
+     </p>
+    </div>
+
+    {/* Error banner */}
+    {submitError && (
+     <div
+      role="alert"
+      aria-live="assertive"
+      className="mb-5 flex items-start gap-2 border border-[color:var(--warn)]/40 bg-[color:var(--warn)]/[0.06] rounded-lg px-3.5 py-3 font-sans text-[13px] text-[color:var(--warn)]"
+     >
+      <span className="mt-[6px] w-1.5 h-1.5 rounded-full bg-[color:var(--warn)] shrink-0" />
+      {submitError}
      </div>
+    )}
 
-     {/* Tab toggle */}
-     <div className="mb-7">
-      <TabToggle mode={mode} />
-     </div>
-
-     {/* Heading */}
-     <div className="mb-7">
-      <h2 className="font-bold text-[28px] leading-tight tracking-[-0.02em] text-[#111827]">
-       {isSignup ? 'Create your account' : 'Sign in to Leadre.AI'}
-      </h2>
-      <p className="mt-2 text-[14px] text-[#6b7280]">
-       {isSignup ? (
-        <>
-         No credit card. Three free searches to start.{' '}
-         <Link href="/login" className="text-[#f59e0b] font-medium hover:text-[#d97706]">
-          Sign in →
-         </Link>
-        </>
-       ) : (
-        <>
-         New here?{' '}
-         <Link href="/register" className="text-[#f59e0b] font-medium hover:text-[#d97706]">
-          Create an account →
-         </Link>
-        </>
-       )}
-      </p>
-     </div>
-
-     {/* Error banner */}
-     {submitError && (
-      <div
-       role="alert"
-       aria-live="assertive"
-       className="mb-5 flex items-start gap-2 border border-[#fca5a5] bg-[#fef2f2] rounded-lg px-4 py-3 text-[13px] text-[#dc2626]"
-      >
-       <span className="mt-px w-1.5 h-1.5 rounded-full bg-[#dc2626] shrink-0" />
-       {submitError}
+    {/* Form */}
+    <form onSubmit={onSubmit} className="flex flex-col gap-4">
+     {isSignup && (
+      <div className="grid grid-cols-2 gap-3">
+       <Field
+        id="firstName"
+        label="First name"
+        value={firstName}
+        onChange={(e) => onFirstNameChange?.(e.target.value)}
+        placeholder="Amara"
+        autoComplete="given-name"
+        error={errors.firstName}
+       />
+       <Field
+        id="lastName"
+        label="Last name"
+        value={lastName}
+        onChange={(e) => onLastNameChange?.(e.target.value)}
+        placeholder="Okafor"
+        autoComplete="family-name"
+        error={errors.lastName}
+       />
       </div>
      )}
 
-     {/* Form */}
-     <form onSubmit={onSubmit} className="flex flex-col gap-5">
-      {isSignup && (
-       <div className="grid grid-cols-2 gap-4">
-        <Field
-         id="firstName"
-         label="First name"
-         value={firstName}
-         onChange={(e) => onFirstNameChange?.(e.target.value)}
-         placeholder="Amara"
-         autoComplete="given-name"
-         error={errors.firstName}
-        />
-        <Field
-         id="lastName"
-         label="Last name"
-         value={lastName}
-         onChange={(e) => onLastNameChange?.(e.target.value)}
-         placeholder="Okafor"
-         autoComplete="family-name"
-         error={errors.lastName}
-        />
-       </div>
-      )}
+     <Field
+      id="email"
+      label="Work email"
+      type="email"
+      value={email}
+      onChange={(e) => onEmailChange(e.target.value)}
+      placeholder="amara@company.com"
+      autoComplete="email"
+      error={errors.email}
+     />
 
+     <div>
       <Field
-       id="email"
-       label="Work email"
-       type="email"
-       value={email}
-       onChange={(e) => onEmailChange(e.target.value)}
-       placeholder="amara@company.com"
-       autoComplete="email"
-       error={errors.email}
-      />
-
-      <div>
-       <Field
-        id="password"
-        label="Password"
-        type={showPw ? 'text' : 'password'}
-        value={password}
-        onChange={(e) => onPasswordChange(e.target.value)}
-        placeholder={isSignup ? 'At least 8 characters' : 'Enter your password'}
-        autoComplete={isSignup ? 'new-password' : 'current-password'}
-        error={errors.password}
-        hint={
-         !isSignup ? (
-          <a
-           href="#"
-           className="text-[12px] text-[#6b7280] hover:text-[#374151] transition-colors"
-          >
-           Forgot password?
-          </a>
-         ) : undefined
-        }
-        trailing={
-         <button
-          type="button"
-          onClick={() => setShowPw((v) => !v)}
-          className="p-1.5 text-[#9ca3af] hover:text-[#6b7280] transition-colors"
-          title={showPw ? 'Hide password' : 'Show password'}
-          aria-label={showPw ? 'Hide password' : 'Show password'}
-         >
-          {showPw ? (
-           <EyeOffIcon className="w-4 h-4" />
-          ) : (
-           <EyeIcon className="w-4 h-4" />
-          )}
-         </button>
-        }
-       />
-       {isSignup && password.length > 0 && <Strength pw={password} />}
-      </div>
-
-      {isSignup && (
-       <label className="flex items-start gap-3 cursor-pointer select-none mt-1">
-        <span className="relative mt-[2px] shrink-0">
-         <input
-          type="checkbox"
-          checked={accept}
-          onChange={(e) => setAccept(e.target.checked)}
-          className="peer sr-only"
-         />
-         <span
-          className={`block w-4 h-4 rounded border-2 transition-all ${
-           accept
-            ? 'bg-[#f59e0b] border-[#f59e0b]'
-            : 'bg-[color:var(--paper)] border-[#d1d5db]'
-          }`}
-         />
-         {accept && (
-          <svg
-           className="absolute top-0 left-0 w-4 h-4 p-[2px]"
-           viewBox="0 0 16 16"
-           fill="none"
-           aria-hidden
-          >
-           <path
-            d="m3 8 3.5 3.5L13 5"
-            stroke="white"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-           />
-          </svg>
-         )}
-        </span>
-        <span className="text-[13px] leading-[1.5] text-[#374151]">
-         I agree to LeadreAI&rsquo;s{' '}
+       id="password"
+       label="Password"
+       type={showPw ? 'text' : 'password'}
+       value={password}
+       onChange={(e) => onPasswordChange(e.target.value)}
+       placeholder={isSignup ? 'At least 8 characters' : 'Enter your password'}
+       autoComplete={isSignup ? 'new-password' : 'current-password'}
+       error={errors.password}
+       hint={
+        !isSignup ? (
          <a
           href="#"
-          className="text-[#111827] underline underline-offset-[3px] decoration-[#d1d5db] hover:decoration-[#111827]"
+          className="font-sans font-medium text-[12px] text-[color:var(--ember)] hover:text-[color:var(--ember-2)] transition-colors"
          >
-          Terms
-         </a>{' '}
-         and{' '}
-         <a
-          href="#"
-          className="text-[#111827] underline underline-offset-[3px] decoration-[#d1d5db] hover:decoration-[#111827]"
-         >
-          Privacy Policy
+          Forgot password?
          </a>
-         .
-        </span>
-       </label>
-      )}
+        ) : undefined
+       }
+       trailing={
+        <button
+         type="button"
+         onClick={() => setShowPw((v) => !v)}
+         className="p-1.5 text-[color:var(--ink-4)] hover:text-[color:var(--ink-2)] transition-colors"
+         title={showPw ? 'Hide password' : 'Show password'}
+         aria-label={showPw ? 'Hide password' : 'Show password'}
+        >
+         {showPw ? (
+          <EyeOffIcon className="w-4 h-4" />
+         ) : (
+          <EyeIcon className="w-4 h-4" />
+         )}
+        </button>
+       }
+      />
+      {isSignup && password.length > 0 && <Strength pw={password} />}
+     </div>
 
-      <div className="pt-1">
-       <button
-        type="submit"
-        disabled={isSubmitting || (isSignup && !accept)}
-        className="w-full bg-[#f59e0b] text-white py-3 rounded-lg text-[14px] font-semibold hover:bg-[#d97706] active:bg-[#b45309] transition-colors disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
-       >
-        {isSubmitting ? (
-         <>
-          <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-           <circle
-            cx="12"
-            cy="12"
-            r="9"
-            stroke="currentColor"
-            strokeOpacity="0.3"
-            strokeWidth="2"
-           />
-           <path
-            d="M21 12a9 9 0 0 1-9 9"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-           />
-          </svg>
-          Working&hellip;
-         </>
-        ) : isSignup ? (
-         'Create account'
-        ) : (
-         'Sign in'
+     {isSignup && (
+      <label className="flex items-start gap-3 cursor-pointer select-none mt-1">
+       <span className="relative mt-[2px] shrink-0">
+        <input
+         type="checkbox"
+         checked={accept}
+         onChange={(e) => setAccept(e.target.checked)}
+         className="peer sr-only"
+        />
+        <span
+         className={`block w-4 h-4 rounded border transition-colors ${
+          accept
+           ? 'bg-[color:var(--ink)] border-[color:var(--ink)]'
+           : 'bg-white border-[color:var(--rule)]'
+         }`}
+        />
+        {accept && (
+         <svg
+          className="absolute top-0 left-0 w-4 h-4 p-[2px]"
+          viewBox="0 0 16 16"
+          fill="none"
+          aria-hidden
+         >
+          <path
+           d="m3 8 3.5 3.5L13 5"
+           stroke="var(--paper)"
+           strokeWidth="2"
+           strokeLinecap="round"
+           strokeLinejoin="round"
+          />
+         </svg>
         )}
-       </button>
-      </div>
+       </span>
+       <span className="font-sans text-[12.5px] leading-[1.5] text-[color:var(--ink-2)]">
+        I agree to LeadreAI&rsquo;s{' '}
+        <a
+         href="#"
+         className="text-[color:var(--ink)] underline underline-offset-[3px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]"
+        >
+         Terms
+        </a>{' '}
+        and{' '}
+        <a
+         href="#"
+         className="text-[color:var(--ink)] underline underline-offset-[3px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)]"
+        >
+         Privacy Policy
+        </a>
+        .
+       </span>
+      </label>
+     )}
 
-      {/* Divider */}
-      <div className="relative flex items-center">
-       <span className="flex-1 h-px bg-[#e5e7eb]" />
-       <span className="px-3 text-[12px] text-[#9ca3af]">or</span>
-       <span className="flex-1 h-px bg-[#e5e7eb]" />
-      </div>
+     <div className="pt-1">
+      <button
+       type="submit"
+       disabled={isSubmitting || (isSignup && !accept)}
+       className={PRIMARY_BTN}
+      >
+       {isSubmitting ? (
+        <>
+         <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+          <circle
+           cx="12"
+           cy="12"
+           r="9"
+           stroke="currentColor"
+           strokeOpacity="0.3"
+           strokeWidth="2"
+          />
+          <path
+           d="M21 12a9 9 0 0 1-9 9"
+           stroke="currentColor"
+           strokeWidth="2"
+           strokeLinecap="round"
+          />
+         </svg>
+         Working&hellip;
+        </>
+       ) : isSignup ? (
+        'Create account'
+       ) : (
+        'Sign in'
+       )}
+      </button>
+     </div>
 
-      {/* Social */}
-      <GoogleButton isSignup={isSignup} />
+     {/* Divider */}
+     <div className="relative flex items-center my-1">
+      <span className="flex-1 h-px bg-[color:var(--rule)]" />
+      <span className="px-3 font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-4)]">
+       or
+      </span>
+      <span className="flex-1 h-px bg-[color:var(--rule)]" />
+     </div>
 
-      {/* Secondary paths */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-       <MagicLinkAction prefillEmail={email} />
-       <SsoAction prefillEmail={email} />
-      </div>
-     </form>
-    </div>
+     {/* Social */}
+     <GoogleButton isSignup={isSignup} />
 
-    {/* Footer */}
-    <div className="absolute bottom-5 left-0 right-0 flex items-center justify-center gap-3 text-[11px] text-[#9ca3af]">
-     <span>© 2026 LeadreAI</span>
-     <span aria-hidden>·</span>
-     <a href="#" className="hover:text-[#6b7280] transition-colors">Privacy</a>
-     <span aria-hidden>·</span>
-     <a href="#" className="hover:text-[#6b7280] transition-colors">Terms</a>
-     <span aria-hidden>·</span>
-     <a href="#" className="hover:text-[#6b7280] transition-colors">Status</a>
-    </div>
-   </section>
+     {/* Secondary paths */}
+     <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+      <MagicLinkAction prefillEmail={email} />
+      <SsoAction prefillEmail={email} />
+     </div>
+    </form>
+   </div>
+
+   {/* Footer */}
+   <div className="absolute bottom-5 left-0 right-0 flex items-center justify-center gap-3 font-mono text-[10px] tracking-[0.12em] uppercase text-[color:var(--ink-4)]">
+    <span>© 2026 LeadreAI</span>
+    <span aria-hidden>·</span>
+    <a href="#" className="hover:text-[color:var(--ink-2)] transition-colors">
+     Privacy
+    </a>
+    <span aria-hidden>·</span>
+    <a href="#" className="hover:text-[color:var(--ink-2)] transition-colors">
+     Terms
+    </a>
+    <span aria-hidden>·</span>
+    <a href="#" className="hover:text-[color:var(--ink-2)] transition-colors">
+     Status
+    </a>
+   </div>
   </main>
  );
 }

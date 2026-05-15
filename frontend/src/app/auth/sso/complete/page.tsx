@@ -63,22 +63,28 @@ export default function SsoCompletePage() {
   }, []);
 
   return (
-    <main className="min-h-screen w-full bg-[color:var(--paper)] text-[color:var(--ink)] flex items-center justify-center px-6">
-      <div className="max-w-[420px] text-center">
-        <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[#6b7280]">
+    <main className="min-h-screen w-full bg-[color:var(--paper)] flex items-center justify-center px-6">
+      <div className="w-full max-w-md bg-white border border-[color:var(--rule)] rounded-2xl p-8 text-center">
+        <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-4)]">
           Authenticating
         </span>
-        <h1 className="mt-3 font-extrabold text-[32px] tracking-[-0.03em] leading-tight text-[#111827]">
-          Signing you <span className="text-[#f59e0b]">in.</span>
+        <h1 className="mt-3 font-display font-normal text-[30px] tracking-[-0.01em] leading-[1.15] text-[color:var(--ink)]">
+          Signing you <span className="italic text-[color:var(--ember)]">in.</span>
         </h1>
-        <p className="mt-3 text-[14px] text-[#6b7280] leading-relaxed">
+        <p className="mt-3 font-sans text-[13.5px] text-[color:var(--ink-3)] leading-[1.6]">
           {error ?? "Completing the SSO handshake. You'll be redirected in a moment."}
         </p>
 
         <div className="mt-6 flex justify-center gap-1.5" aria-hidden="true">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b] opacity-80 animate-pulse" />
-          <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b] opacity-60 animate-pulse" style={{ animationDelay: '150ms' }} />
-          <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b] opacity-40 animate-pulse" style={{ animationDelay: '300ms' }} />
+          <span className="w-1.5 h-1.5 rounded-full bg-[color:var(--ember)] opacity-80 animate-pulse" />
+          <span
+            className="w-1.5 h-1.5 rounded-full bg-[color:var(--ember)] opacity-60 animate-pulse"
+            style={{ animationDelay: '150ms' }}
+          />
+          <span
+            className="w-1.5 h-1.5 rounded-full bg-[color:var(--ember)] opacity-40 animate-pulse"
+            style={{ animationDelay: '300ms' }}
+          />
         </div>
       </div>
     </main>

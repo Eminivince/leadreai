@@ -154,30 +154,30 @@ export function OnboardingWizard(): React.JSX.Element | null {
    <button
     aria-label="Close for this session"
     onClick={handleSnooze}
-    className="absolute inset-0 bg-[color:var(--ink)]/30 backdrop-blur-[2px]"
+    className="absolute inset-0 bg-[color:var(--ink)]/40 backdrop-blur-sm"
    />
    <div
     role="dialog"
     aria-modal="true"
     aria-labelledby="onboarding-title"
-    className="relative w-full max-w-[540px] bg-[color:var(--paper)] border border-[color:var(--rule)] shadow-2xl"
+    className="relative w-full max-w-[540px] bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-2xl shadow-xl"
    >
     {/* Header */}
     <div className="flex items-start justify-between gap-3 px-6 py-5 border-b border-[color:var(--rule)]">
      <div>
-      <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+      <div className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-4)]">
        Get started · Step {visibleStep.n} of {STEPS.length}
       </div>
       <h2
        id="onboarding-title"
-       className="mt-1 text-[22px] leading-[1.15] text-[color:var(--ink)]"
+       className="mt-1.5 font-display font-normal text-[26px] leading-[1.15] tracking-[-0.01em] text-[color:var(--ink)]"
       >
        {visibleStep.title}
       </h2>
      </div>
      <button
       onClick={handleSnooze}
-      className="p-2 text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition shrink-0 text-[18px] leading-none"
+      className="p-2 text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition shrink-0 text-[18px] leading-none font-sans"
       aria-label="Close for now"
       title="Close — we'll show this again next session"
      >
@@ -187,7 +187,7 @@ export function OnboardingWizard(): React.JSX.Element | null {
 
     {/* Body */}
     <div className="px-6 py-6">
-     <p className="text-[13.5px] leading-[1.6] text-[color:var(--ink-2)]">
+     <p className="font-sans text-[14px] leading-[1.65] text-[color:var(--ink-3)]">
       {visibleStep.body}
      </p>
 
@@ -195,7 +195,7 @@ export function OnboardingWizard(): React.JSX.Element | null {
       <Link
        href={visibleStep.ctaHref}
        onClick={handleSnooze}
-       className="inline-flex items-center gap-2 bg-[color:var(--forest)] text-white px-4 py-2 text-[13px] font-medium hover:opacity-90 transition"
+       className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] font-sans font-semibold text-[13px] px-5 py-2.5 rounded-lg hover:opacity-85 transition-opacity"
       >
        {visibleStep.ctaLabel}
        <span aria-hidden>→</span>
@@ -204,7 +204,7 @@ export function OnboardingWizard(): React.JSX.Element | null {
        type="button"
        disabled={completeMutation.isPending || completed.has(visibleStep.key)}
        onClick={() => completeMutation.mutate(visibleStep.key)}
-       className="text-[12.5px] text-[color:var(--ink-2)] hover:text-[color:var(--ink)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ink)] disabled:opacity-60 disabled:no-underline"
+       className="border border-[color:var(--rule)] bg-transparent text-[color:var(--ink-2)] font-sans font-medium text-[13px] px-5 py-2.5 rounded-lg hover:border-[color:var(--ink)] hover:text-[color:var(--ink)] transition-colors disabled:opacity-60 disabled:hover:border-[color:var(--rule)] disabled:hover:text-[color:var(--ink-2)]"
       >
        {completed.has(visibleStep.key)
         ? 'Done'
@@ -230,9 +230,9 @@ export function OnboardingWizard(): React.JSX.Element | null {
          aria-label={`Go to step ${s.n}: ${s.title}`}
          className={`h-2 rounded-full transition-all ${
           isActive
-           ? 'w-8 bg-[color:var(--forest)]'
+           ? 'w-8 bg-[color:var(--ember)]'
            : isComplete
-            ? 'w-2 bg-[color:var(--forest)]/60'
+            ? 'w-2 bg-[color:var(--ember)]/60'
             : 'w-2 bg-[color:var(--rule)] hover:bg-[color:var(--ink-3)]'
          }`}
         />
@@ -243,14 +243,14 @@ export function OnboardingWizard(): React.JSX.Element | null {
       type="button"
       onClick={handleSkipForever}
       disabled={dismissMutation.isPending}
-      className="text-[12px] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] disabled:opacity-60"
+      className="font-sans text-[12px] text-[color:var(--ink-3)] hover:text-[color:var(--ink-2)] disabled:opacity-60"
      >
       {dismissMutation.isPending ? 'Skipping…' : "Don't show again"}
      </button>
     </div>
 
     {allDone && (
-     <div className="px-6 pb-5 -mt-2 text-[12px] text-[color:var(--ink-3)] italic">
+     <div className="px-6 pb-5 -mt-2 font-sans text-[12px] text-[color:var(--ink-3)] italic">
       All set — you can close this.
      </div>
     )}
