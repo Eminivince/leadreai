@@ -148,18 +148,18 @@ export default function CampaignsListPage() {
   const pagedCampaigns = campaigns.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10 animate-fade-up">
+    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 md:py-10 animate-fade-up">
       {/* Header — inline pattern matching the rest of the redesign */}
-      <section className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+      <section className="mb-5 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 flex-wrap">
         <div className="flex items-baseline gap-3">
-          <h1 className="font-display text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
+          <h1 className="font-display text-[24px] sm:text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
             Campaigns
           </h1>
           <span className="font-mono text-[12px] tabular-nums text-[color:var(--ink-3)]">
             {isLoading ? '...' : counts.all}
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <PageHelp
             title="Campaigns"
             body="Email outreach sequences. Each campaign points at a lead file (the audience), runs a multi-step sequence on a schedule, and pauses on reply. Open one to see live KPIs."
@@ -180,8 +180,8 @@ export default function CampaignsListPage() {
       </section>
 
       {/* Filter bar — segmented, mono tabular counts */}
-      <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
-        <div className="inline-flex items-center rounded-md border border-[color:var(--rule)] bg-[color:var(--paper)] p-0.5">
+      <div className="flex items-center justify-between gap-3 flex-wrap mb-4 -mx-1 px-1 overflow-x-auto">
+        <div className="inline-flex items-center rounded-md border border-[color:var(--rule)] bg-[color:var(--paper)] p-0.5 shrink-0">
           {FILTERS.map((f) => {
             const on = filter === f.k;
             const n = counts[f.k as keyof typeof counts];

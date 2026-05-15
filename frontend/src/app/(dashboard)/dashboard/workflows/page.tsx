@@ -70,13 +70,13 @@ export default function WorkflowsIndexPage() {
   const workflows = data?.data?.data ?? [];
 
   return (
-    <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10">
+    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 md:py-10">
       {/* Header — Workflows is a sub-view of Tables now. The title
           reads "Tables" with the Workflows tab active so users feel
           they're inside one section, not on a separate top-level. */}
-      <section className="mb-6 flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-baseline gap-3">
-          <h1 className="font-display text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
+      <section className="mb-5 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 flex-wrap">
+        <div className="flex items-baseline gap-3 flex-wrap">
+          <h1 className="font-display text-[24px] sm:text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
             Tables
           </h1>
           <span className="font-mono text-[12px] tabular-nums text-[color:var(--ink-3)]">
@@ -87,7 +87,7 @@ export default function WorkflowsIndexPage() {
               { key: 'tables',    label: 'Tables',    href: '/dashboard/tables' },
               { key: 'workflows', label: 'Workflows', href: '/dashboard/workflows' },
             ]}
-            className="ml-2"
+            className="sm:ml-2"
           />
         </div>
         <PageHelp

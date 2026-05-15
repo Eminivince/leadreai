@@ -1040,15 +1040,15 @@ export default function LeadsPage() {
   const colCount = 7 + (isJobScoped ? schema.length : 0);
 
   return (
-    <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10">
+    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 md:py-10">
       {/* Header */}
       {isJobScoped && job ? (
         <DossierHeader job={job} />
       ) : (
-        <section className="mb-6">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-baseline gap-3">
-              <h1 className="font-display text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
+        <section className="mb-5 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 flex-wrap">
+            <div className="flex items-baseline gap-3 flex-wrap">
+              <h1 className="font-display text-[24px] sm:text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
                 Leads
               </h1>
               <span className="font-mono text-[12px] tabular-nums text-[color:var(--ink-3)]">
@@ -1063,10 +1063,10 @@ export default function LeadsPage() {
                   { key: 'leads', label: 'All', href: '/dashboard/leads' },
                   { key: 'files', label: 'Files', href: '/dashboard/files' },
                 ]}
-                className="ml-2"
+                className="sm:ml-2"
               />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <PageHelp
                 title="Leads"
                 body="All contacts your searches have found, grouped by the query that produced them. Click any row to open the full lead profile."
@@ -1097,8 +1097,8 @@ export default function LeadsPage() {
       {/* Toolbar — segmented filter on the left, search on the right.
           Matches the dashboard aesthetic: rounded-md (not full pills),
           mono tabular counts, hairline borders. */}
-      <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
-        <div className="inline-flex items-center rounded-md border border-[color:var(--rule)] bg-[color:var(--paper)] p-0.5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 flex-wrap mb-4">
+        <div className="inline-flex items-center rounded-md border border-[color:var(--rule)] bg-[color:var(--paper)] p-0.5 self-start overflow-x-auto max-w-full">
           {FILTERS.map((f) => {
             const on = filter === f.k;
             const n = counts[f.k as keyof typeof counts];
@@ -1121,7 +1121,7 @@ export default function LeadsPage() {
           })}
         </div>
 
-        <div className="flex items-center gap-2 h-8 px-3 border border-[color:var(--rule)] bg-[color:var(--paper)] hover:border-[color:var(--ink-3)] focus-within:border-[color:var(--ember)]/60 focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--ember)_8%,transparent)] rounded-md w-[260px] md:w-[320px] transition-colors">
+        <div className="flex items-center gap-2 h-9 sm:h-8 px-3 border border-[color:var(--rule)] bg-[color:var(--paper)] hover:border-[color:var(--ink-3)] focus-within:border-[color:var(--ember)]/60 focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--ember)_8%,transparent)] rounded-md w-full sm:w-[260px] md:w-[320px] transition-colors">
           <SearchIcon className="w-3.5 h-3.5 text-[color:var(--ink-3)] shrink-0" />
           <input
             value={search}
@@ -1342,7 +1342,7 @@ export default function LeadsPage() {
       {isJobScoped && (
         <div className="border border-[color:var(--rule)] rounded-xl overflow-hidden bg-[color:var(--paper)]">
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full min-w-[720px] text-left">
               <LeadsTableHead schema={schema} isJobScoped={isJobScoped} />
               <tbody>
                 {isLoading && (

@@ -54,17 +54,17 @@ export default function LeadContactsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link href="/dashboard/leads">
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button variant="ghost" size="icon" className="h-9 w-9">
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Contacts</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground">Contacts</h2>
             <p className="mt-0.5 text-sm text-muted-foreground">
               {isLoading ? 'Loading…' : `${contacts.length} contact${contacts.length !== 1 ? 's' : ''} found`}
             </p>
@@ -74,7 +74,7 @@ export default function LeadContactsPage() {
           onClick={handleEnrich}
           disabled={triggerEnrichment.isPending}
           size="sm"
-          className="gap-2"
+          className="gap-2 self-start sm:self-auto"
         >
           {triggerEnrichment.isPending ? (
             <Loader2 className="w-4 h-4 animate-spin" />

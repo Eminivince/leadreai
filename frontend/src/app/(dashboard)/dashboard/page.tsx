@@ -1623,7 +1623,7 @@ export default function DashboardPage() {
         className="pointer-events-none absolute inset-0 -z-10 opacity-[0.55] [background-image:radial-gradient(color-mix(in_srgb,var(--ink)_8%,transparent)_1px,transparent_1px)] [background-size:24px_24px]"
       />
 
-      <div className="max-w-[1180px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10 flex flex-col gap-8 md:gap-10">
+      <div className="max-w-[1180px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 md:py-10 flex flex-col gap-6 sm:gap-8 md:gap-10">
         {/* Welcome strip — only when the workspace has truly never
             run a search. Disappears the moment a job exists, so
             returning users never see it. Calmly tells the user that

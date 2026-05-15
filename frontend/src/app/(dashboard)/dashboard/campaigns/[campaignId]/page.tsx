@@ -172,7 +172,7 @@ export default function CampaignDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-16 text-center">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-16 text-center">
         <span className="font-mono text-[12px] text-[color:var(--ink-3)]">Loading campaign…</span>
       </div>
     );
@@ -180,7 +180,7 @@ export default function CampaignDetailPage() {
 
   if (error || !data?.data) {
     return (
-      <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-16 text-center">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-16 text-center">
         <p className="text-[14px] font-medium text-[color:var(--warn)]">
           Couldn&rsquo;t load this campaign.
         </p>
@@ -198,9 +198,9 @@ export default function CampaignDetailPage() {
   const { campaign, sequence, enrollments, perStep, campaignStats, replyClassification } = data.data;
 
   return (
-    <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10 animate-fade-up">
+    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 md:py-10 animate-fade-up">
       {/* Header — breadcrumb + title row + actions */}
-      <section className="mb-6">
+      <section className="mb-5 sm:mb-6">
         <div className="flex items-center gap-1.5 mb-3 font-mono text-[10.5px] text-[color:var(--ink-3)]">
           <Link
             href="/dashboard/campaigns"
@@ -209,12 +209,12 @@ export default function CampaignDetailPage() {
             Campaigns
           </Link>
           <span className="text-[color:var(--ink-3)]/60">/</span>
-          <span className="text-[color:var(--ink-2)] truncate max-w-[480px]">{campaign.name}</span>
+          <span className="text-[color:var(--ink-2)] truncate max-w-[180px] sm:max-w-[480px]">{campaign.name}</span>
         </div>
-        <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 flex-wrap">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-display text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)] truncate">
+              <h1 className="font-display text-[24px] sm:text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)] truncate">
                 {campaign.name}
               </h1>
               <StatusPill status={campaign.status} />
@@ -305,12 +305,13 @@ export default function CampaignDetailPage() {
       <Section chapter="02" title="Per-step">
         {sequence ? (
           <div className="rounded-xl border border-[color:var(--rule)] overflow-hidden bg-[color:var(--paper)]">
+            <div className="overflow-x-auto">
             {sequence.steps.map((step, idx) => {
               const stats = perStep.find((p) => p.stepNumber === step.stepNumber) ?? { sent: 0, bounced: 0, replied: 0 };
               return (
                 <div
                   key={step.stepNumber}
-                  className={`grid grid-cols-[36px_auto_1fr_auto_auto_auto] gap-3 md:gap-4 items-center px-4 md:px-5 py-3 ${
+                  className={`grid grid-cols-[36px_auto_1fr_auto_auto_auto] gap-3 md:gap-4 items-center px-4 md:px-5 py-3 min-w-[560px] ${
                     idx > 0 ? 'border-t border-[color:var(--rule)]' : ''
                   }`}
                 >
@@ -338,6 +339,7 @@ export default function CampaignDetailPage() {
                 </div>
               );
             })}
+            </div>
           </div>
         ) : (
           <div className="rounded-xl border border-[color:var(--rule)] bg-[color:var(--paper-2)]/40 p-6 text-center">

@@ -60,7 +60,7 @@ export default function WorkflowDetailPage() {
 
   if (isLoading && !workflow) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center  italic text-[14px] text-[color:var(--ink-3)]">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-20 text-center  italic text-[14px] text-[color:var(--ink-3)]">
         Loading workflow…
       </div>
     );
@@ -68,7 +68,7 @@ export default function WorkflowDetailPage() {
 
   if (!workflow) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-20 text-center">
         <p className=" text-[14px] text-[color:var(--ink-2)]">Workflow not found.</p>
         <Link href="/dashboard/workflows" className="mt-4 inline-block font-mono text-[11px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)]">
           ← All workflows
@@ -78,10 +78,10 @@ export default function WorkflowDetailPage() {
   }
 
   return (
-    <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-10 md:py-14">
+    <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-10 md:py-14">
       {/* Header */}
-      <section className="mb-10">
-        <div className="flex items-center gap-3 mb-4">
+      <section className="mb-6 sm:mb-10">
+        <div className="flex items-center gap-3 mb-4 flex-wrap">
           <Link
             href="/dashboard/workflows"
             className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
@@ -93,17 +93,17 @@ export default function WorkflowDetailPage() {
             {workflow.tableTemplate.rowType}
           </span>
         </div>
-        <h1 className=" text-[38px] md:text-[52px] leading-[0.97] tracking-[-0.015em] text-[color:var(--ink)]">
+        <h1 className=" text-[30px] sm:text-[38px] md:text-[52px] leading-[0.97] tracking-[-0.015em] text-[color:var(--ink)]">
           {workflow.name}
         </h1>
         {workflow.description && (
-          <p className="mt-3  text-[15px] leading-[1.55] text-[color:var(--ink-2)] max-w-[780px]">
+          <p className="mt-3  text-[14px] sm:text-[15px] leading-[1.55] text-[color:var(--ink-2)] max-w-[780px]">
             {workflow.description}
           </p>
         )}
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-10">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 lg:gap-10">
         {/* Left — details */}
         <div>
           <WorkflowMeta workflow={workflow} onChanged={invalidate} workspaceId={workspaceId ?? ''} />
