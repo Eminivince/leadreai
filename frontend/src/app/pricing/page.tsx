@@ -17,7 +17,13 @@ const PRICING_TIERS = [
     price: '$99',
     period: '/month',
     tagline: 'For growing sales teams.',
-    features: ['Up to 500 contacts/month', 'CRM sync (HubSpot)', 'Priority enrichment queue', 'Outbound webhooks', 'Live chat support'],
+    features: [
+      'Up to 500 contacts/month',
+      'CRM sync (HubSpot)',
+      'Priority enrichment queue',
+      'Outbound webhooks',
+      'Live chat support',
+    ],
     cta: 'Start free trial',
     ctaHref: '/auth/register',
     highlighted: true,
@@ -27,7 +33,13 @@ const PRICING_TIERS = [
     price: '$299',
     period: '/month',
     tagline: 'For agencies and enterprise teams.',
-    features: ['Unlimited contacts', 'Custom pipeline integrations', 'Dedicated account manager', 'SLA guarantee', 'Custom data sources'],
+    features: [
+      'Unlimited contacts',
+      'Custom pipeline integrations',
+      'Dedicated account manager',
+      'SLA guarantee',
+      'Custom data sources',
+    ],
     cta: 'Contact sales',
     // TODO: replace with dedicated sales/demo booking page when available
     ctaHref: '/contact',
@@ -54,109 +66,122 @@ const FAQS = [
   },
 ]
 
+function Check() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 shrink-0 mt-[3px]" aria-hidden>
+      <path
+        d="m3 8 3.5 3.5L13 5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 export default function PricingPage() {
   return (
-    <main className="alt-tokens bg-[color:var(--paper)] text-[color:var(--alt-ink)]">
+    <main className="bg-[color:var(--paper)] text-[color:var(--ink)] min-h-screen">
       <AltNav />
 
       {/* Hero */}
-      <section style={{
-        background: 'linear-gradient(to bottom, #fffbeb 0%, #ffffff 55%)',
-        padding: '72px 24px 56px',
-        textAlign: 'center',
-      }}>
-        <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--alt-amber)', textTransform: 'uppercase', marginBottom: 12 }}>
+      <section className="px-6 pt-20 pb-12 text-center">
+        <div className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ember)] mb-5">
           Pricing
-        </p>
-        <h1 style={{
-          fontSize: 'clamp(32px, 4vw, 52px)', fontWeight: 800,
-          letterSpacing: '-0.04em', color: 'var(--alt-ink)',
-          lineHeight: 1.1, maxWidth: 560, margin: '0 auto 16px',
-        }}>
-          Simple, honest pricing
+        </div>
+        <h1 className="font-display font-normal text-[clamp(36px,4.5vw,52px)] leading-[1.05] tracking-[-0.01em] text-[color:var(--ink)] max-w-[640px] mx-auto">
+          Simple, <em className="not-italic font-display italic text-[color:var(--ember)]">honest</em> pricing
         </h1>
-        <p style={{ fontSize: 16, color: 'var(--alt-ink-3)', maxWidth: 420, margin: '0 auto' }}>
+        <p className="mt-5 font-sans text-[15px] text-[color:var(--ink-3)] max-w-[460px] mx-auto leading-[1.6]">
           Start free. Upgrade when you need more. No hidden fees.
         </p>
       </section>
 
       {/* Pricing grid */}
-      <section style={{ background: '#fff', padding: '40px 24px 72px' }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: 24, maxWidth: 900, margin: '0 auto', alignItems: 'stretch',
-        }}>
-          {PRICING_TIERS.map(tier => (
-            <div key={tier.name} style={{
-              background: tier.highlighted ? 'var(--alt-ink)' : '#fff',
-              border: tier.highlighted ? 'none' : '1px solid var(--alt-rule)',
-              borderRadius: 14, padding: '28px',
-              display: 'flex', flexDirection: 'column',
-              position: 'relative',
-            }}>
-              {tier.highlighted && (
-                <div style={{
-                  position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
-                  background: 'var(--alt-amber)', color: '#fff',
-                  borderRadius: 999, padding: '4px 14px', fontSize: 12, fontWeight: 700,
-                  whiteSpace: 'nowrap',
-                }}>
-                  Most popular
-                </div>
-              )}
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--alt-amber)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>
-                {tier.name}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 6 }}>
-                <span style={{ fontSize: 36, fontWeight: 800, color: tier.highlighted ? '#fff' : 'var(--alt-ink)' }}>{tier.price}</span>
-                <span style={{ fontSize: 14, color: tier.highlighted ? 'var(--alt-ink-4)' : 'var(--alt-ink-3)' }}>{tier.period}</span>
-              </div>
-              <p style={{ fontSize: 13, color: tier.highlighted ? 'var(--alt-ink-4)' : 'var(--alt-ink-3)', marginBottom: 20 }}>{tier.tagline}</p>
-              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {tier.features.map(f => (
-                  <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 14, color: tier.highlighted ? 'var(--alt-rule)' : 'var(--alt-ink-2)' }}>
-                    <span style={{ color: 'var(--alt-amber)', fontWeight: 700, flexShrink: 0 }}>✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <a
-                href={tier.ctaHref}
-                aria-label={`${tier.cta} — ${tier.name} plan`}
-                style={{
-                  display: 'block', textAlign: 'center',
-                  background: tier.highlighted ? 'var(--alt-amber)' : 'var(--alt-ink)',
-                  color: '#fff',
-                  borderRadius: 8, padding: '10px 20px',
-                  fontSize: 14, fontWeight: 700,
-                  textDecoration: 'none', marginTop: 'auto',
-                }}
+      <section className="px-6 pb-20">
+        <div className="grid gap-6 max-w-[960px] mx-auto items-stretch grid-cols-1 md:grid-cols-3">
+          {PRICING_TIERS.map((tier) => {
+            const featured = tier.highlighted
+            return (
+              <div
+                key={tier.name}
+                className={`relative flex flex-col bg-white rounded-xl p-8 border ${
+                  featured
+                    ? 'border-[color:var(--ember)] border-2'
+                    : 'border-[color:var(--rule)]'
+                }`}
               >
-                {tier.cta}
-              </a>
-            </div>
-          ))}
+                {featured && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[color:var(--ember)] text-[color:var(--paper)] font-mono text-[9.5px] tracking-[0.18em] uppercase px-3 py-1 rounded-full whitespace-nowrap">
+                    Most popular
+                  </div>
+                )}
+
+                <div className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-4)] mb-3">
+                  {tier.name}
+                </div>
+
+                <div className="flex items-baseline gap-1 mb-2">
+                  <span className="font-display font-normal text-[44px] leading-none tracking-[-0.01em] text-[color:var(--ink)]">
+                    {tier.price}
+                  </span>
+                  <span className="font-sans text-[14px] text-[color:var(--ink-3)]">
+                    {tier.period}
+                  </span>
+                </div>
+
+                <p className="font-sans text-[13.5px] text-[color:var(--ink-3)] mb-6 leading-[1.55]">
+                  {tier.tagline}
+                </p>
+
+                <ul className="flex flex-col gap-3 mb-8">
+                  {tier.features.map((f) => (
+                    <li
+                      key={f}
+                      className="flex items-start gap-2 font-sans text-[14px] text-[color:var(--ink-2)] leading-[1.5]"
+                    >
+                      <span className="text-[color:var(--success)]">
+                        <Check />
+                      </span>
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <a
+                  href={tier.ctaHref}
+                  aria-label={`${tier.cta} — ${tier.name} plan`}
+                  className={`mt-auto inline-flex items-center justify-center font-sans font-semibold text-[13px] px-5 py-2.5 rounded-lg transition-all ${
+                    featured
+                      ? 'bg-[color:var(--ink)] text-[color:var(--paper)] hover:opacity-85'
+                      : 'border border-[color:var(--rule)] bg-transparent text-[color:var(--ink-2)] hover:border-[color:var(--ink)] hover:text-[color:var(--ink)]'
+                  }`}
+                >
+                  {tier.cta}
+                </a>
+              </div>
+            )
+          })}
         </div>
       </section>
 
       {/* FAQ */}
-      <section style={{ background: 'var(--alt-paper-2)', padding: '64px 24px 80px' }}>
-        <div style={{ maxWidth: 680, margin: '0 auto' }}>
-          <h2 style={{
-            fontSize: 'clamp(24px, 2.5vw, 32px)', fontWeight: 800,
-            letterSpacing: '-0.03em', color: 'var(--alt-ink)',
-            marginBottom: 40, textAlign: 'center',
-          }}>
+      <section className="bg-[color:var(--paper-2)] px-6 py-20 border-t border-[color:var(--rule)]">
+        <div className="max-w-[720px] mx-auto">
+          <div className="font-mono text-[9.5px] tracking-[0.18em] uppercase text-[color:var(--ink-4)] mb-3 text-center">
+            FAQ
+          </div>
+          <h2 className="font-display font-normal text-[clamp(28px,3vw,36px)] tracking-[-0.01em] leading-[1.15] text-[color:var(--ink)] text-center mb-12">
             Frequently asked questions
           </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            {FAQS.map(faq => (
-              <div key={faq.q}>
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--alt-ink)', marginBottom: 8 }}>
+          <div className="flex flex-col divide-y divide-[color:var(--rule)]">
+            {FAQS.map((faq) => (
+              <div key={faq.q} className="py-6 first:pt-0 last:pb-0">
+                <h3 className="font-sans font-semibold text-[15px] text-[color:var(--ink)] mb-2">
                   {faq.q}
                 </h3>
-                <p style={{ fontSize: 14, color: 'var(--alt-ink-3)', lineHeight: 1.65 }}>
+                <p className="font-sans text-[14px] text-[color:var(--ink-3)] leading-[1.65]">
                   {faq.a}
                 </p>
               </div>
