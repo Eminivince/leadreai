@@ -78,7 +78,7 @@ export function WorkspaceUsageWidget({
     </div>
     <a
      href={`/api/v1/workspaces/${workspaceId}/usage/export`}
-     className="inline-flex items-center gap-1.5 italic text-[12.5px] text-[color:var(--ink-2)] hover:text-[color:var(--forest)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--forest)] transition"
+     className="inline-flex items-center gap-1.5 italic text-[12.5px] text-[color:var(--ink-2)] hover:text-[color:var(--ember)] underline underline-offset-[4px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ember)] transition"
     >
      Export CSV
     </a>
@@ -110,7 +110,7 @@ export function WorkspaceUsageWidget({
          <div
           key={d.date}
           title={`${d.date}: ${fmtUsd(d.totalUSD)}`}
-          className="w-[6px] bg-[color:var(--forest)]/70 hover:bg-[color:var(--forest)] transition-colors"
+          className="w-[6px] bg-[color:var(--ember)]/70 hover:bg-[color:var(--ember)] transition-colors"
           style={{ height: `${h}px` }}
          />
         );

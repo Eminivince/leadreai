@@ -1,20 +1,23 @@
 'use client';
 
 import Link from 'next/link';
-import { Suspense, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Suspense, useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
 import { useAppStore } from '@/store/useAppStore';
 import { useCredits } from '@/hooks/useCredits';
+import { useWorkspace } from '@/hooks/useWorkspace';
 import {
   SectionHead,
   ForthcomingPanel,
   PrimaryButton,
   GhostButton,
+  Label,
+  HairlineInput,
 } from '@/components/settings/primitives';
-import { planConfig, type CreditTransaction } from '@leadreai/shared';
+import { planConfig, type CreditTransaction, type Workspace } from '@leadreai/shared';
 
 /**
  * Billing & usage.
@@ -71,9 +74,9 @@ function BalanceCard({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex-1 min-w-[240px] rounded-xl border border-[color:var(--rule)] bg-[color:var(--paper)] p-4 md:p-5">
+    <div className="flex-1 min-w-[240px] rounded-xl border border-[color:var(--rule)] bg-white p-4 md:p-5">
       <div className="flex items-center justify-between gap-3 mb-2">
-        <span className="font-mono text-[10px] tracking-[0.04em] uppercase text-[color:var(--forest-2)]">
+        <span className="font-mono text-[10px] tracking-[0.04em] uppercase text-[color:var(--ember-2)]">
           {kicker}
         </span>
         <span className="font-mono text-[10px] tabular-nums text-[color:var(--ink-3)]">
@@ -170,9 +173,9 @@ export default function BillingSettingsPage() {
                 className="absolute inset-0 translate-x-1 translate-y-1 bg-[color:var(--rule)]/25"
                 aria-hidden
               />
-              <div className="relative bg-[color:var(--paper-2)] border border-[color:var(--rule)] p-6 md:p-7">
+              <div className="relative bg-white border-2 border-[color:var(--ember)] rounded-xl p-6 md:p-7">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="font-mono text-[10px] tracking-[0.06em] text-[color:var(--forest)]">
+                  <span className="font-mono text-[10px] tracking-[0.06em] text-[color:var(--ember)]">
                     Current plan
                   </span>
                   <span className="font-mono text-[10px] tracking-[0.06em] text-[color:var(--ink-3)]">
@@ -202,8 +205,8 @@ export default function BillingSettingsPage() {
                     <div
                       className={
                         monthlyPct > 80
-                          ? 'h-full bg-[color:var(--rust)]'
-                          : 'h-full bg-[color:var(--forest)]'
+                          ? 'h-full bg-[color:var(--warn)]'
+                          : 'h-full bg-[color:var(--ember)]'
                       }
                       style={{ width: `${monthlyPct}%` }}
                     />
@@ -310,12 +313,12 @@ export default function BillingSettingsPage() {
                 const isCredit = t.kind === 'credit';
                 const bucketTone =
                   t.bucket === 'monthly'
-                    ? 'text-[color:var(--forest)] border-[color:var(--forest)]/40'
+                    ? 'text-[color:var(--ember)] border-[color:var(--ember)]/40'
                     : 'text-[color:var(--ink-2)] border-[color:var(--rule)]';
                 return (
                   <div
                     key={t._id}
-                    className="grid grid-cols-[40px_1fr_auto_auto_auto] gap-4 items-baseline py-3 border-b border-[color:var(--rule)]/70"
+                    className="grid grid-cols-[28px_1fr_auto] sm:grid-cols-[40px_1fr_auto_auto_auto] gap-2 sm:gap-4 items-baseline py-3 border-b border-[color:var(--rule)]/70"
                   >
                     <span className="font-mono text-[10px] tracking-[0.06em] text-[color:var(--ink-3)] tabular-nums">
                       {String(i + 1).padStart(2, '0')}
@@ -331,24 +334,27 @@ export default function BillingSettingsPage() {
                       )}
                     </div>
                     <span
-                      className={`font-mono text-[9.5px] tracking-[0.04em] px-2 py-0.5 border bg-[color:var(--paper-3)] ${bucketTone}`}
+                      className={`hidden sm:inline font-mono text-[9.5px] tracking-[0.04em] px-2 py-0.5 border bg-[color:var(--paper-3)] ${bucketTone}`}
                     >
                       {t.bucket}
                     </span>
                     <span
                       className={`font-mono text-[13px] tabular-nums whitespace-nowrap ${
-                        isCredit ? 'text-[color:var(--forest)]' : 'text-[color:var(--ink)]'
+                        isCredit ? 'text-[color:var(--ember)]' : 'text-[color:var(--ink)]'
                       }`}
                     >
                       {isCredit ? '+' : ''}
                       {t.delta.toLocaleString()}
                     </span>
-                    <span className="font-mono text-[10px] tracking-[0.04em] text-[color:var(--ink-3)] tabular-nums whitespace-nowrap">
+                    <span className="hidden sm:inline font-mono text-[10px] tracking-[0.04em] text-[color:var(--ink-3)] tabular-nums whitespace-nowrap">
                       {new Date(t.createdAt).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
                       })}{' '}
                       · bal {t.balanceAfter.toLocaleString()}
+                    </span>
+                    <span className="sm:hidden col-start-2 -mt-2 font-mono text-[10px] tracking-[0.04em] text-[color:var(--ink-3)] tabular-nums">
+                      {t.bucket} · {new Date(t.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · bal {t.balanceAfter.toLocaleString()}
                     </span>
                   </div>
                 );
@@ -358,9 +364,15 @@ export default function BillingSettingsPage() {
         </div>
       </section>
 
+      {/* Budget (Task #15 / #23 frontend) */}
+      <section>
+        <SectionHead n="04" title="Monthly budget" />
+        <BudgetPanel />
+      </section>
+
       {/* Usage */}
       <section>
-        <SectionHead n="04" title="Usage" />
+        <SectionHead n="05" title="Usage" />
         <div className="">
           <ForthcomingPanel title="Workspace usage metrics.">
             Searches run, leads collected, exports shipped, and credits consumed per workspace — all
@@ -369,6 +381,110 @@ export default function BillingSettingsPage() {
           </ForthcomingPanel>
         </div>
       </section>
+    </div>
+  );
+}
+
+/**
+ * Budget panel — per-workspace monthly USD cap + alert threshold.
+ * Crossing the threshold mints a `budget.threshold` notification via
+ * the hourly checker; this UI is the lever that controls it.
+ */
+function BudgetPanel() {
+  const { workspaceId } = useWorkspace();
+  const qc = useQueryClient();
+  const { data } = useQuery({
+    queryKey: ['workspace', workspaceId],
+    queryFn: () => apiFetch<{ success: true; data: Workspace & { budget?: { monthlyCapUSD?: number; alertThresholdPct?: number; alertedAt?: string } } }>(`/api/v1/workspaces/${workspaceId}`),
+    enabled: Boolean(workspaceId),
+  });
+  const ws = data?.data;
+  const budget = ws?.budget;
+
+  const [cap, setCap] = useState('');
+  const [threshold, setThreshold] = useState('80');
+
+  useEffect(() => {
+    setCap(budget?.monthlyCapUSD != null ? String(budget.monthlyCapUSD) : '');
+    setThreshold(budget?.alertThresholdPct != null ? String(budget.alertThresholdPct) : '80');
+  }, [budget?.monthlyCapUSD, budget?.alertThresholdPct]);
+
+  const save = useMutation({
+    mutationFn: (payload: { monthlyCapUSD: number | null; alertThresholdPct?: number }) =>
+      apiFetch(`/api/v1/workspaces/${workspaceId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ budget: payload }),
+      }),
+    onSuccess: () => {
+      toast.success('Budget updated.');
+      qc.invalidateQueries({ queryKey: ['workspace', workspaceId] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed.'),
+  });
+
+  return (
+    <div className="flex flex-col gap-4 max-w-md">
+      <p className="text-[13px] text-[color:var(--ink-2)] leading-[1.55]">
+        When month-to-date spend crosses the threshold, you&rsquo;ll get an in-app
+        notification. Set the cap to 0 (or clear it) to disable alerts.
+      </p>
+
+      <div>
+        <Label>Monthly cap (USD)</Label>
+        <HairlineInput
+          type="number"
+          step="0.01"
+          min="0"
+          value={cap}
+          onChange={(e) => setCap(e.target.value)}
+          placeholder="e.g. 200"
+        />
+      </div>
+
+      <div>
+        <Label>Alert at % of cap</Label>
+        <HairlineInput
+          type="number"
+          min="1"
+          max="100"
+          value={threshold}
+          onChange={(e) => setThreshold(e.target.value)}
+        />
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1">
+        <GhostButton
+          onClick={() => save.mutate({ monthlyCapUSD: null })}
+          disabled={save.isPending || !budget?.monthlyCapUSD}
+        >
+          Clear budget
+        </GhostButton>
+        <PrimaryButton
+          onClick={() => {
+            const capN = Number(cap);
+            const thN = Number(threshold);
+            if (Number.isNaN(capN) || capN < 0) {
+              toast.error('Cap must be a non-negative number');
+              return;
+            }
+            if (Number.isNaN(thN) || thN < 1 || thN > 100) {
+              toast.error('Threshold must be 1–100');
+              return;
+            }
+            save.mutate({ monthlyCapUSD: capN, alertThresholdPct: thN });
+          }}
+          disabled={save.isPending}
+        >
+          {save.isPending ? 'Saving…' : 'Save budget'}
+        </PrimaryButton>
+      </div>
+
+      {budget?.monthlyCapUSD ? (
+        <p className="text-[11px] text-[color:var(--ink-3)] font-mono">
+          Current cap ${budget.monthlyCapUSD.toFixed(2)} · alert at {budget.alertThresholdPct ?? 80}%
+          {budget.alertedAt ? ` · last alert ${new Date(budget.alertedAt).toLocaleDateString()}` : ''}
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -236,7 +236,7 @@ export default function FileDetailPage() {
 
   if (fileLoading) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-16  italic text-[14px] text-[color:var(--ink-2)] text-center">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-16  italic text-[14px] text-[color:var(--ink-2)] text-center">
         Loading file…
       </div>
     );
@@ -244,7 +244,7 @@ export default function FileDetailPage() {
 
   if (!file) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-20 text-center">
         <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
           Missing
         </span>
@@ -269,27 +269,27 @@ export default function FileDetailPage() {
   const sourceLabel = file.source === 'job' ? 'Auto-filed from a dispatch' : 'Curated by hand';
 
   return (
-    <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-10 md:py-12">
+    <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-10 md:py-12">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-3 mb-6 font-mono text-[10px] tracking-[0.22em] uppercase">
+      <div className="flex items-center gap-3 mb-5 sm:mb-6 font-mono text-[10px] tracking-[0.22em] uppercase">
         <Link href="/dashboard/files" className="text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition">
           Files
         </Link>
         <span className="text-[color:var(--ink-3)]">/</span>
-        <span className="text-[color:var(--ink-2)] truncate max-w-[360px]">{file.name}</span>
+        <span className="text-[color:var(--ink-2)] truncate max-w-[180px] sm:max-w-[360px]">{file.name}</span>
       </div>
 
       {/* Header */}
-      <section className="mb-10 pb-8 border-b border-[color:var(--rule)]">
-        <div className="flex items-center gap-3 mb-5">
+      <section className="mb-6 sm:mb-10 pb-6 sm:pb-8 border-b border-[color:var(--rule)]">
+        <div className="flex items-center gap-3 mb-4 sm:mb-5">
           <span className="block w-8 h-px bg-[color:var(--ink)]" />
           <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
             {isArchived ? 'Archived file' : 'Active file'}
           </span>
         </div>
-        <div className="flex items-end justify-between gap-6 flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 sm:gap-6 flex-wrap">
           <div className="max-w-[780px]">
-            <h1 className=" text-[40px] md:text-[54px] leading-[0.98] tracking-[-0.015em] text-[color:var(--ink)]">
+            <h1 className=" text-[30px] sm:text-[40px] md:text-[54px] leading-[0.98] tracking-[-0.015em] text-[color:var(--ink)]">
               {file.name}
             </h1>
             {file.description && (
@@ -326,7 +326,7 @@ export default function FileDetailPage() {
                     ? 'Restore the file before starting a campaign.'
                     : undefined
               }
-              className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--ember)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Start a campaign <ArrowEast className="w-3 h-3" />
             </button>
@@ -353,7 +353,7 @@ export default function FileDetailPage() {
           <div className="mt-5">
             <Link
               href="/dashboard/leads"
-              className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors"
+              className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--ember)] transition-colors"
             >
               Open leads archive <ArrowEast className="w-3 h-3" />
             </Link>
@@ -361,7 +361,7 @@ export default function FileDetailPage() {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[640px]">
             <thead>
               <tr className="border-b-2 border-[color:var(--ink)]">
                 <th className="text-left py-3 px-3 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">

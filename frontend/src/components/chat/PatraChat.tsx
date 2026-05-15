@@ -255,10 +255,10 @@ export function PatraChat() {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="Open Patra assistant"
-        className={`fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all ${
+        className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all ${
           open
             ? 'bg-[color:var(--ink)]/80 scale-90'
-            : 'bg-[color:var(--ink)] hover:bg-[color:var(--forest)] hover:scale-105'
+            : 'bg-[color:var(--ink)] hover:bg-[color:var(--ember)] hover:scale-105'
         }`}
       >
         {open
@@ -269,8 +269,7 @@ export function PatraChat() {
       {/* Panel */}
       {open && (
         <div
-          className="fixed bottom-[88px] right-6 z-50 w-[380px] max-w-[calc(100vw-24px)] flex flex-col bg-[color:var(--paper)] border border-[color:var(--rule)] shadow-2xl rounded-xl overflow-hidden"
-          style={{ height: 'min(560px, calc(100vh - 120px))' }}
+          className="fixed inset-x-2 bottom-[72px] sm:inset-x-auto sm:bottom-[88px] sm:right-6 z-50 w-auto sm:w-[380px] mx-auto sm:mx-0 max-w-[calc(100vw-16px)] sm:max-w-[calc(100vw-24px)] h-[calc(100vh-96px)] sm:h-[min(560px,calc(100vh-120px))] flex flex-col bg-[color:var(--paper)] border border-[color:var(--rule)] shadow-2xl rounded-xl overflow-hidden"
         >
           {/* Header */}
           <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[color:var(--rule)] shrink-0">
@@ -280,7 +279,7 @@ export function PatraChat() {
               </div>
               <div>
                 <div className="text-[13.5px] font-semibold text-[color:var(--ink)] leading-tight">Patra</div>
-                <div className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--forest)] leading-tight">AI assistant</div>
+                <div className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ember)] leading-tight">AI assistant</div>
               </div>
             </div>
             <button
@@ -348,7 +347,7 @@ export function PatraChat() {
               <button
                 onClick={() => void send()}
                 disabled={!input.trim() || loading}
-                className="w-9 h-9 rounded-lg bg-[color:var(--ink)] text-[color:var(--paper)] flex items-center justify-center hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40 shrink-0"
+                className="w-9 h-9 rounded-lg bg-[color:var(--ink)] text-[color:var(--paper)] flex items-center justify-center hover:bg-[color:var(--ember)] transition-colors disabled:opacity-40 shrink-0"
               >
                 <SendIcon className="w-3.5 h-3.5" />
               </button>

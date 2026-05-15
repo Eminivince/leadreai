@@ -83,8 +83,8 @@ function statusTone(s: DocStatus): {
     case 'ready':
       return {
         label: 'ready',
-        dotClass: 'bg-[color:var(--forest)]',
-        textClass: 'text-[color:var(--forest-2)]',
+        dotClass: 'bg-[color:var(--ember)]',
+        textClass: 'text-[color:var(--ember-2)]',
         pulse: false,
       };
     case 'failed':
@@ -420,7 +420,7 @@ export default function LibraryPage() {
   const pagedDocs = docs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10 animate-fade-up">
+    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 md:py-10 animate-fade-up">
       {/* Settings → Context breadcrumb. Library is now framed as
           configuration (the agent's reading list); users reach it
           from Settings rather than the primary nav. */}
@@ -434,10 +434,10 @@ export default function LibraryPage() {
         <span className="text-[color:var(--ink-3)]/60">/</span>
         <span className="text-[color:var(--ink-2)]">Context</span>
       </div>
-      <section className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+      <section className="mb-5 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 flex-wrap">
         <div>
           <div className="flex items-baseline gap-3">
-            <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)]">
+            <h1 className="font-display text-[24px] sm:text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
               Context
             </h1>
             <span className="font-mono text-[12px] tabular-nums text-[color:var(--ink-3)]">
@@ -448,7 +448,7 @@ export default function LibraryPage() {
             Documents the agent reads on every search.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <PageHelp
             title="Context"
             body="Documents the agent reads on every search — pitch decks, ICP notes, portfolio lists, case studies. Upload them once; they shape the results of every dispatch from then on."
@@ -462,7 +462,7 @@ export default function LibraryPage() {
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={uploading}
-            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] transition-colors disabled:opacity-50"
           >
             <UploadIcon className="w-3.5 h-3.5" />
             {uploading ? 'Uploading…' : 'Upload'}
@@ -479,7 +479,7 @@ export default function LibraryPage() {
         onClick={() => inputRef.current?.click()}
         className={`mb-6 border border-dashed rounded-xl transition-all cursor-pointer text-center px-6 py-9 ${
           isDragging
-            ? 'border-[color:var(--forest)]/60 bg-[color:var(--forest)]/[0.04] shadow-[0_0_0_4px_color-mix(in_srgb,var(--forest)_8%,transparent)]'
+            ? 'border-[color:var(--ember)]/60 bg-[color:var(--ember)]/[0.04] shadow-[0_0_0_4px_color-mix(in_srgb,var(--ember)_8%,transparent)]'
             : 'border-[color:var(--rule)] bg-[color:var(--paper-2)]/40 hover:border-[color:var(--ink-3)] hover:bg-[color:var(--paper-2)]'
         }`}
       >
@@ -507,9 +507,9 @@ export default function LibraryPage() {
       {(docs.length > 0 || isLoading) && (
         <div className="flex items-center gap-2 mb-3 flex-wrap">
           {summary.ready > 0 && (
-            <span className="inline-flex items-center gap-1.5 rounded-md border border-[color:var(--forest)]/30 bg-[color:var(--forest)]/[0.06] px-2 h-6">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)]" aria-hidden />
-              <span className="font-mono text-[10.5px] tabular-nums text-[color:var(--forest-2)]">
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-[color:var(--ember)]/30 bg-[color:var(--ember)]/[0.06] px-2 h-6">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ember)]" aria-hidden />
+              <span className="font-mono text-[10.5px] tabular-nums text-[color:var(--ember-2)]">
                 {summary.ready} ready
               </span>
             </span>
@@ -615,7 +615,7 @@ export default function LibraryPage() {
                     onClick={() => router.push(`/dashboard/library/${d._id}`)}
                     className="flex-1 min-w-0 text-left"
                   >
-                    <div className="text-[13.5px] font-medium text-[color:var(--ink)] truncate group-hover:text-[color:var(--forest)] transition-colors">
+                    <div className="text-[13.5px] font-medium text-[color:var(--ink)] truncate group-hover:text-[color:var(--ember)] transition-colors">
                       {d.title ?? d.originalFilename}
                     </div>
                     <div className="mt-0.5 font-mono text-[10.5px] tabular-nums text-[color:var(--ink-3)] truncate">
@@ -658,7 +658,7 @@ export default function LibraryPage() {
                         }}
                         disabled={retryMutation.isPending}
                         title="Retry processing"
-                        className="text-[11.5px] font-medium text-[color:var(--forest-2)] hover:text-[color:var(--forest)] transition-colors disabled:opacity-60 px-2 h-7 rounded-md hover:bg-[color:var(--paper-3)]"
+                        className="text-[11.5px] font-medium text-[color:var(--ember-2)] hover:text-[color:var(--ember)] transition-colors disabled:opacity-60 px-2 h-7 rounded-md hover:bg-[color:var(--paper-3)]"
                       >
                         Retry
                       </button>

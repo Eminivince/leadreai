@@ -1,0 +1,291 @@
+<h2>B and C — with testimonials</h2>
+<p class="subtitle">Both designs extended past the hero to show how the testimonial section fits each language.</p>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&family=Epilogue:wght@300;400;500;700;800;900&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
+
+.dcard {
+  border: 2px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.12s;
+}
+.dcard:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.1); }
+.dcard.selected { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.18); }
+
+.label-bar {
+  padding: 10px 16px;
+  background: #f8f8f8;
+  border-bottom: 1px solid #eee;
+  font-size: 11px;
+  font-weight: 700;
+  color: #555;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ════════════════════════════════════
+   DIRECTION B — PRODUCT AS HERO
+   ════════════════════════════════════ */
+.b-wrap { background: #fff; font-family: 'Inter', sans-serif; }
+
+/* Header */
+.b-header {
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #F3F4F6;
+}
+.b-logo { font-size: 13px; font-weight: 800; color: #111; letter-spacing: -0.02em; }
+.b-logo span { color: #16A34A; }
+.b-nav { font-size: 10px; color: #9CA3AF; letter-spacing: 0.08em; }
+
+/* Hero */
+.b-hero { padding: 20px 20px 0; }
+.b-hero-hed { font-size: 11px; font-weight: 700; color: #111; margin-bottom: 10px; }
+.b-hero-hed span { color: #16A34A; }
+.b-query {
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 5px;
+  padding: 7px 12px;
+  display: flex; gap: 8px; align-items: center;
+  margin-bottom: 10px;
+}
+.b-query .q { font-size: 10.5px; color: #374151; flex: 1; }
+.b-query .go { font-size: 9px; background: #16A34A; color: #fff; padding: 4px 10px; border-radius: 4px; font-weight: 600; letter-spacing: 0.06em; }
+.b-table { width: 100%; border-collapse: collapse; font-size: 9.5px; }
+.b-table th { text-align: left; font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #9CA3AF; font-weight: 600; padding: 5px 8px; border-bottom: 1px solid #F3F4F6; }
+.b-table td { padding: 6px 8px; color: #374151; border-bottom: 1px solid #FAFAFA; }
+.b-table .co { font-weight: 700; color: #111; }
+.b-table .vf { color: #16A34A; font-size: 8.5px; }
+.b-table .src { color: #D1D5DB; font-size: 8.5px; }
+.b-table tr.blur td { filter: blur(3.5px); opacity: 0.45; user-select: none; }
+.b-gate {
+  background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, #fff 60%);
+  padding: 16px 20px 14px;
+  text-align: center;
+  margin-top: -24px;
+  position: relative;
+}
+.b-gate .btn { display: inline-block; background: #111; color: #fff; font-size: 10px; font-weight: 700; padding: 8px 20px; border-radius: 4px; letter-spacing: 0.06em; }
+.b-gate .sub { font-size: 9.5px; color: #9CA3AF; margin-top: 5px; }
+
+/* Divider */
+.b-divider {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px;
+}
+.b-divider .line { flex: 1; height: 1px; background: #F3F4F6; }
+.b-divider .txt { font-size: 8.5px; letter-spacing: 0.18em; text-transform: uppercase; color: #D1D5DB; white-space: nowrap; }
+
+/* Testimonials */
+.b-testimonials { padding: 0 20px 20px; }
+.b-testi-hed { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: #9CA3AF; margin-bottom: 10px; }
+.b-testi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.b-testi-card {
+  border: 1px solid #F3F4F6;
+  border-radius: 6px;
+  padding: 12px;
+  background: #FAFAFA;
+}
+.b-testi-stars { color: #F59E0B; font-size: 9px; margin-bottom: 6px; letter-spacing: 1px; }
+.b-testi-quote { font-size: 10px; color: #374151; line-height: 1.5; font-style: italic; margin-bottom: 8px; }
+.b-testi-author { display: flex; align-items: center; gap: 6px; }
+.b-testi-avatar { width: 20px; height: 20px; border-radius: 50%; background: #16A34A; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.b-testi-name { font-size: 9px; font-weight: 700; color: #111; }
+.b-testi-role { font-size: 8.5px; color: #9CA3AF; }
+
+
+/* ════════════════════════════════════
+   DIRECTION C — SYNE BOLD / NEON
+   ════════════════════════════════════ */
+.c-wrap { background: #0C0C0C; font-family: 'Syne', sans-serif; }
+
+/* Header */
+.c-header {
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #181818;
+}
+.c-logo { font-size: 14px; font-weight: 800; color: #fff; letter-spacing: 0.04em; }
+.c-nav { font-size: 9.5px; color: #444; letter-spacing: 0.12em; text-transform: uppercase; }
+
+/* Hero */
+.c-hero { padding: 22px 20px 16px; }
+.c-eyebrow { font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase; color: #00FF88; margin-bottom: 10px; font-weight: 400; }
+.c-hed { font-size: 42px; font-weight: 800; line-height: 0.92; letter-spacing: -0.03em; color: #fff; margin-bottom: 10px; }
+.c-hed .dim { color: #222; }
+.c-hed .accent { color: #00FF88; }
+.c-sub { font-size: 10.5px; color: #555; line-height: 1.55; max-width: 240px; margin-bottom: 14px; font-weight: 400; }
+.c-cta-row { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; }
+.c-btn { background: #00FF88; color: #0C0C0C; font-size: 9.5px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; padding: 8px 16px; border-radius: 2px; }
+.c-ghost { font-size: 9.5px; color: #333; letter-spacing: 0.14em; text-transform: uppercase; }
+
+/* Proof strip */
+.c-proof {
+  border-top: 1px solid #181818;
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  margin: 0 20px;
+}
+.c-proof-item { padding: 10px 0; border-right: 1px solid #181818; padding-right: 12px; padding-left: 0; }
+.c-proof-item:last-child { border-right: none; padding-left: 12px; }
+.c-proof-num { font-size: 20px; font-weight: 800; color: #00FF88; line-height: 1; }
+.c-proof-lbl { font-size: 8px; color: #333; letter-spacing: 0.14em; text-transform: uppercase; margin-top: 1px; }
+
+/* Testimonials */
+.c-testi-section { padding: 16px 20px 20px; }
+.c-testi-label {
+  font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: #333; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.c-testi-label::after { content: ''; flex: 1; height: 1px; background: #1A1A1A; }
+.c-testi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.c-testi-card {
+  border: 1px solid #1A1A1A;
+  border-radius: 2px;
+  padding: 12px;
+  background: #0F0F0F;
+  position: relative;
+}
+.c-testi-card::before {
+  content: '"';
+  position: absolute; top: 8px; left: 10px;
+  font-size: 28px; color: #00FF88; opacity: 0.25;
+  font-family: Georgia, serif; line-height: 1;
+}
+.c-testi-quote { font-size: 10px; color: #888; line-height: 1.5; margin-bottom: 10px; padding-top: 8px; font-weight: 400; }
+.c-testi-author { display: flex; align-items: center; gap: 7px; border-top: 1px solid #1A1A1A; padding-top: 8px; }
+.c-testi-avatar {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #0C0C0C; border: 1px solid #00FF88;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8.5px; font-weight: 700; color: #00FF88; flex-shrink: 0;
+}
+.c-testi-name { font-size: 9.5px; font-weight: 700; color: #CCC; }
+.c-testi-role { font-size: 8.5px; color: #444; }
+</style>
+
+<div class="split">
+
+  <!-- DIRECTION B -->
+  <div class="dcard" data-choice="b" onclick="toggleSelect(this)">
+    <div class="label-bar">B — Product as Hero</div>
+    <div class="b-wrap">
+      <div class="b-header">
+        <div class="b-logo">Leadre<span>AI</span></div>
+        <div class="b-nav">Sign in · Get started</div>
+      </div>
+      <div class="b-hero">
+        <div class="b-hero-hed">47 leads found for <span>"Fintech Series A, Lagos"</span></div>
+        <div class="b-query">
+          <span class="q">Fintech founders Series A+ Lagos</span>
+          <span class="go">Search →</span>
+        </div>
+        <table class="b-table">
+          <tr><th>Company</th><th>Contact</th><th>Email</th><th>Sources</th></tr>
+          <tr><td class="co">Paystack</td><td>Shola Akinlade</td><td class="vf">✓ verified</td><td class="src">3×</td></tr>
+          <tr><td class="co">Moniepoint</td><td>Tosin Eniolorunda</td><td class="vf">✓ verified</td><td class="src">2×</td></tr>
+          <tr class="blur"><td class="co">Flutterwave</td><td>████████</td><td>██████</td><td>—</td></tr>
+        </table>
+      </div>
+      <div class="b-gate">
+        <div class="btn">Unlock all 47 results →</div>
+        <div class="sub">Free to start — no credit card</div>
+      </div>
+
+      <div class="b-divider">
+        <div class="line"></div>
+        <div class="txt">What agencies say</div>
+        <div class="line"></div>
+      </div>
+
+      <div class="b-testimonials">
+        <div class="b-testi-grid">
+          <div class="b-testi-card">
+            <div class="b-testi-stars">★★★★★</div>
+            <div class="b-testi-quote">"We ran 3 client briefs in a week. Every table had verified emails."</div>
+            <div class="b-testi-author">
+              <div class="b-testi-avatar">T</div>
+              <div><div class="b-testi-name">Tunde A.</div><div class="b-testi-role">Outbound Agency, Lagos</div></div>
+            </div>
+          </div>
+          <div class="b-testi-card">
+            <div class="b-testi-stars">★★★★★</div>
+            <div class="b-testi-quote">"Nothing else covers the African fintech market this well. Period."</div>
+            <div class="b-testi-author">
+              <div class="b-testi-avatar" style="background:#0A2240">A</div>
+              <div><div class="b-testi-name">Amara O.</div><div class="b-testi-role">Research Lead, Nairobi</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIRECTION C -->
+  <div class="dcard" data-choice="c" onclick="toggleSelect(this)">
+    <div class="label-bar">C — Syne Bold / Neon</div>
+    <div class="c-wrap">
+      <div class="c-header">
+        <div class="c-logo">LEADRE</div>
+        <div class="c-nav">Pricing · Sign in</div>
+      </div>
+      <div class="c-hero">
+        <div class="c-eyebrow">B2B Intelligence · Africa</div>
+        <div class="c-hed">Find<br><span class="dim">leads,</span><br><span class="accent">fast.</span></div>
+        <div class="c-sub">A research agent that turns a brief into an evidence-backed table. Every cell justified. Every source linked.</div>
+        <div class="c-cta-row">
+          <div class="c-btn">Get started</div>
+          <div class="c-ghost">See demo →</div>
+        </div>
+      </div>
+      <div class="c-proof" style="margin-bottom:0">
+        <div class="c-proof-item">
+          <div class="c-proof-num">50k+</div>
+          <div class="c-proof-lbl">Leads</div>
+        </div>
+        <div class="c-proof-item" style="padding-left:12px">
+          <div class="c-proof-num">8m</div>
+          <div class="c-proof-lbl">Avg run</div>
+        </div>
+        <div class="c-proof-item" style="padding-left:12px">
+          <div class="c-proof-num">3×</div>
+          <div class="c-proof-lbl">Sources</div>
+        </div>
+      </div>
+
+      <div class="c-testi-section">
+        <div class="c-testi-label">What agencies say</div>
+        <div class="c-testi-grid">
+          <div class="c-testi-card">
+            <div class="c-testi-quote">"We ran 3 client briefs in a week. Every table came back with verified emails."</div>
+            <div class="c-testi-author">
+              <div class="c-testi-avatar">T</div>
+              <div><div class="c-testi-name">Tunde A.</div><div class="c-testi-role">Outbound Agency, Lagos</div></div>
+            </div>
+          </div>
+          <div class="c-testi-card">
+            <div class="c-testi-quote">"Nothing else covers African fintech this well. Period."</div>
+            <div class="c-testi-author">
+              <div class="c-testi-avatar">A</div>
+              <div><div class="c-testi-name">Amara O.</div><div class="c-testi-role">Research Lead, Nairobi</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p style="margin-top: 18px; font-size: 11.5px; color: #888; text-align: center;">Click your preferred direction. Or tell me what to change — colour, type size, testimonial layout, anything.</p>

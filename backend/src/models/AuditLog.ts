@@ -19,6 +19,10 @@ export interface IAuditLog extends mongoose.Document {
   ipAddress?: string;
   userAgent?: string;
   durationMs?: number;
+  /** Per-workspace TTL anchor (Task #21). When set, the TTL index on
+   *  `expiresAt` removes this row at that time. When unset (enterprise
+   *  customers with regulatory holds), the row never expires. */
+  expiresAt?: Date;
   createdAt: Date;
 }
 
@@ -47,10 +51,14 @@ const auditLogSchema = new Schema<IAuditLog>(
     ipAddress: { type: String },
     userAgent: { type: String },
     durationMs: { type: Number },
+    expiresAt: { type: Date, index: { expireAfterSeconds: 0 } },
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );
 
-auditLogSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 });
+// Note: TTL index sits on `expiresAt` (set per-row at insert by the
+// audit-log writer based on the workspace's auditRetentionDays
+// setting). Rows whose expiresAt is unset never expire — that's the
+// enterprise-retention path.
 
 export default mongoose.model<IAuditLog>('AuditLog', auditLogSchema);

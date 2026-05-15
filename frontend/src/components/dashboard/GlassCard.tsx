@@ -31,7 +31,7 @@ export function Pill({ children, tone = 'neutral', className = '' }: {
  const tones: Record<string, string> = {
   neutral: 'bg-[color:var(--paper)]/[0.08] text-white/75 border-white/10',
   red:   'bg-rose-400/10 text-rose-200 border-rose-300/20',
-  amber:  'bg-amber-400/10 text-amber-100 border-[color:var(--forest)]/50/20',
+  amber:  'bg-amber-400/10 text-amber-100 border-[color:var(--ember)]/50/20',
   green:  'bg-emerald-400/10 text-emerald-200 border-emerald-300/20',
   blue:  'bg-sky-400/10 text-sky-200 border-sky-300/20',
   violet: 'bg-violet-400/10 text-violet-200 border-violet-300/20',

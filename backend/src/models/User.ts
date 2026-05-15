@@ -47,6 +47,14 @@ export interface IUser extends mongoose.Document {
    * logs out (or admin force-rotates them) without us needing a denylist.
    */
   tokenVersion: number;
+  /** First-run onboarding state (Task #19). Tracks completed steps so
+   *  the wizard can resume mid-setup rather than re-show its intro.
+   *  `dismissedAt` opts the user out entirely — we never re-prompt. */
+  onboardingState?: {
+    completedSteps: string[];
+    dismissedAt?: Date;
+    completedAt?: Date;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -85,6 +93,11 @@ const userSchema = new Schema<IUser>(
     isEmailVerified: { type: Boolean, default: false },
     lastLoginAt: { type: Date },
     tokenVersion: { type: Number, default: 0 },
+    onboardingState: {
+      completedSteps: { type: [String], default: [] },
+      dismissedAt: { type: Date },
+      completedAt: { type: Date },
+    },
   },
   { timestamps: true }
 );

@@ -6,6 +6,7 @@ export const NOTIFICATION_TYPES = [
   'campaign.bounce',
   'crm.sync_complete',
   'crm.sync_failed',
+  'budget.threshold',
   'system',
 ] as const;
 

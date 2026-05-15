@@ -1,4 +1,5 @@
 import { type Request, type Response } from 'express';
+import type mongoose from 'mongoose';
 import Lead from '../models/Lead.js';
 import { ApiError } from '../utils/ApiError.js';
 
@@ -109,4 +110,61 @@ export async function bulkDeleteLeads(req: Request, res: Response): Promise<void
 
   await Lead.deleteMany({ _id: { $in: leadIds }, workspaceId });
   res.json({ success: true });
+}
+
+/* ── Bulk suppression (Task #18) ─────────────────────────────────── */
+
+/**
+ * Add every selected lead's primary email + domain to the workspace
+ * suppression list. The reply-pause / bounce-suppress paths already
+ * check this list before any send, so this is the canonical "block
+ * outreach to these leads" lever for an agency mid-campaign.
+ */
+export async function bulkSuppressLeads(req: Request, res: Response): Promise<void> {
+  const { workspaceId } = req.params;
+  const body = req.body as { leadIds?: string[]; mode?: 'email' | 'domain' | 'both' };
+  const leadIds = body.leadIds ?? [];
+  const mode = body.mode ?? 'email';
+  if (leadIds.length === 0) {
+    res.json({ success: true, data: { suppressed: 0 } });
+    return;
+  }
+
+  const leads = await Lead.find({ _id: { $in: leadIds }, workspaceId })
+    .select('emails companyDomain')
+    .lean();
+
+  // De-dupe the (workspace, email|domain) pairs before insert so a 500-
+  // lead bulk doesn't try to insert 500 dup-key conflicts. The model
+  // itself has a unique index per workspace + value; ordered:false
+  // tolerates the residual races.
+  const { SuppressionEntry } = await import('../models/SuppressionList.js');
+  const entries: Array<{ workspaceId: string; email?: string; domain?: string; addedBy?: mongoose.Types.ObjectId; addedAt: Date }> = [];
+  const now = new Date();
+  for (const lead of leads) {
+    const primary = lead.emails?.[0]?.address?.toLowerCase();
+    if ((mode === 'email' || mode === 'both') && primary) {
+      entries.push({ workspaceId: workspaceId!, email: primary, addedBy: req.user?._id, addedAt: now });
+    }
+    if ((mode === 'domain' || mode === 'both') && lead.companyDomain) {
+      entries.push({ workspaceId: workspaceId!, domain: lead.companyDomain.toLowerCase(), addedBy: req.user?._id, addedAt: now });
+    }
+  }
+
+  if (entries.length === 0) {
+    res.json({ success: true, data: { suppressed: 0 } });
+    return;
+  }
+
+  try {
+    const inserted = await SuppressionEntry.insertMany(entries, { ordered: false });
+    res.json({ success: true, data: { suppressed: inserted.length } });
+  } catch (err: unknown) {
+    // Duplicate-key 11000s on the unique index are expected on a
+    // partial overlap; pluck the actual insertedDocs count instead of
+    // bailing the whole request.
+    const bulkErr = err as { insertedDocs?: unknown[]; result?: { insertedCount?: number } };
+    const count = bulkErr.insertedDocs?.length ?? bulkErr.result?.insertedCount ?? 0;
+    res.json({ success: true, data: { suppressed: count } });
+  }
 }

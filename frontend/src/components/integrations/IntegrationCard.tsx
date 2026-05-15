@@ -33,7 +33,7 @@ function ArrowEast({ className = 'w-3 h-3' }: { className?: string }) {
 
 function StatusChip({ status }: { status: CardStatus }) {
  const map: Record<CardStatus, { label: string; tone: string }> = {
-  'on-the-wire': { label: 'On the wire', tone: 'text-[color:var(--forest)] border-[color:var(--forest)]/40' },
+  'on-the-wire': { label: 'On the wire', tone: 'text-[color:var(--ember)] border-[color:var(--ember)]/40' },
   'not-filed':  { label: 'Not filed',  tone: 'text-[color:var(--ink-2)] border-[color:var(--rule)]' },
   'forthcoming': { label: 'Forthcoming', tone: 'text-[color:var(--ink-3)] border-[color:var(--rule)]/60' },
  };
@@ -89,7 +89,7 @@ export function IntegrationCard({
    <div
     className={`relative h-full border bg-[color:var(--paper)] p-6 rounded-sm transition-all ${
      isConnected
-      ? 'border-[color:var(--forest)]/40'
+      ? 'border-[color:var(--ember)]/40'
       : isForthcoming
        ? 'border-[color:var(--rule)]/60 bg-[color:var(--paper-2)]/60 opacity-85'
        : 'border-[color:var(--rule)]'

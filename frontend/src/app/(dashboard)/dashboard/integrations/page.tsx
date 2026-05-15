@@ -177,7 +177,7 @@ export default function IntegrationsPage() {
    transition={{ duration: 0.28 }}
   >
    {/* Page header — framed as a Settings sub-page */}
-   <div className="px-8 py-6">
+   <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
     <div className="max-w-[1280px] mx-auto">
      <div className="flex items-center gap-1.5 mb-3 font-mono text-[10.5px] text-[color:var(--ink-3)]">
       <Link
@@ -189,16 +189,16 @@ export default function IntegrationsPage() {
       <span className="text-[color:var(--ink-3)]/60">/</span>
       <span className="text-[color:var(--ink-2)]">Integrations</span>
      </div>
-     <div className="flex items-center justify-between gap-6 flex-wrap">
+     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6 flex-wrap">
      <div>
-      <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)]">
+      <h1 className="font-display text-[24px] sm:text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
        Integrations
       </h1>
       <p className="text-[12.5px] text-[color:var(--ink-3)] mt-0.5">
        Connect your CRM, email sender, and webhooks.
       </p>
      </div>
-     <div className="flex items-center gap-3">
+     <div className="flex items-center gap-3 flex-wrap">
       <PageHelp
        title="Integrations"
        body="Connect external tools — CRM, email sender, and outbound webhooks. Live integrations push or pull data automatically."
@@ -209,7 +209,7 @@ export default function IntegrationsPage() {
        ]}
       />
       <span className="text-[13px] text-[color:var(--ink-3)]">Connected:</span>
-      <span className="font-bold text-[color:var(--forest)] text-[15px]">
+      <span className="font-bold text-[color:var(--ember)] text-[15px]">
        {liveConnected}
        <span className="font-normal text-[color:var(--ink-3)] ml-1">/ {totalLive}</span>
       </span>
@@ -219,7 +219,7 @@ export default function IntegrationsPage() {
    </div>
 
    {/* Sections */}
-   <div className="max-w-5xl mx-auto px-8 py-6 flex flex-col gap-8">
+   <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col gap-6 sm:gap-8">
     {sections.map((s) => (
      <section key={s.key}>
       {/* Section label */}

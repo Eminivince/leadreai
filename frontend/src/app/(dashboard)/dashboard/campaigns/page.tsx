@@ -75,7 +75,7 @@ function relativeTime(iso: string): string {
  */
 function StatusPill({ status }: { status: CampaignListItem['status'] }) {
   const map = {
-    active:    { label: 'active',    dot: 'bg-[color:var(--forest)]',  text: 'text-[color:var(--forest-2)]', border: 'border-[color:var(--forest)]/30 bg-[color:var(--forest)]/[0.06]', pulse: true },
+    active:    { label: 'active',    dot: 'bg-[color:var(--ember)]',  text: 'text-[color:var(--ember-2)]', border: 'border-[color:var(--ember)]/30 bg-[color:var(--ember)]/[0.06]', pulse: true },
     paused:    { label: 'paused',    dot: 'bg-[color:var(--warn)]',    text: 'text-[color:var(--warn)]',     border: 'border-[color:var(--warn)]/30 bg-[color:var(--warn)]/[0.04]',    pulse: false },
     draft:     { label: 'draft',     dot: 'bg-[color:var(--ink-3)]',   text: 'text-[color:var(--ink-2)]',    border: 'border-[color:var(--rule)] bg-[color:var(--paper-2)]',          pulse: false },
     completed: { label: 'completed', dot: 'bg-[color:var(--ink-3)]',   text: 'text-[color:var(--ink-2)]',    border: 'border-[color:var(--rule)] bg-[color:var(--paper-2)]',          pulse: false },
@@ -148,18 +148,18 @@ export default function CampaignsListPage() {
   const pagedCampaigns = campaigns.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10 animate-fade-up">
+    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 md:py-10 animate-fade-up">
       {/* Header — inline pattern matching the rest of the redesign */}
-      <section className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+      <section className="mb-5 sm:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 flex-wrap">
         <div className="flex items-baseline gap-3">
-          <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)]">
+          <h1 className="font-display text-[24px] sm:text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
             Campaigns
           </h1>
           <span className="font-mono text-[12px] tabular-nums text-[color:var(--ink-3)]">
             {isLoading ? '...' : counts.all}
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <PageHelp
             title="Campaigns"
             body="Email outreach sequences. Each campaign points at a lead file (the audience), runs a multi-step sequence on a schedule, and pauses on reply. Open one to see live KPIs."
@@ -171,7 +171,7 @@ export default function CampaignsListPage() {
           />
           <button
             onClick={() => router.push('/dashboard/campaigns/new')}
-            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] transition-colors"
+            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] transition-colors"
           >
             New campaign
             <ArrowEast className="w-3 h-3" />
@@ -180,8 +180,8 @@ export default function CampaignsListPage() {
       </section>
 
       {/* Filter bar — segmented, mono tabular counts */}
-      <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
-        <div className="inline-flex items-center rounded-md border border-[color:var(--rule)] bg-[color:var(--paper)] p-0.5">
+      <div className="flex items-center justify-between gap-3 flex-wrap mb-4 -mx-1 px-1 overflow-x-auto">
+        <div className="inline-flex items-center rounded-md border border-[color:var(--rule)] bg-[color:var(--paper)] p-0.5 shrink-0">
           {FILTERS.map((f) => {
             const on = filter === f.k;
             const n = counts[f.k as keyof typeof counts];
@@ -225,7 +225,7 @@ export default function CampaignsListPage() {
                   className="group flex items-center gap-3 md:gap-4 px-4 md:px-5 py-3 border-b border-[color:var(--rule)] last:border-b-0 hover:bg-[color:var(--paper-2)]/60 transition-colors"
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="text-[13.5px] font-medium text-[color:var(--ink)] truncate group-hover:text-[color:var(--forest)] transition-colors">
+                    <div className="text-[13.5px] font-medium text-[color:var(--ink)] truncate group-hover:text-[color:var(--ember)] transition-colors">
                       {c.name}
                     </div>
                     <div className="mt-0.5 font-mono text-[10.5px] tabular-nums text-[color:var(--ink-3)] truncate">
@@ -315,7 +315,7 @@ function EmptyState({
       {isFirstTime && (
         <button
           onClick={onCreate}
-          className="mt-5 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] transition-colors"
+          className="mt-5 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] transition-colors"
         >
           New campaign
           <ArrowEast className="w-3 h-3" />

@@ -398,6 +398,7 @@ export async function campaignStats(req: Request, res: Response): Promise<void> 
         enrollments: { active: 0, paused: 0, completed: 0, stopped: 0, bounced: 0, unsubscribed: 0, replied: 0, total: 0 },
         perStep: [],
         campaignStats: campaign.stats,
+        replyClassification: { positive: 0, ooo: 0, bounce: 0, unknown: 0 },
       },
     });
     return;

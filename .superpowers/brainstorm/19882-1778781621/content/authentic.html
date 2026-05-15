@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>LeadreAI — The Real One</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+
+:root{
+  --paper:    #F6F2EA;
+  --paper-2:  #EDE8DC;
+  --ink:      #1C1714;
+  --ink-2:    #4A4035;
+  --ink-3:    #8A7A65;
+  --ink-4:    #B8A898;
+  --rule:     #DDD7CC;
+  --ember:    #B84C2B;  /* the one accent — burnt terracotta */
+  --ember-bg: #F7E8E2;
+
+  --display: 'Instrument Serif', serif;
+  --body:    'Outfit', sans-serif;
+  --mono:    'DM Mono', monospace;
+}
+
+body{
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 14px;
+  line-height: 1.5;
+  min-width: 900px;
+}
+
+/* ── NAV ─────────────────────────────────────── */
+.nav{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 0 48px;
+  height: 56px;
+  border-bottom: 1px solid var(--rule);
+}
+.nav-brand{
+  display:flex;align-items:center;gap:10px;
+}
+.nav-mark{
+  width:28px;height:28px;border-radius:7px;
+  background:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.nav-mark svg{width:16px;height:16px;}
+.nav-wordmark{
+  font-family:var(--body);
+  font-size:15px;font-weight:700;
+  color:var(--ink);letter-spacing:-0.02em;
+}
+.nav-links{
+  display:flex;align-items:center;gap:28px;
+}
+.nav-links a{
+  font-size:13px;font-weight:400;
+  color:var(--ink-3);text-decoration:none;
+  letter-spacing:0.01em;
+}
+.nav-links a:hover{color:var(--ink);}
+.nav-cta{
+  display:flex;align-items:center;gap:10px;
+}
+.btn-ghost{
+  font-size:13px;font-weight:500;color:var(--ink-2);
+  text-decoration:none;letter-spacing:0.01em;
+}
+.btn-solid{
+  background:var(--ink);color:var(--paper);
+  font-family:var(--body);font-size:12.5px;font-weight:600;
+  padding:8px 18px;border-radius:6px;letter-spacing:0.02em;
+  border:none;cursor:pointer;
+  transition:opacity 0.15s;
+}
+.btn-solid:hover{opacity:0.85;}
+
+/* ── HERO ────────────────────────────────────── */
+.hero{
+  display:grid;
+  grid-template-columns:1fr 420px;
+  gap:0;
+  padding:0 48px;
+  min-height:calc(100vh - 56px);
+  border-bottom:1px solid var(--rule);
+}
+
+.hero-left{
+  display:flex;flex-direction:column;
+  justify-content:center;
+  padding:60px 64px 60px 0;
+  border-right:1px solid var(--rule);
+}
+
+/* The headline */
+.hero-eyebrow{
+  font-family:var(--mono);
+  font-size:10px;font-weight:400;
+  letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--ember);
+  margin-bottom:24px;
+  display:flex;align-items:center;gap:10px;
+}
+.hero-eyebrow::before{
+  content:'';width:20px;height:1px;background:var(--ember);flex-shrink:0;
+}
+
+.hero-h1{
+  font-family:var(--display);
+  font-size:clamp(48px,4.5vw,64px);
+  font-weight:400;
+  line-height:1.05;
+  letter-spacing:-0.02em;
+  color:var(--ink);
+  margin-bottom:28px;
+}
+.hero-h1 em{
+  font-style:italic;
+  color:var(--ink-2);
+}
+
+.hero-body{
+  font-size:15px;font-weight:400;
+  color:var(--ink-3);line-height:1.7;
+  max-width:420px;margin-bottom:40px;
+}
+
+.hero-actions{
+  display:flex;align-items:center;gap:16px;
+  flex-wrap:wrap;
+}
+.hero-primary{
+  background:var(--ink);color:var(--paper);
+  font-family:var(--body);font-size:13.5px;font-weight:600;
+  padding:12px 24px;border-radius:8px;
+  border:none;cursor:pointer;
+  display:flex;align-items:center;gap:8px;
+  transition:opacity 0.15s;
+}
+.hero-primary:hover{opacity:0.82;}
+.hero-primary svg{width:14px;height:14px;opacity:0.7;}
+.hero-secondary{
+  font-size:13.5px;font-weight:500;color:var(--ink-3);
+  display:flex;align-items:center;gap:6px;
+}
+.hero-secondary span{font-size:11px;color:var(--ink-4);}
+
+/* Trust strip */
+.hero-trust{
+  margin-top:48px;
+  padding-top:24px;
+  border-top:1px solid var(--rule);
+  display:flex;align-items:center;gap:28px;
+}
+.trust-item{
+  display:flex;flex-direction:column;
+  gap:2px;
+}
+.trust-num{
+  font-family:var(--display);
+  font-size:22px;font-weight:400;
+  color:var(--ink);letter-spacing:-0.02em;
+  line-height:1;
+}
+.trust-num em{
+  font-style:italic;color:var(--ember);
+}
+.trust-lbl{
+  font-family:var(--mono);font-size:9.5px;
+  color:var(--ink-4);letter-spacing:0.12em;
+  text-transform:uppercase;
+}
+.trust-sep{width:1px;height:32px;background:var(--rule);}
+
+/* RIGHT side — the product preview */
+.hero-right{
+  display:flex;flex-direction:column;
+  justify-content:center;
+  padding:48px 0 48px 52px;
+}
+.preview-label{
+  font-family:var(--mono);font-size:9.5px;
+  color:var(--ink-4);letter-spacing:0.18em;
+  text-transform:uppercase;margin-bottom:12px;
+}
+
+/* Query bar */
+.query-bar{
+  display:flex;align-items:center;gap:10px;
+  background:var(--paper);
+  border:1.5px solid var(--rule);
+  border-radius:8px;
+  padding:10px 14px;
+  margin-bottom:6px;
+}
+.query-bar .q{
+  font-size:13px;color:var(--ink-2);flex:1;
+}
+.query-bar .badge{
+  font-family:var(--mono);font-size:9px;
+  background:var(--ember-bg);color:var(--ember);
+  border:1px solid rgba(184,76,43,0.2);
+  padding:3px 9px;border-radius:5px;
+  letter-spacing:0.08em;
+  white-space:nowrap;
+}
+.results-count{
+  font-family:var(--mono);font-size:10px;
+  color:var(--ink-4);
+  padding:6px 2px;letter-spacing:0.04em;
+  margin-bottom:4px;
+}
+.results-count strong{color:var(--ink-2);}
+
+/* The table */
+.data-table{
+  width:100%;border-collapse:collapse;
+  border:1.5px solid var(--rule);
+  border-radius:8px;overflow:hidden;
+  background:white;
+}
+.data-table thead tr{
+  background:var(--paper-2);
+  border-bottom:1.5px solid var(--rule);
+}
+.data-table th{
+  text-align:left;
+  font-family:var(--mono);font-size:8.5px;
+  letter-spacing:0.16em;text-transform:uppercase;
+  color:var(--ink-4);font-weight:500;
+  padding:9px 14px;
+}
+.data-table td{
+  padding:11px 14px;
+  border-bottom:1px solid var(--paper-2);
+  vertical-align:middle;
+}
+.data-table tr:last-child td{border-bottom:none;}
+.co{font-size:12.5px;font-weight:600;color:var(--ink);}
+.domain{font-size:10px;color:var(--ink-4);margin-top:1px;}
+.contact{font-size:12px;color:var(--ink-2);}
+.verified{
+  font-size:11.5px;color:#2D7A4A;
+  display:flex;align-items:center;gap:4px;
+  font-weight:500;
+}
+.verified::before{content:'✓';font-weight:700;}
+.source-ct{font-size:10.5px;color:var(--ink-4);}
+.blur-row td{filter:blur(4px);opacity:0.35;user-select:none;}
+
+/* Gate */
+.gate{
+  background:linear-gradient(to bottom, rgba(246,242,234,0) 0%, var(--paper) 52%);
+  padding:22px 0 4px;margin-top:-28px;
+  text-align:center;position:relative;
+}
+.gate-cta{
+  display:inline-flex;align-items:center;gap:8px;
+  border:1.5px solid var(--rule);background:white;
+  padding:10px 22px;border-radius:7px;
+  font-size:12.5px;font-weight:600;color:var(--ink);
+  cursor:pointer;transition:border-color 0.15s;
+  margin-bottom:5px;
+}
+.gate-cta:hover{border-color:var(--ink);}
+.gate-sub{font-size:11px;color:var(--ink-4);}
+
+/* ── WHAT THIS IS ────────────────────────────── */
+.what-section{
+  padding:72px 48px;
+  border-bottom:1px solid var(--rule);
+  display:grid;
+  grid-template-columns:280px 1fr;
+  gap:80px;
+  align-items:start;
+}
+.what-label{
+  font-family:var(--mono);font-size:10px;
+  color:var(--ink-4);letter-spacing:0.18em;
+  text-transform:uppercase;
+  padding-top:4px;
+}
+.what-content h2{
+  font-family:var(--display);
+  font-size:34px;font-weight:400;
+  color:var(--ink);letter-spacing:-0.02em;
+  line-height:1.15;margin-bottom:20px;
+}
+.what-content h2 em{font-style:italic;color:var(--ink-2);}
+.what-content p{
+  font-size:14.5px;color:var(--ink-3);line-height:1.75;
+  max-width:540px;margin-bottom:16px;
+}
+.what-content p strong{color:var(--ink-2);font-weight:600;}
+
+/* three pillars */
+.pillars{
+  margin-top:40px;
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:0;border:1.5px solid var(--rule);border-radius:10px;
+  overflow:hidden;
+}
+.pillar{
+  padding:22px 22px 20px;
+  border-right:1px solid var(--rule);
+}
+.pillar:last-child{border-right:none;}
+.pillar-num{
+  font-family:var(--mono);font-size:10px;
+  color:var(--ember);letter-spacing:0.1em;
+  margin-bottom:10px;
+}
+.pillar-title{
+  font-size:13.5px;font-weight:600;color:var(--ink);
+  margin-bottom:6px;
+}
+.pillar-body{
+  font-size:12px;color:var(--ink-3);line-height:1.6;
+}
+
+/* ── TESTIMONIALS ────────────────────────────── */
+.testi-section{
+  padding:72px 48px;
+}
+.testi-top{
+  display:flex;align-items:baseline;
+  justify-content:space-between;
+  margin-bottom:40px;
+}
+.testi-heading{
+  font-family:var(--display);
+  font-size:32px;font-weight:400;
+  color:var(--ink);letter-spacing:-0.02em;
+}
+.testi-heading em{font-style:italic;color:var(--ink-3);}
+.testi-meta{
+  font-family:var(--mono);font-size:10px;
+  color:var(--ink-4);letter-spacing:0.14em;
+  text-transform:uppercase;
+}
+.testi-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1.5px;background:var(--rule);
+  border:1.5px solid var(--rule);border-radius:12px;overflow:hidden;
+}
+.testi-card{
+  padding:28px 24px;background:var(--paper);
+  display:flex;flex-direction:column;
+  gap:20px;
+}
+.testi-quote{
+  font-family:var(--display);
+  font-size:16px;font-weight:400;font-style:italic;
+  color:var(--ink-2);line-height:1.55;
+  flex:1;
+}
+.testi-quote::before{
+  content:'\201C';
+  font-size:32px;color:var(--rule);
+  display:block;line-height:0.8;
+  margin-bottom:8px;
+}
+.testi-author{
+  display:flex;align-items:center;gap:10px;
+}
+.testi-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--paper-2);border:1.5px solid var(--rule);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:var(--ink-3);
+  flex-shrink:0;
+}
+.testi-name{font-size:12.5px;font-weight:600;color:var(--ink);}
+.testi-role{font-size:11px;color:var(--ink-4);margin-top:1px;}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ─────────────────────────────────────── -->
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-mark">
+      <svg viewBox="0 0 16 16" fill="none">
+        <path d="M3 13 L3 3 L6 3 L6 10 L13 10 L13 13 Z" fill="white"/>
+        <circle cx="12" cy="4" r="1.8" fill="rgba(255,255,255,0.5)"/>
+      </svg>
+    </div>
+    <span class="nav-wordmark">LeadreAI</span>
+  </div>
+  <div class="nav-links">
+    <a href="#">Product</a>
+    <a href="#">Pricing</a>
+    <a href="#">Docs</a>
+    <a href="#">Blog</a>
+  </div>
+  <div class="nav-cta">
+    <a href="#" class="btn-ghost">Sign in</a>
+    <button class="btn-solid">Start for free</button>
+  </div>
+</nav>
+
+<!-- ── HERO ─────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow">B2B intelligence · African markets</div>
+
+    <h1 class="hero-h1">
+      Your clients ask<br>
+      where the data<br>
+      <em>comes from.</em><br>
+      Now you can show them.
+    </h1>
+
+    <p class="hero-body">
+      LeadreAI runs a research agent against live registries, filings, and public sources — and gives you a table where every cell links back to its evidence. Built specifically for markets Apollo and ZoomInfo don't cover well.
+    </p>
+
+    <div class="hero-actions">
+      <button class="hero-primary">
+        Start researching
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 8h10M8 3l5 5-5 5"/>
+        </svg>
+      </button>
+      <div class="hero-secondary">
+        See a live demo <span>→ 8 min research run</span>
+      </div>
+    </div>
+
+    <div class="hero-trust">
+      <div class="trust-item">
+        <div class="trust-num">50<em>k+</em></div>
+        <div class="trust-lbl">Leads delivered</div>
+      </div>
+      <div class="trust-sep"></div>
+      <div class="trust-item">
+        <div class="trust-num">8<em>m</em></div>
+        <div class="trust-lbl">Avg research run</div>
+      </div>
+      <div class="trust-sep"></div>
+      <div class="trust-item">
+        <div class="trust-num">3<em>×</em></div>
+        <div class="trust-lbl">Sources per cell</div>
+      </div>
+      <div class="trust-sep"></div>
+      <div class="trust-item">
+        <div class="trust-num">100<em>%</em></div>
+        <div class="trust-lbl">Evidence-backed</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="preview-label">Live result — Fintech Series A, Lagos</div>
+
+    <div class="query-bar">
+      <span class="q">Fintech founders Series A+, Lagos</span>
+      <span class="badge">✓ completed in 8 min</span>
+    </div>
+    <div class="results-count"><strong>47 leads found</strong> · showing 2 of 47</div>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th>Contact</th>
+          <th>Email</th>
+          <th>Sources</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="co">Paystack</div><div class="domain">paystack.com</div></td>
+          <td><div class="contact">Shola Akinlade</div></td>
+          <td><div class="verified">verified</div></td>
+          <td><div class="source-ct">3 sources</div></td>
+        </tr>
+        <tr>
+          <td><div class="co">Moniepoint</div><div class="domain">moniepoint.com</div></td>
+          <td><div class="contact">Tosin Eniolorunda</div></td>
+          <td><div class="verified">verified</div></td>
+          <td><div class="source-ct">2 sources</div></td>
+        </tr>
+        <tr class="blur-row">
+          <td><div class="co">Flutterwave</div><div class="domain">flutterwave.com</div></td>
+          <td><div class="contact">Olugbenga Agboola</div></td>
+          <td><div class="verified">verified</div></td>
+          <td><div class="source-ct">4 sources</div></td>
+        </tr>
+        <tr class="blur-row">
+          <td><div class="co">Cowrywise</div><div class="domain">cowrywise.com</div></td>
+          <td><div class="contact">Razaq Ahmed</div></td>
+          <td><div class="verified">verified</div></td>
+          <td><div class="source-ct">2 sources</div></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="gate">
+      <button class="gate-cta">Unlock all 47 results →</button>
+      <div class="gate-sub">Free to start — no credit card</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── WHAT THIS IS ─────────────────────────────── -->
+<section class="what-section">
+  <div class="what-label">What it is</div>
+  <div class="what-content">
+    <h2>Not a database.<br>A <em>research agent.</em></h2>
+    <p>
+      Apollo sells you rows from a table they built once and maintain over time.
+      LeadreAI runs a fresh research job every time — reading live registries,
+      company filings, SERP results, and public directories — then writes only
+      what it can <strong>justify from what it found.</strong>
+    </p>
+    <p>
+      That distinction matters most in the markets it was built for: Nigerian fintech,
+      East African SMB, pan-African regulated industries. Markets where the big databases
+      have thin coverage, stale emails, and no evidence trail.
+    </p>
+
+    <div class="pillars">
+      <div class="pillar">
+        <div class="pillar-num">01</div>
+        <div class="pillar-title">Live research, not stale rows</div>
+        <div class="pillar-body">Every job reads live sources. Results are fresh from the moment you run.</div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-num">02</div>
+        <div class="pillar-title">Every cell has a receipt</div>
+        <div class="pillar-body">Source URL, confidence score, and timestamp on every piece of data.</div>
+      </div>
+      <div class="pillar">
+        <div class="pillar-num">03</div>
+        <div class="pillar-title">Built for African markets</div>
+        <div class="pillar-body">Coverage where Apollo is thin — Nigeria, Kenya, Ghana, and beyond.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TESTIMONIALS ─────────────────────────────── -->
+<section class="testi-section">
+  <div class="testi-top">
+    <h2 class="testi-heading">Agencies who<br><em>actually use it.</em></h2>
+    <div class="testi-meta">Lagos · Nairobi · Accra</div>
+  </div>
+  <div class="testi-grid">
+    <div class="testi-card">
+      <div class="testi-quote">
+        We ran 3 client briefs in one week. Every table came back with verified emails and source links attached. My clients stopped asking "how do you know this?"
+      </div>
+      <div class="testi-author">
+        <div class="testi-avatar">T</div>
+        <div>
+          <div class="testi-name">Tunde Adeyemi</div>
+          <div class="testi-role">Outbound Agency, Lagos</div>
+        </div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-quote">
+        Apollo has zero real coverage on the markets I work in. Leadre found 60 verified contacts in one run that would have taken me three days manually.
+      </div>
+      <div class="testi-author">
+        <div class="testi-avatar">A</div>
+        <div>
+          <div class="testi-name">Amara Okonkwo</div>
+          <div class="testi-role">Research Lead, Nairobi</div>
+        </div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-quote">
+        The evidence trail is the thing. I can show a client exactly where any piece of data came from. That's not a feature I had before. It changes conversations.
+      </div>
+      <div class="testi-author">
+        <div class="testi-avatar">K</div>
+        <div>
+          <div class="testi-name">Kofi Mensah</div>
+          <div class="testi-role">B2B Research, Accra</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

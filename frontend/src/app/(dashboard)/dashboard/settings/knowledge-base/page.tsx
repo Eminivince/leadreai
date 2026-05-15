@@ -170,14 +170,16 @@ export default function KnowledgeBaseSettingsPage() {
           }
         />
         <div className="">
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
             <p className=" text-[14px] leading-[1.5] text-[color:var(--ink-2)] max-w-[560px]">
               Entries teach the agent what to say, how to say it, and who you sell to. The engine
               reads these when drafting outreach and ranking leads.
             </p>
-            <PrimaryButton type="button" onClick={openAdd} disabled={atLimit || !workspaceId}>
-              {atLimit ? 'At limit' : 'Add entry'}
-            </PrimaryButton>
+            <div className="self-start sm:self-auto">
+              <PrimaryButton type="button" onClick={openAdd} disabled={atLimit || !workspaceId}>
+                {atLimit ? 'At limit' : 'Add entry'}
+              </PrimaryButton>
+            </div>
           </div>
 
           {isLoading ? (
@@ -261,10 +263,10 @@ export default function KnowledgeBaseSettingsPage() {
                   createMutation.mutate(form);
                 }
               }}
-              className="relative w-full max-w-[560px] h-full bg-[color:var(--paper)] border-l border-[color:var(--rule)] overflow-y-auto"
+              className="relative w-full sm:max-w-[560px] h-full bg-[color:var(--paper)] border-l border-[color:var(--rule)] overflow-y-auto"
               style={{ animation: 'kbSlide .26s cubic-bezier(.2,.9,.25,1) both' }}
             >
-              <div className="flex items-center justify-between px-7 pt-7 pb-4 border-b border-[color:var(--rule)]">
+              <div className="flex items-center justify-between px-5 sm:px-7 pt-6 sm:pt-7 pb-4 border-b border-[color:var(--rule)]">
                 <span className="font-mono text-[10px] tracking-[0.06em] text-[color:var(--ink-3)]">
                   {editing ? 'Edit entry' : 'New entry'}
                 </span>
@@ -277,7 +279,7 @@ export default function KnowledgeBaseSettingsPage() {
                 </button>
               </div>
 
-              <div className="px-7 pt-5 pb-4 border-b border-[color:var(--rule)]">
+              <div className="px-5 sm:px-7 pt-5 pb-4 border-b border-[color:var(--rule)]">
                 <h2 className="text-[18px] font-semibold tracking-[-0.005em] text-[color:var(--ink)]">
                   {editing ? editing.title : 'Add a knowledge entry'}
                 </h2>
@@ -286,7 +288,7 @@ export default function KnowledgeBaseSettingsPage() {
                 </p>
               </div>
 
-              <div className="px-7 py-7 flex flex-col gap-6">
+              <div className="px-5 sm:px-7 py-6 sm:py-7 flex flex-col gap-6">
                 <div>
                   <Label>Title</Label>
                   <HairlineInput
@@ -328,7 +330,7 @@ export default function KnowledgeBaseSettingsPage() {
                 </div>
               </div>
 
-              <div className="sticky bottom-0 bg-[color:var(--paper)] border-t border-[color:var(--rule)] px-7 py-4 flex items-center justify-end gap-3">
+              <div className="sticky bottom-0 bg-[color:var(--paper)] border-t border-[color:var(--rule)] px-5 sm:px-7 py-4 flex items-center justify-end gap-3">
                 <GhostButton type="button" onClick={closeDialog} disabled={isSaving}>
                   Cancel
                 </GhostButton>

@@ -60,7 +60,7 @@ export default function WorkflowDetailPage() {
 
   if (isLoading && !workflow) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center  italic text-[14px] text-[color:var(--ink-3)]">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-20 text-center  italic text-[14px] text-[color:var(--ink-3)]">
         Loading workflow…
       </div>
     );
@@ -68,7 +68,7 @@ export default function WorkflowDetailPage() {
 
   if (!workflow) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-20 text-center">
         <p className=" text-[14px] text-[color:var(--ink-2)]">Workflow not found.</p>
         <Link href="/dashboard/workflows" className="mt-4 inline-block font-mono text-[11px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)]">
           ← All workflows
@@ -78,10 +78,10 @@ export default function WorkflowDetailPage() {
   }
 
   return (
-    <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-10 md:py-14">
+    <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-10 md:py-14">
       {/* Header */}
-      <section className="mb-10">
-        <div className="flex items-center gap-3 mb-4">
+      <section className="mb-6 sm:mb-10">
+        <div className="flex items-center gap-3 mb-4 flex-wrap">
           <Link
             href="/dashboard/workflows"
             className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
@@ -93,22 +93,23 @@ export default function WorkflowDetailPage() {
             {workflow.tableTemplate.rowType}
           </span>
         </div>
-        <h1 className=" text-[38px] md:text-[52px] leading-[0.97] tracking-[-0.015em] text-[color:var(--ink)]">
+        <h1 className=" text-[30px] sm:text-[38px] md:text-[52px] leading-[0.97] tracking-[-0.015em] text-[color:var(--ink)]">
           {workflow.name}
         </h1>
         {workflow.description && (
-          <p className="mt-3  text-[15px] leading-[1.55] text-[color:var(--ink-2)] max-w-[780px]">
+          <p className="mt-3  text-[14px] sm:text-[15px] leading-[1.55] text-[color:var(--ink-2)] max-w-[780px]">
             {workflow.description}
           </p>
         )}
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-10">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 lg:gap-10">
         {/* Left — details */}
         <div>
           <WorkflowMeta workflow={workflow} onChanged={invalidate} workspaceId={workspaceId ?? ''} />
           <ColumnsSummary workflow={workflow} />
           {workflow.seed && <SeedSummary workflow={workflow} />}
+          <PublishPanel workflow={workflow} workspaceId={workspaceId ?? ''} onChanged={invalidate} />
           <div className="mt-10 border-t border-[color:var(--rule)] pt-6">
             <button
               onClick={() => void handleDelete()}
@@ -144,17 +145,71 @@ function WorkflowMeta({
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(workflow.name);
   const [description, setDescription] = useState(workflow.description ?? '');
+  // Power-user surface (Task #17). Editing the seed brief covers the
+  // most common "I want to tweak this workflow without re-creating"
+  // path; columns + parameters are advanced enough we expose JSON
+  // mode rather than build a full visual builder — keeps the diff
+  // small and lets agencies who know the schema iterate.
+  const [seedBrief, setSeedBrief] = useState(workflow.seed?.rawQueryTemplate ?? '');
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [advancedJson, setAdvancedJson] = useState(() =>
+    JSON.stringify(
+      {
+        seedParameters: workflow.seed?.parameters ?? [],
+        columns: workflow.tableTemplate.columns,
+      },
+      null,
+      2,
+    ),
+  );
+  const [advancedError, setAdvancedError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   async function save() {
     setSaving(true);
+    setAdvancedError(null);
     try {
+      const payload: Record<string, unknown> = {
+        name: name.trim(),
+        description: description.trim() || undefined,
+      };
+
+      // Seed brief — only send when it's been touched away from the
+      // current value, AND the workflow had a seed (we don't synthesize
+      // one from this surface; that path is /from-table).
+      if (workflow.seed && seedBrief.trim() !== (workflow.seed.rawQueryTemplate ?? '')) {
+        payload['seed'] = {
+          rawQueryTemplate: seedBrief.trim(),
+          parameters: workflow.seed.parameters ?? [],
+        };
+      }
+
+      if (advancedOpen) {
+        let parsedAdvanced: { seedParameters?: unknown; columns?: unknown };
+        try {
+          parsedAdvanced = JSON.parse(advancedJson) as typeof parsedAdvanced;
+        } catch {
+          setAdvancedError('Advanced JSON is not valid');
+          setSaving(false);
+          return;
+        }
+        if (Array.isArray(parsedAdvanced.columns)) {
+          payload['tableTemplate'] = {
+            ...workflow.tableTemplate,
+            columns: parsedAdvanced.columns,
+          };
+        }
+        if (Array.isArray(parsedAdvanced.seedParameters) && workflow.seed) {
+          payload['seed'] = {
+            rawQueryTemplate: seedBrief.trim() || workflow.seed.rawQueryTemplate,
+            parameters: parsedAdvanced.seedParameters,
+          };
+        }
+      }
+
       await apiFetch(`/api/v1/workspaces/${workspaceId}/workflows/${workflow._id}`, {
         method: 'PATCH',
-        body: JSON.stringify({
-          name: name.trim(),
-          description: description.trim() || undefined,
-        }),
+        body: JSON.stringify(payload),
       });
       await onChanged();
       setEditing(false);
@@ -183,6 +238,46 @@ function WorkflowMeta({
     <div className="mb-8 border border-[color:var(--rule)] bg-[color:var(--paper-3)]/40 rounded-sm p-5 flex flex-col gap-4">
       <LabeledInput label="Name" value={name} onChange={setName} />
       <LabeledInput label="Description" value={description} onChange={setDescription} />
+
+      {workflow.seed ? (
+        <label className="flex flex-col gap-1">
+          <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+            Agent brief
+          </span>
+          <textarea
+            value={seedBrief}
+            onChange={(e) => setSeedBrief(e.target.value)}
+            rows={4}
+            className="w-full bg-transparent border border-[color:var(--rule)] focus:border-[color:var(--ink)] py-2 px-2 outline-none text-[14px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] rounded-sm"
+            placeholder="What should the agent look for? Supports {{parameters}} from below."
+          />
+        </label>
+      ) : null}
+
+      <details
+        open={advancedOpen}
+        onToggle={(e) => setAdvancedOpen((e.currentTarget as HTMLDetailsElement).open)}
+        className="border border-[color:var(--rule)] rounded-sm p-3"
+      >
+        <summary className="cursor-pointer font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+          Advanced — columns &amp; parameters (JSON)
+        </summary>
+        <p className="mt-3 text-[12px] text-[color:var(--ink-3)]">
+          Edits here apply to <em>new</em> runs only. In-flight runs keep
+          the snapshot they started with.
+        </p>
+        <textarea
+          value={advancedJson}
+          onChange={(e) => setAdvancedJson(e.target.value)}
+          rows={12}
+          spellCheck={false}
+          className="mt-2 w-full bg-[color:var(--paper-1)] border border-[color:var(--rule)] focus:border-[color:var(--ink)] py-2 px-2 outline-none font-mono text-[12px] text-[color:var(--ink)] rounded-sm"
+        />
+        {advancedError ? (
+          <p className="mt-2 text-[12px] text-red-600">{advancedError}</p>
+        ) : null}
+      </details>
+
       <div className="flex items-center justify-end gap-3">
         <button
           onClick={() => setEditing(false)}
@@ -193,7 +288,7 @@ function WorkflowMeta({
         <button
           onClick={() => void save()}
           disabled={!name.trim() || saving}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-4 py-2 rounded-full  text-[13px] font-medium hover:bg-[color:var(--ember)] transition-colors disabled:opacity-40"
         >
           {saving ? 'Saving…' : 'Save'}
         </button>
@@ -235,7 +330,7 @@ function ColumnsSummary({ workflow }: { workflow: Workflow }) {
                     {c.label}
                   </span>
                   {isEnriched && (
-                    <span className="font-mono text-[8.5px] text-[color:var(--forest)] shrink-0">
+                    <span className="font-mono text-[8.5px] text-[color:var(--ember)] shrink-0">
                       AI
                     </span>
                   )}
@@ -265,8 +360,8 @@ function SeedSummary({ workflow }: { workflow: Workflow }) {
   return (
     <div className="mb-8">
       <div className="flex items-center gap-3 mb-3">
-        <span className="block w-6 h-px bg-[color:var(--forest)]" />
-        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
+        <span className="block w-6 h-px bg-[color:var(--ember)]" />
+        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ember)]">
           Seed query
         </span>
       </div>
@@ -375,7 +470,7 @@ function RunForm({
 
   return (
     <div className="border border-[color:var(--ink)] bg-[color:var(--paper)] rounded-sm p-6">
-      <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)] block mb-1">
+      <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ember)] block mb-1">
         Run
       </span>
       <h2 className=" text-[26px] leading-tight text-[color:var(--ink)] mb-5">
@@ -402,7 +497,7 @@ function RunForm({
                 type="checkbox"
                 checked={dispatchSeedJob}
                 onChange={(e) => setDispatchSeedJob(e.target.checked)}
-                className="accent-[color:var(--forest)]"
+                className="accent-[color:var(--ember)]"
               />
               Dispatch the seed query now
             </label>
@@ -440,7 +535,7 @@ function RunForm({
             ? `Missing: ${missingRequired.map((p) => p.label).join(', ')}`
             : undefined
         }
-        className="mt-6 w-full inline-flex items-center justify-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-4 py-3 rounded-full  text-[13.5px] font-medium transition-colors disabled:opacity-40"
+        className="mt-6 w-full inline-flex items-center justify-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] px-4 py-3 rounded-full  text-[13.5px] font-medium transition-colors disabled:opacity-40"
       >
         {running ? 'Running…' : hasSeed && dispatchSeedJob ? 'Create table + dispatch →' : 'Create table →'}
       </button>
@@ -524,5 +619,129 @@ function LabeledInput({
         className="w-full bg-transparent border-b border-[color:var(--rule)] focus:border-[color:var(--ink)] py-2 outline-none  text-[14px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)]"
       />
     </label>
+  );
+}
+
+/* ── Publish panel (Phase 11 M2) ──────────────────────────────────── */
+
+function PublishPanel({
+  workflow,
+  workspaceId,
+  onChanged,
+}: {
+  workflow: Workflow;
+  workspaceId: string;
+  onChanged: () => Promise<void>;
+}) {
+  const [pending, setPending] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const isPublished = Boolean(workflow.shareToken && workflow.publishedAt);
+
+  const installUrl =
+    typeof window !== 'undefined' && workflow.shareToken
+      ? `${window.location.origin}/install/${workflow.shareToken}`
+      : '';
+
+  async function handlePublish() {
+    setPending(true);
+    try {
+      await apiFetch(
+        `/api/v1/workspaces/${workspaceId}/workflows/${workflow._id}/publish`,
+        { method: 'POST' },
+      );
+      await onChanged();
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function handleUnpublish() {
+    if (!confirm('Unpublish this workflow? Existing install links will stop working.')) return;
+    setPending(true);
+    try {
+      await apiFetch(
+        `/api/v1/workspaces/${workspaceId}/workflows/${workflow._id}/publish`,
+        { method: 'DELETE' },
+      );
+      await onChanged();
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function handleCopy() {
+    if (!installUrl) return;
+    try {
+      await navigator.clipboard.writeText(installUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2_000);
+    } catch {
+      // older browsers — surface nothing; selecting + copy works manually
+    }
+  }
+
+  return (
+    <section className="mt-10 border-t border-[color:var(--rule)] pt-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h3 className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
+            Publish
+          </h3>
+          <p className="mt-2 text-[14px] leading-[1.55] text-[color:var(--ink-2)] max-w-[520px]">
+            {isPublished
+              ? 'Share this install link with another workspace — they can copy the workflow into their own space without seeing yours.'
+              : 'Generate a share link so another workspace can install a copy of this workflow.'}
+          </p>
+        </div>
+        {!isPublished ? (
+          <button
+            type="button"
+            onClick={() => void handlePublish()}
+            disabled={pending}
+            className="shrink-0 rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-50"
+          >
+            {pending ? 'Generating…' : 'Publish'}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => void handleUnpublish()}
+            disabled={pending}
+            className="shrink-0 rounded-md border border-[color:var(--rule)] px-4 py-2 text-sm text-[color:var(--ink)] hover:bg-[color:var(--paper-3)] disabled:opacity-50"
+          >
+            {pending ? 'Working…' : 'Unpublish'}
+          </button>
+        )}
+      </div>
+
+      {isPublished && installUrl ? (
+        <div className="mt-4 flex items-center gap-2 rounded-md border border-[color:var(--rule)] bg-[color:var(--paper-1)] px-3 py-2">
+          <input
+            readOnly
+            value={installUrl}
+            onFocus={(e) => e.currentTarget.select()}
+            className="flex-1 bg-transparent font-mono text-[12px] text-[color:var(--ink)] outline-none"
+            aria-label="Install URL"
+          />
+          <button
+            type="button"
+            onClick={() => void handleCopy()}
+            className="rounded border border-[color:var(--rule)] px-3 py-1 text-xs text-[color:var(--ink-2)] hover:text-[color:var(--ink)]"
+            aria-label="Copy install URL"
+          >
+            {copied ? 'Copied' : 'Copy'}
+          </button>
+        </div>
+      ) : null}
+
+      {isPublished && workflow.publishStats ? (
+        <p className="mt-3 font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
+          {workflow.publishStats.installs} install{workflow.publishStats.installs === 1 ? '' : 's'}
+          {workflow.publishStats.lastInstalledAt
+            ? ` · last on ${new Date(workflow.publishStats.lastInstalledAt).toLocaleDateString()}`
+            : ''}
+        </p>
+      ) : null}
+    </section>
   );
 }

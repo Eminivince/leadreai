@@ -34,10 +34,25 @@ export interface IWorkflowDoc extends mongoose.Document {
     defaultTableNameTemplate?: string;
   };
   seed?: WorkflowSeed;
-  origin: 'local';
+  origin: 'local' | 'installed';
   stats: {
     timesRun: number;
     lastRunAt?: Date;
+  };
+  /** Phase 11 M2 — set when the workflow is published. URL-safe random
+   *  32-char token; sparse-unique-indexed so multiple unpublished
+   *  workflows don't collide on `null`. */
+  shareToken?: string;
+  publishedAt?: Date;
+  publishStats?: { installs: number; lastInstalledAt?: Date };
+  /** Phase 11 M2 — only present when origin === 'installed'. Preserves
+   *  the agency provenance so the dashboard can show "from X" badges. */
+  installedFrom?: {
+    shareToken: string;
+    sourceWorkflowId: mongoose.Types.ObjectId;
+    sourceWorkspaceId: mongoose.Types.ObjectId;
+    publishedBy: mongoose.Types.ObjectId;
+    installedAt: Date;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -96,6 +111,25 @@ const statsSchema = new Schema(
   { _id: false },
 );
 
+const installedFromSchema = new Schema(
+  {
+    shareToken: { type: String, required: true },
+    sourceWorkflowId: { type: Schema.Types.ObjectId, required: true },
+    sourceWorkspaceId: { type: Schema.Types.ObjectId, required: true },
+    publishedBy: { type: Schema.Types.ObjectId, required: true },
+    installedAt: { type: Date, required: true },
+  },
+  { _id: false },
+);
+
+const publishStatsSchema = new Schema(
+  {
+    installs: { type: Number, default: 0, min: 0 },
+    lastInstalledAt: { type: Date },
+  },
+  { _id: false },
+);
+
 const workflowSchema = new Schema<IWorkflowDoc>(
   {
     workspaceId: { type: Schema.Types.ObjectId, ref: 'Workspace', required: true, index: true },
@@ -105,12 +139,19 @@ const workflowSchema = new Schema<IWorkflowDoc>(
     tags: { type: [String], default: [] },
     tableTemplate: { type: tableTemplateSchema, required: true },
     seed: { type: seedSchema },
-    origin: { type: String, enum: ['local'], default: 'local' },
+    origin: { type: String, enum: ['local', 'installed'], default: 'local' },
     stats: { type: statsSchema, default: () => ({ timesRun: 0 }) },
+    shareToken: { type: String },
+    publishedAt: { type: Date },
+    publishStats: { type: publishStatsSchema },
+    installedFrom: { type: installedFromSchema },
   },
   { timestamps: true },
 );
 
 workflowSchema.index({ workspaceId: 1, updatedAt: -1 });
+// Sparse-unique on shareToken so unpublished docs (null token) don't
+// collide. The public install lookup hits this index directly.
+workflowSchema.index({ shareToken: 1 }, { unique: true, sparse: true });
 
 export default mongoose.model<IWorkflowDoc>('Workflow', workflowSchema);

@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LeadreAI — Bloom Design Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --font-body: 'Poppins', sans-serif;
+  --font-serif: 'Source Serif 4', serif;
+}
+
+html, body { width: 100%; min-height: 100vh; overflow-x: hidden; }
+
+/* ── Background ─────────────────────────────────────────────── */
+.bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 70% 40%, rgba(60,90,50,0.55) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 80% at 20% 80%, rgba(30,60,40,0.6) 0%, transparent 65%),
+    radial-gradient(ellipse 100% 100% at 50% 50%, rgba(10,25,15,1) 0%, rgba(5,12,8,1) 100%);
+  background-color: #060e09;
+}
+
+/* Animated light leak */
+.bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 50% 40% at 65% 30%, rgba(120,180,80,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 30% 50% at 85% 70%, rgba(80,140,60,0.08) 0%, transparent 60%);
+  animation: breathe 8s ease-in-out infinite alternate;
+}
+
+@keyframes breathe {
+  from { opacity: 0.6; transform: scale(1); }
+  to   { opacity: 1;   transform: scale(1.04); }
+}
+
+/* ── Liquid glass ───────────────────────────────────────────── */
+.lg {
+  background: rgba(255,255,255,0.01);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: none;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.1);
+  position: relative;
+  overflow: hidden;
+}
+.lg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.4px;
+  background: linear-gradient(180deg,
+    rgba(255,255,255,0.45) 0%,
+    rgba(255,255,255,0.15) 20%,
+    transparent 40%,
+    transparent 60%,
+    rgba(255,255,255,0.15) 80%,
+    rgba(255,255,255,0.45) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.lg-strong {
+  background: rgba(255,255,255,0.01);
+  backdrop-filter: blur(50px);
+  -webkit-backdrop-filter: blur(50px);
+  border: none;
+  box-shadow: 4px 4px 4px rgba(0,0,0,0.05), inset 0 1px 1px rgba(255,255,255,0.15);
+  position: relative;
+  overflow: hidden;
+}
+.lg-strong::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.4px;
+  background: linear-gradient(180deg,
+    rgba(255,255,255,0.5) 0%,
+    rgba(255,255,255,0.2) 20%,
+    transparent 40%,
+    transparent 60%,
+    rgba(255,255,255,0.2) 80%,
+    rgba(255,255,255,0.5) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Layout ─────────────────────────────────────────────────── */
+.shell {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  min-height: 100vh;
+  font-family: var(--font-body);
+}
+
+/* LEFT PANEL */
+.left {
+  position: relative;
+  width: 52%;
+  min-height: 100vh;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+.left-glass {
+  position: absolute;
+  inset: 16px;
+  border-radius: 28px;
+  pointer-events: none;
+}
+.left-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 4px 8px;
+}
+
+/* NAV */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 12px 10px;
+}
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.nav-logo {
+  width: 32px; height: 32px;
+}
+.nav-wordmark {
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.04em;
+}
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  color: rgba(255,255,255,0.8);
+  font-size: 13px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.nav-btn:hover { transform: scale(1.05); }
+
+/* HERO */
+.hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px 24px 28px;
+  gap: 0;
+}
+.hero-logo {
+  width: 72px; height: 72px;
+  margin-bottom: 24px;
+}
+.hero-h1 {
+  font-size: clamp(42px, 5.5vw, 68px);
+  font-weight: 500;
+  color: #fff;
+  letter-spacing: -0.04em;
+  line-height: 0.93;
+  margin-bottom: 28px;
+}
+.hero-h1 em {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 300;
+  color: rgba(255,255,255,0.75);
+}
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 28px;
+  border-radius: 999px;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.15s;
+  margin-bottom: 22px;
+}
+.cta-btn:hover  { transform: scale(1.05); }
+.cta-btn:active { transform: scale(0.96); }
+.cta-icon {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+}
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+.pill {
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  color: rgba(255,255,255,0.8);
+  font-family: var(--font-body);
+}
+
+/* QUOTE */
+.quote-block {
+  text-align: center;
+  padding: 0 20px 14px;
+}
+.quote-label {
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 7px;
+}
+.quote-text {
+  font-size: 13px;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.55;
+}
+.quote-text em {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 300;
+}
+.quote-author {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+.q-line { flex: 1; max-width: 56px; height: 1px; background: rgba(255,255,255,0.18); }
+.q-name {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+}
+
+/* RIGHT PANEL */
+.right {
+  width: 48%;
+  padding: 20px 20px 20px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 100vh;
+}
+
+/* Top bar */
+.right-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+}
+.social-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+.icon-circle {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.85);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.icon-circle:hover { transform: scale(1.08); }
+.icon-circle svg { width: 13px; height: 13px; }
+.v-sep { width: 1px; height: 14px; background: rgba(255,255,255,0.2); margin: 0 4px; }
+.acct-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  color: rgba(255,255,255,0.8);
+  font-size: 12px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.acct-btn:hover { transform: scale(1.05); }
+
+/* Community card */
+.community-card {
+  width: 210px;
+  padding: 18px 18px 16px;
+  border-radius: 18px;
+}
+.community-card h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 5px;
+}
+.community-card p {
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.55;
+}
+
+/* Feature section */
+.feature-outer {
+  margin-top: auto;
+  border-radius: 40px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.feature-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.feat-card {
+  border-radius: 24px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+.feat-icon {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 10px;
+}
+.feat-icon svg { width: 14px; height: 14px; color: #fff; }
+.feat-card h4 {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 4px;
+}
+.feat-card p {
+  font-size: 10.5px;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.5;
+}
+.bottom-card {
+  border-radius: 18px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.bottom-card-thumb {
+  width: 88px; height: 60px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.05) 100%);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.bottom-card-thumb svg { width: 28px; height: 28px; opacity: 0.35; }
+.bottom-card-text { flex: 1; min-width: 0; }
+.bottom-card-text h4 {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 3px;
+}
+.bottom-card-text p {
+  font-size: 10.5px;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.plus-btn {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 300;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+  line-height: 1;
+}
+.plus-btn:hover { transform: scale(1.1); }
+
+/* ── TABLE / DEMO section (inside left panel, scrolled to) ──── */
+/* We show it as a separate scroll section below the fold */
+.demo-section {
+  position: relative;
+  z-index: 10;
+  padding: 0 20px 40px;
+  font-family: var(--font-body);
+}
+.demo-inner {
+  border-radius: 28px;
+  padding: 28px;
+}
+.section-eyebrow {
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 6px;
+}
+.section-h2 {
+  font-size: 30px;
+  font-weight: 500;
+  color: #fff;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 20px;
+}
+.section-h2 em {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 300;
+  color: rgba(255,255,255,0.65);
+}
+.query-bar {
+  border-radius: 12px;
+  padding: 11px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.query-bar-text {
+  flex: 1;
+  font-size: 13px;
+  color: rgba(255,255,255,0.65);
+}
+.query-badge {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.55);
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+.results-meta {
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  padding: 8px 4px;
+  letter-spacing: 0.03em;
+}
+.results-meta strong { color: rgba(255,255,255,0.7); }
+.demo-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.demo-table thead tr {
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.demo-table th {
+  text-align: left;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+  font-weight: 600;
+  padding: 9px 14px;
+}
+.demo-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  vertical-align: middle;
+}
+.demo-table tr:last-child td { border-bottom: none; }
+.demo-table tr:nth-child(even) td { background: rgba(255,255,255,0.018); }
+.co-name { font-size: 12.5px; font-weight: 600; color: #fff; }
+.co-domain { font-size: 10px; color: rgba(255,255,255,0.25); margin-top: 2px; }
+.contact-name { font-size: 12px; color: rgba(255,255,255,0.6); }
+.verified {
+  font-size: 11.5px;
+  color: rgba(180,230,170,0.85);
+  display: flex; align-items: center; gap: 5px;
+}
+.verified::before { content: '✓'; font-weight: 700; }
+.src-count { font-size: 11px; color: rgba(255,255,255,0.22); }
+.blur-row td { filter: blur(4px); opacity: 0.3; user-select: none; }
+
+.gate {
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(6,14,9,0.92) 55%);
+  text-align: center;
+  padding: 24px 0 6px;
+  margin-top: -30px;
+  position: relative;
+}
+.gate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 28px;
+  border-radius: 999px;
+  color: rgba(255,255,255,0.8);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: transform 0.15s;
+  margin-bottom: 6px;
+}
+.gate-btn:hover { transform: scale(1.04); }
+.gate-sub { font-size: 10.5px; color: rgba(255,255,255,0.25); }
+
+/* ── TESTIMONIALS section ───────────────────────────────────── */
+.testi-section {
+  position: relative;
+  z-index: 10;
+  padding: 0 20px 60px;
+  font-family: var(--font-body);
+}
+.testi-inner {
+  border-radius: 28px;
+  padding: 28px;
+}
+.testi-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.testi-label {
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  white-space: nowrap;
+}
+.testi-rule { flex: 1; height: 1px; background: rgba(255,255,255,0.07); }
+.testi-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 12px;
+}
+.testi-card {
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+}
+.testi-quote {
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.65;
+  flex: 1;
+  margin-bottom: 14px;
+}
+.testi-quote::before { content: '\201C'; color: rgba(255,255,255,0.2); }
+.testi-quote::after  { content: '\201D'; color: rgba(255,255,255,0.2); }
+.testi-author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.testi-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.18);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+  flex-shrink: 0;
+}
+.testi-name { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.8); }
+.testi-role { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 1px; }
+
+/* ── SVG icons ──────────────────────────────────────────────── */
+svg { display: inline-block; }
+</style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="bg"></div>
+
+<!-- ═══════════ FOLD 1: HERO (two-panel split) ═══════════ -->
+<div class="shell">
+
+  <!-- LEFT PANEL -->
+  <div class="left">
+    <div class="left-glass lg-strong" style="border-radius:28px;"></div>
+    <div class="left-inner">
+
+      <!-- NAV -->
+      <nav class="nav">
+        <div class="nav-brand">
+          <!-- Logo mark: stylised L + spark -->
+          <svg class="nav-logo" viewBox="0 0 32 32" fill="none">
+            <rect width="32" height="32" rx="10" fill="rgba(255,255,255,0.07)"/>
+            <path d="M10 22 L10 10 L13 10 L13 19 L22 19 L22 22 Z" fill="rgba(255,255,255,0.85)"/>
+            <circle cx="22" cy="11" r="2.2" fill="rgba(255,255,255,0.5)"/>
+            <path d="M19 9 L22 11 L25 9" stroke="rgba(255,255,255,0.4)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="nav-wordmark">leadre</span>
+        </div>
+        <button class="nav-btn lg" style="border-radius:999px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="6"  x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+          Menu
+        </button>
+      </nav>
+
+      <!-- HERO -->
+      <div class="hero">
+        <!-- Logo mark large -->
+        <svg class="hero-logo" viewBox="0 0 72 72" fill="none">
+          <rect width="72" height="72" rx="22" fill="rgba(255,255,255,0.06)"/>
+          <path d="M22 50 L22 22 L29 22 L29 43 L50 43 L50 50 Z" fill="rgba(255,255,255,0.8)"/>
+          <circle cx="50" cy="24" r="5" fill="rgba(255,255,255,0.4)"/>
+          <path d="M43 20 L50 24 L57 20" stroke="rgba(255,255,255,0.3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+
+        <h1 class="hero-h1">
+          Find the lead<br>
+          <em>before</em> the pitch.
+        </h1>
+
+        <button class="cta-btn lg-strong" style="border-radius:999px;">
+          Start researching
+          <span class="cta-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </span>
+        </button>
+
+        <div class="pills">
+          <span class="pill lg">Nigerian Fintech</span>
+          <span class="pill lg">Agency Workflows</span>
+          <span class="pill lg">Evidence-backed</span>
+        </div>
+      </div>
+
+      <!-- QUOTE -->
+      <div class="quote-block">
+        <p class="quote-label">Visionary Research</p>
+        <p class="quote-text">"We imagined a world where <em>every lead had a receipt.</em>"</p>
+        <div class="quote-author">
+          <span class="q-line"></span>
+          <span class="q-name">LeadreAI</span>
+          <span class="q-line"></span>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /left -->
+
+  <!-- RIGHT PANEL -->
+  <div class="right">
+
+    <!-- Top bar -->
+    <div class="right-top">
+      <div class="social-pill lg" style="border-radius:999px;">
+        <!-- Twitter -->
+        <div class="icon-circle">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </div>
+        <!-- LinkedIn -->
+        <div class="icon-circle">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        </div>
+        <!-- Instagram -->
+        <div class="icon-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="v-sep"></div>
+        <div class="icon-circle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+      <button class="acct-btn lg" style="border-radius:999px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Account
+      </button>
+    </div>
+
+    <!-- Community card -->
+    <div class="community-card lg" style="border-radius:18px;">
+      <h3>Join the desk</h3>
+      <p>LeadreAI is used by outbound agencies running research across Nigeria, Kenya, and Ghana.</p>
+    </div>
+
+    <!-- Feature section -->
+    <div class="feature-outer lg-strong" style="border-radius:40px; margin-top:auto;">
+      <div class="feature-row">
+        <div class="feat-card lg" style="border-radius:24px;">
+          <div class="feat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+            </svg>
+          </div>
+          <h4>Dispatch Agent</h4>
+          <p>Runs against live registries, SERP, and filings in real time</p>
+        </div>
+        <div class="feat-card lg" style="border-radius:24px;">
+          <div class="feat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+            </svg>
+          </div>
+          <h4>Evidence Archive</h4>
+          <p>Every cell carries its source URL, confidence, and timestamp</p>
+        </div>
+      </div>
+      <div class="bottom-card lg" style="border-radius:18px;">
+        <div class="bottom-card-thumb">
+          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5">
+            <path d="M3 3h18v18H3zM3 9h18M9 21V9"/>
+          </svg>
+        </div>
+        <div class="bottom-card-text">
+          <h4>Proof-bundle exports</h4>
+          <p>Export to CSV, XLSX, or PDF — every row carries the evidence trail your clients can audit.</p>
+        </div>
+        <div class="plus-btn">+</div>
+      </div>
+    </div>
+
+  </div><!-- /right -->
+</div><!-- /shell fold 1 -->
+
+
+<!-- ═══════════ FOLD 2: PRODUCT DEMO ═══════════ -->
+<div class="demo-section">
+  <div class="demo-inner lg-strong" style="border-radius:28px;">
+    <p class="section-eyebrow">Live demo</p>
+    <h2 class="section-h2">See it <em>work.</em></h2>
+
+    <div class="query-bar lg" style="border-radius:12px;">
+      <div class="query-bar-text">Fintech founders Series A+, Lagos</div>
+      <div class="query-badge">✓ 8 MIN</div>
+    </div>
+    <div class="results-meta"><strong>47 leads found</strong> for "Fintech Series A, Lagos"</div>
+
+    <table class="demo-table">
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th>Contact</th>
+          <th>Email</th>
+          <th>Sources</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="co-name">Paystack</div><div class="co-domain">paystack.com</div></td>
+          <td><div class="contact-name">Shola Akinlade</div></td>
+          <td><div class="verified">verified</div></td>
+          <td><div class="src-count">3 sources</div></td>
+        </tr>
+        <tr>
+          <td><div class="co-name">Moniepoint</div><div class="co-domain">moniepoint.com</div></td>
+          <td><div class="contact-name">Tosin Eniolorunda</div></td>
+          <td><div class="verified">verified</div></td>
+          <td><div class="src-count">2 sources</div></td>
+        </tr>
+        <tr class="blur-row">
+          <td><div class="co-name">Flutterwave</div><div class="co-domain">flutterwave.com</div></td>
+          <td><div class="contact-name">Olugbenga Agboola</div></td>
+          <td><div class="verified">verified</div></td>
+          <td><div class="src-count">4 sources</div></td>
+        </tr>
+        <tr class="blur-row">
+          <td><div class="co-name">Cowrywise</div><div class="co-domain">cowrywise.com</div></td>
+          <td><div class="contact-name">Razaq Ahmed</div></td>
+          <td><div class="verified">verified</div></td>
+          <td><div class="src-count">2 sources</div></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="gate">
+      <button class="gate-btn lg" style="border-radius:999px;">Unlock all 47 results →</button>
+      <div class="gate-sub">Free to start — no credit card required</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════ FOLD 3: TESTIMONIALS ═══════════ -->
+<div class="testi-section">
+  <div class="testi-inner lg-strong" style="border-radius:28px;">
+    <div class="testi-header">
+      <span class="testi-label">What agencies say</span>
+      <span class="testi-rule"></span>
+    </div>
+    <div class="testi-grid">
+      <div class="testi-card lg" style="border-radius:18px;">
+        <div class="testi-quote">We ran 3 client briefs in one week. Every table came back with verified emails and source links. Nothing else covers Nigerian fintech like this.</div>
+        <div class="testi-author">
+          <div class="testi-avatar">T</div>
+          <div>
+            <div class="testi-name">Tunde Adeyemi</div>
+            <div class="testi-role">Outbound Agency, Lagos</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card lg" style="border-radius:18px;">
+        <div class="testi-quote">Apollo has zero coverage on the markets I work in. Leadre found 60 verified contacts in one run that would have taken me 3 days manually.</div>
+        <div class="testi-author">
+          <div class="testi-avatar">A</div>
+          <div>
+            <div class="testi-name">Amara Okonkwo</div>
+            <div class="testi-role">Research Lead, Nairobi</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card lg" style="border-radius:18px;">
+        <div class="testi-quote">My clients ask where the data comes from. With Leadre I can click any cell and show them the source. That's a conversation I never had with Clay.</div>
+        <div class="testi-author">
+          <div class="testi-avatar">K</div>
+          <div>
+            <div class="testi-name">Kofi Mensah</div>
+            <div class="testi-role">B2B Research, Accra</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

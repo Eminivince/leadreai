@@ -123,7 +123,7 @@ export default function TableDetailPage() {
 
   if (loadingTable && !table) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center  italic text-[14px] text-[color:var(--ink-3)]">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-20 text-center  italic text-[14px] text-[color:var(--ink-3)]">
         Loading table…
       </div>
     );
@@ -131,7 +131,7 @@ export default function TableDetailPage() {
 
   if (!table) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-20 text-center">
         <p className=" text-[14px] text-[color:var(--ink-2)]">Table not found.</p>
         <Link href="/dashboard/tables" className="mt-4 inline-block font-mono text-[11px] tracking-[0.18em] uppercase text-[color:var(--ink-2)] hover:text-[color:var(--ink)]">
           ← All tables
@@ -141,11 +141,11 @@ export default function TableDetailPage() {
   }
 
   return (
-    <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-10 md:py-12">
+    <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-10 md:py-12">
       {/* Header */}
-      <section className="mb-8 flex items-end justify-between gap-4 flex-wrap">
+      <section className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 flex-wrap">
         <div className="max-w-[720px]">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3 mb-4 flex-wrap">
             <Link
               href="/dashboard/tables"
               className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)] hover:text-[color:var(--ink)]"
@@ -157,7 +157,7 @@ export default function TableDetailPage() {
               {table.rowType}
             </span>
           </div>
-          <h1 className=" text-[38px] md:text-[52px] leading-[0.97] tracking-[-0.015em] text-[color:var(--ink)]">
+          <h1 className=" text-[28px] sm:text-[38px] md:text-[52px] leading-[0.97] tracking-[-0.015em] text-[color:var(--ink)]">
             {table.name}
           </h1>
           {table.description && (
@@ -202,7 +202,7 @@ export default function TableDetailPage() {
             onClick={() => setActionOpen(true)}
             disabled={table.rowCount === 0}
             title={table.rowCount === 0 ? 'Add rows before running an action' : undefined}
-            className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-4 py-2 rounded-full  text-[13px] font-medium transition disabled:opacity-40"
+            className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] px-4 py-2 rounded-full  text-[13px] font-medium transition disabled:opacity-40"
           >
             Run action →
           </button>
@@ -236,7 +236,7 @@ export default function TableDetailPage() {
                 type="checkbox"
                 checked={showHidden}
                 onChange={(e) => setShowHidden(e.target.checked)}
-                className="accent-[color:var(--forest)]"
+                className="accent-[color:var(--ember)]"
               />
               Show hidden rows
               {hiddenCount > 0 && !showHidden && (
@@ -250,7 +250,7 @@ export default function TableDetailPage() {
                 type="checkbox"
                 checked={showHiddenCols}
                 onChange={(e) => setShowHiddenCols(e.target.checked)}
-                className="accent-[color:var(--forest)]"
+                className="accent-[color:var(--ember)]"
               />
               Show hidden columns
               {hiddenColCount > 0 && !showHiddenCols && (
@@ -462,7 +462,7 @@ function TableGrid({
                   }}
                   onChange={toggleAll}
                   aria-label="Select all rows"
-                  className="accent-[color:var(--forest)] cursor-pointer"
+                  className="accent-[color:var(--ember)] cursor-pointer"
                 />
               </th>
               <th
@@ -516,11 +516,11 @@ function TableGrid({
               const isHidden = row.hidden === true;
               const rowClasses = [
                 'border-b border-[color:var(--rule)]/60 group',
-                isSelected ? 'bg-[color:var(--forest)]/5' : 'hover:bg-[color:var(--paper-3)]/40',
+                isSelected ? 'bg-[color:var(--ember)]/5' : 'hover:bg-[color:var(--paper-3)]/40',
                 isHidden ? 'opacity-55' : '',
               ].join(' ');
               const stickyBg = isSelected
-                ? 'bg-[color:var(--forest)]/5'
+                ? 'bg-[color:var(--ember)]/5'
                 : 'bg-[color:var(--paper)] group-hover:bg-[color:var(--paper-3)]/40';
               return (
                 <tr key={row._id} className={rowClasses}>
@@ -530,7 +530,7 @@ function TableGrid({
                       checked={isSelected}
                       onChange={() => toggleRow(row._id)}
                       aria-label={`Select row ${row.primaryKey}`}
-                      className="accent-[color:var(--forest)] cursor-pointer"
+                      className="accent-[color:var(--ember)] cursor-pointer"
                     />
                   </td>
                   <td
@@ -647,13 +647,13 @@ function ColumnHeader({
               {column.label}
             </span>
             {isEnriched && (
-              <span className="font-mono text-[8.5px] text-[color:var(--forest)] whitespace-nowrap">
+              <span className="font-mono text-[8.5px] text-[color:var(--ember)] whitespace-nowrap">
                 AI
               </span>
             )}
             {isEnriching && (
               <span
-                className="font-mono text-[8.5px] text-[color:var(--forest)] animate-pulse whitespace-nowrap"
+                className="font-mono text-[8.5px] text-[color:var(--ember)] animate-pulse whitespace-nowrap"
                 title="Enriching…"
               >
                 ⟳
@@ -673,7 +673,7 @@ function ColumnHeader({
           {isEnriched && !isHidden && (
             <button
               onClick={onRunEnrichment}
-              className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--forest)] hover:text-[color:var(--ink)] transition"
+              className="font-mono text-[9px] tracking-[0.18em] uppercase text-[color:var(--ember)] hover:text-[color:var(--ink)] transition"
               title="Re-run enrichment on this column"
             >
               Run →
@@ -717,7 +717,7 @@ function ColumnHeader({
         onPointerUp={onResizePointerUp}
         className="absolute top-0 right-0 h-full w-[6px] cursor-col-resize select-none touch-none group/handle"
       >
-        <div className="absolute right-[2px] top-0 h-full w-[2px] bg-transparent group-hover/handle:bg-[color:var(--forest)]/50 transition-colors" />
+        <div className="absolute right-[2px] top-0 h-full w-[2px] bg-transparent group-hover/handle:bg-[color:var(--ember)]/50 transition-colors" />
       </div>
     </th>
   );
@@ -872,7 +872,7 @@ function BulkActionBar({
 
   return (
     <div className="sticky top-4 z-30 mb-4 border border-[color:var(--ink)] bg-[color:var(--paper)] rounded-sm shadow-[0_8px_24px_-12px_rgba(0,0,0,0.25)]">
-      <div className="flex items-center justify-between gap-4 px-4 py-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 px-4 py-3 flex-wrap">
         <div className="flex items-baseline gap-3">
           <span className=" text-[20px] text-[color:var(--ink)]">
             {selectedIds.size}
@@ -1078,7 +1078,7 @@ function EditableCell({
               setEditing(false);
             }
           }}
-          className="w-full bg-[color:var(--forest)]/5 border border-[color:var(--forest)] px-3 py-2  text-[13px] text-[color:var(--ink)] outline-none"
+          className="w-full bg-[color:var(--ember)]/5 border border-[color:var(--ember)] px-3 py-2  text-[13px] text-[color:var(--ink)] outline-none"
         />
       </td>
     );
@@ -1126,7 +1126,7 @@ function EditableCell({
               }}
               title="View source"
               aria-label="View cell sources"
-              className={`font-mono text-[8.5px] text-[color:var(--forest)] transition ${
+              className={`font-mono text-[8.5px] text-[color:var(--ember)] transition ${
                 showSources ? 'opacity-100' : 'opacity-0 group-hover/cell:opacity-100'
               }`}
             >
@@ -1148,7 +1148,7 @@ function EditableCell({
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className=" text-[12px] text-[color:var(--forest)] hover:underline truncate"
+                        className=" text-[12px] text-[color:var(--ember)] hover:underline truncate"
                       >
                         {src.sourceUrl}
                       </a>
@@ -1184,7 +1184,7 @@ function EditableCell({
           <button
             onClick={handleReEnrich}
             title={reEnriching ? 'Enriching…' : 'Re-enrich this cell'}
-            className={`shrink-0 font-mono text-[11px] text-[color:var(--forest)] transition ml-0.5 ${
+            className={`shrink-0 font-mono text-[11px] text-[color:var(--ember)] transition ml-0.5 ${
               reEnriching
                 ? 'animate-pulse opacity-100'
                 : 'opacity-0 group-hover/cell:opacity-100'
@@ -1498,7 +1498,7 @@ function AddColumnDialog({
         <button
           onClick={() => void handleSave()}
           disabled={!label.trim() || saving || keyConflict || (mode === 'enriched' && !sourceId)}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--ember)] transition-colors disabled:opacity-40"
         >
           {saving ? 'Adding…' : 'Add column'}
         </button>
@@ -1593,7 +1593,7 @@ function AddRowDialog({
         <button
           onClick={() => void handleSave()}
           disabled={!primaryKey.trim() || saving}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--ember)] transition-colors disabled:opacity-40"
         >
           {saving ? 'Adding…' : 'Add row'}
         </button>
@@ -1689,7 +1689,7 @@ function SeedFromJobDialog({
                 onClick={() => setSelectedId(j._id)}
                 className={`w-full grid grid-cols-[1fr_auto] gap-4 items-baseline py-3 px-3 border-b border-[color:var(--rule)] text-left transition ${
                   selected
-                    ? 'bg-[color:var(--forest)]/5 border-l-2 border-l-[color:var(--forest)]'
+                    ? 'bg-[color:var(--ember)]/5 border-l-2 border-l-[color:var(--ember)]'
                     : 'hover:bg-[color:var(--paper-3)]/50'
                 }`}
               >
@@ -1726,7 +1726,7 @@ function SeedFromJobDialog({
         <button
           onClick={() => void handleSeed()}
           disabled={!selectedId || saving}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--ember)] transition-colors disabled:opacity-40"
         >
           {saving ? 'Seeding…' : 'Seed rows'}
         </button>
@@ -1820,7 +1820,7 @@ function SaveAsWorkflowDialog({
             checked={canIncludeSeed && includeSeed}
             disabled={!canIncludeSeed}
             onChange={(e) => setIncludeSeed(e.target.checked)}
-            className="accent-[color:var(--forest)] mt-0.5"
+            className="accent-[color:var(--ember)] mt-0.5"
           />
           <span>
             Capture this table&rsquo;s search query as the workflow seed
@@ -1849,7 +1849,7 @@ function SaveAsWorkflowDialog({
         <button
           onClick={() => void handleSave()}
           disabled={!name.trim() || saving}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-5 py-2.5 rounded-full  text-[13px] font-medium transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] px-5 py-2.5 rounded-full  text-[13px] font-medium transition-colors disabled:opacity-40"
         >
           {saving ? 'Saving…' : 'Save workflow →'}
         </button>
@@ -1866,7 +1866,7 @@ function Dialog({ title, children, onClose }: { title: string; children: React.R
       <div className="absolute inset-0 bg-[color:var(--ink)]/40" onClick={onClose} aria-hidden />
       <div className="relative w-[min(92vw,560px)] bg-[color:var(--paper)] border border-[color:var(--rule)] rounded-sm">
         <div className="p-8 md:p-10">
-          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)] block mb-2">
+          <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ember)] block mb-2">
             {title}
           </span>
           {children}
@@ -1996,7 +1996,7 @@ function RunEnrichmentDialog({
             type="checkbox"
             checked={skipExisting}
             onChange={(e) => setSkipExisting(e.target.checked)}
-            className="accent-[color:var(--forest)]"
+            className="accent-[color:var(--ember)]"
           />
           Skip rows that already have a value in this column
         </label>
@@ -2044,7 +2044,7 @@ function RunEnrichmentDialog({
         <button
           onClick={() => void handleLaunch()}
           disabled={launching || !est || est.rowsWithResolvableInputs === 0}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-2.5 rounded-full  text-[13px] font-medium hover:bg-[color:var(--ember)] transition-colors disabled:opacity-40"
         >
           {launching ? 'Launching…' : `Enrich ${est?.rowsWithResolvableInputs ?? 0} rows`}
         </button>
@@ -2219,7 +2219,7 @@ function ActionCatalogList({
                         <Link
                           href="/dashboard/settings/data-sources"
                           onClick={(evt) => evt.stopPropagation()}
-                          className=" italic text-[11.5px] text-[color:var(--forest)] underline underline-offset-[3px]"
+                          className=" italic text-[11.5px] text-[color:var(--ember)] underline underline-offset-[3px]"
                         >
                           Connect {action.sourceDisplayName} →
                         </Link>
@@ -2395,7 +2395,7 @@ function ActionConfigureStep({
           type="checkbox"
           checked={skipExisting}
           onChange={(e) => setSkipExisting(e.target.checked)}
-          className="accent-[color:var(--forest)]"
+          className="accent-[color:var(--ember)]"
         />
         Skip rows that already have a value in this column
       </label>
@@ -2423,7 +2423,7 @@ function ActionConfigureStep({
               : !outputKey.trim() ? 'Column key required'
               : undefined
           }
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-5 py-2.5 rounded-full  text-[13px] font-medium transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] px-5 py-2.5 rounded-full  text-[13px] font-medium transition-colors disabled:opacity-40"
         >
           {launching ? 'Running…' : 'Run action'}
         </button>

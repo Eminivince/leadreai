@@ -69,7 +69,7 @@ export default function InvocationsPage() {
  return (
   <div className="flex flex-col gap-6">
    {/* Header */}
-   <div className="flex items-center justify-between gap-4 pb-4 border-b border-[color:var(--rule)]">
+   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-4 border-b border-[color:var(--rule)]">
     <div className="flex items-center gap-2 text-[13px]">
      <Link
       href="/dashboard/settings/data-sources"
@@ -87,7 +87,7 @@ export default function InvocationsPage() {
       type="checkbox"
       checked={autoRefresh}
       onChange={(e) => setAutoRefresh(e.target.checked)}
-      className="accent-[color:var(--forest)]"
+      className="accent-[color:var(--ember)]"
      />
      Auto-refresh
     </label>
@@ -140,9 +140,9 @@ export default function InvocationsPage() {
      <button
       key={inv._id}
       onClick={() => setActiveId(inv._id)}
-      className="w-full grid grid-cols-[110px_1fr_auto_auto_auto] gap-4 items-baseline py-3 border-b border-[color:var(--rule)] text-left hover:bg-[color:var(--paper-3)]/50 transition"
+      className="w-full grid grid-cols-[1fr_auto] sm:grid-cols-[110px_1fr_auto_auto_auto] gap-2 sm:gap-4 items-baseline py-3 border-b border-[color:var(--rule)] text-left hover:bg-[color:var(--paper-3)]/50 transition"
      >
-      <span className="font-mono text-[10px] text-[color:var(--ink-3)]">
+      <span className="hidden sm:inline font-mono text-[10px] text-[color:var(--ink-3)]">
        {formatTime(inv.occurredAt)}
       </span>
       <div className="min-w-0">
@@ -152,12 +152,19 @@ export default function InvocationsPage() {
        <div className="font-mono text-[10px] text-[color:var(--ink-3)] truncate mt-0.5">
         {summarizeInput(inv.input)}
        </div>
+       <div className="sm:hidden font-mono text-[10px] text-[color:var(--ink-3)] mt-1 flex flex-wrap items-center gap-2">
+        <span>{formatTime(inv.occurredAt)}</span>
+        <span>·</span>
+        <span className="tabular-nums">{typeof inv.latencyMs === 'number' ? `${inv.latencyMs}ms` : '—'}</span>
+        <span>·</span>
+        <span className="tabular-nums">{typeof inv.costUSD === 'number' ? fmtUsd(inv.costUSD) : '—'}</span>
+       </div>
       </div>
       <StatusChip status={inv.status} />
-      <span className="font-mono text-[10px] text-[color:var(--ink-3)] tabular-nums min-w-[60px] text-right">
+      <span className="hidden sm:inline font-mono text-[10px] text-[color:var(--ink-3)] tabular-nums min-w-[60px] text-right">
        {typeof inv.latencyMs === 'number' ? `${inv.latencyMs}ms` : '—'}
       </span>
-      <span className="font-mono text-[10px] text-[color:var(--ink-3)] tabular-nums min-w-[60px] text-right">
+      <span className="hidden sm:inline font-mono text-[10px] text-[color:var(--ink-3)] tabular-nums min-w-[60px] text-right">
        {typeof inv.costUSD === 'number' ? fmtUsd(inv.costUSD) : '—'}
       </span>
      </button>
@@ -211,9 +218,9 @@ function InvocationDrawer({
 }) {
  return (
   <div className="fixed inset-0 z-[60] flex">
-   <div className="flex-1 bg-[color:var(--ink)]/30" onClick={onClose} aria-hidden />
-   <div className="w-full max-w-[640px] bg-[color:var(--paper)] border-l border-[color:var(--rule)] overflow-y-auto">
-    <div className="px-6 md:px-8 py-6 md:py-8 flex flex-col gap-6">
+   <div className="hidden sm:block flex-1 bg-[color:var(--ink)]/30" onClick={onClose} aria-hidden />
+   <div className="w-full sm:max-w-[640px] bg-[color:var(--paper)] border-l border-[color:var(--rule)] overflow-y-auto">
+    <div className="px-5 sm:px-6 md:px-8 py-6 md:py-8 flex flex-col gap-6">
      <div className="flex items-start justify-between gap-4">
       <div>
        <span className="font-mono text-[10px] tracking-[0.06em] text-[color:var(--ink-3)] block mb-1">
@@ -261,7 +268,7 @@ function InvocationDrawer({
        {invocation.parentJobId && (
         <Link
          href={`/dashboard/leads?jobId=${invocation.parentJobId}`}
-         className=" text-[13px] text-[color:var(--ink)] hover:text-[color:var(--forest)] underline underline-offset-[4px] decoration-[color:var(--rule)]"
+         className=" text-[13px] text-[color:var(--ink)] hover:text-[color:var(--success)] underline underline-offset-[4px] decoration-[color:var(--rule)]"
         >
          Parent job → {invocation.parentJobId}
         </Link>
@@ -316,7 +323,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function StatusChip({ status }: { status: InvocationStatus }) {
  const styles: Record<InvocationStatus, string> = {
-  success: 'text-[color:var(--forest)] border-[color:var(--forest)]/40 bg-[color:var(--forest)]/5',
+  success: 'text-[color:var(--success)] border-[color:var(--success)]/40 bg-[color:var(--success)]/5',
   failed: 'text-[color:var(--warn)] border-[color:var(--warn)]/40 bg-[color:var(--warn)]/5',
   rate_limited: 'text-[color:var(--warn)] border-[color:var(--warn)]/40 bg-[color:var(--warn)]/5',
   auth_failed: 'text-[color:var(--warn)] border-[color:var(--warn)]/40 bg-[color:var(--warn)]/5',

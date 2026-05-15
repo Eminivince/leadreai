@@ -108,7 +108,7 @@ export function WebhookPanel({ workspaceId }: { workspaceId: string }) {
    <div>
     <span
      className={`font-mono text-[9.5px] tracking-[0.22em] uppercase ${
-      connected ? 'text-[color:var(--forest)]' : 'text-[color:var(--ink-3)]'
+      connected ? 'text-[color:var(--ember)]' : 'text-[color:var(--ink-3)]'
      }`}
     >
      {connected ? 'On the wire' : 'Not filed'}
@@ -117,11 +117,11 @@ export function WebhookPanel({ workspaceId }: { workspaceId: string }) {
      {connected ? (
       <>
        Cable dispatched to{' '}
-       <em className="italic text-[color:var(--forest)]">your endpoint</em>.
+       <em className="italic text-[color:var(--ember)]">your endpoint</em>.
       </>
      ) : (
       <>
-       Wire LeadreAI to <em className="italic text-[color:var(--forest)]">your own endpoint</em>.
+       Wire LeadreAI to <em className="italic text-[color:var(--ember)]">your own endpoint</em>.
       </>
      )}
     </h3>
@@ -159,7 +159,7 @@ export function WebhookPanel({ workspaceId }: { workspaceId: string }) {
        key={ev.key}
        className="flex items-baseline gap-4 py-3 border-b border-[color:var(--rule)]/70"
       >
-       <span className="font-mono text-[11px] text-[color:var(--forest)] shrink-0 w-[130px]">
+       <span className="font-mono text-[11px] text-[color:var(--ember)] shrink-0 w-[130px]">
         {ev.key}
        </span>
        <div className="min-w-0 flex-1">
@@ -202,7 +202,7 @@ export function WebhookPanel({ workspaceId }: { workspaceId: string }) {
     <button
      type="submit"
      disabled={saveMutation.isPending || (!dirty && !!existingUrl)}
-     className="group ml-auto inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-3 rounded-full text-[13px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+     className="group ml-auto inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] px-5 py-3 rounded-full text-[13px] font-medium hover:bg-[color:var(--ember)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
     >
      {saveMutation.isPending ? 'Saving…' : connected ? 'Save cable' : 'File this cable'}
      <ArrowEast className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />

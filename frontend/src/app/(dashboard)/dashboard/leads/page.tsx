@@ -10,6 +10,7 @@ import { apiFetch } from '@/lib/api';
 import { getAccessToken } from '@/lib/auth';
 import type { ApiResponse, Lead, LeadFileSummary, ProspectingJob, OutputSchemaColumn, FactValue } from '@leadreai/shared';
 import { PageHelp } from '@/components/ui/PageHelp';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Pagination } from '@/components/shared/Pagination';
 import { SectionTabs } from '@/components/shared/SectionTabs';
 
@@ -143,13 +144,13 @@ function ArrowEast({ className = 'w-3 h-3' }: { className?: string }) {
 /* ── Status chip ────────────────────────────────────────────── */
 function StatusChip({ status }: { status: string }) {
   const map: Record<string, { label: string; tone: string }> = {
-    qualified: { label: 'Qualified', tone: 'text-[color:var(--forest)] border-[color:var(--forest)]/40' },
-    pending:   { label: 'New',       tone: 'text-[color:var(--ink-2)] border-[color:var(--rule)]' },
-    dust:      { label: 'Rejected',  tone: 'text-[color:var(--ink-3)] border-[color:var(--rule)]/60' },
+    qualified: { label: 'Qualified', tone: 'bg-[color:var(--success)]/10 text-[color:var(--success)]' },
+    pending:   { label: 'New',       tone: 'bg-[color:var(--ember-bg)] text-[color:var(--ember)]' },
+    dust:      { label: 'Rejected',  tone: 'bg-[color:var(--paper-2)] text-[color:var(--ink-3)]' },
   };
   const chip = map[status] ?? map.pending!;
   return (
-    <span className={`inline-flex items-center font-mono text-[9.5px] tracking-[0.18em] uppercase px-2 py-0.5 border bg-[color:var(--paper-3)] ${chip.tone}`}>
+    <span className={`inline-flex items-center font-mono text-[9.5px] tracking-[0.16em] uppercase px-2 py-0.5 rounded-full ${chip.tone}`}>
       {chip.label}
     </span>
   );
@@ -202,8 +203,8 @@ function DossierHeader({ job }: { job: ProspectingJob }) {
           <div className="flex items-center gap-2">
             {isLive ? (
               <span className="relative inline-flex">
-                <span className="relative inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)]" />
-                <span className="absolute inset-0 inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)] opacity-60 animate-ping" />
+                <span className="relative inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ember)]" />
+                <span className="absolute inset-0 inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ember)] opacity-60 animate-ping" />
               </span>
             ) : (
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ink-3)]" />
@@ -272,7 +273,7 @@ function DossierHeader({ job }: { job: ProspectingJob }) {
                     {c.type}
                   </span>
                   {c.required && (
-                    <span className="font-mono text-[10px] text-[color:var(--forest-2)]">·req</span>
+                    <span className="font-mono text-[10px] text-[color:var(--ember-2)]">·req</span>
                   )}
                 </span>
               ))}
@@ -398,7 +399,7 @@ function LeadDrawer({
                 <div key={i} className="flex items-baseline justify-between gap-3">
                   <a
                     href={`mailto:${e.address}`}
-                    className="font-mono text-[12.5px] text-[color:var(--ink)] hover:text-[color:var(--forest)] truncate transition"
+                    className="font-mono text-[12.5px] text-[color:var(--ink)] hover:text-[color:var(--ember)] truncate transition"
                   >
                     {e.address}
                   </a>
@@ -415,7 +416,7 @@ function LeadDrawer({
                 <div key={i} className="flex items-baseline justify-between gap-3">
                   <a
                     href={`tel:${p.normalized ?? p.raw}`}
-                    className="font-mono text-[12.5px] text-[color:var(--ink)] hover:text-[color:var(--forest)] transition"
+                    className="font-mono text-[12.5px] text-[color:var(--ink)] hover:text-[color:var(--ember)] transition"
                   >
                     {p.normalized ?? p.raw}
                   </a>
@@ -449,7 +450,7 @@ function LeadDrawer({
                               href={f.sourceUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="ml-2 inline-flex items-baseline font-mono text-[9.5px] text-[color:var(--forest)] hover:underline"
+                              className="ml-2 inline-flex items-baseline font-mono text-[9.5px] text-[color:var(--ember)] hover:underline"
                             >
                               source <ExternalIcon className="w-2.5 h-2.5 ml-0.5 self-center" />
                             </a>
@@ -477,7 +478,7 @@ function LeadDrawer({
               <ol className="mt-3 space-y-1.5">
                 {lead.sources.slice(0, 5).map((s, i) => (
                   <li key={i} className="flex items-baseline gap-2  text-[12px] text-[color:var(--ink-2)]">
-                    <sup className="text-[color:var(--forest)] font-mono">{i + 1}</sup>
+                    <sup className="text-[color:var(--ember)] font-mono">{i + 1}</sup>
                     <a
                       href={s.url}
                       target="_blank"
@@ -612,7 +613,7 @@ function LeadRow({
           <span className="font-mono text-[11.5px] text-[color:var(--ink)] truncate block">
             {primaryEmail(lead)}
             {primaryEmailSource(lead) && (
-              <sup className="ml-0.5 text-[9px] text-[color:var(--forest)]" title={`Source: ${primaryEmailSource(lead)}`}>
+              <sup className="ml-0.5 text-[9px] text-[color:var(--ember)]" title={`Source: ${primaryEmailSource(lead)}`}>
                 {lead.emails[0]?.verified ? '✓' : '*'}
               </sup>
             )}
@@ -640,7 +641,7 @@ function LeadRow({
               {f && f.value !== null && f.value !== undefined ? (
                 <span className=" text-[13px] text-[color:var(--ink)] truncate block">
                   {formatted}
-                  {f?.sourceUrl && <sup className="ml-0.5 text-[9px] text-[color:var(--forest)]">†</sup>}
+                  {f?.sourceUrl && <sup className="ml-0.5 text-[9px] text-[color:var(--ember)]">†</sup>}
                 </span>
               ) : (
                 <span className=" italic text-[12.5px] text-[color:var(--ink-3)]">—</span>
@@ -754,7 +755,7 @@ function QueryGroup({
             <Link
               href={`/dashboard/leads?jobId=${jobId}`}
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 text-[11.5px] font-medium text-[color:var(--ink-2)] hover:text-[color:var(--forest)] transition-colors"
+              className="inline-flex items-center gap-1 text-[11.5px] font-medium text-[color:var(--ink-2)] hover:text-[color:var(--ember)] transition-colors"
             >
               Open
               <ArrowEast className="w-3 h-3" />
@@ -862,6 +863,27 @@ export default function LeadsPage() {
       void qc.invalidateQueries({ queryKey: ['files', workspaceId] });
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to create file.'),
+  });
+
+  // Bulk suppression (Task #27). Mode picker lets the agency pick
+  // email-only (target individual reachout), domain-only (blanket the
+  // whole org), or both.
+  const [suppressOpen, setSuppressOpen] = useState(false);
+  const [suppressMode, setSuppressMode] = useState<'email' | 'domain' | 'both'>('email');
+
+  const bulkSuppressMutation = useMutation({
+    mutationFn: async ({ leadIds, mode }: { leadIds: string[]; mode: 'email' | 'domain' | 'both' }) =>
+      apiFetch<ApiResponse<{ suppressed: number }>>(
+        `/api/v1/workspaces/${workspaceId}/leads/bulk-suppress`,
+        { method: 'POST', body: JSON.stringify({ leadIds, mode }) },
+      ),
+    onSuccess: (res) => {
+      toast.success(`Suppressed ${res.data.suppressed} entr${res.data.suppressed === 1 ? 'y' : 'ies'}.`);
+      setSuppressOpen(false);
+      setSelected(new Set());
+      void qc.invalidateQueries({ queryKey: ['suppression', workspaceId] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to suppress.'),
   });
 
   const leadsPath = jobId
@@ -1018,15 +1040,15 @@ export default function LeadsPage() {
   const colCount = 7 + (isJobScoped ? schema.length : 0);
 
   return (
-    <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10">
+    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 md:py-10">
       {/* Header */}
       {isJobScoped && job ? (
         <DossierHeader job={job} />
       ) : (
-        <section className="mb-6">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-baseline gap-3">
-              <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)]">
+        <section className="mb-5 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 flex-wrap">
+            <div className="flex items-baseline gap-3 flex-wrap">
+              <h1 className="font-display text-[24px] sm:text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
                 Leads
               </h1>
               <span className="font-mono text-[12px] tabular-nums text-[color:var(--ink-3)]">
@@ -1041,10 +1063,10 @@ export default function LeadsPage() {
                   { key: 'leads', label: 'All', href: '/dashboard/leads' },
                   { key: 'files', label: 'Files', href: '/dashboard/files' },
                 ]}
-                className="ml-2"
+                className="sm:ml-2"
               />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <PageHelp
                 title="Leads"
                 body="All contacts your searches have found, grouped by the query that produced them. Click any row to open the full lead profile."
@@ -1062,7 +1084,7 @@ export default function LeadsPage() {
               </button>
               <button
                 onClick={() => router.push('/dashboard/campaigns')}
-                className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] transition-colors"
+                className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] transition-colors"
               >
                 Start campaign
                 <ArrowEast className="w-3 h-3" />
@@ -1075,8 +1097,8 @@ export default function LeadsPage() {
       {/* Toolbar — segmented filter on the left, search on the right.
           Matches the dashboard aesthetic: rounded-md (not full pills),
           mono tabular counts, hairline borders. */}
-      <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
-        <div className="inline-flex items-center rounded-md border border-[color:var(--rule)] bg-[color:var(--paper)] p-0.5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 flex-wrap mb-4">
+        <div className="inline-flex items-center rounded-md border border-[color:var(--rule)] bg-[color:var(--paper)] p-0.5 self-start overflow-x-auto max-w-full">
           {FILTERS.map((f) => {
             const on = filter === f.k;
             const n = counts[f.k as keyof typeof counts];
@@ -1099,7 +1121,7 @@ export default function LeadsPage() {
           })}
         </div>
 
-        <div className="flex items-center gap-2 h-8 px-3 border border-[color:var(--rule)] bg-[color:var(--paper)] hover:border-[color:var(--ink-3)] focus-within:border-[color:var(--forest)]/60 focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--forest)_8%,transparent)] rounded-md w-[260px] md:w-[320px] transition-colors">
+        <div className="flex items-center gap-2 h-9 sm:h-8 px-3 border border-[color:var(--rule)] bg-[color:var(--paper)] hover:border-[color:var(--ink-3)] focus-within:border-[color:var(--ember)]/60 focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--ember)_8%,transparent)] rounded-md w-full sm:w-[260px] md:w-[320px] transition-colors">
           <SearchIcon className="w-3.5 h-3.5 text-[color:var(--ink-3)] shrink-0" />
           <input
             value={search}
@@ -1181,12 +1203,12 @@ export default function LeadsPage() {
                         onChange={(e) => setNewFileName(e.target.value)}
                         placeholder="File name"
                         maxLength={200}
-                        className="flex-1 bg-transparent border border-[color:var(--rule)] focus:border-[color:var(--forest)]/60 rounded-md outline-none px-2 py-1 text-[12.5px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] transition-colors"
+                        className="flex-1 bg-transparent border border-[color:var(--rule)] focus:border-[color:var(--ember)]/60 rounded-md outline-none px-2 py-1 text-[12.5px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] transition-colors"
                       />
                       <button
                         type="submit"
                         disabled={!newFileName.trim() || createFileWithLeadsMutation.isPending}
-                        className="px-2.5 h-7 rounded-md text-[11.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] disabled:opacity-50 transition-colors"
+                        className="px-2.5 h-7 rounded-md text-[11.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] disabled:opacity-50 transition-colors"
                       >
                         {createFileWithLeadsMutation.isPending ? '…' : 'Create'}
                       </button>
@@ -1201,6 +1223,18 @@ export default function LeadsPage() {
               className="flex items-center gap-1.5 text-[12.5px] font-medium text-[color:var(--paper)]/80 hover:text-[color:var(--paper)] transition"
             >
               Export CSV
+            </button>
+
+            {/* Bulk suppress (Task #27) — adds every selected lead's
+                primary email + domain to the workspace suppression
+                list. Behind a confirm because it's effectively
+                irreversible: removing from suppression doesn't
+                automatically re-engage a paused sequence. */}
+            <button
+              onClick={() => setSuppressOpen(true)}
+              className="flex items-center gap-1.5 text-[12.5px] font-medium text-[color:var(--paper)]/80 hover:text-[color:var(--paper)] transition"
+            >
+              Suppress
             </button>
 
             <div className="w-px h-5 bg-[color:var(--paper)]/20" />
@@ -1239,7 +1273,7 @@ export default function LeadsPage() {
               </p>
               <button
                 onClick={() => router.push('/dashboard')}
-                className="mt-5 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] transition-colors"
+                className="mt-5 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] transition-colors"
               >
                 Run a search
                 <ArrowEast className="w-3 h-3" />
@@ -1308,7 +1342,7 @@ export default function LeadsPage() {
       {isJobScoped && (
         <div className="border border-[color:var(--rule)] rounded-xl overflow-hidden bg-[color:var(--paper)]">
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full min-w-[720px] text-left">
               <LeadsTableHead schema={schema} isJobScoped={isJobScoped} />
               <tbody>
                 {isLoading && (
@@ -1353,7 +1387,7 @@ export default function LeadsPage() {
             </span>
             {isJobScoped && schema.length > 0 && (
               <span className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
-                <sup className="text-[color:var(--forest)] mr-1">†</sup>
+                <sup className="text-[color:var(--ember)] mr-1">†</sup>
                 Hover for source
               </span>
             )}
@@ -1362,6 +1396,23 @@ export default function LeadsPage() {
       )}
 
       <LeadDrawer lead={drawerLead} schema={schema} onClose={() => setDrawerId(null)} />
+
+      {/* Bulk suppress confirm (Task #27) */}
+      <ConfirmDialog
+        open={suppressOpen}
+        onOpenChange={setSuppressOpen}
+        title={`Suppress ${selCount} lead${selCount === 1 ? '' : 's'}?`}
+        description="Adds the primary email and/or domain of each selected lead to your suppression list. Suppressed addresses are skipped on every send — including in-flight sequences. Removing from suppression later does not auto-resume."
+        itemName={`Mode: ${suppressMode}`}
+        confirmLabel="Suppress"
+        loading={bulkSuppressMutation.isPending}
+        onConfirm={() =>
+          bulkSuppressMutation.mutate({
+            leadIds: Array.from(selected),
+            mode: suppressMode,
+          })
+        }
+      />
     </div>
   );
 }

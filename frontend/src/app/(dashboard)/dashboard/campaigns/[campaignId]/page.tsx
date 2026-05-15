@@ -37,6 +37,12 @@ interface StatsResponse {
     totalLeads: number; draftsCreated: number; sent: number;
     opened: number; replied: number; bounced: number;
   };
+  replyClassification?: {
+    positive: number;
+    ooo: number;
+    bounce: number;
+    unknown: number;
+  };
 }
 
 function ArrowEast({ className = 'w-3 h-3' }: { className?: string }) {
@@ -54,7 +60,7 @@ function ArrowEast({ className = 'w-3 h-3' }: { className?: string }) {
  */
 function StatusPill({ status }: { status: string }) {
   const map: Record<string, { label: string; dot: string; text: string; border: string; pulse: boolean }> = {
-    active:    { label: 'active',    dot: 'bg-[color:var(--forest)]',   text: 'text-[color:var(--forest-2)]', border: 'border-[color:var(--forest)]/30 bg-[color:var(--forest)]/[0.06]', pulse: true },
+    active:    { label: 'active',    dot: 'bg-[color:var(--ember)]',   text: 'text-[color:var(--ember-2)]', border: 'border-[color:var(--ember)]/30 bg-[color:var(--ember)]/[0.06]', pulse: true },
     paused:    { label: 'paused',    dot: 'bg-[color:var(--warn)]',     text: 'text-[color:var(--warn)]',     border: 'border-[color:var(--warn)]/30 bg-[color:var(--warn)]/[0.04]',    pulse: false },
     draft:     { label: 'draft',     dot: 'bg-[color:var(--ink-3)]',    text: 'text-[color:var(--ink-2)]',    border: 'border-[color:var(--rule)] bg-[color:var(--paper-2)]',          pulse: false },
     completed: { label: 'completed', dot: 'bg-[color:var(--ink-3)]',    text: 'text-[color:var(--ink-2)]',    border: 'border-[color:var(--rule)] bg-[color:var(--paper-2)]',          pulse: false },
@@ -166,7 +172,7 @@ export default function CampaignDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-16 text-center">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-16 text-center">
         <span className="font-mono text-[12px] text-[color:var(--ink-3)]">Loading campaign…</span>
       </div>
     );
@@ -174,7 +180,7 @@ export default function CampaignDetailPage() {
 
   if (error || !data?.data) {
     return (
-      <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-16 text-center">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-16 text-center">
         <p className="text-[14px] font-medium text-[color:var(--warn)]">
           Couldn&rsquo;t load this campaign.
         </p>
@@ -189,12 +195,12 @@ export default function CampaignDetailPage() {
     );
   }
 
-  const { campaign, sequence, enrollments, perStep, campaignStats } = data.data;
+  const { campaign, sequence, enrollments, perStep, campaignStats, replyClassification } = data.data;
 
   return (
-    <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10 animate-fade-up">
+    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 md:py-10 animate-fade-up">
       {/* Header — breadcrumb + title row + actions */}
-      <section className="mb-6">
+      <section className="mb-5 sm:mb-6">
         <div className="flex items-center gap-1.5 mb-3 font-mono text-[10.5px] text-[color:var(--ink-3)]">
           <Link
             href="/dashboard/campaigns"
@@ -203,12 +209,12 @@ export default function CampaignDetailPage() {
             Campaigns
           </Link>
           <span className="text-[color:var(--ink-3)]/60">/</span>
-          <span className="text-[color:var(--ink-2)] truncate max-w-[480px]">{campaign.name}</span>
+          <span className="text-[color:var(--ink-2)] truncate max-w-[180px] sm:max-w-[480px]">{campaign.name}</span>
         </div>
-        <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 flex-wrap">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)] truncate">
+              <h1 className="font-display text-[24px] sm:text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)] truncate">
                 {campaign.name}
               </h1>
               <StatusPill status={campaign.status} />
@@ -233,7 +239,7 @@ export default function CampaignDetailPage() {
               <button
                 onClick={() => void runAction('resume')}
                 disabled={busy !== null}
-                className="inline-flex items-center h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--forest)] text-white hover:bg-[color:var(--forest-2)] transition-colors disabled:opacity-50"
+                className="inline-flex items-center h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ember)] text-white hover:bg-[color:var(--ember-2)] transition-colors disabled:opacity-50"
               >
                 {busy === 'resume' ? 'Resuming…' : 'Resume'}
               </button>
@@ -277,18 +283,35 @@ export default function CampaignDetailPage() {
           {enrollments.stopped > 0 ? `${enrollments.stopped} stopped · ` : ''}
           {enrollments.total === 0 && 'Not activated yet — enroll leads from the campaigns index.'}
         </p>
+
+        {replyClassification &&
+        (replyClassification.positive +
+          replyClassification.ooo +
+          replyClassification.bounce +
+          replyClassification.unknown) > 0 ? (
+          <div className="mt-4 flex items-center gap-2 flex-wrap">
+            <span className="font-mono text-[10.5px] tracking-[0.06em] text-[color:var(--ink-3)]">
+              replies by class:
+            </span>
+            <ClassChip label="positive" count={replyClassification.positive} tone="positive" />
+            <ClassChip label="OOO" count={replyClassification.ooo} tone="neutral" />
+            <ClassChip label="bounce" count={replyClassification.bounce} tone="warn" />
+            <ClassChip label="unknown" count={replyClassification.unknown} tone="neutral" />
+          </div>
+        ) : null}
       </Section>
 
       {/* Per-step sequence */}
       <Section chapter="02" title="Per-step">
         {sequence ? (
           <div className="rounded-xl border border-[color:var(--rule)] overflow-hidden bg-[color:var(--paper)]">
+            <div className="overflow-x-auto">
             {sequence.steps.map((step, idx) => {
               const stats = perStep.find((p) => p.stepNumber === step.stepNumber) ?? { sent: 0, bounced: 0, replied: 0 };
               return (
                 <div
                   key={step.stepNumber}
-                  className={`grid grid-cols-[36px_auto_1fr_auto_auto_auto] gap-3 md:gap-4 items-center px-4 md:px-5 py-3 ${
+                  className={`grid grid-cols-[36px_auto_1fr_auto_auto_auto] gap-3 md:gap-4 items-center px-4 md:px-5 py-3 min-w-[560px] ${
                     idx > 0 ? 'border-t border-[color:var(--rule)]' : ''
                   }`}
                 >
@@ -316,6 +339,7 @@ export default function CampaignDetailPage() {
                 </div>
               );
             })}
+            </div>
           </div>
         ) : (
           <div className="rounded-xl border border-[color:var(--rule)] bg-[color:var(--paper-2)]/40 p-6 text-center">
@@ -341,7 +365,7 @@ export default function CampaignDetailPage() {
             AI-generated drafts are persisted under{' '}
             <Link
               href={`/dashboard/leads?campaignId=${campaign._id}`}
-              className="text-[color:var(--ink)] hover:text-[color:var(--forest)] underline underline-offset-[3px] decoration-[color:var(--rule)] hover:decoration-[color:var(--forest)] transition-colors"
+              className="text-[color:var(--ink)] hover:text-[color:var(--ember)] underline underline-offset-[3px] decoration-[color:var(--rule)] hover:decoration-[color:var(--ember)] transition-colors"
             >
               leads
             </Link>{' '}
@@ -366,5 +390,37 @@ function StepCount({ label, n, tone = 'muted' }: { label: string; n: number; ton
         {label}
       </div>
     </div>
+  );
+}
+
+/**
+ * Reply classification chip (Task #26). Three tones so the eye picks
+ * positives apart from bounces at a glance — but no semantic colour
+ * for OOO/unknown since those are reads-needed-by-human bins.
+ */
+function ClassChip({
+  label,
+  count,
+  tone,
+}: {
+  label: string;
+  count: number;
+  tone: 'positive' | 'warn' | 'neutral';
+}) {
+  const map = {
+    positive:
+      'border-[color:var(--ember)]/40 bg-[color:var(--ember)]/[0.08] text-[color:var(--ember-2,#3b6e44)]',
+    warn:
+      'border-[color:var(--warn)]/40 bg-[color:var(--warn)]/[0.06] text-[color:var(--warn)]',
+    neutral:
+      'border-[color:var(--rule)] bg-[color:var(--paper-2)] text-[color:var(--ink-2)]',
+  } as const;
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 font-mono text-[10.5px] tracking-[0.04em] tabular-nums ${map[tone]}`}
+    >
+      <span>{label}</span>
+      <span className="font-semibold">{count}</span>
+    </span>
   );
 }

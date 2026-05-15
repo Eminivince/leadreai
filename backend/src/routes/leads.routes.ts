@@ -11,6 +11,7 @@ router.use(authorize(['owner', 'admin', 'member']));
 router.get('/', asyncHandler(leadsController.listLeads));
 router.post('/bulk-tag', asyncHandler(leadsController.bulkTagLeads));
 router.post('/bulk-delete', asyncHandler(leadsController.bulkDeleteLeads));
+router.post('/bulk-suppress', asyncHandler(leadsController.bulkSuppressLeads));
 router.get('/:leadId', asyncHandler(leadsController.getLead));
 router.patch('/:leadId', asyncHandler(leadsController.updateLead));
 router.delete('/:leadId', asyncHandler(leadsController.deleteLead));

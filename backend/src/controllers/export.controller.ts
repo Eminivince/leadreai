@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import Lead from '../models/Lead.js';
+import Workspace from '../models/Workspace.js';
 import { ApiError } from '../utils/ApiError.js';
 import { leadsToCsv } from '../services/export/csvExporter.js';
 import { leadsToXlsx } from '../services/export/xlsxExporter.js';
@@ -18,8 +19,29 @@ export async function exportLeads(req: Request, res: Response): Promise<void> {
 
   const leads = await Lead.find(filter).sort({ rankScore: -1 }).limit(5000);
 
+  // Workspace branding lookup (Task #12 — white-label exports). A client
+  // sub-workspace inherits parent branding when its own block is empty.
+  // We collapse both into a single flat block for downstream renderers.
+  const workspace = await Workspace.findById(workspaceId)
+    .select('branding parentWorkspaceId clientLabel name')
+    .lean();
+  let branding = workspace?.branding;
+  if ((!branding || !branding.displayName) && workspace?.parentWorkspaceId) {
+    const parent = await Workspace.findById(workspace.parentWorkspaceId)
+      .select('branding')
+      .lean();
+    branding = { ...(parent?.branding ?? {}), ...(branding ?? {}) };
+  }
+  const brandingBlock = {
+    displayName: branding?.displayName ?? workspace?.name,
+    logoUrl: branding?.logoUrl,
+    contactEmail: branding?.contactEmail,
+    reportTitle: branding?.reportTitle ?? 'Lead research export',
+    clientLabel: workspace?.clientLabel,
+  };
+
   if (format === 'xlsx') {
-    const buffer = await leadsToXlsx(leads);
+    const buffer = await leadsToXlsx(leads, brandingBlock);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="leads-${workspaceId}.xlsx"`);
     res.send(buffer);
@@ -31,10 +53,6 @@ export async function exportLeads(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  // Proof bundle — the regulated-buyer flavour. Every fact carries its
-  // sourceUrl + confidence + scrapedAt; auditors can verify any cell
-  // without the LeadreAI UI. Same shape as JSON but explicitly named so
-  // the file name signals to procurement that it's the audit copy.
   if (format === 'proof-bundle') {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Content-Disposition', `attachment; filename="leads-proof-bundle-${workspaceId}.json"`);
@@ -42,13 +60,14 @@ export async function exportLeads(req: Request, res: Response): Promise<void> {
       generatedAt: new Date().toISOString(),
       workspaceId,
       jobId: jobId ?? null,
+      producedBy: brandingBlock,
       leadCount: leads.length,
       leads,
     }, null, 2));
     return;
   }
 
-  const csv = await leadsToCsv(leads);
+  const csv = await leadsToCsv(leads, brandingBlock);
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', `attachment; filename="leads-${workspaceId}.csv"`);
   res.send(csv);

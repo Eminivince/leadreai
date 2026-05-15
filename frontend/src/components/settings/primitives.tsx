@@ -18,7 +18,7 @@ import React from 'react';
 
 export function Label({ children }: { children: React.ReactNode }) {
  return (
-  <span className="font-mono text-[10.5px] tracking-[0.06em] text-[color:var(--ink-3)] block mb-1.5">
+  <span className="font-sans font-medium text-[12.5px] text-[color:var(--ink-2)] block mb-1.5">
    {children}
   </span>
  );
@@ -30,7 +30,7 @@ export const HairlineInput = React.forwardRef<HTMLInputElement, React.InputHTMLA
    <input
     ref={ref}
     {...props}
-    className={`block w-full bg-[color:var(--paper)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] focus:border-[color:var(--forest)]/60 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--forest)_8%,transparent)] disabled:bg-[color:var(--paper-2)] disabled:hover:border-[color:var(--rule)] disabled:cursor-not-allowed rounded-md px-3 h-9 outline-none text-[13.5px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] transition-colors ${className}`}
+    className={`block w-full bg-white border border-[color:var(--rule)] rounded-lg px-3.5 py-2.5 text-[13.5px] text-[color:var(--ink)] placeholder:text-[color:var(--ink-4)] focus:border-[color:var(--ink)] focus:outline-none transition-colors disabled:bg-[color:var(--paper-2)] disabled:cursor-not-allowed ${className}`}
    />
   );
  },
@@ -40,7 +40,7 @@ export function HairlineTextarea({ className = '', ...props }: React.TextareaHTM
  return (
   <textarea
    {...props}
-   className={`block w-full bg-[color:var(--paper)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] focus:border-[color:var(--forest)]/60 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--forest)_8%,transparent)] rounded-md px-3 py-2 outline-none text-[13.5px] leading-[1.55] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] resize-none transition-colors ${className}`}
+   className={`block w-full bg-white border border-[color:var(--rule)] rounded-lg px-3.5 py-2.5 text-[13.5px] leading-[1.55] text-[color:var(--ink)] placeholder:text-[color:var(--ink-4)] focus:border-[color:var(--ink)] focus:outline-none resize-none transition-colors ${className}`}
   />
  );
 }
@@ -63,7 +63,7 @@ export function HairlineSelect({
    <select
     value={value}
     onChange={(e) => onChange(e.target.value)}
-    className="block w-full bg-[color:var(--paper)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] focus:border-[color:var(--forest)]/60 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--forest)_8%,transparent)] rounded-md pl-3 pr-9 h-9 outline-none text-[13.5px] text-[color:var(--ink)] appearance-none cursor-pointer transition-colors"
+    className="block w-full bg-white border border-[color:var(--rule)] rounded-lg pl-3.5 pr-9 py-2.5 text-[13.5px] text-[color:var(--ink)] focus:border-[color:var(--ink)] focus:outline-none appearance-none cursor-pointer transition-colors"
    >
     {children}
    </select>
@@ -143,7 +143,7 @@ export function ForthcomingPanel({
  );
 }
 
-/** Primary filled button — ink fill, amber on hover. */
+/** Primary filled button — ink fill, hover opacity. */
 export function PrimaryButton({
  children,
  disabled,
@@ -153,14 +153,14 @@ export function PrimaryButton({
   <button
    {...rest}
    disabled={disabled}
-   className={`inline-flex items-center gap-1.5 bg-[color:var(--ink)] text-[color:var(--paper)] px-3.5 h-8 rounded-md text-[12.5px] font-medium hover:bg-[color:var(--forest)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[color:var(--ink)] ${rest.className ?? ''}`}
+   className={`inline-flex items-center gap-1.5 bg-[color:var(--ink)] text-[color:var(--paper)] font-sans font-semibold text-[13px] px-5 py-2.5 rounded-lg hover:opacity-85 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed ${rest.className ?? ''}`}
   >
    {children}
   </button>
  );
 }
 
-/** Secondary outline button — paper-2 bg, hairline border. */
+/** Secondary outline button — transparent bg, hairline border, ink on hover. */
 export function GhostButton({
  children,
  ...rest
@@ -168,7 +168,7 @@ export function GhostButton({
  return (
   <button
    {...rest}
-   className={`inline-flex items-center gap-1.5 text-[12.5px] font-medium text-[color:var(--ink-2)] border border-[color:var(--rule)] bg-[color:var(--paper-2)] hover:border-[color:var(--ink-3)] hover:text-[color:var(--ink)] px-3 h-8 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${rest.className ?? ''}`}
+   className={`inline-flex items-center gap-1.5 border border-[color:var(--rule)] bg-transparent text-[color:var(--ink-2)] font-sans font-medium text-[13px] px-5 py-2.5 rounded-lg hover:border-[color:var(--ink)] hover:text-[color:var(--ink)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${rest.className ?? ''}`}
   >
    {children}
   </button>

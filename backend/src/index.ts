@@ -12,6 +12,8 @@ import { initSentry, captureException } from './lib/sentry.js';
 import './services/data-sources/sources/index.js';
 import { startTableEnrichmentWorker, stopTableEnrichmentWorker } from './services/data-tables/worker.js';
 import { startSequenceWorker, stopSequenceWorker } from './services/sequenceWorker.js';
+import { startGmailInboundPoller, stopGmailInboundPoller } from './services/gmailInboundPoller.js';
+import { startBudgetChecker, stopBudgetChecker } from './services/budgetChecker.js';
 
 // Process-level safety net. An uncaught exception in an async handler that
 // escapes Express, or a Promise rejection nobody attached `.catch` to, will
@@ -81,6 +83,17 @@ async function bootstrap() {
   startSequenceWorker();
   logger.info('Sequence worker started');
 
+  // Gmail inbound poller (Task #13). Picks up replies for workspaces
+  // that use Gmail OAuth as sender — they don't get a webhook surface
+  // like Resend / SendGrid do.
+  startGmailInboundPoller();
+  logger.info('Gmail inbound poller started');
+
+  // Cost budget alerts (Task #15). Hourly checker emits a notification
+  // when month-to-date spend crosses the workspace threshold.
+  startBudgetChecker();
+  logger.info('Budget checker started');
+
   const server = app.listen(env.PORT, () => {
     logger.info(`Backend listening on port ${env.PORT}`);
   });
@@ -89,6 +102,8 @@ async function bootstrap() {
     logger.info(`Received ${signal}, shutting down`);
     server.close(async () => {
       stopSequenceWorker();
+      stopGmailInboundPoller();
+      stopBudgetChecker();
       await stopTableEnrichmentWorker();
       await mongoose.connection.close();
       await getRedis().quit();

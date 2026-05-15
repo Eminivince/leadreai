@@ -1,0 +1,401 @@
+<h2>Four more — different spatial personalities</h2>
+<p class="subtitle">Each one has a completely different way of holding space. Not themes — philosophies.</p>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Inter:wght@300;400;500;600;700;800;900&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Epilogue:wght@300;400;500;700;800;900&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.grid4 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.dcard {
+  border: 2px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.12s, box-shadow 0.12s;
+  background: #fff;
+}
+.dcard:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.1); }
+.dcard.selected { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.18); }
+
+.preview { height: 280px; overflow: hidden; position: relative; }
+.desc { padding: 14px 18px; border-top: 1px solid #eee; }
+.desc h3 { font-size: 12.5px; font-weight: 700; margin-bottom: 4px; color: #111; }
+.desc p { font-size: 11px; color: #666; line-height: 1.55; }
+.swatches { display: flex; gap: 5px; margin-top: 8px; }
+.sw { width: 18px; height: 18px; border-radius: 2px; border: 1px solid #ddd; }
+
+/* ═══════════════════════════════════════
+   A — LUXURY EDITORIAL
+   Fashion brand minimalism. Type only.
+   Nothing to prove.
+   ═══════════════════════════════════════ */
+.lux { background: #FAFAF7; font-family: 'Cormorant Garamond', serif; padding: 32px 32px 0; }
+.lux-wordmark {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: #999;
+  margin-bottom: 40px;
+}
+.lux-hed {
+  font-size: 52px;
+  font-weight: 300;
+  line-height: 1.0;
+  color: #141210;
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+}
+.lux-hed em { font-style: italic; color: #7A5C3A; }
+.lux-rule { height: 1px; background: #D8D4CC; margin-bottom: 16px; }
+.lux-body {
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  color: #999;
+  letter-spacing: 0.04em;
+  line-height: 1.65;
+  max-width: 260px;
+}
+.lux-cta {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  border-top: 1px solid #E8E4DC;
+  padding: 12px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.lux-cta span {
+  font-family: 'Inter', sans-serif;
+  font-size: 9.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #7A5C3A;
+}
+.lux-cta span.right { color: #CCC; }
+
+/* ═══════════════════════════════════════
+   B — PRODUCT AS HERO
+   The data IS the landing page.
+   No hiding behind feature bullets.
+   ═══════════════════════════════════════ */
+.prod { background: #fff; font-family: 'Inter', sans-serif; padding: 24px 24px 0; }
+.prod-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+.prod-hed {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111;
+  letter-spacing: -0.01em;
+}
+.prod-hed span { color: #16A34A; }
+.prod-query {
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  padding: 7px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.prod-query .q {
+  font-size: 11px;
+  color: #374151;
+  flex: 1;
+}
+.prod-query .badge {
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #16A34A;
+  background: #DCFCE7;
+  padding: 2px 7px;
+  border-radius: 9px;
+}
+.prod-table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+.prod-table th {
+  text-align: left;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #9CA3AF;
+  font-weight: 600;
+  padding: 5px 8px;
+  border-bottom: 1px solid #F3F4F6;
+}
+.prod-table td {
+  padding: 7px 8px;
+  color: #374151;
+  border-bottom: 1px solid #F9FAFB;
+  vertical-align: top;
+}
+.prod-table tr:last-child td { border-bottom: none; }
+.prod-table .co { font-weight: 600; color: #111; }
+.prod-table .domain { color: #9CA3AF; font-size: 9px; display: block; }
+.prod-table .verified { color: #16A34A; font-size: 9px; display: flex; align-items: center; gap: 3px; }
+.prod-table .src { font-size: 8.5px; color: #C4B5FD; }
+.prod-table .blur td { filter: blur(3px); opacity: 0.5; }
+.prod-footer {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: #F9FAFB;
+  border-top: 1px solid #E5E7EB;
+  padding: 9px 24px;
+  font-size: 9.5px;
+  color: #6B7280;
+  display: flex;
+  justify-content: space-between;
+}
+.prod-footer strong { color: #111; }
+
+/* ═══════════════════════════════════════
+   C — SYNE BOLD
+   One typeface pushed to extremes.
+   Massive scale contrast.
+   Flat but with one strong line color.
+   ═══════════════════════════════════════ */
+.syne-dir { background: #0F0F0F; font-family: 'Syne', sans-serif; padding: 0; }
+.syne-top {
+  padding: 18px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #1E1E1E;
+}
+.syne-wordmark {
+  font-size: 13px; font-weight: 800; color: #fff;
+  letter-spacing: 0.06em;
+}
+.syne-nav {
+  display: flex; gap: 16px;
+}
+.syne-nav span {
+  font-size: 10px; color: #555; letter-spacing: 0.12em; text-transform: uppercase;
+}
+.syne-hero {
+  padding: 28px 24px 20px;
+}
+.syne-eyebrow {
+  font-size: 9.5px; letter-spacing: 0.22em; text-transform: uppercase;
+  color: #00FF88; margin-bottom: 14px; font-weight: 400;
+}
+.syne-hed {
+  font-size: 46px; font-weight: 800; line-height: 0.95;
+  letter-spacing: -0.03em; color: #FFFFFF;
+  margin-bottom: 20px;
+}
+.syne-hed .dim { color: #333; }
+.syne-sub {
+  font-size: 11px; color: #666; line-height: 1.55; max-width: 260px;
+  font-weight: 400; letter-spacing: 0.02em;
+  margin-bottom: 18px;
+}
+.syne-cta-row { display: flex; gap: 10px; align-items: center; }
+.syne-btn {
+  background: #00FF88; color: #0F0F0F;
+  font-size: 10px; font-weight: 800; letter-spacing: 0.14em;
+  text-transform: uppercase; padding: 9px 18px; border-radius: 2px;
+}
+.syne-ghost {
+  font-size: 10px; color: #444; letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════
+   D — EPILOGUE WARM
+   Not dark, not bright — rich mid-tone.
+   Like a leather-bound notebook became
+   a product. Warm, precise, alive.
+   ═══════════════════════════════════════ */
+.epil { background: #1C1712; font-family: 'Epilogue', sans-serif; padding: 0; }
+.epil-header {
+  padding: 14px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.epil-logo {
+  font-size: 13.5px; font-weight: 900; color: #F5EDD8;
+  letter-spacing: -0.01em;
+}
+.epil-logo sup {
+  font-size: 8px; color: #C4972A; vertical-align: super;
+  letter-spacing: 0.12em; text-transform: uppercase;
+}
+.epil-nav span {
+  font-size: 10px; color: #5A4E38; letter-spacing: 0.1em;
+}
+.epil-hero { padding: 24px 24px 20px; }
+.epil-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #26211A; border: 1px solid #3A3020;
+  border-radius: 2px; padding: 4px 10px; margin-bottom: 18px;
+}
+.epil-tag-dot { width: 5px; height: 5px; border-radius: 50%; background: #C4972A; }
+.epil-tag-text { font-size: 9px; color: #8A7A5A; letter-spacing: 0.16em; text-transform: uppercase; }
+.epil-hed {
+  font-size: 40px; font-weight: 800; line-height: 1.0;
+  letter-spacing: -0.03em; color: #F5EDD8; margin-bottom: 12px;
+}
+.epil-hed em { font-style: normal; color: #C4972A; }
+.epil-rule { height: 1px; background: #2E2820; margin-bottom: 12px; }
+.epil-sub {
+  font-size: 11px; color: #5A4E38; line-height: 1.6;
+  font-weight: 400; max-width: 260px;
+}
+.epil-stats {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid #2A2318;
+}
+.epil-stat { padding: 10px 14px; border-right: 1px solid #2A2318; }
+.epil-stat:last-child { border-right: none; }
+.epil-stat-num {
+  font-size: 20px; font-weight: 800; color: #F5EDD8; line-height: 1;
+}
+.epil-stat-num em { color: #C4972A; font-style: normal; }
+.epil-stat-lbl { font-size: 8px; color: #4A4030; letter-spacing: 0.14em; text-transform: uppercase; margin-top: 2px; }
+</style>
+
+<div class="grid4">
+
+  <!-- A: LUXURY EDITORIAL -->
+  <div class="dcard" data-choice="a" onclick="toggleSelect(this)">
+    <div class="preview">
+      <div class="lux">
+        <div class="lux-wordmark">Leadre AI</div>
+        <div class="lux-hed">Find the lead<br><em>before</em> the pitch.</div>
+        <div class="lux-rule"></div>
+        <div class="lux-body">Evidence-backed B2B research for markets Apollo doesn't cover. Every cell justified. Every source linked.</div>
+      </div>
+      <div class="lux-cta">
+        <span>Start researching →</span>
+        <span class="right">Lagos · Nairobi · Abuja</span>
+      </div>
+    </div>
+    <div class="desc">
+      <h3>A — Luxury Editorial</h3>
+      <p>Fashion-brand minimalism applied to B2B. Cormorant Garamond at large scale, extreme white space, warm paper tones. The confidence of "nothing to prove." No icons, no gradients, no cards.</p>
+      <div class="swatches">
+        <div class="sw" style="background:#FAFAF7"></div>
+        <div class="sw" style="background:#141210"></div>
+        <div class="sw" style="background:#7A5C3A"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B: PRODUCT AS HERO -->
+  <div class="dcard" data-choice="b" onclick="toggleSelect(this)">
+    <div class="preview">
+      <div class="prod">
+        <div class="prod-hed">47 leads found for <span>"Fintech Series A, Lagos"</span></div>
+        <div class="prod-query">
+          <span class="q">Fintech founders Series A+ Lagos</span>
+          <span class="badge">✓ 8 min</span>
+        </div>
+        <table class="prod-table">
+          <tr><th>Company</th><th>Contact</th><th>Email</th><th>Source</th></tr>
+          <tr><td><span class="co">Paystack</span><span class="domain">paystack.com</span></td><td>Shola Akinlade</td><td><span class="verified">✓ verified</span></td><td><span class="src">3 sources</span></td></tr>
+          <tr><td><span class="co">Moniepoint</span><span class="domain">moniepoint.com</span></td><td>Tosin Eniolorunda</td><td><span class="verified">✓ verified</span></td><td><span class="src">2 sources</span></td></tr>
+          <tr class="blur"><td><span class="co">Flutterwave</span></td><td>████████</td><td>████████</td><td>—</td></tr>
+          <tr class="blur"><td><span class="co">Cowrywise</span></td><td>████████</td><td>████████</td><td>—</td></tr>
+        </table>
+      </div>
+      <div class="prod-footer">
+        <span>Showing <strong>2 of 47</strong> results</span>
+        <span>Sign in to unlock all →</span>
+      </div>
+    </div>
+    <div class="desc">
+      <h3>B — Product as Hero</h3>
+      <p>The actual data table IS the landing page hero. No feature bullets, no testimonials above the fold — the product earns trust by showing the quality of its results. Stark, confident, functional.</p>
+      <div class="swatches">
+        <div class="sw" style="background:#fff; border-color:#ccc"></div>
+        <div class="sw" style="background:#111"></div>
+        <div class="sw" style="background:#16A34A"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C: SYNE DARK -->
+  <div class="dcard" data-choice="c" onclick="toggleSelect(this)">
+    <div class="preview">
+      <div class="syne-dir" style="height:100%">
+        <div class="syne-top">
+          <span class="syne-wordmark">LEADRE</span>
+          <div class="syne-nav">
+            <span>Product</span>
+            <span>Pricing</span>
+          </div>
+        </div>
+        <div class="syne-hero">
+          <div class="syne-eyebrow">B2B intelligence for Africa</div>
+          <div class="syne-hed">Find leads.<br><span class="dim">Not</span><br>excuses.</div>
+          <div class="syne-sub">A research agent that turns a brief into an evidence-backed table in 8 minutes.</div>
+          <div class="syne-cta-row">
+            <div class="syne-btn">Get started</div>
+            <div class="syne-ghost">See a demo →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="desc">
+      <h3>C — Syne Bold / Neon</h3>
+      <p>Pure black + electric green accent. One display font — Syne — pushed to extremes of weight and scale. Sharp, fast-moving energy. The kind of design that makes you lean forward.</p>
+      <div class="swatches">
+        <div class="sw" style="background:#0F0F0F"></div>
+        <div class="sw" style="background:#FFFFFF"></div>
+        <div class="sw" style="background:#00FF88"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D: EPILOGUE WARM DARK -->
+  <div class="dcard" data-choice="d" onclick="toggleSelect(this)">
+    <div class="preview">
+      <div class="epil" style="height:100%">
+        <div class="epil-header">
+          <div class="epil-logo">leadre<sup>AI</sup></div>
+          <div class="epil-nav"><span>Sign in</span></div>
+        </div>
+        <div class="epil-hero">
+          <div class="epil-tag">
+            <div class="epil-tag-dot"></div>
+            <div class="epil-tag-text">Nigerian & African markets</div>
+          </div>
+          <div class="epil-hed">Research that<br><em>holds up.</em></div>
+          <div class="epil-rule"></div>
+          <div class="epil-sub">Every lead comes with its source. Every claim is traceable. This is what evidence-backed actually means.</div>
+        </div>
+        <div class="epil-stats">
+          <div class="epil-stat"><div class="epil-stat-num">50<em>k</em></div><div class="epil-stat-lbl">Leads delivered</div></div>
+          <div class="epil-stat"><div class="epil-stat-num">8<em>m</em></div><div class="epil-stat-lbl">Avg research run</div></div>
+          <div class="epil-stat"><div class="epil-stat-num">3<em>×</em></div><div class="epil-stat-lbl">Sources per cell</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="desc">
+      <h3>D — Warm Dark</h3>
+      <p>Very deep warm brown — not "dark mode grey" but a rich ink-black with amber undertones. Gold accent. Epilogue typeface. Feels like a premium craft tool. Alive, not cold.</p>
+      <div class="swatches">
+        <div class="sw" style="background:#1C1712"></div>
+        <div class="sw" style="background:#F5EDD8"></div>
+        <div class="sw" style="background:#C4972A"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p style="margin-top: 18px; font-size: 11.5px; color: #888; text-align: center;">Click what feels closest — even a reaction like "B but lighter" moves us forward. Or tell me what's wrong with each.</p>

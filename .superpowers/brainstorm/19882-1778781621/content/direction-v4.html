@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>LeadreAI — Direction V4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=Instrument+Serif:ital@0;1&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Epilogue:wght@300;400;700;900&family=Fraunces:ital,wght@0,300;0,700;1,300;1,700&family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#111;font-family:sans-serif;padding:24px;display:flex;flex-direction:column;gap:12px;}
+h1.page-title{color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;margin-bottom:4px;opacity:0.5}
+p.page-sub{color:#555;font-size:12px;margin-bottom:20px;}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+/* card chrome */
+.card{
+  border-radius:16px;overflow:hidden;cursor:pointer;
+  transition:transform 0.12s,box-shadow 0.12s;
+  border:2px solid transparent;
+  position:relative;
+}
+.card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,0.5);}
+.card.selected{border-color:#818cf8;box-shadow:0 0 0 3px rgba(129,140,248,0.25);}
+.preview{height:320px;position:relative;overflow:hidden;}
+.meta{padding:14px 18px 16px;border-top:1px solid rgba(255,255,255,0.06);}
+.meta h3{font-size:12.5px;font-weight:700;color:#fff;margin-bottom:5px;}
+.meta p{font-size:11px;color:#666;line-height:1.6;}
+.swatches{display:flex;gap:5px;margin-top:9px;}
+.sw{width:20px;height:20px;border-radius:3px;border:1px solid rgba(255,255,255,0.1);}
+
+/* ═══════════════════════════════════════════════════
+   A — CITY INTELLIGENCE
+   Lagos aerial at night. Glass panels float over the
+   city. Same energy as Bloom but right context.
+   ═══════════════════════════════════════════════════ */
+.a-preview{
+  background:
+    radial-gradient(ellipse 90% 60% at 60% 80%, rgba(255,180,40,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 20% 60%, rgba(255,120,30,0.12) 0%, transparent 50%),
+    radial-gradient(ellipse 100% 100% at 50% 50%, #0A0C14 0%, #060810 100%);
+  padding:0;
+  display:flex;
+}
+
+/* tiny city lights */
+.a-preview::before{
+  content:'';
+  position:absolute;inset:0;
+  background-image:
+    radial-gradient(circle 1px at 12% 72%, rgba(255,200,80,0.9) 0%,transparent 1px),
+    radial-gradient(circle 1.5px at 23% 65%, rgba(255,160,40,0.7) 0%,transparent 1.5px),
+    radial-gradient(circle 1px at 35% 78%, rgba(255,220,100,0.8) 0%,transparent 1px),
+    radial-gradient(circle 2px at 48% 70%, rgba(255,190,60,0.6) 0%,transparent 2px),
+    radial-gradient(circle 1px at 58% 74%, rgba(255,210,90,0.85) 0%,transparent 1px),
+    radial-gradient(circle 1px at 67% 68%, rgba(255,170,50,0.7) 0%,transparent 1px),
+    radial-gradient(circle 1.5px at 75% 75%, rgba(255,200,80,0.9) 0%,transparent 1.5px),
+    radial-gradient(circle 1px at 82% 71%, rgba(255,180,60,0.8) 0%,transparent 1px),
+    radial-gradient(circle 1px at 18% 80%, rgba(255,210,80,0.6) 0%,transparent 1px),
+    radial-gradient(circle 1px at 90% 76%, rgba(255,200,70,0.7) 0%,transparent 1px),
+    radial-gradient(circle 1px at 42% 82%, rgba(255,190,60,0.5) 0%,transparent 1px),
+    radial-gradient(circle 1.5px at 55% 79%, rgba(255,170,40,0.8) 0%,transparent 1.5px);
+}
+.a-left{
+  width:58%;padding:22px 18px 20px;display:flex;flex-direction:column;
+  position:relative;z-index:1;
+}
+.a-glass{
+  position:absolute;inset:14px;border-radius:20px;
+  background:rgba(255,255,255,0.02);
+  backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,0.12), 4px 4px 4px rgba(0,0,0,0.1);
+}
+.a-glass::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;padding:1.2px;
+  background:linear-gradient(180deg,rgba(255,255,255,0.4) 0%,rgba(255,255,255,0.12) 20%,transparent 40%,transparent 60%,rgba(255,255,255,0.12) 80%,rgba(255,255,255,0.4) 100%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;
+}
+.a-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:auto;position:relative;z-index:2;padding-top:6px;}
+.a-logo{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;letter-spacing:-0.01em;}
+.a-pill{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:99px;padding:4px 12px;font-size:9px;color:rgba(255,255,255,0.6);letter-spacing:0.12em;text-transform:uppercase;}
+.a-hero{flex:1;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2;}
+.a-eyebrow{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:0.22em;text-transform:uppercase;color:rgba(255,180,60,0.8);margin-bottom:10px;}
+.a-h1{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;line-height:0.92;letter-spacing:-0.04em;color:#fff;margin-bottom:14px;}
+.a-h1 em{font-family:'Instrument Serif',serif;font-style:italic;font-weight:300;color:rgba(255,255,255,0.65);}
+.a-sub{font-family:'DM Mono',monospace;font-size:8.5px;color:rgba(255,255,255,0.35);line-height:1.7;letter-spacing:0.04em;}
+.a-right{
+  width:42%;padding:16px 16px 16px 0;display:flex;flex-direction:column;justify-content:flex-end;
+  position:relative;z-index:1;
+}
+.a-stat-block{
+  background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:16px;
+}
+.a-stat{margin-bottom:10px;}
+.a-stat:last-child{margin-bottom:0;}
+.a-stat-num{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;line-height:1;}
+.a-stat-num em{color:rgba(255,180,60,0.85);font-style:normal;}
+.a-stat-lbl{font-family:'DM Mono',monospace;font-size:7.5px;color:rgba(255,255,255,0.25);letter-spacing:0.14em;text-transform:uppercase;margin-top:1px;}
+
+/* ═══════════════════════════════════════════════════
+   B — SIGNAL / DATA FIELD
+   Abstract data-point background (not stock-photo).
+   The design language of intelligence infrastructure.
+   ═══════════════════════════════════════════════════ */
+.b-preview{
+  background:#050508;
+  font-family:'Epilogue',sans-serif;
+  display:flex;flex-direction:column;
+  padding:0;position:relative;overflow:hidden;
+}
+/* Animated dot grid */
+.b-preview::before{
+  content:'';position:absolute;inset:0;
+  background-image:
+    radial-gradient(circle 1px at 15% 25%, rgba(255,255,255,0.12) 0%,transparent 1px),
+    radial-gradient(circle 1px at 35% 15%, rgba(255,255,255,0.08) 0%,transparent 1px),
+    radial-gradient(circle 1.5px at 55% 30%, rgba(255,255,255,0.15) 0%,transparent 1.5px),
+    radial-gradient(circle 1px at 72% 20%, rgba(255,255,255,0.1) 0%,transparent 1px),
+    radial-gradient(circle 1px at 88% 35%, rgba(255,255,255,0.08) 0%,transparent 1px),
+    radial-gradient(circle 1px at 25% 50%, rgba(255,255,255,0.06) 0%,transparent 1px),
+    radial-gradient(circle 2px at 62% 55%, rgba(255,255,255,0.18) 0%,transparent 2px),
+    radial-gradient(circle 1px at 45% 70%, rgba(255,255,255,0.1) 0%,transparent 1px),
+    radial-gradient(circle 1px at 80% 60%, rgba(255,255,255,0.07) 0%,transparent 1px),
+    radial-gradient(circle 1.5px at 10% 75%, rgba(255,255,255,0.12) 0%,transparent 1.5px),
+    radial-gradient(circle 1px at 92% 70%, rgba(255,255,255,0.09) 0%,transparent 1px);
+  opacity:0.8;
+}
+/* Connection lines (SVG approach via CSS) */
+.b-lines{
+  position:absolute;inset:0;
+  background:
+    linear-gradient(to bottom right, transparent 48%, rgba(255,255,255,0.03) 50%, transparent 52%),
+    linear-gradient(to bottom left, transparent 48%, rgba(255,255,255,0.025) 50%, transparent 52%),
+    linear-gradient(170deg, transparent 30%, rgba(255,255,255,0.02) 32%, transparent 34%);
+}
+.b-glow{
+  position:absolute;
+  top:20%;left:40%;
+  width:200px;height:200px;
+  background:radial-gradient(circle, rgba(120,80,255,0.08) 0%, transparent 70%);
+}
+.b-nav{
+  position:relative;z-index:2;
+  padding:18px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.b-logo{font-family:'Epilogue',sans-serif;font-size:14px;font-weight:900;color:#fff;letter-spacing:-0.02em;}
+.b-nav-r{display:flex;align-items:center;gap:8px;}
+.b-tag{
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;
+  border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.4);
+  padding:3px 9px;border-radius:3px;
+}
+.b-body{
+  flex:1;position:relative;z-index:2;
+  display:flex;flex-direction:column;
+  justify-content:center;
+  padding:20px 22px;
+}
+.b-h1{
+  font-size:36px;font-weight:900;color:#fff;line-height:0.95;
+  letter-spacing:-0.04em;margin-bottom:14px;
+}
+.b-h1 .ghost{color:rgba(255,255,255,0.1);}
+.b-h1 .lit{color:#fff;}
+.b-sub{
+  font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.3);
+  line-height:1.7;letter-spacing:0.04em;max-width:260px;margin-bottom:16px;
+}
+.b-cta{
+  display:inline-flex;align-items:center;gap:8px;
+  border:1px solid rgba(255,255,255,0.15);
+  padding:9px 20px;border-radius:3px;
+  font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+  color:rgba(255,255,255,0.8);width:fit-content;
+}
+.b-ticker{
+  position:relative;z-index:2;
+  padding:10px 22px;
+  border-top:1px solid rgba(255,255,255,0.05);
+  display:flex;align-items:center;gap:20px;
+}
+.b-tick{
+  font-family:'DM Mono',monospace;font-size:8px;color:rgba(255,255,255,0.2);
+  letter-spacing:0.1em;text-transform:uppercase;
+}
+.b-tick strong{color:rgba(255,255,255,0.6);}
+
+/* ═══════════════════════════════════════════════════
+   C — FINE EDITORIAL
+   No background tricks. Pure typography.
+   Premium magazine on cream. Type IS the design.
+   ═══════════════════════════════════════════════════ */
+.c-preview{
+  background:#F7F5F0;
+  font-family:'Fraunces',serif;
+  display:flex;flex-direction:column;
+  padding:0;
+}
+.c-header{
+  border-bottom:2px solid #1A1A1A;
+  padding:12px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.c-masthead-l{display:flex;align-items:baseline;gap:10px;}
+.c-wordmark{
+  font-family:'Fraunces',serif;font-size:22px;font-weight:700;
+  color:#1A1A1A;letter-spacing:-0.04em;
+}
+.c-wordmark em{font-style:italic;font-weight:300;}
+.c-edition{font-family:'DM Mono',monospace;font-size:7.5px;color:#999;letter-spacing:0.14em;text-transform:uppercase;}
+.c-nav-links{display:flex;gap:16px;}
+.c-nav-links span{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:#999;}
+.c-body{flex:1;padding:24px 20px 18px;display:grid;grid-template-columns:1.6fr 1fr;gap:0;}
+.c-main{padding-right:20px;border-right:1px solid #E0DBD0;}
+.c-kicker{
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.18em;
+  text-transform:uppercase;color:#888;margin-bottom:10px;
+  display:flex;align-items:center;gap:8px;
+}
+.c-kicker::before{content:'';width:20px;height:1px;background:#888;}
+.c-h1{
+  font-family:'Fraunces',serif;font-size:38px;font-weight:700;
+  line-height:1.0;letter-spacing:-0.03em;color:#1A1A1A;margin-bottom:12px;
+}
+.c-h1 em{font-weight:300;font-style:italic;color:#5A5040;}
+.c-dek{
+  font-family:'Space Grotesk',sans-serif;font-size:11px;color:#666;
+  line-height:1.65;max-width:240px;border-left:2px solid #1A1A1A;padding-left:10px;
+}
+.c-aside{padding-left:16px;}
+.c-aside-label{
+  font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:0.2em;
+  text-transform:uppercase;color:#AAA;margin-bottom:12px;
+}
+.c-aside-stat{margin-bottom:12px;}
+.c-aside-num{
+  font-family:'Fraunces',serif;font-size:26px;font-weight:700;
+  color:#1A1A1A;line-height:1;
+}
+.c-aside-num em{font-style:italic;font-weight:300;font-size:20px;color:#888;}
+.c-aside-lbl{font-family:'DM Mono',monospace;font-size:7.5px;color:#BBB;letter-spacing:0.1em;text-transform:uppercase;}
+.c-footer{
+  border-top:1px solid #E0DBD0;padding:10px 20px;
+  display:flex;align-items:center;gap:8px;
+}
+.c-footer-text{font-family:'DM Mono',monospace;font-size:8px;color:#BBB;letter-spacing:0.1em;}
+.c-pill{background:#1A1A1A;color:#F7F5F0;font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:0.12em;text-transform:uppercase;padding:4px 10px;border-radius:2px;}
+
+/* ═══════════════════════════════════════════════════
+   D — STRUCTURED AMBER
+   Deep warm-dark. Not "dark mode" but the look of a
+   premium physical instrument — like a high-end watch
+   dial or a well-made leather notebook. Amber signal
+   on near-black warm ground.
+   ═══════════════════════════════════════════════════ */
+.d-preview{
+  background:#0F0C07;
+  font-family:'Epilogue',sans-serif;
+  display:flex;flex-direction:column;
+  padding:0;overflow:hidden;
+}
+/* Subtle texture */
+.d-preview::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 50% at 50% 100%, rgba(200,130,20,0.06) 0%, transparent 60%);
+  pointer-events:none;
+}
+.d-top-rule{height:3px;background:linear-gradient(90deg,#C8871A 0%,#E8A832 40%,#C8871A 100%);}
+.d-nav{
+  padding:14px 20px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid rgba(200,135,26,0.12);position:relative;z-index:1;
+}
+.d-logo{
+  font-family:'Epilogue',sans-serif;font-size:14px;font-weight:900;
+  color:#F5ECD8;letter-spacing:-0.01em;
+}
+.d-logo sup{font-size:8px;color:#C8871A;letter-spacing:0.14em;text-transform:uppercase;vertical-align:super;}
+.d-nav-r{font-family:'DM Mono',monospace;font-size:8.5px;color:rgba(200,135,26,0.5);letter-spacing:0.14em;text-transform:uppercase;}
+.d-body{
+  flex:1;padding:22px 22px 16px;display:flex;flex-direction:column;
+  justify-content:center;position:relative;z-index:1;
+}
+.d-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  margin-bottom:16px;width:fit-content;
+}
+.d-tag-dot{width:5px;height:5px;border-radius:50%;background:#C8871A;}
+.d-tag-text{font-family:'DM Mono',monospace;font-size:8px;color:rgba(200,135,26,0.6);letter-spacing:0.18em;text-transform:uppercase;}
+.d-h1{
+  font-family:'Epilogue',sans-serif;font-size:36px;font-weight:900;
+  line-height:0.95;letter-spacing:-0.03em;color:#F5ECD8;margin-bottom:14px;
+}
+.d-h1 em{font-style:normal;color:#C8871A;}
+.d-rule{height:1px;background:rgba(200,135,26,0.14);margin-bottom:12px;}
+.d-sub{
+  font-family:'DM Mono',monospace;font-size:8.5px;color:rgba(245,236,216,0.3);
+  line-height:1.7;letter-spacing:0.04em;max-width:240px;margin-bottom:16px;
+}
+.d-cta{
+  display:inline-flex;align-items:center;gap:10px;
+  background:rgba(200,135,26,0.1);
+  border:1px solid rgba(200,135,26,0.25);
+  padding:10px 20px;border-radius:3px;width:fit-content;
+}
+.d-cta-text{font-family:'Epilogue',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#C8871A;}
+.d-stats{
+  border-top:1px solid rgba(200,135,26,0.1);
+  display:grid;grid-template-columns:repeat(3,1fr);position:relative;z-index:1;
+}
+.d-stat{padding:10px 16px;border-right:1px solid rgba(200,135,26,0.08);}
+.d-stat:last-child{border-right:none;}
+.d-stat-num{font-family:'Epilogue',sans-serif;font-size:19px;font-weight:900;color:#F5ECD8;line-height:1;}
+.d-stat-num em{color:#C8871A;font-style:normal;}
+.d-stat-lbl{font-family:'DM Mono',monospace;font-size:7px;color:rgba(200,135,26,0.3);letter-spacing:0.14em;text-transform:uppercase;margin-top:2px;}
+</style>
+</head>
+<body>
+<h1 class="page-title">LeadreAI — Four new directions</h1>
+<p class="page-sub">All based on what you responded to: premium, immersive, structured. Different moods, different contexts. Click to select.</p>
+
+<div class="grid">
+
+  <!-- A: CITY INTELLIGENCE -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="preview a-preview">
+      <div class="a-glass"></div>
+      <div class="a-left">
+        <nav class="a-nav">
+          <span class="a-logo">LEADRE</span>
+          <span class="a-pill">Menu</span>
+        </nav>
+        <div class="a-hero">
+          <div class="a-eyebrow">B2B Intelligence · Lagos</div>
+          <div class="a-h1">Find the lead<br><em>before</em><br>the pitch.</div>
+          <div class="a-sub">Live research agent<br>for markets Apollo skips.</div>
+        </div>
+      </div>
+      <div class="a-right">
+        <div class="a-stat-block">
+          <div class="a-stat"><div class="a-stat-num">50<em>k+</em></div><div class="a-stat-lbl">leads delivered</div></div>
+          <div class="a-stat"><div class="a-stat-num">8<em>m</em></div><div class="a-stat-lbl">avg research run</div></div>
+          <div class="a-stat"><div class="a-stat-num">3<em>×</em></div><div class="a-stat-lbl">sources per cell</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="meta" style="background:#0A0C14;">
+      <h3>A — City Intelligence</h3>
+      <p>Lagos/Nairobi at night as a CSS-generated cityscape. Glass panel floats over the city lights. Same split-panel energy as Bloom, but grounded in the actual African business context.</p>
+      <div class="swatches">
+        <div class="sw" style="background:#0A0C14;"></div>
+        <div class="sw" style="background:#fff;"></div>
+        <div class="sw" style="background:rgba(255,180,60,0.85);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B: SIGNAL / DATA FIELD -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="preview b-preview">
+      <div class="b-lines"></div>
+      <div class="b-glow"></div>
+      <nav class="b-nav">
+        <div class="b-logo">leadre</div>
+        <div class="b-nav-r">
+          <span class="b-tag">Sign in</span>
+          <span class="b-tag">Pricing</span>
+        </div>
+      </nav>
+      <div class="b-body">
+        <div class="b-h1">
+          <span class="ghost">Research</span><br>
+          <span class="lit">that holds up.</span>
+        </div>
+        <div class="b-sub">Every cell. Every source.<br>Every claim traceable.</div>
+        <div class="b-cta">Get started →</div>
+      </div>
+      <div class="b-ticker">
+        <span class="b-tick"><strong>50k+</strong> leads</span>
+        <span class="b-tick"><strong>8m</strong> avg run</span>
+        <span class="b-tick"><strong>3×</strong> sources</span>
+        <span class="b-tick"><strong>100%</strong> evidence</span>
+      </div>
+    </div>
+    <div class="meta" style="background:#050508;">
+      <h3>B — Signal Field</h3>
+      <p>Abstract data-point constellation as the background. Not a photo — a visual representation of intelligence infrastructure itself. Sparse, precise, technical. The background IS the product concept.</p>
+      <div class="swatches">
+        <div class="sw" style="background:#050508;"></div>
+        <div class="sw" style="background:#fff;"></div>
+        <div class="sw" style="background:rgba(120,80,255,0.6);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C: FINE EDITORIAL -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="preview c-preview">
+      <div class="c-header">
+        <div class="c-masthead-l">
+          <div class="c-wordmark">leadre<em>AI</em></div>
+          <span class="c-edition">Lagos · Nairobi · 14 May 2026</span>
+        </div>
+        <div class="c-nav-links">
+          <span>Product</span><span>Pricing</span><span>Sign in</span>
+        </div>
+      </div>
+      <div class="c-body">
+        <div class="c-main">
+          <div class="c-kicker">B2B Research Platform</div>
+          <div class="c-h1">Find leads<br>that <em>hold up.</em></div>
+          <div class="c-dek">Evidence-backed research for markets Apollo doesn't cover. Every result traceable to its source.</div>
+        </div>
+        <div class="c-aside">
+          <div class="c-aside-label">By the numbers</div>
+          <div class="c-aside-stat">
+            <div class="c-aside-num">50<em>k+</em></div>
+            <div class="c-aside-lbl">Leads delivered</div>
+          </div>
+          <div class="c-aside-stat">
+            <div class="c-aside-num">8<em>m</em></div>
+            <div class="c-aside-lbl">Avg research run</div>
+          </div>
+        </div>
+      </div>
+      <div class="c-footer">
+        <span class="c-footer-text">Free to start ·</span>
+        <span class="c-pill">Start researching →</span>
+      </div>
+    </div>
+    <div class="meta" style="background:#1A1A1A;">
+      <h3>C — Fine Editorial</h3>
+      <p>No background tricks at all. Cream paper, black rules, Fraunces serif headline, monospace metadata. Looks like a premium newspaper or FT feature page. The discipline of print applied to product.</p>
+      <div class="swatches">
+        <div class="sw" style="background:#F7F5F0;border-color:#ccc;"></div>
+        <div class="sw" style="background:#1A1A1A;"></div>
+        <div class="sw" style="background:#888;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- D: STRUCTURED AMBER -->
+  <div class="card" data-choice="d" onclick="toggleSelect(this)">
+    <div class="preview d-preview">
+      <div class="d-top-rule"></div>
+      <nav class="d-nav">
+        <div class="d-logo">leadre<sup>AI</sup></div>
+        <div class="d-nav-r">Sign in · Pricing</div>
+      </nav>
+      <div class="d-body">
+        <div class="d-tag">
+          <div class="d-tag-dot"></div>
+          <div class="d-tag-text">Nigerian & African markets</div>
+        </div>
+        <div class="d-h1">Research<br>that <em>holds up.</em></div>
+        <div class="d-rule"></div>
+        <div class="d-sub">Every lead comes with its source.<br>Every claim is traceable.</div>
+        <div class="d-cta"><span class="d-cta-text">Start researching →</span></div>
+      </div>
+      <div class="d-stats">
+        <div class="d-stat"><div class="d-stat-num">50<em>k</em></div><div class="d-stat-lbl">leads</div></div>
+        <div class="d-stat"><div class="d-stat-num">8<em>m</em></div><div class="d-stat-lbl">avg run</div></div>
+        <div class="d-stat"><div class="d-stat-num">3<em>×</em></div><div class="d-stat-lbl">sources</div></div>
+      </div>
+    </div>
+    <div class="meta" style="background:#0F0C07;">
+      <h3>D — Structured Amber</h3>
+      <p>Deep warm-black with amber signal — the palette of a high-end instrument dial or a leather-bound research folder. Not "dark mode". Premium, tactile, serious. The amber accent earns its place.</p>
+      <div class="swatches">
+        <div class="sw" style="background:#0F0C07;"></div>
+        <div class="sw" style="background:#F5ECD8;"></div>
+        <div class="sw" style="background:#C8871A;"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+function toggleSelect(el){
+  document.querySelectorAll('.card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  if(window.recordChoice) window.recordChoice(el.dataset.choice, el.querySelector('h3').textContent);
+}
+</script>
+</body>
+</html>

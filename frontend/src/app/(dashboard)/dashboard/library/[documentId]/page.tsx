@@ -60,7 +60,7 @@ function bytesLabel(n: number): string {
 function statusTone(s: LibraryDocument['status']): { label: string; className: string } {
   switch (s) {
     case 'ready':
-      return { label: 'Filed', className: 'text-[color:var(--forest)] border-[color:var(--forest)]/40' };
+      return { label: 'Filed', className: 'text-[color:var(--ember)] border-[color:var(--ember)]/40' };
     case 'failed':
       return { label: 'Failed', className: 'text-[color:var(--warn)] border-[color:var(--warn)]/40' };
     case 'pending':
@@ -180,7 +180,7 @@ export default function LibraryDocumentDetailPage() {
 
   if (docLoading) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-16  italic text-[14px] text-[color:var(--ink-2)] text-center">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-16  italic text-[14px] text-[color:var(--ink-2)] text-center">
         Loading document…
       </div>
     );
@@ -188,7 +188,7 @@ export default function LibraryDocumentDetailPage() {
 
   if (!doc) {
     return (
-      <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-20 text-center">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-20 text-center">
         <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
           Missing
         </span>
@@ -212,7 +212,7 @@ export default function LibraryDocumentDetailPage() {
     doc.status === 'ready' && ['csv', 'xlsx', 'xls'].includes(doc.fileType);
 
   return (
-    <div className="max-w-[1480px] mx-auto px-6 md:px-8 lg:px-10 py-10 md:py-12">
+    <div className="max-w-[1480px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-10 md:py-12">
       {/* Breadcrumb */}
       <div className="flex items-center gap-3 mb-6 font-mono text-[10px] tracking-[0.22em] uppercase">
         <Link
@@ -226,15 +226,15 @@ export default function LibraryDocumentDetailPage() {
       </div>
 
       {/* Header */}
-      <section className="mb-10 pb-8 border-b border-[color:var(--rule)]">
-        <div className="flex items-center gap-3 mb-5">
+      <section className="mb-6 sm:mb-10 pb-6 sm:pb-8 border-b border-[color:var(--rule)]">
+        <div className="flex items-center gap-3 mb-4 sm:mb-5">
           <span className="block w-8 h-px bg-[color:var(--ink)]" />
           <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-2)]">
             {isAudio ? 'Transcript' : 'Document'}
           </span>
         </div>
 
-        <div className="flex items-end justify-between gap-6 flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 sm:gap-6 flex-wrap">
           <div className="max-w-[780px]">
             {renaming ? (
               <div className="flex items-center gap-2">
@@ -246,12 +246,12 @@ export default function LibraryDocumentDetailPage() {
                     if (e.key === 'Enter') renameMutation.mutate(titleDraft.trim());
                     else if (e.key === 'Escape') setRenaming(false);
                   }}
-                  className="bg-transparent border-b-2 border-[color:var(--ink)] outline-none py-1  text-[36px] md:text-[44px] leading-tight text-[color:var(--ink)] flex-1"
+                  className="bg-transparent border-b-2 border-[color:var(--ink)] outline-none py-1  text-[26px] sm:text-[36px] md:text-[44px] leading-tight text-[color:var(--ink)] flex-1"
                 />
                 <button
                   onClick={() => renameMutation.mutate(titleDraft.trim())}
                   disabled={!titleDraft.trim() || renameMutation.isPending}
-                  className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--forest)] disabled:opacity-60"
+                  className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ember)] disabled:opacity-60"
                 >
                   Save
                 </button>
@@ -269,7 +269,7 @@ export default function LibraryDocumentDetailPage() {
                   setRenaming(true);
                 }}
                 title="Double-click to rename"
-                className=" text-[36px] md:text-[48px] leading-[0.98] tracking-[-0.015em] text-[color:var(--ink)] cursor-text"
+                className=" text-[26px] sm:text-[36px] md:text-[48px] leading-[0.98] tracking-[-0.015em] text-[color:var(--ink)] cursor-text"
               >
                 {displayTitle}
               </h1>
@@ -529,8 +529,8 @@ function AnalysisPanel({
   return (
     <section className="mb-10 pb-10 border-b border-[color:var(--rule)]">
       <div className="flex items-center gap-3 mb-5">
-        <span className="block w-8 h-px bg-[color:var(--forest)]" />
-        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--forest)]">
+        <span className="block w-8 h-px bg-[color:var(--ember)]" />
+        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ember)]">
           What the AI understands
         </span>
       </div>
@@ -538,7 +538,7 @@ function AnalysisPanel({
       {empty && (
         <div className="border border-dashed border-[color:var(--rule)] bg-[color:var(--paper-3)]/60 rounded-sm p-6 md:p-8">
           <h3 className=" text-[24px] md:text-[28px] leading-[1.15] text-[color:var(--ink)]">
-            Let the AI read <em className="italic text-[color:var(--forest)]">{displayTitle}</em> and propose searches.
+            Let the AI read <em className="italic text-[color:var(--ember)]">{displayTitle}</em> and propose searches.
           </h3>
           <p className="mt-2  italic text-[13.5px] text-[color:var(--ink-2)] max-w-[640px] leading-[1.55]">
             You&rsquo;ll see what it classifies this as, the entities it picked up, and 3 distinct
@@ -572,7 +572,7 @@ function AnalysisPanel({
           {/* Gist */}
           <div>
             <div className="flex items-center gap-3 flex-wrap mb-2">
-              <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase border border-[color:var(--forest)]/40 bg-[color:var(--forest)]/5 text-[color:var(--forest)] px-2 py-0.5">
+              <span className="font-mono text-[9.5px] tracking-[0.18em] uppercase border border-[color:var(--ember)]/40 bg-[color:var(--ember)]/5 text-[color:var(--ember)] px-2 py-0.5">
                 {analysis.docType}
               </span>
               {analysis.cached ? (
@@ -626,7 +626,7 @@ function AnalysisPanel({
                     className="border border-[color:var(--rule)] bg-[color:var(--paper-3)]/50 p-4 flex flex-col gap-3 hover:border-[color:var(--ink-2)] transition-colors"
                   >
                     <div className="flex items-baseline justify-between gap-2">
-                      <span className=" italic text-[28px] leading-none text-[color:var(--forest)] tabular-nums">
+                      <span className=" italic text-[28px] leading-none text-[color:var(--ember)] tabular-nums">
                         {String(i + 1).padStart(2, '0')}
                       </span>
                       {d.targetCount !== undefined && (
@@ -660,7 +660,7 @@ function AnalysisPanel({
                       </button>
                       <button
                         onClick={() => launchDispatch(d.prompt)}
-                        className="inline-flex items-center gap-1.5  text-[12.5px] font-medium text-[color:var(--ink)] hover:text-[color:var(--forest)] transition"
+                        className="inline-flex items-center gap-1.5  text-[12.5px] font-medium text-[color:var(--ink)] hover:text-[color:var(--ember)] transition"
                       >
                         File this <ArrowEast className="w-2.5 h-2.5" />
                       </button>
@@ -673,8 +673,8 @@ function AnalysisPanel({
 
           {/* Ambiguities */}
           {analysis.ambiguities.length > 0 && (
-            <div className="border-l-2 border-[color:var(--rust)] pl-4 py-1 max-w-[820px]">
-              <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--rust)]">
+            <div className="border-l-2 border-[color:var(--ember-2)] pl-4 py-1 max-w-[820px]">
+              <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[color:var(--ember-2)]">
                 Before you dispatch — clarify these
               </span>
               <ul className="mt-2 space-y-1.5">

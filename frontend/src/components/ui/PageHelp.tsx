@@ -43,7 +43,7 @@ export function PageHelp({ title, body, tips }: PageHelpProps) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 z-50 w-[300px] bg-[color:var(--paper)] border border-[color:var(--rule)] shadow-xl rounded-sm">
+        <div className="absolute right-0 top-full mt-2 z-50 w-[min(300px,calc(100vw-24px))] bg-[color:var(--paper)] border border-[color:var(--rule)] shadow-xl rounded-sm">
           <div className="px-4 pt-3 pb-1">
             <span className="font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
               {title}
@@ -55,7 +55,7 @@ export function PageHelp({ title, body, tips }: PageHelpProps) {
               <ul className="mt-3 pt-3 border-t border-dashed border-[color:var(--rule)] flex flex-col gap-1.5">
                 {tips.map((tip) => (
                   <li key={tip} className="flex items-start gap-2 text-[12px] text-[color:var(--ink-3)] leading-[1.5]">
-                    <span className="text-[color:var(--forest)] shrink-0 mt-0.5 font-bold">·</span>
+                    <span className="text-[color:var(--ember)] shrink-0 mt-0.5 font-bold">·</span>
                     {tip}
                   </li>
                 ))}

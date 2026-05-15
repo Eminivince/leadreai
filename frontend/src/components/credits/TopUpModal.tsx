@@ -82,12 +82,12 @@ function PackageCard({
       onClick={onSelect}
       className={`relative w-full flex items-center justify-between gap-4 p-4 text-left border transition-colors ${
         selected
-          ? 'border-[color:var(--forest)] bg-[color:var(--paper-3)]'
+          ? 'border-[color:var(--ember)] bg-[color:var(--paper-3)]'
           : 'border-[color:var(--rule)] hover:border-[color:var(--ink-2)] bg-[color:var(--paper)]'
       }`}
     >
       {selected && (
-        <span className="absolute left-0 top-2 bottom-2 w-[2px] bg-[color:var(--forest)]" />
+        <span className="absolute left-0 top-2 bottom-2 w-[2px] bg-[color:var(--ember)]" />
       )}
       <div className="min-w-0">
         <div className=" text-[22px] leading-tight text-[color:var(--ink)]">
@@ -187,7 +187,7 @@ export function TopUpModal() {
   const selectedPkg = CREDIT_PACKAGES.find((p) => p.id === selectedId);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center p-0 sm:p-4">
       <button
         aria-label="Close"
         onClick={closeTopUp}
@@ -197,19 +197,19 @@ export function TopUpModal() {
         role="dialog"
         aria-modal="true"
         aria-labelledby="topup-title"
-        className="relative w-full max-w-[560px] bg-[color:var(--paper)] border border-[color:var(--rule)] shadow-2xl"
+        className="relative w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-[560px] bg-[color:var(--paper)] border-0 sm:border sm:border-[color:var(--rule)] shadow-2xl flex flex-col overflow-hidden"
       >
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 px-6 py-5 border-b border-[color:var(--rule)]">
-          <div>
+        <div className="flex items-start justify-between gap-3 px-5 sm:px-6 py-4 sm:py-5 border-b border-[color:var(--rule)] shrink-0">
+          <div className="min-w-0">
             <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
               Top up
             </div>
             <h2
               id="topup-title"
-              className="mt-1 text-[26px] leading-[1.05] text-[color:var(--ink)]"
+              className="mt-1 text-[22px] sm:text-[26px] leading-[1.05] text-[color:var(--ink)]"
             >
-              Buy <em className="italic text-[color:var(--forest)]">dispatches</em>.
+              Buy <em className="italic text-[color:var(--ember)]">dispatches</em>.
             </h2>
             <p className="mt-1 italic text-[12.5px] text-[color:var(--ink-2)]">
               One credit covers one dispatch, regardless of lead count.
@@ -217,7 +217,7 @@ export function TopUpModal() {
           </div>
           <button
             onClick={closeTopUp}
-            className="p-2 text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition shrink-0"
+            className="-mr-1.5 w-10 h-10 inline-flex items-center justify-center text-[color:var(--ink-3)] hover:text-[color:var(--ink)] transition shrink-0"
             aria-label="Close"
           >
             <CloseIcon />
@@ -225,7 +225,7 @@ export function TopUpModal() {
         </div>
 
         {/* Body */}
-        <div className="px-6 py-6 flex flex-col gap-2">
+        <div className="px-5 sm:px-6 py-5 sm:py-6 flex flex-col gap-2 flex-1 overflow-y-auto">
           {CREDIT_PACKAGES.map((pkg) => (
             <PackageCard
               key={pkg.id}
@@ -237,21 +237,27 @@ export function TopUpModal() {
         </div>
 
         {/* Footer — payment provider buttons */}
-        <div className="px-6 pb-6 flex flex-col gap-4">
-          <div className="flex flex-col gap-3">
+        <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-2 sm:pt-0 flex flex-col gap-4 shrink-0 border-t sm:border-t-0 border-[color:var(--rule)]">
+          <div className="flex flex-col gap-3 pt-3 sm:pt-0">
             <p className="font-mono text-[10px] tracking-[0.18em] uppercase text-[color:var(--ink-3)]">
               {selectedPkg
                 ? `${selectedPkg.credits} dispatches — $${selectedPkg.priceUsd} — choose provider`
                 : 'Select a package above'}
             </p>
-            <div className="flex items-center gap-3 flex-wrap">
-              <GhostButton type="button" onClick={closeTopUp} disabled={busy}>
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-2 sm:gap-3 sm:flex-wrap">
+              <GhostButton
+                type="button"
+                onClick={closeTopUp}
+                disabled={busy}
+                className="w-full sm:w-auto justify-center"
+              >
                 Cancel
               </GhostButton>
               <PrimaryButton
                 type="button"
                 onClick={() => void handlePaystack()}
                 disabled={!selectedId || busy}
+                className="w-full sm:w-auto justify-center"
               >
                 {busy ? 'Opening…' : 'Pay with Paystack'}
               </PrimaryButton>
@@ -259,6 +265,7 @@ export function TopUpModal() {
                 type="button"
                 onClick={() => void handleStripe()}
                 disabled={!selectedId || busy}
+                className="w-full sm:w-auto justify-center"
               >
                 Stripe (new tab)
               </GhostButton>

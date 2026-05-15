@@ -210,7 +210,7 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`w-full bg-[color:var(--paper)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] focus:border-[color:var(--forest)]/60 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--forest)_8%,transparent)] rounded-md px-3 h-9 outline-none text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] transition-colors ${
+        className={`w-full bg-[color:var(--paper)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] focus:border-[color:var(--ember)]/60 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--ember)_8%,transparent)] rounded-md px-3 h-9 outline-none text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] transition-colors ${
           mono ? 'font-mono text-[12.5px]' : 'text-[13.5px]'
         }`}
       />
@@ -239,7 +239,7 @@ function SelectField({
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full bg-[color:var(--paper)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] focus:border-[color:var(--forest)]/60 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--forest)_8%,transparent)] rounded-md pl-3 pr-9 h-9 outline-none text-[13.5px] text-[color:var(--ink)] appearance-none cursor-pointer transition-colors"
+          className="w-full bg-[color:var(--paper)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] focus:border-[color:var(--ember)]/60 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--ember)_8%,transparent)] rounded-md pl-3 pr-9 h-9 outline-none text-[13.5px] text-[color:var(--ink)] appearance-none cursor-pointer transition-colors"
         >
           {options.map((o) => <option key={o} value={o}>{o}</option>)}
         </select>
@@ -455,11 +455,11 @@ function SourceChip({ meta, onClear }: { meta: SourceMeta; onClear: () => void }
   }
 
   return (
-    <div className="rounded-md border border-[color:var(--forest)]/40 bg-[color:var(--forest)]/[0.06] px-4 py-3 flex items-center justify-between gap-4">
+    <div className="rounded-md border border-[color:var(--ember)]/40 bg-[color:var(--ember)]/[0.06] px-4 py-3 flex items-center justify-between gap-4">
       <div className="min-w-0 flex items-start gap-3">
-        <span className="mt-1 inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)] shrink-0" aria-hidden />
+        <span className="mt-1 inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ember)] shrink-0" aria-hidden />
         <div className="min-w-0">
-          <span className="font-mono text-[10px] tracking-[0.04em] text-[color:var(--forest-2)] block">
+          <span className="font-mono text-[10px] tracking-[0.04em] text-[color:var(--ember-2)] block">
             {kicker.toLowerCase()}
           </span>
           <div className="mt-0.5 text-[14px] font-semibold text-[color:var(--ink)] truncate">
@@ -541,7 +541,7 @@ function ModeTabs({ mode, setMode }: { mode: SourceMode; setMode: (m: SourceMode
             }`}
           >
             {on && (
-              <span className="absolute left-0 bottom-0 right-0 h-[2px] bg-[color:var(--forest)]" aria-hidden />
+              <span className="absolute left-0 bottom-0 right-0 h-[2px] bg-[color:var(--ember)]" aria-hidden />
             )}
             <div className={`text-[12.5px] font-medium ${on ? 'text-[color:var(--ink)]' : 'text-[color:var(--ink-2)]'}`}>
               {t.label}
@@ -644,7 +644,7 @@ function TableSourcePicker({
                 key={t._id}
                 onClick={() => setSelectedId(t._id)}
                 className={`w-full grid grid-cols-[1fr_auto_auto] gap-4 items-baseline py-2.5 px-3 border-b border-[color:var(--rule)]/60 last:border-b-0 text-left transition ${
-                  on ? 'bg-[color:var(--forest)]/5 border-l-2 border-l-[color:var(--forest)]' : 'hover:bg-[color:var(--paper-3)]/50'
+                  on ? 'bg-[color:var(--ember)]/5 border-l-2 border-l-[color:var(--ember)]' : 'hover:bg-[color:var(--paper-3)]/50'
                 }`}
               >
                 <span className=" text-[13.5px] text-[color:var(--ink)] truncate">
@@ -680,7 +680,7 @@ function TableSourcePicker({
         <button
           onClick={() => void handleUse()}
           disabled={!selected || !fileName.trim() || saving}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-5 py-2.5 rounded-full  text-[13px] font-medium transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] px-5 py-2.5 rounded-full  text-[13px] font-medium transition-colors disabled:opacity-40"
         >
           {saving ? 'Preparing…' : 'Use this table →'}
         </button>
@@ -731,7 +731,7 @@ function FileSourcePicker({
                 key={f._id}
                 onClick={() => setSelectedId(f._id)}
                 className={`w-full grid grid-cols-[1fr_auto] gap-4 items-baseline py-2.5 px-3 border-b border-[color:var(--rule)]/60 last:border-b-0 text-left transition ${
-                  on ? 'bg-[color:var(--forest)]/5 border-l-2 border-l-[color:var(--forest)]' : 'hover:bg-[color:var(--paper-3)]/50'
+                  on ? 'bg-[color:var(--ember)]/5 border-l-2 border-l-[color:var(--ember)]' : 'hover:bg-[color:var(--paper-3)]/50'
                 }`}
               >
                 <span className=" text-[13.5px] text-[color:var(--ink)] truncate">
@@ -757,7 +757,7 @@ function FileSourcePicker({
             });
           }}
           disabled={!selected}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-5 py-2.5 rounded-full  text-[13px] font-medium transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] px-5 py-2.5 rounded-full  text-[13px] font-medium transition-colors disabled:opacity-40"
         >
           Use this file →
         </button>
@@ -874,7 +874,7 @@ function LeadsSourcePicker({
         <div className="flex items-center justify-between mb-2 font-mono text-[9.5px] tracking-[0.22em] uppercase text-[color:var(--ink-3)]">
           <span>Results</span>
           <span>
-            {selectedCount > 0 && <span className="text-[color:var(--forest)]">{selectedCount} selected · </span>}
+            {selectedCount > 0 && <span className="text-[color:var(--ember)]">{selectedCount} selected · </span>}
             {total} matching
           </span>
         </div>
@@ -894,14 +894,14 @@ function LeadsSourcePicker({
                 <label
                   key={l._id}
                   className={`flex items-center gap-3 py-2 px-3 border-b border-[color:var(--rule)]/60 last:border-b-0 cursor-pointer transition ${
-                    checked ? 'bg-[color:var(--forest)]/5' : 'hover:bg-[color:var(--paper-3)]/50'
+                    checked ? 'bg-[color:var(--ember)]/5' : 'hover:bg-[color:var(--paper-3)]/50'
                   }`}
                 >
                   <input
                     type="checkbox"
                     checked={checked}
                     onChange={() => toggle(l)}
-                    className="accent-[color:var(--forest)] shrink-0"
+                    className="accent-[color:var(--ember)] shrink-0"
                   />
                   <div className="min-w-0 flex-1">
                     <div className=" text-[13.5px] text-[color:var(--ink)] truncate">
@@ -941,7 +941,7 @@ function LeadsSourcePicker({
         <button
           onClick={() => void handleUse()}
           disabled={selectedCount === 0 || !fileName.trim() || saving}
-          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] px-5 py-2.5 rounded-full  text-[13px] font-medium transition-colors disabled:opacity-40"
+          className="inline-flex items-center gap-2 bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] px-5 py-2.5 rounded-full  text-[13px] font-medium transition-colors disabled:opacity-40"
         >
           {saving ? 'Preparing…' : `Use ${selectedCount} lead${selectedCount === 1 ? '' : 's'} →`}
         </button>
@@ -1100,7 +1100,7 @@ function SequenceStep({
                       n[i] = { ...s, delayDays: Math.max(0, Number(e.target.value) || 0) };
                       setSeq(n);
                     }}
-                    className="w-[60px] bg-[color:var(--paper)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] focus:border-[color:var(--forest)]/60 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--forest)_8%,transparent)] rounded-md outline-none text-center font-mono text-[12px] tabular-nums text-[color:var(--ink)] py-1 transition-colors"
+                    className="w-[60px] bg-[color:var(--paper)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] focus:border-[color:var(--ember)]/60 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--ember)_8%,transparent)] rounded-md outline-none text-center font-mono text-[12px] tabular-nums text-[color:var(--ink)] py-1 transition-colors"
                   />
                 </div>
                 {/* Expand chevron — replaces the "edit/close" mono label */}
@@ -1198,7 +1198,7 @@ function StepEditor({
               value={step.body}
               onChange={(e) => onChange({ body: e.target.value })}
               placeholder={`Hi {{first_name}},\n\nNoticed {{company}} …`}
-              className="block w-full bg-[color:var(--paper)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] focus:border-[color:var(--forest)]/60 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--forest)_8%,transparent)] rounded-md px-3 py-2 outline-none text-[13.5px] leading-[1.6] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] resize-none transition-colors"
+              className="block w-full bg-[color:var(--paper)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] focus:border-[color:var(--ember)]/60 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--ember)_8%,transparent)] rounded-md px-3 py-2 outline-none text-[13.5px] leading-[1.6] text-[color:var(--ink)] placeholder:text-[color:var(--ink-3)] resize-none transition-colors"
             />
           </div>
 
@@ -1232,7 +1232,7 @@ function StepEditor({
           <label
             className={`flex items-start gap-3 cursor-pointer rounded-md border p-3 transition-colors ${
               step.useAI
-                ? 'border-[color:var(--forest)]/40 bg-[color:var(--forest)]/[0.04]'
+                ? 'border-[color:var(--ember)]/40 bg-[color:var(--ember)]/[0.04]'
                 : 'border-[color:var(--rule)] bg-[color:var(--paper)] hover:border-[color:var(--ink-3)]'
             }`}
           >
@@ -1246,7 +1246,7 @@ function StepEditor({
               <span
                 className={`block w-4 h-4 rounded-[3px] border transition-colors ${
                   step.useAI
-                    ? 'bg-[color:var(--forest)] border-[color:var(--forest)]'
+                    ? 'bg-[color:var(--ember)] border-[color:var(--ember)]'
                     : 'bg-[color:var(--paper)] border-[color:var(--rule)]'
                 }`}
               />
@@ -1262,7 +1262,7 @@ function StepEditor({
                   AI auto-personalize per lead
                 </span>
                 {step.useAI && (
-                  <span className="font-mono text-[9.5px] tracking-[0.04em] text-[color:var(--forest-2)] uppercase">
+                  <span className="font-mono text-[9.5px] tracking-[0.04em] text-[color:var(--ember-2)] uppercase">
                     on
                   </span>
                 )}
@@ -1431,7 +1431,7 @@ function ScheduleStep({
               step={20}
               value={schedule.dailySendCap}
               onChange={(e) => setSchedule({ ...schedule, dailySendCap: Number(e.target.value) })}
-              className="w-full accent-[color:var(--forest)] cursor-pointer"
+              className="w-full accent-[color:var(--ember)] cursor-pointer"
             />
             <div className="flex justify-between font-mono text-[10px] tabular-nums text-[color:var(--ink-3)]/70 mt-1">
               <span>20</span>
@@ -1474,7 +1474,7 @@ function ScheduleStep({
                 <select
                   value={replyRules.notifyChannel}
                   onChange={(e) => setReplyRules({ ...replyRules, notifyChannel: e.target.value as ReplyRules['notifyChannel'] })}
-                  className="bg-[color:var(--paper)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] focus:border-[color:var(--forest)]/60 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--forest)_8%,transparent)] rounded-md pl-3 pr-8 h-8 outline-none text-[12.5px] text-[color:var(--ink)] appearance-none cursor-pointer transition-colors"
+                  className="bg-[color:var(--paper)] border border-[color:var(--rule)] hover:border-[color:var(--ink-3)] focus:border-[color:var(--ember)]/60 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--ember)_8%,transparent)] rounded-md pl-3 pr-8 h-8 outline-none text-[12.5px] text-[color:var(--ink)] appearance-none cursor-pointer transition-colors"
                 >
                   <option value="slack">Slack · #sales</option>
                   <option value="email">Email digest</option>
@@ -1514,9 +1514,9 @@ function ReviewStep({
         {/* Summary card — clean rounded-xl, status pill, mono meta row */}
         <div className="rounded-xl border border-[color:var(--rule)] bg-[color:var(--paper)] overflow-hidden">
           <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-[color:var(--rule)]">
-            <span className="inline-flex items-center gap-1.5 rounded-md border border-[color:var(--forest)]/30 bg-[color:var(--forest)]/[0.06] px-2 h-6">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)]" aria-hidden />
-              <span className="font-mono text-[10.5px] text-[color:var(--forest-2)]">draft ready</span>
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-[color:var(--ember)]/30 bg-[color:var(--ember)]/[0.06] px-2 h-6">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ember)]" aria-hidden />
+              <span className="font-mono text-[10.5px] text-[color:var(--ember-2)]">draft ready</span>
             </span>
             <span className="font-mono text-[10.5px] tabular-nums text-[color:var(--ink-3)]">
               Saves as draft · activate later
@@ -1538,7 +1538,7 @@ function ReviewStep({
               {aiSteps > 0 && (
                 <>
                   <span className="text-[color:var(--ink-3)]/60 mx-1.5">·</span>
-                  <span className="text-[color:var(--forest-2)]">{aiSteps} ai-personalized</span>
+                  <span className="text-[color:var(--ember-2)]">{aiSteps} ai-personalized</span>
                 </>
               )}
             </p>
@@ -1740,8 +1740,8 @@ function LaunchedModal({
           <div className="flex items-center gap-2 mb-3">
             {isActivated ? (
               <span className="relative inline-flex">
-                <span className="relative inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)]" />
-                <span className="absolute inset-0 inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--forest)] opacity-60 animate-ping" />
+                <span className="relative inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ember)]" />
+                <span className="absolute inset-0 inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ember)] opacity-60 animate-ping" />
               </span>
             ) : (
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--ink-3)]" />
@@ -1815,7 +1815,7 @@ function LaunchedModal({
               </span>
               <button
                 onClick={onViewDetail}
-                className="inline-flex items-center gap-1.5 bg-[color:var(--ink)] text-[color:var(--paper)] px-3.5 h-8 rounded-md text-[12.5px] font-medium hover:bg-[color:var(--forest)] transition-colors"
+                className="inline-flex items-center gap-1.5 bg-[color:var(--ink)] text-[color:var(--paper)] px-3.5 h-8 rounded-md text-[12.5px] font-medium hover:bg-[color:var(--ember)] transition-colors"
               >
                 View campaign
                 <ArrowEast className="w-3 h-3" />
@@ -1838,7 +1838,7 @@ function LaunchedModal({
                   preflight.eligibleLeadsCount === 0 ? 'No eligible leads to enroll' :
                   undefined
                 }
-                className="inline-flex items-center gap-1.5 bg-[color:var(--forest)] text-white px-3.5 h-8 rounded-md text-[12.5px] font-medium hover:bg-[color:var(--forest-2)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1.5 bg-[color:var(--ember)] text-white px-3.5 h-8 rounded-md text-[12.5px] font-medium hover:bg-[color:var(--ember-2)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {activating ? 'Activating…' : 'Activate now'}
                 <ArrowEast className="w-3 h-3" />
@@ -1995,9 +1995,9 @@ export default function CampaignBuilderPage() {
   }
 
   return (
-    <div className="max-w-[1280px] mx-auto px-6 md:px-8 lg:px-10 py-8 md:py-10">
+    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 md:py-10">
       {/* Header — compact breadcrumb + title row */}
-      <section className="mb-6">
+      <section className="mb-5 sm:mb-6">
         <div className="flex items-center gap-1.5 mb-3 font-mono text-[10.5px] text-[color:var(--ink-3)]">
           <Link
             href="/dashboard/campaigns"
@@ -2008,16 +2008,16 @@ export default function CampaignBuilderPage() {
           <span className="text-[color:var(--ink-3)]/60">/</span>
           <span className="text-[color:var(--ink-2)]">New</span>
         </div>
-        <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 flex-wrap">
           <div>
-            <h1 className="text-[22px] md:text-[26px] font-semibold tracking-[-0.01em] text-[color:var(--ink)]">
+            <h1 className="font-display text-[24px] sm:text-[28px] md:text-[32px] tracking-[-0.01em] text-[color:var(--ink)]">
               New campaign
             </h1>
             <p className="mt-0.5 text-[12.5px] text-[color:var(--ink-3)]">
               Four steps. Saves as a draft — activate when you&rsquo;re ready.
             </p>
           </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <PageHelp
             title="Campaigns"
             body="Email outreach sequences. Pick a lead file as the audience, write your email steps, set a schedule, and activate. Track opens and replies on the campaign detail page."
@@ -2037,7 +2037,7 @@ export default function CampaignBuilderPage() {
             onClick={handleLaunch}
             disabled={isLaunching || !fileId}
             title={!fileId ? 'Pick an audience first.' : undefined}
-            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)] transition-colors disabled:opacity-50 disabled:hover:bg-[color:var(--ink)]"
+            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md text-[12.5px] font-medium bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)] transition-colors disabled:opacity-50 disabled:hover:bg-[color:var(--ink)]"
           >
             {isLaunching ? 'Saving\u2026' : 'Save draft'}
           </button>
@@ -2070,7 +2070,7 @@ export default function CampaignBuilderPage() {
                       current
                         ? 'bg-[color:var(--ink)] text-[color:var(--paper)]'
                         : done
-                          ? 'bg-[color:var(--forest)] text-white'
+                          ? 'bg-[color:var(--ember)] text-white'
                           : 'border border-[color:var(--rule)] text-[color:var(--ink-3)]'
                     }`}
                   >
@@ -2089,14 +2089,14 @@ export default function CampaignBuilderPage() {
         </div>
         <div className="h-[2px] bg-[color:var(--paper-3)] overflow-hidden">
           <div
-            className="h-full bg-[color:var(--forest)] transition-all duration-300"
+            className="h-full bg-[color:var(--ember)] transition-all duration-300"
             style={{ width: `${((stepIdx + 1) / STEPS.length) * 100}%` }}
           />
         </div>
       </div>
 
       {/* Content grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-10 lg:gap-14">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-6 lg:gap-14">
         <div className="min-w-0">
           {step === 'audience' && (
             <AudienceStep
@@ -2144,7 +2144,7 @@ export default function CampaignBuilderPage() {
           advanceBlock string surfaces both as a tooltip and as a
           subtle helper line so users see WHY the button is dim
           before they click. */}
-      <div className="mt-10 sticky bottom-0 bg-[color:var(--paper)]/95 backdrop-blur-sm border-t border-[color:var(--rule)] -mx-6 md:-mx-8 lg:-mx-10 px-6 md:px-8 lg:px-10 py-3.5 flex items-center justify-between gap-3">
+      <div className="mt-8 sm:mt-10 sticky bottom-0 bg-[color:var(--paper)]/95 backdrop-blur-sm border-t border-[color:var(--rule)] -mx-4 sm:-mx-6 md:-mx-8 lg:-mx-10 px-4 sm:px-6 md:px-8 lg:px-10 py-3.5 flex items-center justify-between gap-3">
         <button
           onClick={() => {
             if (canPrev) {
@@ -2183,8 +2183,8 @@ export default function CampaignBuilderPage() {
             title={advanceBlock ?? undefined}
             className={`inline-flex items-center gap-1.5 h-9 px-4 rounded-md text-[13px] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
               canNext
-                ? 'bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--forest)]'
-                : 'bg-[color:var(--forest)] text-white hover:bg-[color:var(--forest-2)]'
+                ? 'bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--ember)]'
+                : 'bg-[color:var(--ember)] text-white hover:bg-[color:var(--ember-2)]'
             }`}
           >
             {canNext ? 'Continue' : 'Save campaign'}
