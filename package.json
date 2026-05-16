@@ -1,6 +1,9 @@
 {
   "name": "leadreai",
   "private": true,
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "turbo run dev",
     "be": "pnpm --filter @leadreai/backend dev",
